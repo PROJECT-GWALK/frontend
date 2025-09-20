@@ -17,7 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useTheme } from "next-themes";
 import { LogOut, Moon, Sun } from "lucide-react";
 import Image from "next/image";
-import { menuItems } from "@/utils/menuItems";
+import { menuItems } from "@/utils/settings";
+import { signOut } from "next-auth/react";
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
@@ -68,14 +69,21 @@ export function Navbar() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {menuItems.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        <DropdownMenuItem className="flex items-center gap-2">
-                          {item.icon}
-                          <span>{item.label}</span>
-                        </DropdownMenuItem>
-                      </Link>
-                    ))}
+                    {menuItems
+                      .filter((item) => {
+                        if (item.role === "user") return true;
+                        if (item.role === "admin" && user.role === "ADMIN")
+                          return true;
+                        return false;
+                      })
+                      .map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <DropdownMenuItem className="flex items-center gap-2">
+                            {item.icon}
+                            <span>{item.label}</span>
+                          </DropdownMenuItem>
+                        </Link>
+                      ))}
                     <DropdownMenuItem
                       onClick={() =>
                         setTheme(theme === "dark" ? "light" : "dark")
@@ -90,7 +98,7 @@ export function Navbar() {
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">
+                    <DropdownMenuItem variant="destructive" onClick={() => {signOut()}}>
                       <LogOut />
                       Logout
                     </DropdownMenuItem>

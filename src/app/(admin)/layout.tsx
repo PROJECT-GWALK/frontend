@@ -1,15 +1,30 @@
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import "../globals.css";
-import { Navbar } from "@/components/navbar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { ModeToggle } from "@/components/mode toggle";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  console.log("Session in Layout:", session);
+  if (
+    !session?.user ||
+    (session.user as { role?: string }).role !== "ADMIN"
+  ) {
+    redirect("/")
+  }
+
   return (
-    <>
-      <Navbar />
-      <main className="max-w-7xl mx-auto w-full px-6 py-8">{children}</main>
-    </>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarTrigger />
+      <main className="w-full">{children}</main>
+      <ModeToggle />
+    </SidebarProvider>
   );
 }

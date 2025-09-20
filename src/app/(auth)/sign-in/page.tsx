@@ -6,10 +6,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { signIn } from "@/lib/auth";
+import { auth, signIn } from "@/lib/auth";
+import { signInRedirect } from "@/utils/settings";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
-export default function SignIn() {
+export default async function SignIn() {
+  const session = await auth();
+
+  if (session) {
+    redirect(signInRedirect);
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <Card className="m-8 w-full max-w-xl">
@@ -25,7 +33,7 @@ export default function SignIn() {
           <form
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo: "/test" });
+              await signIn("google", { redirectTo: signInRedirect });
             }}
             className="w-full"
           >
