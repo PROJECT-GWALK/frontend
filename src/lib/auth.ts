@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import Google from "next-auth/providers/google";
+import { randomUUID } from "crypto";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -22,8 +23,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = user.id;
         session.user.role = (user as any).role;
+        session.user.username = (user as any).username;
       }
       return session;
+    },
+  },
+
+  events: {
+    async createUser({ user }) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          image: null,
+          username: `user_${randomUUID().slice(0, 8)}`,
+        },
+      });
     },
   },
 });
