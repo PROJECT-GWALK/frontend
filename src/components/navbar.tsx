@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useTheme } from "next-themes";
 import { LogOut, Moon, Sun } from "lucide-react";
 import Image from "next/image";
-import { menuItems } from "@/utils/settings";
+import { appBrand, menuItems } from "@/utils/settings";
 import { signOut } from "next-auth/react";
 
 export function Navbar() {
@@ -44,13 +44,17 @@ export function Navbar() {
           <div>
             <Link href="/" className="text-lg font-bold">
               <div className="flex items-center space-x-4">
-                <Image
-                  src="/gwalk-icon.svg"
-                  alt="GWALK"
-                  width={32}
-                  height={32}
-                />
-                <div>Gallery walk</div>
+                {appBrand.logo && (
+                  <Image
+                    src={appBrand.logo}
+                    alt="GWALK"
+                    width={32}
+                    height={32}
+                  />
+                )}
+                {appBrand.name && (
+                  <div>{appBrand.name}</div>
+                )}
               </div>
             </Link>
           </div>

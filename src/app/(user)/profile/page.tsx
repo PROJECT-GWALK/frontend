@@ -1,6 +1,6 @@
 "use client";
 
-export default function TestPage() {
+export default function ProfilePage() {
 
   return (
 <>

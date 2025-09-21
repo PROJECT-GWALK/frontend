@@ -1,5 +1,10 @@
 import { User as UserIcon, Settings, Lock } from "lucide-react";
 
+export const appBrand = {
+  logo: "/gwalk-icon.svg",
+  name: "Gallery Walk",
+};
+
 export const menuItems = [
   {
     label: "Profile",
