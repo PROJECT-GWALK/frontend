@@ -62,7 +62,7 @@ export function Navbar() {
             {user ? (
               <div className="flex items-center space-x-4">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <DropdownMenuTrigger asChild className="select-none hover:border-2">
                     <Avatar>
                       <AvatarImage src={user.image || ""} />
                       <AvatarFallback>

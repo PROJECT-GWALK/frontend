@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
-import { getCurrentUser } from "@/utils/api";
+import { getCurrentUser, updateCurrentUser } from "@/utils/api";
 import { settingsSchema, User } from "@/utils/types";
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -56,12 +56,10 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // cleanup preview เก่า
     if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
 
     const url = URL.createObjectURL(file);
     setPreview(url);
-
   };
 
   const avatarSrc: string | undefined = preview || user?.image || undefined;
@@ -79,14 +77,16 @@ export default function SettingsPage() {
 
     setUser((prev) => (prev ? { ...prev, image: null } : prev));
 
-    const input = document.getElementById("imageUpload") as HTMLInputElement | null;
+    const input = document.getElementById(
+      "imageUpload"
+    ) as HTMLInputElement | null;
     if (input) input.value = "";
   };
 
   const onSubmit = async (data: SettingsFormValues) => {
     setLoading(true);
     try {
-      console.log("Submitting settings:", { ...data, image: preview });
+      await updateCurrentUser({ ...data, image: preview });
 
       toast.success("Saved changes successfully");
 
@@ -119,30 +119,26 @@ export default function SettingsPage() {
   };
 
   const handleAutoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-  e.target.style.height = "auto";
-  e.target.style.height = `${e.target.scrollHeight}px`;
-};
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
 
   return (
     <div className="flex justify-center">
-      <Card className="m-8 w-full max-w-4xl">
+      <Card className="w-full max-w-4xl">
         <CardHeader>
           <CardTitle>Account Settings</CardTitle>
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={form.handleSubmit(
-              onSubmit,
-              (errors) => {
-                console.log("Form errors:", errors);
-              }
-            )}
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.log("Form errors:", errors);
+            })}
             className="space-y-6"
           >
             <div className="flex flex-col items-center space-y-4">
-              <Avatar key={avatarSrc || "no-image"} className="h-24 w-24">
+              <Avatar key={avatarSrc || "no-image"} className="h-24 w-24 select-none">
                 {avatarSrc ? <AvatarImage src={avatarSrc} /> : null}
-                {/* โชว์ทันที ไม่รอ delay */}
                 <AvatarFallback delayMs={0}>
                   {avatarFallbackText}
                 </AvatarFallback>
@@ -157,15 +153,21 @@ export default function SettingsPage() {
                   onChange={handleFileChange}
                 />
                 <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => document.getElementById("imageUpload")?.click()}
-                  >
-                    Change
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    document.getElementById("imageUpload")?.click()
+                  }
+                >
+                  Change
                 </Button>
 
                 {(preview || user?.image) && (
-                  <Button type="button" variant="destructive" onClick={handleRemoveImage}>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleRemoveImage}
+                  >
                     Remove
                   </Button>
                 )}
@@ -181,7 +183,7 @@ export default function SettingsPage() {
               <Label htmlFor="username">Username</Label>
               <Input id="username" {...form.register("username")} />
               {form.formState.errors.username && (
-                <p className="text-sm text-red-500 mt-1">
+                <p className="text-sm text-destructive mt-1">
                   {form.formState.errors.username.message}
                 </p>
               )}
@@ -191,26 +193,26 @@ export default function SettingsPage() {
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" {...form.register("name")} />
               {form.formState.errors.name && (
-                <p className="text-sm text-red-500 mt-1">
+                <p className="text-sm text-destructive mt-1">
                   {form.formState.errors.name.message}
                 </p>
               )}
             </div>
 
-<div>
-  <Label htmlFor="description">Description</Label>
-  <Textarea
-    id="description"
-    {...form.register("description")}
-    onInput={handleAutoResize}
-    className="overflow-hidden resize-none"
-  />
-  {form.formState.errors.description && (
-    <p className="text-sm text-red-500 mt-1">
-      {form.formState.errors.description.message}
-    </p>
-  )}
-</div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                {...form.register("description")}
+                onInput={handleAutoResize}
+                className="overflow-hidden resize-none"
+              />
+              {form.formState.errors.description && (
+                <p className="text-sm text-destructive mt-1">
+                  {form.formState.errors.description.message}
+                </p>
+              )}
+            </div>
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Saving..." : "Save Changes"}

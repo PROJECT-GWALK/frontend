@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
     request.cookies.get("__Secure-authjs.session-token")?.value;
 
   if (!sessionToken) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

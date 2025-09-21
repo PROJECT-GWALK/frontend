@@ -20,7 +20,7 @@ export default async function SignIn() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Card className="m-8 w-full max-w-xl">
+      <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle className="flex justify-center">
             <Image src="gwalk-icon.svg" alt="Logo" width={160} height={160} />

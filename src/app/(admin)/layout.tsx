@@ -11,7 +11,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  console.log("Session in Layout:", session);
   if (
     !session?.user ||
     (session.user as { role?: string }).role !== "ADMIN"
@@ -22,9 +21,13 @@ export default async function RootLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarTrigger />
-      <main className="w-full">{children}</main>
-      <ModeToggle />
+      <main className="w-full">
+        <div className="flex items-center justify-between p-4">
+          <SidebarTrigger />
+          <ModeToggle />
+        </div>
+        <div className="p-4">{children}</div>
+      </main>
     </SidebarProvider>
   );
 }
