@@ -18,12 +18,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: { strategy: "database" },
+
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
         session.user.role = (user as any).role;
         session.user.username = (user as any).username;
+
+        try {
+          const today = new Date();
+          const dateOnly = new Date(today);
+          dateOnly.setUTCHours(0, 0, 0, 0);
+
+          await prisma.userDailyActive.upsert({
+            where: {
+              userId_date: {
+                userId: user.id,
+                date: dateOnly,
+              },
+            },
+            update: {},
+            create: {
+              userId: user.id,
+              date: dateOnly,
+            },
+          });
+        } catch (err) {
+          console.error("Failed to log daily active user:", err);
+        }
       }
       return session;
     },
