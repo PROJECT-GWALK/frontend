@@ -4,6 +4,18 @@ import { prisma } from "./prisma";
 import Google from "next-auth/providers/google";
 import { randomUUID } from "crypto";
 
+function getThailandDateOnly() {
+  const now = new Date();
+  const thailand = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  return new Date(
+    Date.UTC(
+      thailand.getUTCFullYear(),
+      thailand.getUTCMonth(),
+      thailand.getUTCDate()
+    )
+  );
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   pages: {
@@ -26,26 +38,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = (user as any).role;
         session.user.username = (user as any).username;
 
-        try {
-          const today = new Date();
-          const dateOnly = new Date(today);
-          dateOnly.setUTCHours(0, 0, 0, 0);
+        const ban = await prisma.userBan.findUnique({
+          where: { email: user.email! },
+        });
 
-          await prisma.userDailyActive.upsert({
-            where: {
-              userId_date: {
+        let isBanned = false;
+        if (ban) {
+          if (!ban.expiresAt || ban.expiresAt > new Date()) {
+            isBanned = true;
+          }
+        }
+
+        (session as any).banned = isBanned;
+
+        if (!isBanned) {
+          try {
+            const dateOnly = getThailandDateOnly();
+
+            await prisma.userDailyActive.upsert({
+              where: {
+                userId_date: {
+                  userId: user.id,
+                  date: dateOnly,
+                },
+              },
+              update: {},
+              create: {
                 userId: user.id,
                 date: dateOnly,
               },
-            },
-            update: {},
-            create: {
-              userId: user.id,
-              date: dateOnly,
-            },
-          });
-        } catch (err) {
-          console.error("Failed to log daily active user:", err);
+            });
+          } catch (err) {
+            console.error("Failed to log daily active user:", err);
+          }
         }
       }
       return session;

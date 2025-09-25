@@ -23,3 +23,9 @@ export const settingsSchema = z.object({
   description: z.string().max(200, "Description too long").optional().or(z.literal("")),
   image: z.string().url().optional().or(z.literal("")),
 });
+
+export type UserActiveChartData = {
+  date: string;
+  active: number;
+  fullLabel: string;
+};
