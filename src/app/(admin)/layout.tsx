@@ -1,9 +1,9 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import "../globals.css";
-import { AppSidebar } from "@/components/app-sidebar";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { ModeToggle } from "@/components/mode toggle";
+import { ModeToggle } from "@/components/mode-toggle";
+import { AppSidebar } from "@/components/user/app-sidebar";
 
 export default async function RootLayout({
   children,
