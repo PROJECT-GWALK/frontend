@@ -13,8 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
-import { getCurrentUser, updateCurrentUser } from "@/utils/api";
 import { settingsSchema, User } from "@/utils/types";
+import { getCurrentUser, updateCurrentUser } from "@/utils/apiuser";
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
@@ -37,19 +37,18 @@ export default function SettingsPage() {
   useEffect(() => {
     (async () => {
       const current = await getCurrentUser();
-      setUser(current);
+      setUser(current.user);
 
       if (current) {
         form.reset({
-          username: current.username ?? "",
-          name: current.name ?? "",
-          description: current.description ?? "",
-          image: current.image ?? "",
+          username: current.user.username ?? "",
+          name: current.user.name ?? "",
+          description: current.user.description ?? "",
+          image: current.user.image ?? "",
         });
-        setPreview(current.image ?? null);
+        setPreview(current.user.image ?? null);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

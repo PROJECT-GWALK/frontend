@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getCurrentUser } from "@/utils/api";
+import { getCurrentUser } from "@/utils/apiuser";
 import { linkify } from "@/utils/function";
 import { User } from "@/utils/types";
 import Link from "next/link";
@@ -25,8 +25,8 @@ export default function ProfilePage() {
 
   const fetchUser = async () => {
     try {
-      const user = await getCurrentUser();
-      setUser(user);
+      const data = await getCurrentUser();
+      setUser(data.user);
     } catch (error) {
       console.error("Error fetching user:", error);
     }

@@ -11,38 +11,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Button } from "./ui/button";
 import Link from "next/link";
-import { Separator } from "./ui/separator";
-
-// Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-];
+import { menuItemsAdmin } from "@/utils/settings";
+import { Separator } from "../ui/separator";
+import { Button } from "../ui/button";
 
 export function AppSidebar() {
   return (
@@ -52,12 +24,12 @@ export function AppSidebar() {
           <SidebarGroupLabel>Gallery walk</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {menuItemsAdmin.map((menuItemsAdmin) => (
+                <SidebarMenuItem key={menuItemsAdmin.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
+                    <a href={menuItemsAdmin.url}>
+                      {menuItemsAdmin.icon}
+                      <span>{menuItemsAdmin.title}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

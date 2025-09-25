@@ -1,24 +1,18 @@
 "use client";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+
 import Link from "next/link";
-import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { User } from "@/utils/types";
-import { getCurrentUser } from "@/utils/api";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useTheme } from "next-themes";
 import { LogOut, Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import { appBrand, menuItems } from "@/utils/settings";
 import { signOut } from "next-auth/react";
+import { getCurrentUser } from "@/utils/apiuser";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,8 +20,8 @@ export function Navbar() {
 
   const fetchUser = async () => {
     try {
-      const user = await getCurrentUser();
-      setUser(user);
+      const data = await getCurrentUser();
+      setUser(data.user);
     } catch (error) {
       console.error("Error fetching user:", error);
     }

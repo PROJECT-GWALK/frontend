@@ -19,7 +19,7 @@ export default async function SignIn() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center px-6 py-8">
       <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle className="flex justify-center">
