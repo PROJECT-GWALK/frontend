@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -37,9 +38,8 @@ export default function SettingsPage() {
   useEffect(() => {
     (async () => {
       const current = await getCurrentUser();
-      setUser(current.user);
-
       if (current) {
+        setUser(current.user);
         form.reset({
           username: current.user.username ?? "",
           name: current.user.name ?? "",
@@ -52,12 +52,13 @@ export default function SettingsPage() {
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const f = e.target.files?.[0];
+    if (!f) return;
 
     if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
 
-    const url = URL.createObjectURL(file);
+    setFile(f);
+    const url = URL.createObjectURL(f);
     setPreview(url);
   };
 
@@ -68,10 +69,9 @@ export default function SettingsPage() {
   const avatarFallbackText = initialsBase.slice(0, 2).toUpperCase();
 
   const handleRemoveImage = () => {
-    if (preview?.startsWith("blob:")) {
-      URL.revokeObjectURL(preview);
-    }
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     setPreview(null);
+    setFile(null);
     form.setValue("image", "");
 
     setUser((prev) => (prev ? { ...prev, image: null } : prev));
@@ -82,40 +82,37 @@ export default function SettingsPage() {
     if (input) input.value = "";
   };
 
-  const onSubmit = async (data: SettingsFormValues) => {
-    setLoading(true);
-    try {
-      await updateCurrentUser({ ...data, image: preview });
-
-      toast.success("Saved changes successfully");
-
-      const updated = await getCurrentUser();
-      setUser(updated);
-
-      if (updated) {
-        form.reset({
-          username: updated.username ?? "",
-          name: updated.name ?? "",
-          description: updated.description ?? "",
-          image: updated.image ?? "",
-        });
-        setPreview(updated.image ?? null);
-      } else {
-        form.reset({
-          username: "",
-          name: "",
-          description: "",
-          image: "",
-        });
-        setPreview(null);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update settings");
-    } finally {
-      setLoading(false);
+const onSubmit = async (data: SettingsFormValues) => {
+  setLoading(true);
+  try {
+    const formData = new FormData();
+    formData.append("username", data.username || "");
+    formData.append("name", data.name || "");
+    formData.append("description", data.description || "");
+    if (file) {
+      formData.append("file", file);
     }
-  };
+
+    const updated = await updateCurrentUser(formData);
+
+    toast.success("Saved changes successfully");
+    setUser(updated.user);
+    setPreview(updated.user.image ?? null);
+
+    form.reset({
+      username: updated.user.username ?? "",
+      name: updated.user.name ?? "",
+      description: updated.user.description ?? "",
+      image: updated.user.image ?? "",
+    });
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update settings");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleAutoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     e.target.style.height = "auto";
@@ -130,9 +127,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.log("Form errors:", errors);
-            })}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6"
           >
             <div className="flex flex-col items-center space-y-4">
