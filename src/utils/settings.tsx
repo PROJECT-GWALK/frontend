@@ -39,4 +39,12 @@ export const menuItemsAdmin = [
   },
 ];
 
+export const navbarItems = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: <LayoutDashboard />,
+  },
+]
+
 export const signInRedirect = "/dashboard";

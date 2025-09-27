@@ -1,0 +1,144 @@
+"use client";
+
+import React, { useState } from "react";
+import Cropper, { Area } from "react-easy-crop";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+
+type ImageCropDialogProps = {
+  open: boolean;
+  src: string | null;
+  onOpenChange?: (open: boolean) => void;
+  onCancel: () => void;
+  onConfirm: (file: File, previewUrl: string) => void;
+  fileName?: string;
+  fileType?: string;
+  aspect?: number; // default 1 (square)
+  title?: string;
+  quality?: number;
+};
+
+export default function ImageCropDialog({
+  open,
+  src,
+  onOpenChange,
+  onCancel,
+  onConfirm,
+  fileName,
+  fileType,
+  aspect = 1,
+  title = "Crop to square",
+  quality = 0.92,
+}: ImageCropDialogProps) {
+  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const onCropComplete = (_: Area, pixels: Area) => {
+    setCroppedAreaPixels(pixels);
+  };
+
+  const createImage = (url: string) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.addEventListener("load", () => resolve(img));
+      img.addEventListener("error", (err) => reject(err));
+      img.crossOrigin = "anonymous";
+      img.src = url;
+    });
+
+  const getCroppedBlob = async (imageSrc: string, cropPixels: Area, mime: string) => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not supported");
+
+    const width = Math.round(cropPixels.width);
+    const height = Math.round(cropPixels.height);
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.drawImage(
+      image,
+      Math.round(cropPixels.x),
+      Math.round(cropPixels.y),
+      Math.round(cropPixels.width),
+      Math.round(cropPixels.height),
+      0,
+      0,
+      width,
+      height
+    );
+
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error("Canvas is empty"));
+          resolve(blob);
+        },
+        mime || "image/png",
+        quality
+      );
+    });
+  };
+
+  const handleConfirm = async () => {
+    if (!src || !croppedAreaPixels) return;
+    const mime = fileType || "image/png";
+    const blob = await getCroppedBlob(src, croppedAreaPixels, mime);
+    const name = (fileName && `cropped-${fileName}`) || "avatar-cropped.png";
+    const newFile = new File([blob], name, { type: blob.type });
+    const url = URL.createObjectURL(newFile);
+    onConfirm(newFile, url);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="relative w-full h-[320px] bg-muted rounded-md overflow-hidden">
+          {src && (
+            <Cropper
+              image={src}
+              crop={crop}
+              zoom={zoom}
+              aspect={aspect}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+              restrictPosition
+              showGrid={false}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Label htmlFor="zoom">Zoom</Label>
+          <input
+            id="zoom"
+            type="range"
+            min={1}
+            max={3}
+            step={0.1}
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleConfirm}>
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
