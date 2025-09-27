@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { User } from "@/utils/types";
 import { useTheme } from "next-themes";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, Moon, Sun } from "lucide-react";
 import Image from "next/image";
 import { appBrand, menuItems } from "@/utils/settings";
 import { signOut } from "next-auth/react";
@@ -13,10 +13,26 @@ import { getCurrentUser } from "@/utils/apiuser";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { navbarItems } from "@/utils/settings";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const { setTheme, theme } = useTheme();
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    // ปิด Sheet อัตโนมัติเมื่อขนาดหน้าจอ ≥ md
+    if (!isMobile && sheetOpen) {
+      setSheetOpen(false);
+    }
+  }, [isMobile, sheetOpen]);
 
   const fetchUser = async () => {
     try {
@@ -27,14 +43,39 @@ export function Navbar() {
     }
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
   return (
     <nav className="border-b ">
       <div className="container mx-auto px-8 py-6">
         <div className="flex items-center justify-between">
+          <div className="md:hidden">
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open menu">
+                  <Menu className="w-5 h-5" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 !w-[70vw] sm:!w-64">
+                <SheetHeader className="p-4">
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="p-2">
+                  <div className="flex flex-col space-y-1">
+                    {navbarItems.map((item) => (
+                      <Link
+                        key={item.url}
+                        href={item.url}
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           <div>
             <Link href="/" className="text-lg font-bold">
               <div className="flex items-center space-x-4">
