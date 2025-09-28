@@ -2,11 +2,12 @@ import axios from "axios";
 
 // ====================== USER MANAGEMENT ======================
 
-export const getAllUsers = async () => {
+export const getAllUsers = async (role?: "ADMIN" | "USER") => {
   const res = await axios.get("/backend/api/usermanagement", {
+    params: role ? { role } : {},
     withCredentials: true,
   });
-  return res.data; // { message, users }
+  return res.data;
 };
 
 export const updateUserRole = async (id: string, role: "USER" | "ADMIN") => {
