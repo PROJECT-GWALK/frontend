@@ -120,10 +120,10 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   /* Brand palette (dark) - ใช้ค่าเดียวกันเพื่อความคงเส้นคงวา */
   --brand-primary: #366a4d;
-  --brand-secondary: #716007;
+  --brand-secondary: #a1890a;
   --brand-tertiary: #295670;
-  --brand-quaternary: #da5e58;
-  --brand-on: #ccc;
+  --brand-quaternary: #d1362e;
+  --brand-on: #e6e6e6;
 }
 
 @theme inline {
