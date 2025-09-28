@@ -53,16 +53,12 @@ export const navbarItems = [
     url: "/dashboard",
   },
   {
-    title: "Service",
-    url: "/service",
+    title: "Events",
+    url: "/events",
   },
   {
-    title: "About Us",
-    url: "/about",
-  },
-  {
-    title: "Contact",
-    url: "/contact",
+    title: "Users",
+    url: "/users",
   },
 ];
 

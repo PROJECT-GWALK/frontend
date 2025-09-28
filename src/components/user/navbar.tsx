@@ -58,7 +58,7 @@ export function Navbar() {
       <div className="container mx-auto px-8 py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div>
+          <div className="flex items-center space-x-8">
             <Link href="/" className="text-lg font-bold">
               <div className="flex items-center space-x-4">
                 {appBrand.logo && (
@@ -72,24 +72,23 @@ export function Navbar() {
                 {appBrand.name && <div>{appBrand.name}</div>}
               </div>
             </Link>
+            {/* Desktop Navigation Menu */}
+            {user && (
+              <NavigationMenu className="hidden sm:flex">
+                <NavigationMenuList className="items-center space-x-2">
+                  {navbarItems.map((link) => (
+                    <NavigationMenuItem key={link.url}>
+                      <NavigationMenuLink asChild>
+                        <Link href={link.url} className="font-medium">
+                          {link.title}
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
+            )}
           </div>
-
-          {/* Desktop Navigation Menu */}
-          {user && (
-            <NavigationMenu className="hidden sm:flex">
-              <NavigationMenuList className="items-center space-x-8">
-                {navbarItems.map((link) => (
-                  <NavigationMenuItem key={link.url}>
-                    <NavigationMenuLink asChild>
-                      <Link href={link.url} className="font-medium">
-                        {link.title}
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          )}
 
           {/* Desktop User Menu */}
           <div className="hidden sm:block">
@@ -159,7 +158,7 @@ export function Navbar() {
           </div>
 
           {/* Mobile Menu Button + Dropdown (w-full) */}
-          <div className="md:hidden flex items-center space-x-4">
+          <div className="sm:hidden flex items-center space-x-4">
             {user ? (
               <>
                 <Avatar className="w-8 h-8">
