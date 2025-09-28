@@ -1,4 +1,12 @@
-import { User as UserIcon, Settings, Lock, Inbox, Home, Users, LayoutDashboard } from "lucide-react";
+import {
+  User as UserIcon,
+  Settings,
+  Lock,
+  Inbox,
+  Home,
+  Users,
+  LayoutDashboard,
+} from "lucide-react";
 
 export const appBrand = {
   logo: "/gwalk-icon.svg",
@@ -23,7 +31,7 @@ export const menuItems = [
     href: "/admin",
     icon: <Lock className="w-4 h-4" />,
     role: "admin",
-  }
+  },
 ];
 
 export const menuItemsAdmin = [
@@ -43,8 +51,19 @@ export const navbarItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
-    icon: <LayoutDashboard />,
   },
-]
+  {
+    title: "Service",
+    url: "/service",
+  },
+  {
+    title: "About Us",
+    url: "/about",
+  },
+  {
+    title: "Contact",
+    url: "/contact",
+  },
+];
 
 export const signInRedirect = "/dashboard";
