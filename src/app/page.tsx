@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/user/navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 const LandingPage = () => {
   return (
@@ -38,24 +38,38 @@ const LandingPage = () => {
                   asChild
                 >
                   <Link href="/sign-in">
-                    <span className="text-lg font-medium hover:brightness-90">Get Started</span>
+                    <span className="text-lg font-medium hover:brightness-90">
+                      Get Started
+                    </span>
                   </Link>
                 </Button>
               </div>
-              <div className="flex items-center gap-3">
-                <Button size="lg" className="bg-brand-primary hover:brightness-90" asChild>
-                  <Link href="#">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Button
+                  size="lg"
+                  className="bg-brand-primary hover:brightness-90"
+                  asChild
+                >
+                  <Link href="#service">
                     <span className="text-lg font-medium">Service</span>
                   </Link>
                 </Button>
-                <Button size="lg" className="bg-brand-tertiary hover:brightness-90" asChild>
-                  <Link href="#">
-                    <span className="text-lg font-medium">Get Started</span>
+                <Button
+                  size="lg"
+                  className="bg-brand-tertiary hover:brightness-90"
+                  asChild
+                >
+                  <Link href="#about">
+                    <span className="text-lg font-medium">About Us</span>
                   </Link>
                 </Button>
-                <Button size="lg" className="bg-brand-secondary hover:brightness-90" asChild>
-                  <Link href="#">
-                    <span className="text-lg font-medium ">Contact</span>
+                <Button
+                  size="lg"
+                  className="bg-brand-secondary hover:brightness-90"
+                  asChild
+                >
+                  <Link  href="#contact">
+                    <span className="text-lg font-medium">Contact</span>
                   </Link>
                 </Button>
               </div>
@@ -102,6 +116,63 @@ const LandingPage = () => {
               <div className="absolute top-1/3 left-0 w-8 h-8 bg-brand-tertiary-soft rounded-full animate-bounce [animation-delay:1.5s]"></div>
             </div>
           </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16 lg:pb-24 space-y-4">
+          <section id="service" className="scroll-mt-24">
+            <Card>
+              <CardHeader className="text-2xl font-bold">Service</CardHeader>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">
+                  We offer a range of services to help you create, manage, and
+                  join events. Whether you're looking to host a community
+                  gathering or simply connect with like-minded individuals, we
+                  have you covered. We offer a range of services to help you
+                  create, manage, and join events. Whether you're looking to
+                  host a community gathering or simply connect with like-minded
+                  individuals, we have you covered. We offer a range of services
+                  to help you create, manage, and join events. Whether you're
+                  looking to host a community gathering or simply connect with
+                  like-minded individuals, we have you covered.
+                </p>
+              </CardContent>
+            </Card>
+          </section>
+          <section id="about" className="scroll-mt-24">
+            <Card>
+              <CardHeader className="text-2xl font-bold">About Us</CardHeader>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">
+                  We offer a range of services to help you create, manage, and
+                  join events. Whether you're looking to host a community
+                  gathering or simply connect with like-minded individuals, we
+                  have you covered. We offer a range of services to help you
+                  create, manage, and join events. Whether you're looking to
+                  host a community gathering or simply connect with like-minded
+                  individuals, we have you covered. We offer a range of services
+                  to help you create, manage, and join events. Whether you're
+                  looking to host a community gathering or simply connect with
+                  like-minded individuals, we have you covered.
+                </p>
+              </CardContent>
+            </Card>
+          </section>
+          <section id="contact" className="scroll-mt-24">
+            <Card>
+              <CardHeader className="text-2xl font-bold">Contact</CardHeader>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">
+                  We offer a range of services to help you create, manage, and
+                  join events. Whether you're looking to host a community
+                  gathering or simply connect with like-minded individuals, we
+                  have you covered. We offer a range of services to help you
+                  create, manage, and join events. Whether you're looking to
+                  host a community gathering or simply connect with like-minded
+                  individuals, we have you covered.
+                </p>
+              </CardContent>
+            </Card>
+          </section>
         </div>
 
         {/* Features Section */}

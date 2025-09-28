@@ -12,15 +12,15 @@ export default function DashboardPage() {
       <Card className="w-full max-w-4xl">
         <CardHeader className="text-2xl font-bold">Dashboard</CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="relative w-full col-span-3">
+          <div className="sm:grid sm:grid-cols-4 gap-4 flex flex-wrap">
+            <div className="relative w-full sm:col-span-3">
               <Input
                 placeholder="Search events"
                 className="w-full pr-10"
               />
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5" />
             </div>
-            <div className="col-span-1">
+            <div className="sm:col-span-1 w-full">
               <Button className="w-full">
                 Create Event!
                 <CalendarPlus />
