@@ -68,7 +68,7 @@ const LandingPage = () => {
                   className="bg-brand-secondary hover:brightness-90"
                   asChild
                 >
-                  <Link  href="#contact">
+                  <Link href="#contact">
                     <span className="text-lg font-medium">Contact</span>
                   </Link>
                 </Button>
@@ -142,37 +142,130 @@ const LandingPage = () => {
             <Card>
               <CardHeader className="text-2xl font-bold">About Us</CardHeader>
               <CardContent className="p-6">
-                <p className="text-muted-foreground">
-                  We offer a range of services to help you create, manage, and
-                  join events. Whether you're looking to host a community
-                  gathering or simply connect with like-minded individuals, we
-                  have you covered. We offer a range of services to help you
-                  create, manage, and join events. Whether you're looking to
-                  host a community gathering or simply connect with like-minded
-                  individuals, we have you covered. We offer a range of services
-                  to help you create, manage, and join events. Whether you're
-                  looking to host a community gathering or simply connect with
-                  like-minded individuals, we have you covered.
+                <p className="text-muted-foreground mb-8">
+                  This website was created as a project for course 261492 by a
+                  group of fourth-year students from the Department of Computer
+                  Engineering, Faculty of Engineering, Chiang Mai University.
                 </p>
+
+                {/* Team Members Section */}
+                <div className="mt-12">
+                  <h3 className="text-xl font-semibold mb-6 text-center">
+                    Our Team
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Team Member 1 */}
+                    <Card className="text-center">
+                      <CardContent className="p-6">
+                        <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                          <img
+                            src="/Apiwit.jpg"
+                            alt="Apiwit Boonyarit"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <h4 className="text-lg font-semibold mb-2">
+                          Apiwit Boonyarit
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Front-end Developer
+                        </p>
+                        <p className="text-muted-foreground">650612106</p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Team Member 2 */}
+                    <Card className="text-center">
+                      <CardContent className="p-6">
+                        <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                          <img
+                            src="/Autsada.jpg"
+                            alt="Autsada Wiriya"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <h4 className="text-lg font-semibold mb-2">
+                          Autsada Wiriya
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Fullstack Developer
+                        </p>
+                        <p className="text-muted-foreground">650612107</p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Team Member 3 */}
+                    <Card className="text-center">
+                      <CardContent className="p-6">
+                        <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                          <img
+                            src="/UeaAR.jpg"
+                            alt="Ueaarthorn Uawongtrakul"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <h4 className="text-lg font-semibold mb-2">
+                          Ueaarthorn Uawongtrakul
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Project Manager,UX/UI Design,Front-end Developer
+                        </p>
+                        <p className="text-muted-foreground">650612171</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </section>
           <section id="contact" className="scroll-mt-24">
-            <Card>
-              <CardHeader className="text-2xl font-bold">Contact</CardHeader>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">
-                  We offer a range of services to help you create, manage, and
-                  join events. Whether you're looking to host a community
-                  gathering or simply connect with like-minded individuals, we
-                  have you covered. We offer a range of services to help you
-                  create, manage, and join events. Whether you're looking to
-                  host a community gathering or simply connect with like-minded
-                  individuals, we have you covered.
-                </p>
-              </CardContent>
-            </Card>
-          </section>
+  <Card>
+    <CardHeader className="text-2xl font-bold">Contact</CardHeader>
+    <CardContent className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-3">ติดต่อเรา</h3>
+            <div className="space-y-2 text-muted-foreground">
+              <p>
+                <strong className="text-foreground">ที่อยู่:</strong><br/>
+                ภาควิชาวิศวกรรมคอมพิวเตอร์ ชั้น 4 ตึก 30 ปี<br/>
+                คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเชียงใหม่<br/>
+                239 ถนนห้วยแก้ว ตำบลสุเทพ อำเภอเมือง<br/>
+                จังหวัดเชียงใหม่ 50200
+              </p>
+              <p>
+                <strong className="text-foreground">โทรศัพท์:</strong><br/>
+                0-5394-2023, 0-5394-2072
+              </p>
+              <p>
+                <strong className="text-foreground">อีเมล:</strong><br/>
+                cpe@eng.cmu.ac.th
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Map */}
+        <div className="h-80 lg:h-96">
+          <div className="w-full h-full rounded-lg overflow-hidden shadow-md">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3777.0234567890123!2d98.95240731234567!3d18.80123456789012!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30da3a9a36ded807%3A0x984b50b2f3b5c5e6!2sDepartment%20of%20Computer%20Engineering%2C%20Chiang%20Mai%20University!5e0!3m2!1sen!2sth!4v1234567890123!5m2!1sen!2sth"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="ภาควิชาวิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยเชียงใหม่"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</section>
         </div>
 
         {/* Features Section */}
