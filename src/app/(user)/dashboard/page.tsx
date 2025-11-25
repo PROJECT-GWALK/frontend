@@ -6,7 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, CalendarPlus, FileEdit } from "lucide-react";
-import { getMyDraftEvents } from "@/utils/apiuser";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { createEvent, getMyDraftEvents } from "@/utils/apievent";
 
 type DraftEvent = {
   id: string;
@@ -18,6 +29,7 @@ type DraftEvent = {
 export default function DashboardPage() {
   const [drafts, setDrafts] = useState<DraftEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newEventName, setNewEventName] = useState("");
 
   useEffect(() => {
     const fetchDrafts = async () => {
@@ -33,6 +45,17 @@ export default function DashboardPage() {
     fetchDrafts();
   }, []);
 
+  const handleCreateEvent = async (eventName: string) => {
+    try {
+      await createEvent(eventName);
+      // Refresh drafts after creation
+      const res = await getMyDraftEvents();
+      setDrafts(res.events || []);
+    } catch (err) {
+      console.error("Failed to create event:", err);
+    }
+  };
+
   return (
     <div className="flex justify-center">
       <Card className="w-full max-w-4xl">
@@ -45,12 +68,52 @@ export default function DashboardPage() {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5" />
             </div>
             <div className="sm:col-span-1 w-full">
-              <Link href="/createEvent">
-                <Button className="w-full">
-                  Create Event!
-                  <CalendarPlus className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full">
+                    Create Event!
+                    <CalendarPlus className="ml-2 h-5 w-5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Event</DialogTitle>
+                    <DialogDescription>
+                      Enter an event name. The event will be created as a draft and you can finish setup later.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4">
+                    <div className="grid gap-3">
+                      <Label htmlFor="name-1">Event Name</Label>
+                      <Input
+                        id="name-1"
+                        name="name"
+                        value={newEventName}
+                        onChange={(e) => setNewEventName(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                      <Button
+                        type="button"
+                        onClick={async () => {
+                          const name = newEventName.trim();
+                          if (!name) return;
+                          await handleCreateEvent(name);
+                          setNewEventName("");
+                        }}
+                        disabled={!newEventName.trim()}
+                      >
+                        Save changes
+                      </Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -63,7 +126,10 @@ export default function DashboardPage() {
             )}
             <div className="space-y-3">
               {drafts.map((event) => (
-                <Card key={event.id} className="p-4 flex justify-between items-center">
+                <Card
+                  key={event.id}
+                  className="p-4 flex justify-between items-center"
+                >
                   <div>
                     <h4 className="font-semibold">{event.eventName}</h4>
                     <p className="text-sm text-gray-500">
@@ -71,7 +137,9 @@ export default function DashboardPage() {
                       {new Date(event.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <Link href={`/createEvent/${event.id}?step=${event.currentStep}`}>
+                  <Link
+                    href={`/event/${event.id}`}
+                  >
                     <Button variant="outline">
                       <FileEdit className="h-4 w-4 mr-2" />
                       Continue
