@@ -16,13 +16,20 @@ export const createEvent = async (eventName: string) => {
 };
 
 // ====================== UPDATE EVENT ======================
-export const updateEvent = async (id: string, updateData: any) => {
-  const res = await axios.put(
-    `/backend/api/events/${id}`,
-    { updateData },
-    { withCredentials: true }
-  );
-  return res.data;
+export const updateEvent = async (id: string, data: any) => {
+  const res = await fetch(`/backend/api/events/${id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to update event");
+  }
+
+  return res.json();
 };
 
 // ====================== GET EVENT ======================
