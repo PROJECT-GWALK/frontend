@@ -1,373 +1,720 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from "@/components/ui/card";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Assuming you have an Input component
-import { Textarea } from "@/components/ui/textarea"; // Assuming you have a Textarea component
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Assuming you have a Select component
-import { Checkbox } from "@/components/ui/checkbox"; // Assuming you have a Checkbox component
-import { CalendarIcon, Trash2Icon, UploadCloudIcon } from "lucide-react"; // Icons for calendar and upload
+} from "@/components/ui/select";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Link as LinkIcon,
+  Upload,
+  Users,
+  Gift,
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Info,
+  UserCheck,
+  Award,
+} from "lucide-react";
+import { EventSidebar } from "@/app/(user)/event/[id]/EventSidebar";
 import { getEvent } from "@/utils/apievent";
-import { StepSidebar } from "@/app/(user)/event/[id]/Sidebar";
 
-// --- Extended Type to include form data based on the image and JSON ---
+type SpecialReward = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 type EventDetail = {
   id: string;
   eventName: string;
-  eventCategory?: string; // Added for the select field
-  eventDescription?: string; // Maps to "Description" textarea
+  description?: string;
+  bannerUrl?: string;
   startDate?: string;
-  endDate?: string;
   startTime?: string;
+  endDate?: string;
   endTime?: string;
-  locationName?: string | null; // Maps to "Venue" input
-  isOnlineEvent?: boolean; // Maps to "This is an online event" checkbox
-  // Ticketing (Basic Structure)
-  generalAdmissionPrice?: number;
-  generalAdmissionQuantity?: number;
-  vipPassPrice?: number;
-  vipPassQuantity?: number;
-  // Settings & Visibility
-  eventVisibility?: "Public" | "Private";
-  eventUrlSlug?: string;
-  // Meta
-  currentStep: number;
-  createdAt: string;
-  status?: string;
+  locationPlace?: string;
+  locationLink?: string;
+  isOnline?: boolean;
+  meetingLink?: string;
+  visibility?: "public" | "private";
+
+  maxPresenters?: number;
+  isIndividual?: boolean;
+  maxGroups?: number;
+  maxPeoplePerGroup?: number;
+  submissionStartDate?: string;
+  submissionStartTime?: string;
+  submissionEndDate?: string;
+  submissionEndTime?: string;
+  fileRequirement?: string;
+  linkRequirement?: string;
+
+  hasCommittee?: boolean;
+  committeeCount?: number;
+  committeeReward?: number;
+  hasGuestRewards?: boolean;
+  guestRewardAmount?: number;
+
+  specialRewards?: SpecialReward[];
 };
 
-export default function EventPage() {
+export default function EventEdit() {
   const params = useParams();
   const id = (params?.id as string) ?? "";
+  const [activeSection, setActiveSection] = useState("event-info");
+
+  // Event Information
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [eventBanner, setEventBanner] = useState<File | null>(null);
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [locationPlace, setLocationPlace] = useState("");
+  const [locationLink, setLocationLink] = useState("");
+  const [isOnline, setIsOnline] = useState(false);
+  const [meetingLink, setMeetingLink] = useState("");
+  const [eventVisibility, setEventVisibility] = useState("public");
+
+  // Presenter Details
+  const [maxPresenters, setMaxPresenters] = useState("");
+  const [isIndividual, setIsIndividual] = useState(true);
+  const [maxGroups, setMaxGroups] = useState("");
+  const [maxPeoplePerGroup, setMaxPeoplePerGroup] = useState("");
+  const [submissionStartDate, setSubmissionStartDate] = useState("");
+  const [submissionStartTime, setSubmissionStartTime] = useState("");
+  const [submissionEndDate, setSubmissionEndDate] = useState("");
+  const [submissionEndTime, setSubmissionEndTime] = useState("");
+  const [fileRequirement, setFileRequirement] = useState("");
+  const [linkRequirement, setLinkRequirement] = useState("");
+
+  // Committee & Guest
+  const [hasCommittee, setHasCommittee] = useState(false);
+  const [committeeCount, setCommitteeCount] = useState("");
+  const [committeeReward, setCommitteeReward] = useState("");
+  const [hasGuestRewards, setHasGuestRewards] = useState(false);
+  const [guestRewardAmount, setGuestRewardAmount] = useState("");
+
+  // Special Rewards
+  const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([
+    {
+      id: "1",
+      name: "Best Presentation",
+      description: "Awarded to the most engaging presentation",
+    },
+    { id: "2", name: "Innovation Award", description: "For the most innovative idea presented" },
+  ]);
+
+  const handleAddSpecialReward = () => {
+    const newReward: SpecialReward = {
+      id: Date.now().toString(),
+      name: "",
+      description: "",
+    };
+    setSpecialRewards([...specialRewards, newReward]);
+  };
+
+  const handleRemoveReward = (id: string) => {
+    setSpecialRewards(specialRewards.filter((r) => r.id !== id));
+  };
+
+  const handleRewardChange = (id: string, field: "name" | "description", value: string) => {
+    setSpecialRewards(specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  };
+
+  const handleSave = () => {
+    // toast({
+    //   title: "Event Saved",
+    //   description: "Your event details have been saved successfully.",
+    // });
+  };
+
+  const sections = [
+    { id: "event-info", label: "Event Information", icon: Info },
+    { id: "presenter", label: "Presenter Details", icon: Users },
+    { id: "committee", label: "Committee & Guest", icon: UserCheck },
+    { id: "rewards", label: "Special Rewards", icon: Award },
+  ];
+
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load the initial data from the API and map it to the form state
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
       try {
         const res = await getEvent(id);
-        const apiEvent = res.event;
+        const data: EventDetail = res.event;
 
-        // Map API response to the local state structure, filling in missing fields with defaults
-        const mappedEvent: EventDetail = {
-          id: apiEvent.id,
-          eventName: apiEvent.eventName || "Untitled Event",
-          eventDescription: apiEvent.eventDescription || "",
-          startDate: "10/26/2024", // Placeholder for date/time fields
-          endDate: "10/28/2024",
-          startTime: "09:00 AM",
-          endTime: "05:00 PM",
-          locationName: apiEvent.locationName || "",
-          isOnlineEvent: false, // Default
-          generalAdmissionPrice: 40, // Placeholder for ticketing
-          generalAdmissionQuantity: 500,
-          vipPassPrice: 100,
-          vipPassQuantity: 50,
-          eventVisibility: apiEvent.publicView ? "Public" : "Private",
-          eventUrlSlug: "annual-tech-summit", // Placeholder
-          currentStep: apiEvent.currentStep,
-          createdAt: apiEvent.createdAt,
-          status: apiEvent.status,
-        };
+        setEvent(data);
 
-        setEvent(mappedEvent);
+        // ================= EVENT INFO =================
+        setEventTitle(data.eventName || "");
+        setEventDescription(data.description || "");
+        setStartDate(data.startDate || "");
+        setStartTime(data.startTime || "");
+        setEndDate(data.endDate || "");
+        setEndTime(data.endTime || "");
+        setLocationPlace(data.locationPlace || "");
+        setLocationLink(data.locationLink || "");
+        setIsOnline(Boolean(data.isOnline));
+        setMeetingLink(data.meetingLink || "");
+        setEventVisibility(data.visibility || "public");
+
+        // ================= PRESENTER =================
+        setMaxPresenters(data.maxPresenters?.toString() || "");
+        setIsIndividual(data.isIndividual ?? true);
+        setMaxGroups(data.maxGroups?.toString() || "");
+        setMaxPeoplePerGroup(data.maxPeoplePerGroup?.toString() || "");
+
+        setSubmissionStartDate(data.submissionStartDate || "");
+        setSubmissionStartTime(data.submissionStartTime || "");
+        setSubmissionEndDate(data.submissionEndDate || "");
+        setSubmissionEndTime(data.submissionEndTime || "");
+        setFileRequirement(data.fileRequirement || "");
+        setLinkRequirement(data.linkRequirement || "");
+
+        // ================= COMMITTEE & GUEST =================
+        setHasCommittee(Boolean(data.hasCommittee));
+        setCommitteeCount(data.committeeCount?.toString() || "");
+        setCommitteeReward(data.committeeReward?.toString() || "");
+        setHasGuestRewards(Boolean(data.hasGuestRewards));
+        setGuestRewardAmount(data.guestRewardAmount?.toString() || "");
+
+        // ================= SPECIAL REWARDS =================
+        if (data.specialRewards?.length) {
+          setSpecialRewards(data.specialRewards);
+        }
       } catch (err) {
         console.error("Failed to load event:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [id]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-start pt-20">
-        <Card className="w-full max-w-3xl">
-          <CardHeader>
-            <CardTitle>Loading Event...</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!event) {
-    return (
-      <div className="flex justify-center items-start pt-20">
-        <Card className="w-full max-w-3xl">
-          <CardHeader>
-            <CardTitle>Event Not Found</CardTitle>
-          </CardHeader>
-          <CardFooter>
-            <Link href="/dashboard">
-              <Button variant="outline">Back to Dashboard</Button>
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
-  // Helper function to handle form changes
-  const handleChange = (field: keyof EventDetail, value: any) => {
-    setEvent((prev) => (prev ? { ...prev, [field]: value } : null));
-  };
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* 1. Sidebar */}
-      <StepSidebar currentStep={event.currentStep} />
+    <div className="min-h-screen bg-background">
+      <div className="flex">
+        {/* Sidebar */}
+        <EventSidebar
+          sections={sections}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          eventId={id}
+        />
 
-      {/* 2. Main Content Area (Scrollable Form) */}
-      <div className="flex-1 p-8 overflow-y-auto">
-        {/* --- Form Section: Basic Information --- */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-bold mb-4">Basic Information</h2>
-
-          {/* Event Title */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
-            <Input
-              value={event.eventName}
-              onChange={(e) => handleChange("eventName", e.target.value)}
-              placeholder="Annual Tech Summit 2024"
-            />
-          </div>
-
-          {/* Event Banner */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event Banner</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-400 transition-colors">
-              <UploadCloudIcon className="mx-auto h-10 w-10 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-500">Click to upload or drag and drop</p>
-              <p className="text-xs text-gray-400">JPG, PNG, GIF, or SVG (Max: 800x400px)</p>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <Textarea
-              value={event.eventDescription}
-              onChange={(e) => handleChange("eventDescription", e.target.value)}
-              placeholder="Tell attendees about your event..."
-            />
-          </div>
-        </div>
-
-        {/* --- Form Section: Date, Time & Location (Partial View) --- */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-bold mb-4">Date, Time & Location</h2>
-
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            {/* Start Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <div className="relative">
-                <Input value={event.startDate} readOnly className="pr-10" />
-                <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+        {/* Main Content */}
+        <main className="flex-1 p-6 lg:p-8">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Link href="/">
+                  <Button variant="ghost" size="icon">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Edit Event</h1>
+                  <p className="text-muted-foreground">Update your event details</p>
+                </div>
               </div>
+              <Button onClick={handleSave} className="px-6">
+                Save Changes
+              </Button>
             </div>
 
-            {/* Start Time */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-              <Input value={event.startTime} readOnly />
-            </div>
+            {/* Event Information Section */}
+            <Card id="event-info" className="scroll-mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Info className="h-5 w-5 text-primary" />
+                  Event Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="eventTitle">Event Title</Label>
+                  <Input
+                    id="eventTitle"
+                    placeholder="Enter event title"
+                    value={eventTitle}
+                    onChange={(e) => setEventTitle(e.target.value)}
+                  />
+                </div>
 
-            {/* End Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <div className="relative">
-                <Input value={event.endDate} readOnly className="pr-10" />
-                <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Event Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Tell attendees about your event..."
+                    rows={4}
+                    value={eventDescription}
+                    onChange={(e) => setEventDescription(e.target.value)}
+                  />
+                </div>
 
-            {/* End Time */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-              <Input value={event.endTime} readOnly />
+                <div className="space-y-2">
+                  <Label>Event Banner</Label>
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                    <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG, or GIF (max. 800x400px)
+                    </p>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => setEventBanner(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="startDate"
+                        type="date"
+                        className="pl-10"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="startTime">Start Time</Label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="startTime"
+                        type="time"
+                        className="pl-10"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="endDate">End Date</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="endDate"
+                        type="date"
+                        className="pl-10"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="endTime">End Time</Label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="endTime"
+                        type="time"
+                        className="pl-10"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="locationPlace">Location / Venue</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="locationPlace"
+                      placeholder="e.g. Convention Center, Hall A"
+                      className="pl-10"
+                      value={locationPlace}
+                      onChange={(e) => setLocationPlace(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="locationLink">Location Link (Google Maps)</Label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="locationLink"
+                      placeholder="https://maps.google.com/..."
+                      className="pl-10"
+                      value={locationLink}
+                      onChange={(e) => setLocationLink(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isOnline"
+                    checked={isOnline}
+                    onCheckedChange={(checked) => setIsOnline(checked as boolean)}
+                  />
+                  <Label htmlFor="isOnline" className="cursor-pointer">
+                    This is an online event
+                  </Label>
+                </div>
+
+                {isOnline && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <Label htmlFor="meetingLink">Meeting Link</Label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="meetingLink"
+                        placeholder="https://meet.google.com/..."
+                        className="pl-10"
+                        value={meetingLink}
+                        onChange={(e) => setMeetingLink(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="visibility">Event Visibility</Label>
+                  <Select value={eventVisibility} onValueChange={setEventVisibility}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select visibility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Presenter Details Section */}
+            <Card id="presenter" className="scroll-mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Users className="h-5 w-5 text-primary" />
+                  Presenter Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="maxPresenters">Maximum Presenters in Event</Label>
+                  <Input
+                    id="maxPresenters"
+                    type="number"
+                    placeholder="e.g. 50"
+                    value={maxPresenters}
+                    onChange={(e) => setMaxPresenters(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isIndividual"
+                    checked={isIndividual}
+                    onCheckedChange={(checked) => setIsIndividual(checked as boolean)}
+                  />
+                  <Label htmlFor="isIndividual" className="cursor-pointer">
+                    Individual presenters only
+                  </Label>
+                </div>
+
+                {!isIndividual && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxGroups">Maximum Groups</Label>
+                      <Input
+                        id="maxGroups"
+                        type="number"
+                        placeholder="e.g. 20"
+                        value={maxGroups}
+                        onChange={(e) => setMaxGroups(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="maxPeoplePerGroup">Max People per Group</Label>
+                      <Input
+                        id="maxPeoplePerGroup"
+                        type="number"
+                        placeholder="e.g. 5"
+                        value={maxPeoplePerGroup}
+                        onChange={(e) => setMaxPeoplePerGroup(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t pt-6">
+                  <h4 className="font-medium mb-4">Submission Period</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="subStartDate">Start Date</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="subStartDate"
+                          type="date"
+                          className="pl-10"
+                          value={submissionStartDate}
+                          onChange={(e) => setSubmissionStartDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="subStartTime">Start Time</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="subStartTime"
+                          type="time"
+                          className="pl-10"
+                          value={submissionStartTime}
+                          onChange={(e) => setSubmissionStartTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="subEndDate">End Date</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="subEndDate"
+                          type="date"
+                          className="pl-10"
+                          value={submissionEndDate}
+                          onChange={(e) => setSubmissionEndDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="subEndTime">End Time</Label>
+                      <div className="relative">
+                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="subEndTime"
+                          type="time"
+                          className="pl-10"
+                          value={submissionEndTime}
+                          onChange={(e) => setSubmissionEndTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h4 className="font-medium mb-4">Submission Requirements</h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fileRequirement">File Requirement</Label>
+                      <Textarea
+                        id="fileRequirement"
+                        placeholder="e.g. PDF presentation, max 10MB, landscape orientation"
+                        value={fileRequirement}
+                        onChange={(e) => setFileRequirement(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="linkRequirement">Link Requirement</Label>
+                      <Textarea
+                        id="linkRequirement"
+                        placeholder="e.g. YouTube video link, Google Drive folder"
+                        value={linkRequirement}
+                        onChange={(e) => setLinkRequirement(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Committee & Guest Section */}
+            <Card id="committee" className="scroll-mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  Committee & Guest Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="hasCommittee"
+                      checked={hasCommittee}
+                      onCheckedChange={(checked) => setHasCommittee(checked as boolean)}
+                    />
+                    <Label htmlFor="hasCommittee" className="cursor-pointer">
+                      Event has committee members
+                    </Label>
+                  </div>
+
+                  {hasCommittee && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 animate-in fade-in slide-in-from-top-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="committeeCount">Number of Committee Members</Label>
+                        <Input
+                          id="committeeCount"
+                          type="number"
+                          placeholder="e.g. 10"
+                          value={committeeCount}
+                          onChange={(e) => setCommitteeCount(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="committeeReward">Virtual Rewards per Person</Label>
+                        <div className="relative">
+                          <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="committeeReward"
+                            type="number"
+                            placeholder="e.g. 100"
+                            className="pl-10"
+                            value={committeeReward}
+                            onChange={(e) => setCommitteeReward(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="hasGuestRewards"
+                      checked={hasGuestRewards}
+                      onCheckedChange={(checked) => setHasGuestRewards(checked as boolean)}
+                    />
+                    <Label htmlFor="hasGuestRewards" className="cursor-pointer">
+                      Provide virtual rewards for guests
+                    </Label>
+                  </div>
+
+                  {hasGuestRewards && (
+                    <div className="pl-6 animate-in fade-in slide-in-from-top-2">
+                      <div className="space-y-2 max-w-xs">
+                        <Label htmlFor="guestRewardAmount">Virtual Rewards Amount per Guest</Label>
+                        <div className="relative">
+                          <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="guestRewardAmount"
+                            type="number"
+                            placeholder="e.g. 50"
+                            className="pl-10"
+                            value={guestRewardAmount}
+                            onChange={(e) => setGuestRewardAmount(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Special Rewards Section */}
+            <Card id="rewards" className="scroll-mt-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Award className="h-5 w-5 text-primary" />
+                  Special Rewards
+                </CardTitle>
+                <Button onClick={handleAddSpecialReward} size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Reward
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {specialRewards.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Gift className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No special rewards added yet</p>
+                    <p className="text-sm">Click "Add Reward" to create one</p>
+                  </div>
+                ) : (
+                  specialRewards.map((reward, index) => (
+                    <div key={reward.id} className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Reward #{index + 1}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleRemoveReward(reward.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Reward Name</Label>
+                        <Input
+                          placeholder="e.g. Best Presentation"
+                          value={reward.name}
+                          onChange={(e) => handleRewardChange(reward.id, "name", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          placeholder="Describe what this reward is for..."
+                          value={reward.description}
+                          onChange={(e) =>
+                            handleRewardChange(reward.id, "description", e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Save Button (Mobile) */}
+            <div className="lg:hidden">
+              <Button onClick={handleSave} className="w-full">
+                Save Changes
+              </Button>
             </div>
           </div>
-
-          {/* Online Event Checkbox */}
-          <div className="flex items-center space-x-2 mb-4">
-            <Checkbox
-              id="online"
-              checked={event.isOnlineEvent}
-              onCheckedChange={(checked) => handleChange("isOnlineEvent", checked)}
-            />
-            <label
-              htmlFor="online"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              This is an online event
-            </label>
-          </div>
-
-          {/* Venue */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
-            <Input
-              value={event.locationName || ""}
-              onChange={(e) => handleChange("locationName", e.target.value)}
-              placeholder="e.g. Convention Center Hall A"
-            />
-          </div>
-        </div>
-
-        {/* --- Form Section: Ticketing (Partial View) --- */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Ticketing</h2>
-            <Button variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
-              Add Ticket Type
-            </Button>
-          </div>
-
-          {/* General Admission */}
-          <div className="border p-4 rounded-lg mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">General Admission</h3>
-              <Trash2Icon className="h-4 w-4 text-gray-400 cursor-pointer hover:text-red-500" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Price</label>
-                <Input
-                  type="number"
-                  value={event.generalAdmissionPrice}
-                  onChange={(e) =>
-                    handleChange("generalAdmissionPrice", parseFloat(e.target.value))
-                  }
-                  placeholder="Price"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Quantity</label>
-                <Input
-                  type="number"
-                  value={event.generalAdmissionQuantity}
-                  onChange={(e) =>
-                    handleChange("generalAdmissionQuantity", parseInt(e.target.value))
-                  }
-                  placeholder="Quantity"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* VIP Pass */}
-          <div className="border p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">VIP Pass</h3>
-              <Trash2Icon className="h-4 w-4 text-gray-400 cursor-pointer hover:text-red-500" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Price</label>
-                <Input
-                  type="number"
-                  value={event.vipPassPrice}
-                  onChange={(e) => handleChange("vipPassPrice", parseFloat(e.target.value))}
-                  placeholder="Price"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Quantity</label>
-                <Input
-                  type="number"
-                  value={event.vipPassQuantity}
-                  onChange={(e) => handleChange("vipPassQuantity", parseInt(e.target.value))}
-                  placeholder="Quantity"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* --- Form Section: Settings & Visibility (Partial View) --- */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-bold mb-4">Settings & Visibility</h2>
-
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            {/* Event Visibility */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Event Visibility
-              </label>
-              <Select
-                onValueChange={(value) => handleChange("eventVisibility", value)}
-                defaultValue={event.eventVisibility}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select visibility" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Public">Public</SelectItem>
-                  <SelectItem value="Private">Private</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Event URL */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Event URL</label>
-              <div className="flex rounded-md shadow-sm">
-                <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
-                  eventstream.com/
-                </span>
-                <Input
-                  value={event.eventUrlSlug}
-                  onChange={(e) => handleChange("eventUrlSlug", e.target.value)}
-                  className="rounded-l-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-            <Input placeholder="Add tags separated by commas (e.g. tech, innovation, future)" />
-          </div>
-        </div>
-
-        {/* --- Footer/Save Button (Optional, not visible in image but good practice) --- */}
-        <div className="flex justify-end pt-4">
-          <Link href="/dashboard">
-            <Button variant="outline" className="mr-2">
-              Cancel
-            </Button>
-          </Link>
-          <Button>Save and Continue</Button>
-        </div>
+        </main>
       </div>
     </div>
   );
 }
-
-// NOTE: You'll need to install or ensure these Lucide icons are available: CalendarIcon, UploadCloudIcon, Trash2Icon
-// `Trash2Icon` is used for the ticketing section.
-// The provided `getEvent` function is assumed to be working correctly.
-// I took the liberty of adding mock data for fields not present in your JSON but visible in the image (like dates, categories, ticketing).
