@@ -15,6 +15,16 @@ export const createEvent = async (eventName: string) => {
   return res.data;
 };
 
+// ====================== UPDATE EVENT ======================
+export const updateEvent = async (id: string, updateData: any) => {
+  const res = await axios.put(
+    `/backend/api/events/${id}`,
+    { updateData },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
 // ====================== GET EVENT ======================
 export const getEvent = async (id: string) => {
   const res = await axios.get(`/backend/api/events/${id}`, {
