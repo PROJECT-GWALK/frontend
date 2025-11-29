@@ -17,11 +17,12 @@ export const createEvent = async (eventName: string) => {
 
 // ====================== UPDATE EVENT ======================
 export const updateEvent = async (id: string, data: any) => {
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
   const res = await fetch(`/backend/api/events/${id}`, {
     method: "PUT",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    headers: isFormData ? undefined : { "Content-Type": "application/json" },
+    body: isFormData ? data : JSON.stringify(data),
   });
 
   if (!res.ok) {
@@ -46,4 +47,21 @@ export const getMyDraftEvents = async () => {
     withCredentials: true,
   });
   return res.data; // { message, events }
+};
+
+// ====================== PUBLISH EVENT ======================
+export const publishEvent = async (id: string) => {
+  const res = await axios.post(`/backend/api/events/${id}/publish`, {}, {
+    withCredentials: true,
+  });
+  return res.data; // { message, event }
+};
+
+// ====================== CHECK EVENT NAME ======================
+export const checkEventName = async (eventName: string) => {
+  const res = await axios.get(`/backend/api/events/check-name/check`, {
+    params: { eventName },
+    withCredentials: true,
+  });
+  return res.data; // { message, available }
 };

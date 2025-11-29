@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 import { settingsSchema, User } from "@/utils/types";
 import { getCurrentUser, updateCurrentUser } from "@/utils/apiuser";
-import ImageCropDialog from "@/components/user/image-crop-dialog";
+import ImageCropDialog from "@/lib/image-crop-dialog";
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 

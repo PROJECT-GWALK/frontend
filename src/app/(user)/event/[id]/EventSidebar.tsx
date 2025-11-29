@@ -14,6 +14,7 @@ type EventSidebarProps = {
   activeSection: string;
   onSectionChange: (section: string) => void;
   eventId?: string;
+  onSaveDraft?: () => void;
 };
 
 export function EventSidebar({
@@ -21,6 +22,7 @@ export function EventSidebar({
   activeSection,
   onSectionChange,
   eventId,
+  onSaveDraft,
 }: EventSidebarProps) {
   const handleSectionClick = (sectionId: string) => {
     onSectionChange(sectionId);
@@ -33,8 +35,8 @@ export function EventSidebar({
   return (
     <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-card border-r border-border">
       <div className="p-6 border-b border-border">
-        <h2 className="font-semibold text-foreground">Edit Event</h2>
-        <p className="text-sm text-muted-foreground mt-1">Fill in the details below</p>
+        <h2 className="font-semibold text-foreground">Edit Event / แก้ไขอีเวนต์</h2>
+        <p className="text-sm text-muted-foreground mt-1">Fill in the details below / กรอกรายละเอียดด้านล่าง</p>
       </div>
 
       <nav className="flex-1 p-4">
@@ -62,8 +64,8 @@ export function EventSidebar({
       </nav>
 
       <div className="p-4 border-t border-border">
-        <Button variant="secondary" className="w-full" asChild>
-          <Link href="/">Save as Template</Link>
+        <Button variant="secondary" className="w-full" onClick={() => onSaveDraft?.()}>
+          Save as Draft / บันทึกดราฟต์
         </Button>
       </div>
     </aside>

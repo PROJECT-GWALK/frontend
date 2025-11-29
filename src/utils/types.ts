@@ -41,3 +41,44 @@ export type UserActiveChartData = {
   active: number;
   fullLabel: string;
 };
+
+export type EventDetail = {
+  id: string;
+  eventName: string;
+  eventDescription?: string;
+  bannerUrl?: string;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  locationPlace?: string;
+  locationLink?: string;
+  isOnline?: boolean;
+  meetingLink?: string;
+  visibility?: "public" | "private";
+
+  maxPresenters?: number;
+  isIndividual?: boolean;
+  maxGroups?: number;
+  maxPeoplePerGroup?: number;
+  submissionStartDate?: string;
+  submissionStartTime?: string;
+  submissionEndDate?: string;
+  submissionEndTime?: string;
+  fileRequirement?: string;
+  linkRequirement?: string;
+
+  hasCommittee?: boolean;
+  committeeCount?: number;
+  committeeReward?: number;
+  hasGuestRewards?: boolean;
+  guestRewardAmount?: number;
+
+  specialRewards?: SpecialReward[];
+};
+
+export type SpecialReward = {
+  id: string;
+  name: string;
+  description: string;
+};

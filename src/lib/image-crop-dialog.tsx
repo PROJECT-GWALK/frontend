@@ -17,6 +17,8 @@ type ImageCropDialogProps = {
   aspect?: number; // default 1 (square)
   title?: string;
   quality?: number;
+  outputWidth?: number;
+  outputHeight?: number;
 };
 
 export default function ImageCropDialog({
@@ -30,6 +32,8 @@ export default function ImageCropDialog({
   aspect = 1,
   title = "Crop to square",
   quality = 0.92,
+  outputWidth,
+  outputHeight,
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -48,16 +52,18 @@ export default function ImageCropDialog({
       img.src = url;
     });
 
-  const getCroppedBlob = async (imageSrc: string, cropPixels: Area, mime: string) => {
+  const getCroppedBlob = async (imageSrc: string, cropPixels: Area, mime: string, outW?: number, outH?: number) => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas not supported");
 
-    const width = Math.round(cropPixels.width);
-    const height = Math.round(cropPixels.height);
-    canvas.width = width;
-    canvas.height = height;
+    const srcW = Math.round(cropPixels.width);
+    const srcH = Math.round(cropPixels.height);
+    const targetW = outW ?? srcW;
+    const targetH = outH ?? srcH;
+    canvas.width = targetW;
+    canvas.height = targetH;
 
     ctx.drawImage(
       image,
@@ -67,8 +73,8 @@ export default function ImageCropDialog({
       Math.round(cropPixels.height),
       0,
       0,
-      width,
-      height
+      targetW,
+      targetH
     );
 
     return new Promise<Blob>((resolve, reject) => {
@@ -86,8 +92,8 @@ export default function ImageCropDialog({
   const handleConfirm = async () => {
     if (!src || !croppedAreaPixels) return;
     const mime = fileType || "image/png";
-    const blob = await getCroppedBlob(src, croppedAreaPixels, mime);
-    const name = (fileName && `cropped-${fileName}`) || "avatar-cropped.png";
+    const blob = await getCroppedBlob(src, croppedAreaPixels, mime, outputWidth, outputHeight);
+    const name = (fileName && `cropped-${fileName}`) || "banner-cropped.png";
     const newFile = new File([blob], name, { type: blob.type });
     const url = URL.createObjectURL(newFile);
     onConfirm(newFile, url);
