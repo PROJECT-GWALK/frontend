@@ -56,6 +56,7 @@ export type EventDetail = {
   isOnline?: boolean;
   meetingLink?: string;
   visibility?: "public" | "private";
+  status?: "DRAFT" | "PUBLISHED";
 
   maxPresenters?: number;
   isIndividual?: boolean;
@@ -81,4 +82,20 @@ export type SpecialReward = {
   id: string;
   name: string;
   description: string;
+};
+
+export type DraftEvent = {
+  id: string;
+  eventName: string;
+  createdAt: string;
+  status?: "DRAFT" | "PUBLISHED";
+};
+
+export type MyEvent = {
+  id: string;
+  eventName: string;
+  createdAt: string;
+  status: "PUBLISHED";
+  role: string | null;
+  isLeader: boolean;
 };

@@ -65,3 +65,10 @@ export const checkEventName = async (eventName: string) => {
   });
   return res.data; // { message, available }
 };
+
+export const getMyEvents = async () => {
+  const res = await axios.get("/backend/api/events/me", {
+    withCredentials: true,
+  });
+  return res.data; // { message, events }
+};

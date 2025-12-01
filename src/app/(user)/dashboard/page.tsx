@@ -18,40 +18,38 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { createEvent, getMyDraftEvents } from "@/utils/apievent";
-
-type DraftEvent = {
-  id: string;
-  eventName: string;
-  createdAt: string;
-  status?: "DRAFT" | "PUBLISHED";
-};
+import { createEvent, getMyDraftEvents, getMyEvents } from "@/utils/apievent";
+import { DraftEvent, MyEvent } from "@/utils/types";
 
 export default function DashboardPage() {
   const [drafts, setDrafts] = useState<DraftEvent[]>([]);
+  const [myEvents, setMyEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [newEventName, setNewEventName] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "DRAFT" | "LIVE" | "COMPLETED">("ALL");
 
   useEffect(() => {
-    const fetchDrafts = async () => {
+    const load = async () => {
       try {
-        const res = await getMyDraftEvents();
-        setDrafts(res.events || []);
+        const [dRes, eRes] = await Promise.all([
+          getMyDraftEvents(),
+          getMyEvents(),
+        ]);
+        setDrafts(dRes.events || []);
+        setMyEvents(eRes.events || []);
       } catch (err) {
-        console.error("Failed to load drafts:", err);
+        console.error("Failed to load events:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchDrafts();
+    load();
   }, []);
 
   const handleCreateEvent = async (eventName: string) => {
     try {
       await createEvent(eventName);
-      // Refresh drafts after creation
       const res = await getMyDraftEvents();
       setDrafts(res.events || []);
     } catch (err) {
@@ -138,14 +136,14 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <h3 className="font-semibold mb-3">My Events</h3>
+                <h3 className="font-semibold mb-3">My Drafts</h3>
                 {loading && <p>Loading...</p>}
-                {!loading && drafts.filter((d) => (filter === "ALL" || (filter === "DRAFT" ? (d.status ? d.status === "DRAFT" : true) : false)) && d.eventName.toLowerCase().includes(search.toLowerCase())).length === 0 && (
-                  <p className="text-gray-500">No events found.</p>
+                {!loading && drafts.filter((d) => (filter === "ALL" || filter === "DRAFT") && d.eventName.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+                  <p className="text-gray-500">No drafts found.</p>
                 )}
                 <div className="space-y-3">
                   {drafts
-                    .filter((d) => (filter === "ALL" || (filter === "DRAFT" ? (d.status ? d.status === "DRAFT" : true) : false)) && d.eventName.toLowerCase().includes(search.toLowerCase()))
+                    .filter((d) => (filter === "ALL" || filter === "DRAFT") && d.eventName.toLowerCase().includes(search.toLowerCase()))
                     .map((event) => (
                       <Card key={event.id} className="overflow-hidden">
                         <div className="grid grid-cols-[96px_1fr_auto] gap-4 items-center p-4">
@@ -179,6 +177,59 @@ export default function DashboardPage() {
                         </div>
                       </Card>
                     ))}
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="font-semibold mb-3">My Participating Events</h3>
+                  {myEvents.filter((e) => {
+                    const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
+                    if (filter === "ALL") return matchText;
+                    if (filter === "LIVE") return matchText && e.status === "PUBLISHED";
+                    return filter !== "DRAFT" && matchText;
+                  }).length === 0 && (
+                    <p className="text-gray-500">No events found.</p>
+                  )}
+                  <div className="space-y-3">
+                    {myEvents
+                      .filter((e) => {
+                        const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
+                        if (filter === "ALL") return matchText;
+                        if (filter === "LIVE") return matchText && e.status === "PUBLISHED";
+                        return filter !== "DRAFT" && matchText;
+                      })
+                      .map((event) => (
+                        <Card key={event.id} className="overflow-hidden">
+                          <div className="grid grid-cols-[96px_1fr_auto] gap-4 items-center p-4">
+                            <div className="relative">
+                              <div className="rounded-md bg-gradient-to-br from-brand-tertiary/30 to-brand-primary/30 h-20 w-24" />
+                              <span className="absolute top-2 left-2 px-2 py-1 text-xs font-medium rounded-2xl bg-green-500 text-white">Live</span>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">{event.eventName}</h4>
+                              <p className="text-xs text-muted-foreground">{event.role}{event.isLeader ? " • Leader" : ""}</p>
+                              <p className="text-sm text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Link href={`/event/${event.id}`}>
+                                <Button>View</Button>
+                              </Link>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/event/${event.id}`}>Open</Link>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>

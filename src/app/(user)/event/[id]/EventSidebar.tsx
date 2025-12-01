@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Save } from "lucide-react";
 
 type Section = {
   id: string;
@@ -64,8 +64,12 @@ export function EventSidebar({
       </nav>
 
       <div className="p-4 border-t border-border">
-        <Button variant="secondary" className="w-full" onClick={() => onSaveDraft?.()}>
-          Save as Draft / บันทึกดราฟต์
+        <Button
+          variant="secondary"
+          className="w-full h-10 rounded-lg shadow-xs hover:shadow-md transition"
+          onClick={() => onSaveDraft?.()}
+        >
+          <Save className="mr-2 h-4 w-4" /> Save as Draft
         </Button>
       </div>
     </aside>
