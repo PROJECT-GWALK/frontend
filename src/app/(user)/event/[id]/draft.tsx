@@ -153,6 +153,74 @@ export default function EventDraft() {
     );
   };
 
+  const toISO = (date: string, time: string) => (date && time ? `${date}T${time}` : null);
+  const toDate = (date?: string, time?: string) => (date && time ? new Date(`${date}T${time}`) : null);
+  const buildPayload = (opts?: { isoDates?: boolean }) => {
+    const iso = Boolean(opts?.isoDates);
+    const sv = iso ? toDate(startDate, startTime)?.toISOString() : toISO(startDate, startTime);
+    const ev = iso ? toDate(endDate, endTime)?.toISOString() : toISO(endDate, endTime);
+    const sj = iso ? toDate(submissionStartDate, submissionStartTime)?.toISOString() : toISO(submissionStartDate, submissionStartTime);
+    const ej = iso ? toDate(submissionEndDate, submissionEndTime)?.toISOString() : toISO(submissionEndDate, submissionEndTime);
+    return {
+      eventName: eventTitle,
+      eventDescription,
+      location: locationLink,
+      locationName: locationPlace,
+      publicView: eventVisibility === "public",
+      startView: sv,
+      endView: ev,
+      startJoinDate: sj,
+      endJoinDate: ej,
+      maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
+      maxTeams: maxGroups ? parseInt(maxGroups) : null,
+      virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
+      virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
+    };
+  };
+  const buildFormData = (payload: any, file: File) => {
+    const formData = new FormData();
+    Object.entries(payload).forEach(([k, v]) => {
+      if (v !== null && v !== undefined) formData.append(k, typeof v === "string" ? v : String(v));
+    });
+    formData.append("file", file);
+    return formData;
+  };
+  const ensureNameAvailable = async () => {
+    if (!eventTitle.trim()) return false;
+    if (eventTitle.trim() === originalTitle) return true;
+    try {
+      setCheckingName(true);
+      const res = await checkEventName(eventTitle.trim());
+      const ok = Boolean(res?.available);
+      setNameChecked(ok);
+      if (!ok) toast.error("ชื่อ Event ถูกใช้แล้ว");
+      return ok;
+    } catch {
+      setNameChecked(null);
+      toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+      return false;
+    } finally {
+      setCheckingName(false);
+    }
+  };
+  const validatePublish = () => {
+    const errors: string[] = [];
+    if (!eventTitle.trim()) errors.push("กรุณากรอก Event Title");
+    if (!(startDate && startTime)) errors.push("กรุณากรอก Start View วันที่และเวลา");
+    if (!(endDate && endTime)) errors.push("กรุณากรอก End View วันที่และเวลา");
+    const sv = toDate(startDate, startTime);
+    const ev = toDate(endDate, endTime);
+    if (sv && ev && sv > ev) errors.push("Start View ต้องอยู่ก่อน End View");
+    const hasJoinInput = Boolean(submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime);
+    const sj = toDate(submissionStartDate, submissionStartTime);
+    const ej = toDate(submissionEndDate, submissionEndTime);
+    if (hasJoinInput) {
+      if (!(submissionStartDate && submissionStartTime)) errors.push("กรุณากรอก Submission Start วันที่และเวลา");
+      if (!(submissionEndDate && submissionEndTime)) errors.push("กรุณากรอก Submission End วันที่และเวลา");
+      if (sj && ej && sj > ej) errors.push("Submission Start ต้องอยู่ก่อน Submission End");
+    }
+    return errors;
+  };
   const openFilePicker = () => {
     fileInputRef.current?.click();
   };
@@ -211,95 +279,11 @@ export default function EventDraft() {
     toast.info("กำลังบันทึก Draft...");
 
     try {
-      if (eventTitle.trim() !== originalTitle) {
-        try {
-          setCheckingName(true);
-          const res = await checkEventName(eventTitle.trim());
-          const ok = Boolean(res?.available);
-          setNameChecked(ok);
-          if (!ok) {
-            toast.error("ชื่อ Event ถูกใช้แล้ว");
-            return;
-          }
-        } catch (e) {
-          console.error(e);
-          toast.error("ตรวจสอบชื่อไม่สำเร็จ");
-          return;
-        } finally {
-          setCheckingName(false);
-        }
-      }
-
-      const payload: any = {
-        eventName: eventTitle,
-        eventDescription,
-        location: locationLink,
-        locationName: locationPlace,
-        publicView: eventVisibility === "public",
-        startView: startDate && startTime ? `${startDate}T${startTime}` : null,
-        endView: endDate && endTime ? `${endDate}T${endTime}` : null,
-        startJoinDate:
-          submissionStartDate && submissionStartTime
-            ? `${submissionStartDate}T${submissionStartTime}`
-            : null,
-        endJoinDate:
-          submissionEndDate && submissionEndTime
-            ? `${submissionEndDate}T${submissionEndTime}`
-            : null,
-        maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
-        maxTeams: maxGroups ? parseInt(maxGroups) : null,
-        virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
-        virtualRewardCommittee:
-          hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
-      };
-
-      if (eventBanner) {
-        const formData = new FormData();
-        formData.append("eventName", payload.eventName || "");
-        formData.append("eventDescription", payload.eventDescription || "");
-        formData.append("location", payload.location || "");
-        formData.append("locationName", payload.locationName || "");
-        formData.append("publicView", String(payload.publicView));
-        if (payload.startView) formData.append("startView", payload.startView);
-        if (payload.endView) formData.append("endView", payload.endView);
-        if (payload.startJoinDate)
-          formData.append("startJoinDate", payload.startJoinDate);
-        if (payload.endJoinDate)
-          formData.append("endJoinDate", payload.endJoinDate);
-        if (
-          payload.maxTeamMembers !== null &&
-          payload.maxTeamMembers !== undefined
-        ) {
-          formData.append("maxTeamMembers", String(payload.maxTeamMembers));
-        }
-        if (payload.maxTeams !== null && payload.maxTeams !== undefined) {
-          formData.append("maxTeams", String(payload.maxTeams));
-        }
-        if (
-          payload.virtualRewardGuest !== null &&
-          payload.virtualRewardGuest !== undefined
-        ) {
-          formData.append(
-            "virtualRewardGuest",
-            String(payload.virtualRewardGuest)
-          );
-        }
-        if (
-          payload.virtualRewardCommittee !== null &&
-          payload.virtualRewardCommittee !== undefined
-        ) {
-          formData.append(
-            "virtualRewardCommittee",
-            String(payload.virtualRewardCommittee)
-          );
-        }
-        formData.append("file", eventBanner);
-
-        await updateEvent(id, formData);
-      } else {
-        await updateEvent(id, payload);
-      }
-
+      const ok = await ensureNameAvailable();
+      if (!ok) return;
+      const payload = buildPayload({ isoDates: false });
+      const data = eventBanner ? buildFormData(payload, eventBanner) : payload;
+      await updateEvent(id, data);
       toast.success("บันทึก Draft สำเร็จ");
     } catch (err: any) {
       console.error(err);
@@ -310,131 +294,22 @@ export default function EventDraft() {
   const handlePublish = async () => {
     if (!id) return;
 
-    if (eventTitle.trim() !== originalTitle) {
-      try {
-        setCheckingName(true);
-        const res = await checkEventName(eventTitle.trim());
-        const ok = Boolean(res?.available);
-        setNameChecked(ok);
-        if (!ok) {
-          toast.error("ชื่อ Event ถูกใช้แล้ว");
-          return;
-        }
-      } catch (e) {
-        console.error(e);
-        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
-        return;
-      } finally {
-        setCheckingName(false);
-      }
-    }
+    const ok = await ensureNameAvailable();
+    if (!ok) return;
 
-    const errors: string[] = [];
-    if (!eventTitle.trim()) errors.push("กรุณากรอก Event Title");
-    if (!(startDate && startTime))
-      errors.push("กรุณากรอก Start View วันที่และเวลา");
-    if (!(endDate && endTime)) errors.push("กรุณากรอก End View วันที่และเวลา");
-    const sv =
-      startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
-    const ev = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
-    if (sv && ev && sv > ev) errors.push("Start View ต้องอยู่ก่อน End View");
-
-    const hasJoinInput = Boolean(
-      submissionStartDate ||
-        submissionStartTime ||
-        submissionEndDate ||
-        submissionEndTime
-    );
-    const sj =
-      submissionStartDate && submissionStartTime
-        ? new Date(`${submissionStartDate}T${submissionStartTime}`)
-        : null;
-    const ej =
-      submissionEndDate && submissionEndTime
-        ? new Date(`${submissionEndDate}T${submissionEndTime}`)
-        : null;
-    if (hasJoinInput) {
-      if (!(submissionStartDate && submissionStartTime))
-        errors.push("กรุณากรอก Submission Start วันที่และเวลา");
-      if (!(submissionEndDate && submissionEndTime))
-        errors.push("กรุณากรอก Submission End วันที่และเวลา");
-      if (sj && ej && sj > ej)
-        errors.push("Submission Start ต้องอยู่ก่อน Submission End");
-    }
-
+    const errors = validatePublish();
     if (errors.length) {
       toast.error(errors.join("\n"));
       return;
     }
 
     try {
-      const payload: any = {
-        eventName: eventTitle,
-        eventDescription,
-        location: locationLink,
-        locationName: locationPlace,
-        publicView: eventVisibility === "public",
-        startView: sv ? sv.toISOString() : null,
-        endView: ev ? ev.toISOString() : null,
-        startJoinDate: sj ? sj.toISOString() : null,
-        endJoinDate: ej ? ej.toISOString() : null,
-        maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
-        maxTeams: maxGroups ? parseInt(maxGroups) : null,
-        virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
-        virtualRewardCommittee:
-          hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
-      };
-
-      if (eventBanner) {
-        const formData = new FormData();
-        formData.append("eventName", payload.eventName || "");
-        formData.append("eventDescription", payload.eventDescription || "");
-        formData.append("location", payload.location || "");
-        formData.append("locationName", payload.locationName || "");
-        formData.append("publicView", String(payload.publicView));
-        if (payload.startView) formData.append("startView", payload.startView);
-        if (payload.endView) formData.append("endView", payload.endView);
-        if (payload.startJoinDate)
-          formData.append("startJoinDate", payload.startJoinDate);
-        if (payload.endJoinDate)
-          formData.append("endJoinDate", payload.endJoinDate);
-        if (
-          payload.maxTeamMembers !== null &&
-          payload.maxTeamMembers !== undefined
-        )
-          formData.append("maxTeamMembers", String(payload.maxTeamMembers));
-        if (payload.maxTeams !== null && payload.maxTeams !== undefined)
-          formData.append("maxTeams", String(payload.maxTeams));
-        if (
-          payload.virtualRewardGuest !== null &&
-          payload.virtualRewardGuest !== undefined
-        )
-          formData.append(
-            "virtualRewardGuest",
-            String(payload.virtualRewardGuest)
-          );
-        if (
-          payload.virtualRewardCommittee !== null &&
-          payload.virtualRewardCommittee !== undefined
-        )
-          formData.append(
-            "virtualRewardCommittee",
-            String(payload.virtualRewardCommittee)
-          );
-        formData.append("file", eventBanner);
-        await updateEvent(id, formData);
-      } else {
-        await updateEvent(id, payload);
-      }
+      const payload = buildPayload({ isoDates: false });
+      const data = eventBanner ? buildFormData(payload, eventBanner) : payload;
+      await updateEvent(id, data);
       await publishEvent(id);
-      // เรียก api public หลังจาก publish เสร็จ
-      try {
-        await publishEvent(id);
-        window.location.reload();
-      } catch (e) {
-        console.error("Failed to call public API:", e);
-      }
       toast.success("เผยแพร่ Event สำเร็จ");
+      window.location.reload();
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || "Error publishing event");
@@ -757,6 +632,8 @@ export default function EventDraft() {
                           id="startTime"
                           type="time"
                           step="60"
+                          min="00:00"
+                          max="23:59"
                           className="pl-10"
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
@@ -811,6 +688,8 @@ export default function EventDraft() {
                           id="endTime"
                           type="time"
                           step="60"
+                          min="00:00"
+                          max="23:59"
                           className="pl-10"
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
@@ -961,6 +840,8 @@ export default function EventDraft() {
                             id="subStartTime"
                             type="time"
                             step="60"
+                            min="00:00"
+                            max="23:59"
                             className="pl-10"
                             value={submissionStartTime}
                             onChange={(e) =>
@@ -1018,6 +899,8 @@ export default function EventDraft() {
                             id="subEndTime"
                             type="time"
                             step="60"
+                            min="00:00"
+                            max="23:59"
                             className="pl-10"
                             value={submissionEndTime}
                             onChange={(e) =>
