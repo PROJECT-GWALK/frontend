@@ -25,12 +25,27 @@ export const updateEvent = async (id: string, data: any) => {
     body: isFormData ? data : JSON.stringify(data),
   });
 
+  const contentType = res.headers.get("content-type") || "";
+
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Failed to update event");
+    let message = `Failed to update event (${res.status})`;
+    try {
+      if (contentType.includes("application/json")) {
+        const errorData = await res.json();
+        message = errorData?.message || message;
+      } else {
+        const text = await res.text();
+        message = text || message;
+      }
+    } catch {}
+    throw new Error(message);
   }
 
-  return res.json();
+  if (contentType.includes("application/json")) {
+    return res.json();
+  } else {
+    return { message: await res.text() };
+  }
 };
 
 // ====================== GET EVENT ======================
