@@ -16,13 +16,25 @@ export const createEvent = async (eventName: string) => {
 };
 
 // ====================== UPDATE EVENT ======================
-export const updateEvent = async (id: string, data: any) => {
+export const updateEvent = async (id: string, data: any, opts?: { removeImage?: boolean }) => {
   const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  let body: any;
+  let headers: Record<string, string> | undefined = undefined;
+  if (isFormData) {
+    const fd = data as FormData;
+    if (opts?.removeImage) fd.append("imageCover", "null");
+    body = fd;
+  } else {
+    const payload = opts?.removeImage ? { ...data, imageCover: null } : data;
+    headers = { "Content-Type": "application/json" };
+    body = JSON.stringify(payload);
+  }
+
   const res = await fetch(`/backend/api/events/${id}`, {
     method: "PUT",
     credentials: "include",
-    headers: isFormData ? undefined : { "Content-Type": "application/json" },
-    body: isFormData ? data : JSON.stringify(data),
+    headers,
+    body,
   });
 
   const contentType = res.headers.get("content-type") || "";
@@ -79,6 +91,13 @@ export const checkEventName = async (eventName: string) => {
     withCredentials: true,
   });
   return res.data; // { message, available }
+};
+
+export const deleteEvent = async (id: string) => {
+  const res = await axios.delete(`/backend/api/events/${id}`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, deletedId }
 };
 
 export const getMyEvents = async () => {

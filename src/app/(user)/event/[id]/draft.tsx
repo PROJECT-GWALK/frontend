@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, useRef, type ChangeEvent } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import { EventSidebar } from "@/app/(user)/event/[id]/EventSidebar";
 import {
@@ -44,10 +53,12 @@ import {
   publishEvent,
   updateEvent,
   checkEventName,
+  deleteEvent,
 } from "@/utils/apievent";
 import { EventDetail } from "@/utils/types";
 import { toast } from "sonner";
 import ImageCropDialog from "@/lib/image-crop-dialog";
+import { AxiosError } from "axios";
 
 type SpecialReward = {
   id: string;
@@ -55,9 +66,33 @@ type SpecialReward = {
   description: string;
 };
 
+type EventUpdatePayload = {
+  eventName: string;
+  eventDescription: string;
+  location: string;
+  locationName: string;
+  publicView: boolean;
+  startView: string | null;
+  endView: string | null;
+  startJoinDate: string | null;
+  endJoinDate: string | null;
+  maxTeamMembers: number | null;
+  maxTeams: number | null;
+  virtualRewardGuest: number;
+  virtualRewardCommittee: number;
+  specialRewards: SpecialReward[];
+};
+
+const BANNER_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const BANNER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const mapEventNameMessage = (message: string) =>
+  message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
+
 export default function EventDraft() {
   const params = useParams();
   const id = (params?.id as string) ?? "";
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState("event-info");
 
   // Event Information
@@ -72,6 +107,7 @@ export default function EventDraft() {
     type: string;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [bannerRemoved, setBannerRemoved] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -96,6 +132,9 @@ export default function EventDraft() {
   const [originalTitle, setOriginalTitle] = useState("");
   const [nameChecked, setNameChecked] = useState<null | boolean>(null);
   const [checkingName, setCheckingName] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Presenter Details
   const [maxPresenters, setMaxPresenters] = useState("");
@@ -155,12 +194,16 @@ export default function EventDraft() {
 
   const toISO = (date: string, time: string) => (date && time ? `${date}T${time}` : null);
   const toDate = (date?: string, time?: string) => (date && time ? new Date(`${date}T${time}`) : null);
-  const buildPayload = (opts?: { isoDates?: boolean }) => {
+  const buildPayload = (opts?: { isoDates?: boolean }): EventUpdatePayload => {
     const iso = Boolean(opts?.isoDates);
-    const sv = iso ? toDate(startDate, startTime)?.toISOString() : toISO(startDate, startTime);
-    const ev = iso ? toDate(endDate, endTime)?.toISOString() : toISO(endDate, endTime);
-    const sj = iso ? toDate(submissionStartDate, submissionStartTime)?.toISOString() : toISO(submissionStartDate, submissionStartTime);
-    const ej = iso ? toDate(submissionEndDate, submissionEndTime)?.toISOString() : toISO(submissionEndDate, submissionEndTime);
+    const svDate = iso ? toDate(startDate, startTime) : null;
+    const evDate = iso ? toDate(endDate, endTime) : null;
+    const sjDate = iso ? toDate(submissionStartDate, submissionStartTime) : null;
+    const ejDate = iso ? toDate(submissionEndDate, submissionEndTime) : null;
+    const sv = iso ? (svDate ? svDate.toISOString() : null) : toISO(startDate, startTime);
+    const ev = iso ? (evDate ? evDate.toISOString() : null) : toISO(endDate, endTime);
+    const sj = iso ? (sjDate ? sjDate.toISOString() : null) : toISO(submissionStartDate, submissionStartTime);
+    const ej = iso ? (ejDate ? ejDate.toISOString() : null) : toISO(submissionEndDate, submissionEndTime);
     return {
       eventName: eventTitle,
       eventDescription,
@@ -175,12 +218,19 @@ export default function EventDraft() {
       maxTeams: maxGroups ? parseInt(maxGroups) : null,
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
       virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
+      specialRewards,
     };
   };
-  const buildFormData = (payload: any, file: File) => {
+  const buildFormData = (payload: EventUpdatePayload, file: File) => {
     const formData = new FormData();
     Object.entries(payload).forEach(([k, v]) => {
-      if (v !== null && v !== undefined) formData.append(k, typeof v === "string" ? v : String(v));
+      if (v === null || v === undefined) return;
+      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+        formData.append(k, String(v));
+      } else {
+        // For arrays/objects like specialRewards, send as JSON string
+        formData.append(k, JSON.stringify(v));
+      }
     });
     formData.append("file", file);
     return formData;
@@ -195,29 +245,60 @@ export default function EventDraft() {
       setNameChecked(ok);
       if (!ok) toast.error("ชื่อ Event ถูกใช้แล้ว");
       return ok;
-    } catch {
+    } catch (e) {
+      console.error(e);
       setNameChecked(null);
-      toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+      const backendMessage =
+        typeof e === "object" && e && "response" in e
+          ? (e as AxiosError<{ message: string }>)?.response?.data?.message as string | undefined
+          : null;
+      if (backendMessage === "Event name already exists") {
+        toast.error("ไม่สามารถใช้ชื่อนี้ได้");
+      } else {
+        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+      }
       return false;
     } finally {
       setCheckingName(false);
     }
   };
   const validatePublish = () => {
-    const errors: string[] = [];
-    if (!eventTitle.trim()) errors.push("กรุณากรอก Event Title");
-    if (!(startDate && startTime)) errors.push("กรุณากรอก Start View วันที่และเวลา");
-    if (!(endDate && endTime)) errors.push("กรุณากรอก End View วันที่และเวลา");
-    const sv = toDate(startDate, startTime);
-    const ev = toDate(endDate, endTime);
-    if (sv && ev && sv > ev) errors.push("Start View ต้องอยู่ก่อน End View");
+    const errors: Record<string, string> = {};
+
+    if (!eventTitle.trim()) {
+      errors.eventTitle = "กรุณากรอก Event Title";
+    }
+    if (!(startDate && startTime)) {
+      errors.startDateTime = "กรุณากรอก Start View วันที่และเวลา";
+    }
+    if (!(endDate && endTime)) {
+      errors.endDateTime = "กรุณากรอก End View วันที่และเวลา";
+    }
+    const sv = toDate(startDate, startTime); // Event Start
+    const ev = toDate(endDate, endTime); // Event End
+    if (sv && ev && sv > ev) {
+      errors.endDateTime = "Start View ต้องอยู่ก่อน End View";
+    }
     const hasJoinInput = Boolean(submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime);
-    const sj = toDate(submissionStartDate, submissionStartTime);
-    const ej = toDate(submissionEndDate, submissionEndTime);
+    const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
+    const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
-      if (!(submissionStartDate && submissionStartTime)) errors.push("กรุณากรอก Submission Start วันที่และเวลา");
-      if (!(submissionEndDate && submissionEndTime)) errors.push("กรุณากรอก Submission End วันที่และเวลา");
-      if (sj && ej && sj > ej) errors.push("Submission Start ต้องอยู่ก่อน Submission End");
+      if (!(submissionStartDate && submissionStartTime)) {
+        errors.submissionStart = "กรุณากรอก Submission Start วันที่และเวลา";
+      }
+      if (!(submissionEndDate && submissionEndTime)) {
+        errors.submissionEnd = "กรุณากรอก Submission End วันที่และเวลา";
+      }
+      if (sj && ej && sj > ej) {
+        errors.submissionEnd = "Submission Start ต้องอยู่ก่อน Submission End";
+      }
+      // Submission Period ต้องอยู่ก่อน Event
+      if (sj && sv && sj > sv) {
+        errors.submissionStart = "Submission Start ต้องอยู่ก่อน Event Start";
+      }
+      if (ej && sv && ej > sv) {
+        errors.submissionEnd = "Submission End ต้องอยู่ก่อน Event Start";
+      }
     }
     return errors;
   };
@@ -225,14 +306,28 @@ export default function EventDraft() {
     fileInputRef.current?.click();
   };
 
-  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+
+    if (!BANNER_TYPES.includes(f.type)) {
+      toast.error("รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP");
+      e.target.value = "";
+      return;
+    }
+
+    if (f.size > BANNER_MAX_SIZE) {
+      toast.error("ไฟล์ต้องไม่เกิน 5MB");
+      e.target.value = "";
+      return;
+    }
+
     if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
     const url = URL.createObjectURL(f);
     setCropSrc(url);
     setPendingFileMeta({ name: f.name, type: f.type || "image/png" });
     setCropOpen(true);
+    setBannerRemoved(false);
   };
 
   const handleCropCancel = () => {
@@ -246,12 +341,14 @@ export default function EventDraft() {
     setEventBanner(file);
     setBannerPreview(previewUrl);
     setCropOpen(false);
+    setBannerRemoved(false);
   };
 
   const handleRemoveBanner = () => {
     if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
     setBannerPreview(null);
     setEventBanner(null);
+    setBannerRemoved(true);
   };
 
   const handleCheckName = async () => {
@@ -267,7 +364,16 @@ export default function EventDraft() {
     } catch (e) {
       console.error(e);
       setNameChecked(null);
-      toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+      const backendMessage =
+        typeof e === "object" && e && "response" in e
+          ? // @ts-expect-error axios error shape
+            (e as AxiosError).response?.data?.message
+          : null;
+      if (backendMessage === "Event name already exists") {
+        toast.error("ไม่สามารถใช้ชื่อนี้ได้");
+      } else {
+        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+      }
     } finally {
       setCheckingName(false);
     }
@@ -282,12 +388,18 @@ export default function EventDraft() {
       const ok = await ensureNameAvailable();
       if (!ok) return;
       const payload = buildPayload({ isoDates: false });
-      const data = eventBanner ? buildFormData(payload, eventBanner) : payload;
-      await updateEvent(id, data);
+      if (eventBanner) {
+        const data = buildFormData(payload, eventBanner);
+        await updateEvent(id, data);
+      } else {
+        await updateEvent(id, payload, { removeImage: bannerRemoved });
+      }
       toast.success("บันทึก Draft สำเร็จ");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      toast.error(err?.message || "บันทึก Draft ไม่สำเร็จ");
+      const message =
+        err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
+      toast.error(mapEventNameMessage(message));
     }
   };
 
@@ -298,21 +410,28 @@ export default function EventDraft() {
     if (!ok) return;
 
     const errors = validatePublish();
-    if (errors.length) {
-      toast.error(errors.join("\n"));
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
       return;
     }
+    setFieldErrors({});
 
     try {
       const payload = buildPayload({ isoDates: false });
-      const data = eventBanner ? buildFormData(payload, eventBanner) : payload;
-      await updateEvent(id, data);
+      if (eventBanner) {
+        const data = buildFormData(payload, eventBanner);
+        await updateEvent(id, data);
+      } else {
+        await updateEvent(id, payload, { removeImage: bannerRemoved });
+      }
       await publishEvent(id);
       toast.success("เผยแพร่ Event สำเร็จ");
       window.location.reload();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      toast.error(err?.message || "Error publishing event");
+      const message =
+        err instanceof Error ? err.message : "Error publishing event";
+      toast.error(mapEventNameMessage(message));
     }
   };
 
@@ -451,6 +570,13 @@ export default function EventDraft() {
                 >
                   Publish / เผยแพร่
                 </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="px-6 hidden lg:inline-block"
+                >
+                  Delete / ลบ
+                </Button>
               </div>
 
               {/* Event Information Section */}
@@ -499,6 +625,11 @@ export default function EventDraft() {
                         </div>
                       )}
                     </div>
+                    {fieldErrors.eventTitle && (
+                      <p className="text-xs text-destructive mt-1">
+                        {fieldErrors.eventTitle}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -533,11 +664,11 @@ export default function EventDraft() {
                       onConfirm={handleCropConfirm}
                     />
                     {bannerPreview ? (
-                      <div className="relative border rounded-lg overflow-hidden">
+                      <div className="relative border rounded-lg overflow-hidden aspect-[2/1] bg-muted">
                         <img
                           src={bannerPreview}
                           alt="Event banner preview"
-                          className="w-full h-48 md:h-60 object-cover"
+                          className="absolute inset-0 h-full w-full object-cover"
                         />
                         <div className="absolute top-2 right-2 flex gap-2">
                           <Button
@@ -565,10 +696,10 @@ export default function EventDraft() {
                       </div>
                     ) : (
                       <div
-                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-[2/1] flex flex-col items-center justify-center"
                         onClick={openFilePicker}
                       >
-                        <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                        <Upload className="h-10 w-10 text-muted-foreground mb-2" />
                         <p className="text-sm text-muted-foreground">
                           Click to upload or drag and drop
                         </p>
@@ -625,7 +756,10 @@ export default function EventDraft() {
                       </Popover>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="startTime">Start Time / เวลาเริ่ม</Label>
+                      <Label htmlFor="startTime">
+                        Start Time / เวลาเริ่ม{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
                       <div className="relative">
                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -641,6 +775,11 @@ export default function EventDraft() {
                       </div>
                     </div>
                   </div>
+                  {fieldErrors.startDateTime && (
+                    <p className="text-xs text-destructive mt-1">
+                      {fieldErrors.startDateTime}
+                    </p>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -669,6 +808,11 @@ export default function EventDraft() {
                                 setEndDate(toDateStr(d));
                               }
                             }}
+                              disabled={
+                                selectedStart
+                                  ? (date) => date < selectedStart
+                                  : undefined
+                              }
                             formatters={{
                               formatMonthDropdown: (date: Date) =>
                                 date.toLocaleString("th-TH", { month: "long" }),
@@ -681,7 +825,10 @@ export default function EventDraft() {
                       </Popover>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="endTime">End Time / เวลาสิ้นสุด</Label>
+                      <Label htmlFor="endTime">
+                        End Time / เวลาสิ้นสุด{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
                       <div className="relative">
                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -697,6 +844,11 @@ export default function EventDraft() {
                       </div>
                     </div>
                   </div>
+                  {fieldErrors.endDateTime && (
+                    <p className="text-xs text-destructive mt-1">
+                      {fieldErrors.endDateTime}
+                    </p>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="locationPlace">
@@ -794,7 +946,8 @@ export default function EventDraft() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="subStartDate">
-                          Start Date / วันที่เริ่มส่ง
+                          Start Date / วันที่เริ่มส่ง{" "}
+                          <span className="text-destructive">*</span>
                         </Label>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -817,6 +970,11 @@ export default function EventDraft() {
                                   setSubmissionStartDate(toDateStr(d));
                                 }
                               }}
+                              disabled={
+                                selectedStart
+                                  ? (date) => date >= selectedStart
+                                  : undefined
+                              }
                               formatters={{
                                 formatMonthDropdown: (date) =>
                                   date.toLocaleString("th-TH", {
@@ -832,7 +990,8 @@ export default function EventDraft() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="subStartTime">
-                          Start Time / เวลาเริ่มส่ง
+                          Start Time / เวลาเริ่มส่ง{" "}
+                          <span className="text-destructive">*</span>
                         </Label>
                         <div className="relative">
                           <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -851,10 +1010,16 @@ export default function EventDraft() {
                         </div>
                       </div>
                     </div>
+                    {fieldErrors.submissionStart && (
+                      <p className="text-xs text-destructive mt-1">
+                        {fieldErrors.submissionStart}
+                      </p>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <div className="space-y-2">
                         <Label htmlFor="subEndDate">
-                          End Date / วันที่สิ้นสุดส่ง
+                          End Date / วันที่สิ้นสุดส่ง{" "}
+                          <span className="text-destructive">*</span>
                         </Label>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -877,6 +1042,19 @@ export default function EventDraft() {
                                   setSubmissionEndDate(toDateStr(d));
                                 }
                               }}
+                              disabled={
+                                selectedSubStart || selectedStart
+                                  ? (date) => {
+                                      if (selectedSubStart && date < selectedSubStart) {
+                                        return true;
+                                      }
+                                      if (selectedStart && date >= selectedStart) {
+                                        return true;
+                                      }
+                                      return false;
+                                    }
+                                  : undefined
+                              }
                               formatters={{
                                 formatMonthDropdown: (date) =>
                                   date.toLocaleString("th-TH", {
@@ -891,7 +1069,8 @@ export default function EventDraft() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="subEndTime">
-                          End Time / เวลาสิ้นสุดส่ง
+                          End Time / เวลาสิ้นสุดส่ง{" "}
+                          <span className="text-destructive">*</span>
                         </Label>
                         <div className="relative">
                           <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -910,6 +1089,11 @@ export default function EventDraft() {
                         </div>
                       </div>
                     </div>
+                    {fieldErrors.submissionEnd && (
+                      <p className="text-xs text-destructive mt-1">
+                        {fieldErrors.submissionEnd}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1005,8 +1189,8 @@ export default function EventDraft() {
                       <Gift className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <p>No special rewards added yet / ยังไม่มีรางวัลพิเศษ</p>
                       <p className="text-sm">
-                        Click "Add Reward" to create one / คลิก "เพิ่มรางวัล"
-                        เพื่อสร้าง
+                        Click &quot;Add Reward&quot; to create one / คลิก
+                        &quot;เพิ่มรางวัล&quot; เพื่อสร้าง
                       </p>
                     </div>
                   ) : (
@@ -1062,8 +1246,59 @@ export default function EventDraft() {
                 </CardContent>
               </Card>
 
+              <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <DialogContent className="sm:max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>ยืนยันการลบ</DialogTitle>
+                    <DialogDescription>ยืนยันลบ Event ฉบับร่างนี้หรือไม่?</DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="flex flex-col sm:flex-row sm:gap-3 w-full gap-2">
+                    <DialogClose asChild>
+                      <Button variant="outline" className="w-full sm:w-1/2">Cancel</Button>
+                    </DialogClose>
+                    <Button
+                      variant="destructive"
+                      className="w-full sm:w-1/2"
+                      onClick={async () => {
+                        try {
+                          await deleteEvent(id);
+                          setDeleteConfirmOpen(false);
+                          setDeleteSuccessOpen(true);
+                        } catch (e: any) {
+                          console.error(e);
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={deleteSuccessOpen} onOpenChange={(o) => { setDeleteSuccessOpen(o); if (!o) router.push("/dashboard"); }}>
+                <DialogContent className="sm:max-w-sm flex flex-col items-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                    <Check className="h-6 w-6 text-green-600" />
+                  </div>
+                  <DialogHeader className="text-center gap-0">
+                    <DialogTitle className="text-center">Deleted successfully</DialogTitle>
+                    <DialogDescription className="mt-2 text-center mx-auto sm:max-w-[90%]">
+                      Event draft has been deleted.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="flex flex-col sm:flex-row sm:gap-3 w-full gap-2">
+                    <DialogClose asChild>
+                      <Button variant="default" className="w-full sm:w-1/2" onClick={() => router.push("/dashboard")}>Go to Dashboard</Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                      <Button variant="outline" className="w-full sm:w-1/2">Close</Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               {/* Save Button (Mobile) */}
-              <div className="lg:hidden grid grid-cols-2 gap-2">
+              <div className="lg:hidden grid grid-cols-3 gap-2">
                 <Button
                   variant="secondary"
                   onClick={handleSaveDraft}
@@ -1073,6 +1308,13 @@ export default function EventDraft() {
                 </Button>
                 <Button onClick={handlePublish} className="w-full">
                   Publish / เผยแพร่
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="w-full"
+                >
+                  Delete / ลบ
                 </Button>
               </div>
             </div>

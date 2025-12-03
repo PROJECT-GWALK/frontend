@@ -89,6 +89,7 @@ export type DraftEvent = {
   eventName: string;
   createdAt: string;
   status?: "DRAFT" | "PUBLISHED";
+  imageCover?: string | null;
 };
 
 export type MyEvent = {
@@ -98,4 +99,5 @@ export type MyEvent = {
   status: "PUBLISHED";
   role: string | null;
   isLeader: boolean;
+  imageCover?: string | null;
 };
