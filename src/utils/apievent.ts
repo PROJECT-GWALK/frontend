@@ -16,9 +16,13 @@ export const createEvent = async (eventName: string) => {
 };
 
 // ====================== UPDATE EVENT ======================
-export const updateEvent = async (id: string, data: any, opts?: { removeImage?: boolean }) => {
+export const updateEvent = async (
+  id: string,
+  data: FormData | Record<string, unknown>,
+  opts?: { removeImage?: boolean }
+) => {
   const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
-  let body: any;
+  let body: FormData | string;
   let headers: Record<string, string> | undefined = undefined;
   if (isFormData) {
     const fd = data as FormData;

@@ -1264,7 +1264,7 @@ export default function EventDraft() {
                           await deleteEvent(id);
                           setDeleteConfirmOpen(false);
                           setDeleteSuccessOpen(true);
-                        } catch (e: any) {
+                        } catch (e: unknown) {
                           console.error(e);
                         }
                       }}

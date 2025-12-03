@@ -125,13 +125,13 @@ const LandingPage = () => {
               <CardContent className="p-6">
                 <p className="text-muted-foreground">
                   We offer a range of services to help you create, manage, and
-                  join events. Whether you're looking to host a community
+                  join events. Whether you&apos;re looking to host a community
                   gathering or simply connect with like-minded individuals, we
                   have you covered. We offer a range of services to help you
-                  create, manage, and join events. Whether you're looking to
+                  create, manage, and join events. Whether you&apos;re looking to
                   host a community gathering or simply connect with like-minded
                   individuals, we have you covered. We offer a range of services
-                  to help you create, manage, and join events. Whether you're
+                  to help you create, manage, and join events. Whether you&apos;re
                   looking to host a community gathering or simply connect with
                   like-minded individuals, we have you covered.
                 </p>
@@ -158,9 +158,11 @@ const LandingPage = () => {
                     <Card className="text-center">
                       <CardContent className="p-6">
                         <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
-                          <img
+                          <Image
                             src="/Apiwit.jpg"
                             alt="Apiwit Boonyarit"
+                            width={128}
+                            height={128}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -178,9 +180,11 @@ const LandingPage = () => {
                     <Card className="text-center">
                       <CardContent className="p-6">
                         <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
-                          <img
+                          <Image
                             src="/Autsada.jpg"
                             alt="Autsada Wiriya"
+                            width={128}
+                            height={128}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -198,9 +202,11 @@ const LandingPage = () => {
                     <Card className="text-center">
                       <CardContent className="p-6">
                         <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
-                          <img
+                          <Image
                             src="/UeaAR.jpg"
                             alt="Ueaarthorn Uawongtrakul"
+                            width={128}
+                            height={128}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -255,7 +261,7 @@ const LandingPage = () => {
               width="100%"
               height="100%"
               style={{ border: 0 }}
-              allowFullScreen=""
+              allowFullScreen={true}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               title="ภาควิชาวิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยเชียงใหม่"

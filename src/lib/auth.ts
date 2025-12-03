@@ -35,8 +35,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
-        session.user.role = (user as any).role;
-        session.user.username = (user as any).username;
+        const extUser = user as typeof user & { role?: string; username?: string };
+        (session.user as typeof session.user & { role?: string; username?: string }).role = extUser.role;
+        (session.user as typeof session.user & { username?: string; role?: string }).username = extUser.username;
 
         const ban = await prisma.userBan.findUnique({
           where: { email: user.email! },
@@ -49,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        (session as any).banned = isBanned;
+        (session as typeof session & { banned?: boolean }).banned = isBanned;
 
         if (!isBanned) {
           try {
