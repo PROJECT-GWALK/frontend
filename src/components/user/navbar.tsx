@@ -31,7 +31,7 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
 
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -107,7 +107,18 @@ export function Navbar() {
                     </Avatar>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                    <DropdownMenuLabel className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.image || ""} />
+                        <AvatarFallback>
+                          {user.name?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{user.username}</span>
+                        <span className="text-sm text-muted-foreground">{user.name}</span>
+                      </div>
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {menuItems
                       .filter((item) => {
@@ -189,7 +200,20 @@ export function Navbar() {
                     sideOffset={12}
                     className="w-[100vw]"
                   >
-                    {user && <DropdownMenuLabel>{user.name}</DropdownMenuLabel>}
+                    {user && (
+                      <DropdownMenuLabel className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.image || ""} />
+                          <AvatarFallback>
+                            {user.name?.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">@{user.username}</span>
+                          <span className="text-sm text-muted-foreground">{user.name}</span>
+                        </div>
+                      </DropdownMenuLabel>
+                    )}
                     <DropdownMenuSeparator />
                     {/* Primary nav */}
                     {navbarItems.map((link) => (
