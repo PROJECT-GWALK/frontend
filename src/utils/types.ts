@@ -82,6 +82,7 @@ export type SpecialReward = {
   id: string;
   name: string;
   description: string;
+  image?: string | null;
 };
 
 export type DraftEvent = {

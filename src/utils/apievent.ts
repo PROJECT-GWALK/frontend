@@ -110,3 +110,78 @@ export const getMyEvents = async () => {
   });
   return res.data; // { message, events }
 };
+
+// ====================== SPECIAL REWARD ======================
+export const createSpecialReward = async (
+  eventId: string,
+  data: FormData | { name: string; description?: string; image?: string | null }
+) => {
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  let body: FormData | string;
+  let headers: Record<string, string> | undefined = undefined;
+  if (isFormData) {
+    body = data as FormData;
+  } else {
+    headers = { "Content-Type": "application/json" };
+    body = JSON.stringify(data);
+  }
+  const res = await fetch(`/backend/api/events/${eventId}/special-rewards`, {
+    method: "POST",
+    credentials: "include",
+    headers,
+    body,
+  });
+  const ct = res.headers.get("content-type") || "";
+  if (!res.ok) {
+    const msg = ct.includes("application/json")
+      ? (await res.json())?.message || "Failed to create reward"
+      : await res.text();
+    throw new Error(msg);
+  }
+  return ct.includes("application/json") ? res.json() : { message: await res.text() };
+};
+
+export const updateSpecialReward = async (
+  eventId: string,
+  rewardId: string,
+  data: FormData | { name?: string; description?: string; image?: string | null }
+) => {
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  let body: FormData | string;
+  let headers: Record<string, string> | undefined = undefined;
+  if (isFormData) {
+    body = data as FormData;
+  } else {
+    headers = { "Content-Type": "application/json" };
+    body = JSON.stringify(data);
+  }
+  const res = await fetch(`/backend/api/events/${eventId}/special-rewards/${rewardId}`, {
+    method: "PUT",
+    credentials: "include",
+    headers,
+    body,
+  });
+  const ct = res.headers.get("content-type") || "";
+  if (!res.ok) {
+    const msg = ct.includes("application/json")
+      ? (await res.json())?.message || "Failed to update reward"
+      : await res.text();
+    throw new Error(msg);
+  }
+  return ct.includes("application/json") ? res.json() : { message: await res.text() };
+};
+
+export const deleteSpecialReward = async (eventId: string, rewardId: string) => {
+  const res = await fetch(`/backend/api/events/${eventId}/special-rewards/${rewardId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const ct = res.headers.get("content-type") || "";
+  if (!res.ok) {
+    const msg = ct.includes("application/json")
+      ? (await res.json())?.message || "Failed to delete reward"
+      : await res.text();
+    throw new Error(msg);
+  }
+  return ct.includes("application/json") ? res.json() : { message: await res.text() };
+};

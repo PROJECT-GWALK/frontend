@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import Cropper, { Area } from "react-easy-crop";
+import React, { useCallback, useState } from "react";
+import Cropper, { Area, MediaSize } from "react-easy-crop";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -37,11 +37,25 @@ export default function ImageCropDialog({
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(8);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   const onCropComplete = (_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
   };
+
+  const handleMediaLoaded = useCallback((mediaSize: MediaSize) => {
+    const { naturalWidth, naturalHeight } = mediaSize;
+    if (!naturalWidth || !naturalHeight) {
+      setMinZoom(1);
+      setMaxZoom(8);
+      return;
+    }
+    setMinZoom(1);
+    setMaxZoom(8);
+    setZoom(1);
+  }, []);
 
   const createImage = (url: string) =>
     new Promise<HTMLImageElement>((resolve, reject) => {
@@ -101,23 +115,28 @@ export default function ImageCropDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <div className="relative w-full h-[320px] bg-muted rounded-md overflow-hidden">
+        <div className="relative w-full h-[420px] sm:h-[480px] bg-muted rounded-md overflow-hidden">
           {src && (
             <Cropper
               image={src}
               crop={crop}
               zoom={zoom}
+              minZoom={minZoom}
+              maxZoom={maxZoom}
               aspect={aspect}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
+              onMediaLoaded={handleMediaLoaded}
               restrictPosition
-              showGrid={false}
+              showGrid
+              cropShape="rect"
+              zoomWithScroll
             />
           )}
         </div>
@@ -127,8 +146,8 @@ export default function ImageCropDialog({
           <input
             id="zoom"
             type="range"
-            min={1}
-            max={3}
+            min={minZoom}
+            max={maxZoom}
             step={0.1}
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
@@ -139,6 +158,9 @@ export default function ImageCropDialog({
         <DialogFooter>
           <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setZoom(1)}>
+            Reset
           </Button>
           <Button type="button" onClick={handleConfirm}>
             Done

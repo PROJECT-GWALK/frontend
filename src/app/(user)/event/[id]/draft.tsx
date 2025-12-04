@@ -48,22 +48,32 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import { EventSidebar } from "@/app/(user)/event/[id]/EventSidebar";
+
 import {
   getEvent,
   publishEvent,
   updateEvent,
   checkEventName,
   deleteEvent,
+  createSpecialReward,
+  updateSpecialReward,
+  deleteSpecialReward,
 } from "@/utils/apievent";
 import { EventDetail } from "@/utils/types";
 import { toast } from "sonner";
-import ImageCropDialog from "@/lib/image-crop-dialog";
 import { AxiosError } from "axios";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import DeleteSuccessDialog from "./DeleteSuccessDialog";
+import SpecialRewardsSection from "./SpecialRewardsSection";
+import EventInfoSection from "./EventInfoSection";
+import PresenterSection from "./PresenterSection";
+import CommitteeSection from "./CommitteeSection";
 
 type SpecialReward = {
   id: string;
   name: string;
   description: string;
+  image?: string | null;
 };
 
 type EventUpdatePayload = {
@@ -127,6 +137,8 @@ export default function EventDraft() {
       : "เลือกวันที่";
   const [locationPlace, setLocationPlace] = useState("");
   const [locationLink, setLocationLink] = useState("");
+  const calendarStartMonth = new Date(new Date().getFullYear() - 5, 0);
+  const calendarEndMonth = new Date(new Date().getFullYear() + 5, 11);
 
   const [eventVisibility, setEventVisibility] = useState("public");
   const [originalTitle, setOriginalTitle] = useState("");
@@ -192,18 +204,107 @@ export default function EventDraft() {
     );
   };
 
-  const toISO = (date: string, time: string) => (date && time ? `${date}T${time}` : null);
-  const toDate = (date?: string, time?: string) => (date && time ? new Date(`${date}T${time}`) : null);
+  const rewardFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>(
+    {}
+  );
+  const [srFiles, setSrFiles] = useState<Record<string, File | null>>({});
+  const [srRemoved, setSrRemoved] = useState<Record<string, boolean>>({});
+  const [srCropOpen, setSrCropOpen] = useState(false);
+  const [srCropSrc, setSrCropSrc] = useState<string | null>(null);
+  const [srPendingMeta, setSrPendingMeta] = useState<{
+    id: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const [rewardErrors, setRewardErrors] = useState<Record<string, string>>({});
+
+  const openRewardFilePicker = (id: string) => {
+    rewardFileRefs.current[id]?.click();
+  };
+
+  const handleRewardFileChange = (
+    id: string,
+    e: ChangeEvent<HTMLInputElement>
+  ) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!BANNER_TYPES.includes(f.type)) {
+      toast.error("รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP");
+      e.target.value = "";
+      return;
+    }
+    if (f.size > BANNER_MAX_SIZE) {
+      toast.error("ไฟล์ต้องไม่เกิน 5MB");
+      e.target.value = "";
+      return;
+    }
+    if (srPreviews[id]?.startsWith("blob:"))
+      URL.revokeObjectURL(srPreviews[id] as string);
+    const url = URL.createObjectURL(f);
+    setSrCropSrc(url);
+    setSrPendingMeta({ id, name: f.name, type: f.type || "image/png" });
+    setSrCropOpen(true);
+    setSrRemoved((prev) => ({ ...prev, [id]: false }));
+  };
+
+  const handleRewardCropCancel = () => {
+    setSrCropOpen(false);
+    if (srCropSrc && srCropSrc.startsWith("blob:"))
+      URL.revokeObjectURL(srCropSrc);
+    setSrCropSrc(null);
+    setSrPendingMeta(null);
+  };
+
+  const handleRewardCropConfirm = (file: File, previewUrl: string) => {
+    if (!srPendingMeta) return;
+    const { id } = srPendingMeta;
+    setSrFiles((prev) => ({ ...prev, [id]: file }));
+    setSrPreviews((prev) => ({ ...prev, [id]: previewUrl }));
+    setSrCropOpen(false);
+    setSrRemoved((prev) => ({ ...prev, [id]: false }));
+  };
+
+  const handleRemoveRewardImage = (id: string) => {
+    const prev = srPreviews[id];
+    if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+    setSrPreviews((p) => ({ ...p, [id]: null }));
+    setSrFiles((p) => ({ ...p, [id]: null }));
+    setSrRemoved((p) => ({ ...p, [id]: true }));
+  };
+
+  const toISO = (date: string, time: string) =>
+    date && time ? `${date}T${time}` : null;
+  const toDate = (date?: string, time?: string) =>
+    date && time ? new Date(`${date}T${time}`) : null;
   const buildPayload = (opts?: { isoDates?: boolean }): EventUpdatePayload => {
     const iso = Boolean(opts?.isoDates);
     const svDate = iso ? toDate(startDate, startTime) : null;
     const evDate = iso ? toDate(endDate, endTime) : null;
-    const sjDate = iso ? toDate(submissionStartDate, submissionStartTime) : null;
+    const sjDate = iso
+      ? toDate(submissionStartDate, submissionStartTime)
+      : null;
     const ejDate = iso ? toDate(submissionEndDate, submissionEndTime) : null;
-    const sv = iso ? (svDate ? svDate.toISOString() : null) : toISO(startDate, startTime);
-    const ev = iso ? (evDate ? evDate.toISOString() : null) : toISO(endDate, endTime);
-    const sj = iso ? (sjDate ? sjDate.toISOString() : null) : toISO(submissionStartDate, submissionStartTime);
-    const ej = iso ? (ejDate ? ejDate.toISOString() : null) : toISO(submissionEndDate, submissionEndTime);
+    const sv = iso
+      ? svDate
+        ? svDate.toISOString()
+        : null
+      : toISO(startDate, startTime);
+    const ev = iso
+      ? evDate
+        ? evDate.toISOString()
+        : null
+      : toISO(endDate, endTime);
+    const sj = iso
+      ? sjDate
+        ? sjDate.toISOString()
+        : null
+      : toISO(submissionStartDate, submissionStartTime);
+    const ej = iso
+      ? ejDate
+        ? ejDate.toISOString()
+        : null
+      : toISO(submissionEndDate, submissionEndTime);
     return {
       eventName: eventTitle,
       eventDescription,
@@ -217,7 +318,8 @@ export default function EventDraft() {
       maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
       maxTeams: maxGroups ? parseInt(maxGroups) : null,
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
-      virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
+      virtualRewardCommittee:
+        hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
       specialRewards,
     };
   };
@@ -225,7 +327,11 @@ export default function EventDraft() {
     const formData = new FormData();
     Object.entries(payload).forEach(([k, v]) => {
       if (v === null || v === undefined) return;
-      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      if (
+        typeof v === "string" ||
+        typeof v === "number" ||
+        typeof v === "boolean"
+      ) {
         formData.append(k, String(v));
       } else {
         // For arrays/objects like specialRewards, send as JSON string
@@ -250,7 +356,9 @@ export default function EventDraft() {
       setNameChecked(null);
       const backendMessage =
         typeof e === "object" && e && "response" in e
-          ? (e as AxiosError<{ message: string }>)?.response?.data?.message as string | undefined
+          ? ((e as AxiosError<{ message: string }>)?.response?.data?.message as
+              | string
+              | undefined)
           : null;
       if (backendMessage === "Event name already exists") {
         toast.error("ไม่สามารถใช้ชื่อนี้ได้");
@@ -261,6 +369,25 @@ export default function EventDraft() {
     } finally {
       setCheckingName(false);
     }
+  };
+  const validateSpecialRewardsDraft = () => {
+    const errors: Record<string, string> = {};
+    if (specialRewards.length) {
+      for (const r of specialRewards) {
+        if (!r.name || !r.name.trim()) {
+          errors[r.id] = "กรุณากรอกชื่อรางวัล";
+        }
+      }
+    }
+    setRewardErrors(errors);
+    if (Object.keys(errors).length) {
+      setActiveSection("rewards");
+      const el = document.getElementById("rewards");
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      toast.error("กรุณากรอกชื่อรางวัลให้ครบ");
+      return false;
+    }
+    return true;
   };
   const validatePublish = () => {
     const errors: Record<string, string> = {};
@@ -279,7 +406,12 @@ export default function EventDraft() {
     if (sv && ev && sv > ev) {
       errors.endDateTime = "Start View ต้องอยู่ก่อน End View";
     }
-    const hasJoinInput = Boolean(submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime);
+    const hasJoinInput = Boolean(
+      submissionStartDate ||
+        submissionStartTime ||
+        submissionEndDate ||
+        submissionEndTime
+    );
     const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
     const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
@@ -382,12 +514,15 @@ export default function EventDraft() {
   const handleSaveDraft = async () => {
     if (!id) return;
 
+    const okRewards = validateSpecialRewardsDraft();
+    if (!okRewards) return;
     toast.info("กำลังบันทึก Draft...");
 
     try {
       const ok = await ensureNameAvailable();
       if (!ok) return;
       const payload = buildPayload({ isoDates: false });
+      await syncSpecialRewards();
       if (eventBanner) {
         const data = buildFormData(payload, eventBanner);
         await updateEvent(id, data);
@@ -418,6 +553,7 @@ export default function EventDraft() {
 
     try {
       const payload = buildPayload({ isoDates: false });
+      await syncSpecialRewards();
       if (eventBanner) {
         const data = buildFormData(payload, eventBanner);
         await updateEvent(id, data);
@@ -432,6 +568,96 @@ export default function EventDraft() {
       const message =
         err instanceof Error ? err.message : "Error publishing event";
       toast.error(mapEventNameMessage(message));
+    }
+  };
+
+  const syncSpecialRewards = async () => {
+    if (!id) return;
+    if (!event) return;
+    const existingIds = new Set(
+      (event.specialRewards || []).map((r: any) => r.id)
+    );
+    const removed = (event.specialRewards || []).filter(
+      (r: any) => !specialRewards.some((sr) => sr.id === r.id)
+    );
+    for (const r of removed) {
+      try {
+        await deleteSpecialReward(id, r.id);
+      } catch (e) {
+        console.error("Failed to delete reward", e);
+      }
+    }
+    for (const r of specialRewards) {
+      const file = srFiles[r.id] || null;
+      const isRemoved = srRemoved[r.id] || false;
+      try {
+        if (existingIds.has(r.id)) {
+          if (file) {
+            const fd = new FormData();
+            fd.append("name", r.name);
+            if (r.description) fd.append("description", r.description);
+            fd.append("file", file);
+            await updateSpecialReward(id, r.id, fd);
+          } else {
+            const payload: Record<string, any> = { name: r.name };
+            if (r.description) payload.description = r.description;
+            if (isRemoved) payload.image = null;
+            await updateSpecialReward(id, r.id, payload);
+          }
+        } else {
+          if (file) {
+            const fd = new FormData();
+            fd.append("name", r.name);
+            if (r.description) fd.append("description", r.description);
+            fd.append("file", file);
+            const res = await createSpecialReward(id, fd);
+            if (res?.reward?.id) {
+              setSpecialRewards((prev) =>
+                prev.map((x) =>
+                  x.id === r.id
+                    ? {
+                        ...x,
+                        id: res.reward.id,
+                        image: res.reward.image || null,
+                      }
+                    : x
+                )
+              );
+              setSrPreviews((prev) => ({
+                ...prev,
+                [res.reward.id]: res.reward.image || prev[r.id] || null,
+              }));
+              setSrFiles((prev) => {
+                const { [r.id]: _, ...rest } = prev;
+                return { ...rest, [res.reward.id]: null };
+              });
+            }
+          } else {
+            const payload: Record<string, any> = { name: r.name };
+            if (r.description) payload.description = r.description;
+            const res = await createSpecialReward(id, {
+              name: r.name,
+              description: r.description,
+              image: null,
+            });
+            if (res?.reward?.id) {
+              setSpecialRewards((prev) =>
+                prev.map((x) =>
+                  x.id === r.id
+                    ? {
+                        ...x,
+                        id: res.reward.id,
+                        image: res.reward.image || null,
+                      }
+                    : x
+                )
+              );
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to sync reward", e);
+      }
     }
   };
 
@@ -454,6 +680,36 @@ export default function EventDraft() {
     { id: "rewards", label: "Special Rewards / รางวัลพิเศษ", icon: Award },
   ];
 
+  const completionPercent = (() => {
+    const list = [
+      eventTitle,
+      eventDescription,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      locationPlace,
+      locationLink,
+      maxPresenters,
+      maxGroups,
+      submissionStartDate,
+      submissionStartTime,
+      submissionEndDate,
+      submissionEndTime,
+      guestRewardAmount,
+    ];
+    let total = list.length;
+    let filled = list.filter((v) => v && v.trim()).length;
+    if (hasCommittee) {
+      total += 1;
+      if (committeeReward && committeeReward.trim()) filled += 1;
+    }
+    if (bannerPreview) {
+      total += 1;
+      filled += 1;
+    }
+    return Math.round((filled / (total || 1)) * 100);
+  })();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -493,7 +749,9 @@ export default function EventDraft() {
         setMaxGroups(data.maxTeams?.toString() || "");
 
         // ================= SUBMISSION PERIOD =================
-        setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
+        setSelectedSubStart(
+          data.startJoinDate ? new Date(data.startJoinDate) : undefined
+        );
         setSubmissionStartDate(
           data.startJoinDate ? data.startJoinDate.split("T")[0] : ""
         );
@@ -502,7 +760,9 @@ export default function EventDraft() {
             ? data.startJoinDate.split("T")[1]?.slice(0, 5)
             : ""
         );
-        setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
+        setSelectedSubEnd(
+          data.endJoinDate ? new Date(data.endJoinDate) : undefined
+        );
         setSubmissionEndDate(
           data.endJoinDate ? data.endJoinDate.split("T")[0] : ""
         );
@@ -518,8 +778,14 @@ export default function EventDraft() {
         // ================= SPECIAL REWARDS =================
         if (data.specialRewards?.length) {
           setSpecialRewards(data.specialRewards);
+          const previews: Record<string, string | null> = {};
+          data.specialRewards.forEach((r: any) => {
+            previews[r.id] = r.image || null;
+          });
+          setSrPreviews(previews);
         } else {
           setSpecialRewards([]);
+          setSrPreviews({});
         }
       } catch (err) {
         console.error("Failed to load event:", err);
@@ -541,6 +807,7 @@ export default function EventDraft() {
           onSectionChange={setActiveSection}
           eventId={id}
           onSaveDraft={handleSaveDraft}
+          completionPercent={completionPercent}
         />
 
         {/* Main Content */}
@@ -564,738 +831,145 @@ export default function EventDraft() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={handlePublish}
-                  className="px-6 hidden lg:inline-block"
-                >
-                  Publish / เผยแพร่
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                  className="px-6 hidden lg:inline-block"
-                >
-                  Delete / ลบ
-                </Button>
+                <div className="space-x-2">
+                  <Button
+                    variant="destructive"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="px-6 hidden lg:inline-block"
+                  >
+                    Delete / ลบ
+                  </Button>
+                  <Button
+                    onClick={handlePublish}
+                    className="px-6 hidden lg:inline-block"
+                  >
+                    Publish / เผยแพร่
+                  </Button>
+                </div>
               </div>
 
               {/* Event Information Section */}
-              <Card id="event-info" className="scroll-mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Info className="h-5 w-5 text-primary" />
-                    Event Information / ข้อมูลอีเวนต์
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="eventTitle">
-                      Event Title / หัวข้ออีเวนต์{" "}
-                      <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="eventTitle"
-                        placeholder="Enter event title / กรอกหัวข้ออีเวนต์"
-                        value={eventTitle}
-                        onChange={(e) => {
-                          setEventTitle(e.target.value);
-                          setNameChecked(null);
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={handleCheckName}
-                        disabled={
-                          checkingName ||
-                          !eventTitle.trim() ||
-                          eventTitle.trim() === originalTitle
-                        }
-                      >
-                        Check / ตรวจสอบ
-                      </Button>
-                      {eventTitle && nameChecked === true && (
-                        <div className="flex items-center gap-2 text-xs text-green-600">
-                          <Check className="h-4 w-4" />
-                        </div>
-                      )}
-                      {eventTitle && nameChecked === false && (
-                        <div className="flex items-center gap-2 text-xs text-destructive">
-                          <X className="h-4 w-4" />
-                        </div>
-                      )}
-                    </div>
-                    {fieldErrors.eventTitle && (
-                      <p className="text-xs text-destructive mt-1">
-                        {fieldErrors.eventTitle}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">
-                      Event Description / รายละเอียดอีเวนต์
-                    </Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Tell attendees about your event... / บอกผู้เข้าร่วมเกี่ยวกับอีเวนต์ของคุณ"
-                      rows={4}
-                      value={eventDescription}
-                      onChange={(e) => setEventDescription(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Event Banner / แบนเนอร์อีเวนต์</Label>
-                    <ImageCropDialog
-                      open={cropOpen}
-                      src={cropSrc}
-                      fileName={pendingFileMeta?.name}
-                      fileType={pendingFileMeta?.type}
-                      aspect={2}
-                      title="Crop to 800x400"
-                      outputWidth={800}
-                      outputHeight={400}
-                      onOpenChange={(o) => {
-                        if (!o) handleCropCancel();
-                        else setCropOpen(true);
-                      }}
-                      onCancel={handleCropCancel}
-                      onConfirm={handleCropConfirm}
-                    />
-                    {bannerPreview ? (
-                      <div className="relative border rounded-lg overflow-hidden aspect-[2/1] bg-muted">
-                        <img
-                          src={bannerPreview}
-                          alt="Event banner preview"
-                          className="absolute inset-0 h-full w-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2 flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={openFilePicker}
-                          >
-                            Change
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={handleRemoveBanner}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          ref={fileInputRef}
-                          onChange={handleBannerFileChange}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-[2/1] flex flex-col items-center justify-center"
-                        onClick={openFilePicker}
-                      >
-                        <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          PNG, JPG, or GIF (crop to 800x400px)
-                        </p>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          ref={fileInputRef}
-                          onChange={handleBannerFileChange}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">
-                        Start Date / วันที่เริ่ม{" "}
-                        <span className="text-destructive">*</span>
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {formatThaiBE(selectedStart)}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0">
-                          <DateCalendar
-                            mode="single"
-                            captionLayout="dropdown"
-                            selected={selectedStart}
-                            onSelect={(d: Date | undefined) => {
-                              if (d) {
-                                setSelectedStart(d);
-                                setStartDate(toDateStr(d));
-                              }
-                            }}
-                            formatters={{
-                              formatMonthDropdown: (date) =>
-                                date.toLocaleString("th-TH", { month: "long" }),
-                              formatYearDropdown: (date) =>
-                                String(date.getFullYear() + 543),
-                            }}
-                            required
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="startTime">
-                        Start Time / เวลาเริ่ม{" "}
-                        <span className="text-destructive">*</span>
-                      </Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="startTime"
-                          type="time"
-                          step="60"
-                          min="00:00"
-                          max="23:59"
-                          className="pl-10"
-                          value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {fieldErrors.startDateTime && (
-                    <p className="text-xs text-destructive mt-1">
-                      {fieldErrors.startDateTime}
-                    </p>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="endDate">
-                        End Date / วันที่สิ้นสุด{" "}
-                        <span className="text-destructive">*</span>
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {formatThaiBE(selectedEnd)}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0">
-                          <DateCalendar
-                            mode="single"
-                            captionLayout="dropdown"
-                            selected={selectedEnd}
-                            onSelect={(d: Date | undefined) => {
-                              if (d) {
-                                setSelectedEnd(d);
-                                setEndDate(toDateStr(d));
-                              }
-                            }}
-                              disabled={
-                                selectedStart
-                                  ? (date) => date < selectedStart
-                                  : undefined
-                              }
-                            formatters={{
-                              formatMonthDropdown: (date: Date) =>
-                                date.toLocaleString("th-TH", { month: "long" }),
-                              formatYearDropdown: (date: Date) =>
-                                String(date.getFullYear() + 543),
-                            }}
-                            required
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="endTime">
-                        End Time / เวลาสิ้นสุด{" "}
-                        <span className="text-destructive">*</span>
-                      </Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="endTime"
-                          type="time"
-                          step="60"
-                          min="00:00"
-                          max="23:59"
-                          className="pl-10"
-                          value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {fieldErrors.endDateTime && (
-                    <p className="text-xs text-destructive mt-1">
-                      {fieldErrors.endDateTime}
-                    </p>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="locationPlace">
-                      Location / Venue / สถานที่จัดงาน
-                    </Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="locationPlace"
-                        placeholder="e.g. Convention Center, Hall A"
-                        className="pl-10"
-                        value={locationPlace}
-                        onChange={(e) => setLocationPlace(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="locationLink">
-                      Location Link (Google Maps) / ลิงก์ตำแหน่ง (Google Maps)
-                    </Label>
-                    <div className="relative">
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="locationLink"
-                        placeholder="https://maps.google.com/..."
-                        className="pl-10"
-                        value={locationLink}
-                        onChange={(e) => setLocationLink(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="visibility">
-                      Event Visibility / การมองเห็นอีเวนต์
-                    </Label>
-                    <Select
-                      value={eventVisibility}
-                      onValueChange={setEventVisibility}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select visibility" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">Public / สาธารณะ</SelectItem>
-                        <SelectItem value="private">
-                          Private / ส่วนตัว
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
+              <EventInfoSection
+                eventTitle={eventTitle}
+                setEventTitle={(v) => {
+                  setEventTitle(v);
+                  setNameChecked(null);
+                }}
+                checkingName={checkingName}
+                nameChecked={nameChecked}
+                onCheckName={handleCheckName}
+                eventDescription={eventDescription}
+                setEventDescription={setEventDescription}
+                cropOpen={cropOpen}
+                cropSrc={cropSrc}
+                pendingFileMeta={pendingFileMeta}
+                onCropCancel={handleCropCancel}
+                onCropConfirm={handleCropConfirm}
+                bannerPreview={bannerPreview}
+                openFilePicker={openFilePicker}
+                fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+                onBannerFileChange={handleBannerFileChange}
+                onRemoveBanner={handleRemoveBanner}
+                selectedStart={selectedStart}
+                setSelectedStart={setSelectedStart}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                startTime={startTime}
+                setStartTime={setStartTime}
+                selectedEnd={selectedEnd}
+                setSelectedEnd={setSelectedEnd}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                endTime={endTime}
+                setEndTime={setEndTime}
+                calendarStartMonth={calendarStartMonth}
+                calendarEndMonth={calendarEndMonth}
+                formatThaiBE={formatThaiBE}
+                eventVisibility={eventVisibility}
+                setEventVisibility={setEventVisibility}
+                fieldErrors={fieldErrors}
+                locationPlace={locationPlace}
+                setLocationPlace={setLocationPlace}
+                locationLink={locationLink}
+                setLocationLink={setLocationLink}
+              />
 
               {/* Presenter Details Section */}
-              <Card id="presenter" className="scroll-mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Users className="h-5 w-5 text-primary" />
-                    Presenter Details / รายละเอียดผู้นำเสนอ
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="maxPresenters">
-                      Members per Group / จำนวนต่อกลุ่ม
-                    </Label>
-                    <Input
-                      id="maxPresenters"
-                      type="number"
-                      placeholder="e.g. 5"
-                      value={maxPresenters}
-                      onChange={(e) => setMaxPresenters(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="maxGroups">
-                      Maximum Groups / จำนวนกลุ่มสูงสุด
-                    </Label>
-                    <Input
-                      id="maxGroups"
-                      type="number"
-                      placeholder="e.g. 20"
-                      value={maxGroups}
-                      onChange={(e) => setMaxGroups(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="border-t pt-6">
-                    <h4 className="font-medium mb-4">
-                      Submission Period / ช่วงการส่งผลงาน
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="subStartDate">
-                          Start Date / วันที่เริ่มส่ง{" "}
-                          <span className="text-destructive">*</span>
-                        </Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {formatThaiBE(selectedSubStart)}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="p-0">
-                            <DateCalendar
-                              mode="single"
-                              captionLayout="dropdown"
-                              selected={selectedSubStart}
-                              onSelect={(d: Date | undefined) => {
-                                if (d) {
-                                  setSelectedSubStart(d);
-                                  setSubmissionStartDate(toDateStr(d));
-                                }
-                              }}
-                              disabled={
-                                selectedStart
-                                  ? (date) => date >= selectedStart
-                                  : undefined
-                              }
-                              formatters={{
-                                formatMonthDropdown: (date) =>
-                                  date.toLocaleString("th-TH", {
-                                    month: "long",
-                                  }),
-                                formatYearDropdown: (date) =>
-                                  String(date.getFullYear() + 543),
-                              }}
-                              required={false}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="subStartTime">
-                          Start Time / เวลาเริ่มส่ง{" "}
-                          <span className="text-destructive">*</span>
-                        </Label>
-                        <div className="relative">
-                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="subStartTime"
-                            type="time"
-                            step="60"
-                            min="00:00"
-                            max="23:59"
-                            className="pl-10"
-                            value={submissionStartTime}
-                            onChange={(e) =>
-                              setSubmissionStartTime(e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    {fieldErrors.submissionStart && (
-                      <p className="text-xs text-destructive mt-1">
-                        {fieldErrors.submissionStart}
-                      </p>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="subEndDate">
-                          End Date / วันที่สิ้นสุดส่ง{" "}
-                          <span className="text-destructive">*</span>
-                        </Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {formatThaiBE(selectedSubEnd)}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="p-0">
-                            <DateCalendar
-                              mode="single"
-                              captionLayout="dropdown"
-                              selected={selectedSubEnd}
-                              onSelect={(d: Date | undefined) => {
-                                if (d) {
-                                  setSelectedSubEnd(d);
-                                  setSubmissionEndDate(toDateStr(d));
-                                }
-                              }}
-                              disabled={
-                                selectedSubStart || selectedStart
-                                  ? (date) => {
-                                      if (selectedSubStart && date < selectedSubStart) {
-                                        return true;
-                                      }
-                                      if (selectedStart && date >= selectedStart) {
-                                        return true;
-                                      }
-                                      return false;
-                                    }
-                                  : undefined
-                              }
-                              formatters={{
-                                formatMonthDropdown: (date) =>
-                                  date.toLocaleString("th-TH", {
-                                    month: "long",
-                                  }),
-                                formatYearDropdown: (date) =>
-                                  String(date.getFullYear() + 543),
-                              }}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="subEndTime">
-                          End Time / เวลาสิ้นสุดส่ง{" "}
-                          <span className="text-destructive">*</span>
-                        </Label>
-                        <div className="relative">
-                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="subEndTime"
-                            type="time"
-                            step="60"
-                            min="00:00"
-                            max="23:59"
-                            className="pl-10"
-                            value={submissionEndTime}
-                            onChange={(e) =>
-                              setSubmissionEndTime(e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    {fieldErrors.submissionEnd && (
-                      <p className="text-xs text-destructive mt-1">
-                        {fieldErrors.submissionEnd}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <PresenterSection
+                maxPresenters={maxPresenters}
+                setMaxPresenters={setMaxPresenters}
+                maxGroups={maxGroups}
+                setMaxGroups={setMaxGroups}
+                selectedSubStart={selectedSubStart}
+                setSelectedSubStart={setSelectedSubStart}
+                submissionStartDate={submissionStartDate}
+                setSubmissionStartDate={setSubmissionStartDate}
+                submissionStartTime={submissionStartTime}
+                setSubmissionStartTime={setSubmissionStartTime}
+                selectedSubEnd={selectedSubEnd}
+                setSelectedSubEnd={setSelectedSubEnd}
+                submissionEndDate={submissionEndDate}
+                setSubmissionEndDate={setSubmissionEndDate}
+                submissionEndTime={submissionEndTime}
+                setSubmissionEndTime={setSubmissionEndTime}
+                fieldErrors={fieldErrors}
+                calendarStartMonth={calendarStartMonth}
+                calendarEndMonth={calendarEndMonth}
+                formatThaiBE={formatThaiBE}
+                selectedStart={selectedStart}
+              />
 
               {/* Committee & Guest Section */}
-              <Card id="committee" className="scroll-mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <UserCheck className="h-5 w-5 text-primary" />
-                    Committee & Guest Details / คณะกรรมการและผู้เข้าร่วม
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="hasCommittee"
-                        checked={hasCommittee}
-                        onCheckedChange={(checked) =>
-                          setHasCommittee(checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="hasCommittee" className="cursor-pointer">
-                        Event has committee members / มีคณะกรรมการในงาน
-                      </Label>
-                    </div>
-
-                    {hasCommittee && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 animate-in fade-in slide-in-from-top-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="committeeReward">
-                            Virtual Rewards per Person / รางวัลเสมือนต่อคน
-                          </Label>
-                          <div className="relative">
-                            <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="committeeReward"
-                              type="number"
-                              placeholder="e.g. 100"
-                              className="pl-10"
-                              value={committeeReward}
-                              onChange={(e) =>
-                                setCommitteeReward(e.target.value)
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border-t pt-6 space-y-4">
-                    <div className="space-y-2 max-w-xs">
-                      <Label htmlFor="guestRewardAmount">
-                        Virtual Rewards Amount per Guest /
-                        จำนวนรางวัลเสมือนต่อผู้เข้าร่วม
-                      </Label>
-                      <div className="relative">
-                        <Gift className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="guestRewardAmount"
-                          type="number"
-                          placeholder="e.g. 50"
-                          className="pl-10"
-                          value={guestRewardAmount}
-                          onChange={(e) => setGuestRewardAmount(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <CommitteeSection
+                hasCommittee={hasCommittee}
+                setHasCommittee={setHasCommittee}
+                committeeReward={committeeReward}
+                setCommitteeReward={setCommitteeReward}
+                guestRewardAmount={guestRewardAmount}
+                setGuestRewardAmount={setGuestRewardAmount}
+              />
 
               {/* Special Rewards Section */}
-              <Card id="rewards" className="scroll-mt-6">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Award className="h-5 w-5 text-primary" />
-                    Special Rewards / รางวัลพิเศษ
-                  </CardTitle>
-                  <Button
-                    onClick={handleAddSpecialReward}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Reward / เพิ่มรางวัล
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {specialRewards.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Gift className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>No special rewards added yet / ยังไม่มีรางวัลพิเศษ</p>
-                      <p className="text-sm">
-                        Click &quot;Add Reward&quot; to create one / คลิก
-                        &quot;เพิ่มรางวัล&quot; เพื่อสร้าง
-                      </p>
-                    </div>
-                  ) : (
-                    specialRewards.map((reward, index) => (
-                      <div
-                        key={reward.id}
-                        className="border rounded-lg p-4 space-y-4 bg-muted/30"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-muted-foreground">
-                            Reward #{index + 1}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleRemoveReward(reward.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Reward Name / ชื่อรางวัล</Label>
-                          <Input
-                            placeholder="e.g. Best Presentation"
-                            value={reward.name}
-                            onChange={(e) =>
-                              handleRewardChange(
-                                reward.id,
-                                "name",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Description / รายละเอียด</Label>
-                          <Textarea
-                            placeholder="Describe what this reward is for..."
-                            value={reward.description}
-                            onChange={(e) =>
-                              handleRewardChange(
-                                reward.id,
-                                "description",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
+              <SpecialRewardsSection
+                specialRewards={specialRewards}
+                srPreviews={srPreviews}
+                openRewardFilePicker={openRewardFilePicker}
+                rewardFileRefs={rewardFileRefs}
+                handleRewardFileChange={handleRewardFileChange}
+                handleRemoveRewardImage={handleRemoveRewardImage}
+                handleAddSpecialReward={handleAddSpecialReward}
+                handleRemoveReward={handleRemoveReward}
+                handleRewardChange={handleRewardChange}
+                rewardErrors={rewardErrors}
+                srCropOpen={srCropOpen}
+                srCropSrc={srCropSrc}
+                srPendingMeta={srPendingMeta}
+                onRewardCropCancel={handleRewardCropCancel}
+                onRewardCropConfirm={handleRewardCropConfirm}
+              />
 
-              <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <DialogContent className="sm:max-w-sm">
-                  <DialogHeader>
-                    <DialogTitle>ยืนยันการลบ</DialogTitle>
-                    <DialogDescription>ยืนยันลบ Event ฉบับร่างนี้หรือไม่?</DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter className="flex flex-col sm:flex-row sm:gap-3 w-full gap-2">
-                    <DialogClose asChild>
-                      <Button variant="outline" className="w-full sm:w-1/2">Cancel</Button>
-                    </DialogClose>
-                    <Button
-                      variant="destructive"
-                      className="w-full sm:w-1/2"
-                      onClick={async () => {
-                        try {
-                          await deleteEvent(id);
-                          setDeleteConfirmOpen(false);
-                          setDeleteSuccessOpen(true);
-                        } catch (e: unknown) {
-                          console.error(e);
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <DeleteConfirmDialog
+                open={deleteConfirmOpen}
+                onOpenChange={setDeleteConfirmOpen}
+                onConfirm={async () => {
+                  try {
+                    await deleteEvent(id);
+                    setDeleteConfirmOpen(false);
+                    setDeleteSuccessOpen(true);
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+              />
 
-              <Dialog open={deleteSuccessOpen} onOpenChange={(o) => { setDeleteSuccessOpen(o); if (!o) router.push("/dashboard"); }}>
-                <DialogContent className="sm:max-w-sm flex flex-col items-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                    <Check className="h-6 w-6 text-green-600" />
-                  </div>
-                  <DialogHeader className="text-center gap-0">
-                    <DialogTitle className="text-center">Deleted successfully</DialogTitle>
-                    <DialogDescription className="mt-2 text-center mx-auto sm:max-w-[90%]">
-                      Event draft has been deleted.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter className="flex flex-col sm:flex-row sm:gap-3 w-full gap-2">
-                    <DialogClose asChild>
-                      <Button variant="default" className="w-full sm:w-1/2" onClick={() => router.push("/dashboard")}>Go to Dashboard</Button>
-                    </DialogClose>
-                    <DialogClose asChild>
-                      <Button variant="outline" className="w-full sm:w-1/2">Close</Button>
-                    </DialogClose>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <DeleteSuccessDialog
+                open={deleteSuccessOpen}
+                onOpenChange={(o) => {
+                  setDeleteSuccessOpen(o);
+                  if (!o) router.push("/dashboard");
+                }}
+                onGoDashboard={() => router.push("/dashboard")}
+              />
 
               {/* Save Button (Mobile) */}
               <div className="lg:hidden grid grid-cols-3 gap-2">

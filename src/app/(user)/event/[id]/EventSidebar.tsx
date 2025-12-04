@@ -15,6 +15,7 @@ type EventSidebarProps = {
   onSectionChange: (section: string) => void;
   eventId?: string;
   onSaveDraft?: () => void;
+  completionPercent?: number;
 };
 
 export function EventSidebar({
@@ -23,6 +24,7 @@ export function EventSidebar({
   onSectionChange,
   eventId,
   onSaveDraft,
+  completionPercent,
 }: EventSidebarProps) {
   const handleSectionClick = (sectionId: string) => {
     onSectionChange(sectionId);
@@ -37,6 +39,20 @@ export function EventSidebar({
       <div className="p-6 border-b border-border">
         <h2 className="font-semibold text-foreground">Edit Event / แก้ไขอีเวนต์</h2>
         <p className="text-sm text-muted-foreground mt-1">Fill in the details below / กรอกรายละเอียดด้านล่าง</p>
+        {typeof completionPercent === "number" && (
+          <div className="mt-4 flex items-center gap-3">
+            <div className="relative h-16 w-16">
+              <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="28" className="text-muted-foreground/20" stroke="currentColor" strokeWidth="6" fill="transparent" />
+                <circle cx="32" cy="32" r="28" className="text-primary" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="176" strokeDashoffset={Math.max(0, 176 - (176 * (completionPercent || 0)) / 100)} />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-sm font-semibold">{Math.round(completionPercent)}%</span>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground">Progress</div>
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 p-4">
