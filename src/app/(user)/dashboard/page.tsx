@@ -238,9 +238,9 @@ export default function DashboardPage() {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-tertiary/40 to-brand-primary/40 text-lg font-semibold text-primary-foreground">
+                                <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 text-lg font-semibold text-primary-foreground">
                                   <img
-                                    src="./icon.png"
+                                    src="/banner.png"
                                     alt={event.eventName}
                                     className="h-full w-full object-cover"
                                   />
@@ -339,8 +339,12 @@ export default function DashboardPage() {
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-tertiary/40 to-brand-primary/40 text-lg font-semibold text-primary-foreground">
-                                    {initials}
+                                  <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 text-lg font-semibold text-primary-foreground">
+                                    <img
+                                      src="/banner.png"
+                                      alt={event.eventName}
+                                      className="h-full w-full object-cover"
+                                    />
                                   </div>
                                 )}
                                 <span className="absolute top-2 left-2 px-2 py-1 text-[10px] font-medium rounded-2xl bg-emerald-500 text-white shadow-sm">

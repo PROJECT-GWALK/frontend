@@ -46,8 +46,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar as DateCalendar } from "@/components/ui/calendar";
-import { EventSidebar } from "@/app/(user)/event/[id]/EventSidebar";
+import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
 
 import {
   getEvent,

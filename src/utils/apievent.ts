@@ -88,6 +88,15 @@ export const publishEvent = async (id: string) => {
   return res.data; // { message, event }
 };
 
+export const setEventPublicView = async (id: string, publicView: boolean) => {
+  const res = await axios.put(
+    `/backend/api/events/${id}/publicview`,
+    { publicView },
+    { withCredentials: true }
+  );
+  return res.data; // { message, event }
+};
+
 // ====================== CHECK EVENT NAME ======================
 export const checkEventName = async (eventName: string) => {
   const res = await axios.get(`/backend/api/events/check-name/check`, {
