@@ -32,11 +32,7 @@ import {
   Check,
   X,
 } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogClose,
@@ -121,13 +117,10 @@ export default function EventDraft() {
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [selectedStart, setSelectedStart] = useState<Date | undefined>(
-    undefined
-  );
+  const [selectedStart, setSelectedStart] = useState<Date | undefined>(undefined);
   const [selectedEnd, setSelectedEnd] = useState<Date | undefined>(undefined);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const toDateStr = (d: Date) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const toDateStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const formatThaiBE = (d?: Date) =>
     d
       ? d.toLocaleDateString("th-TH", { day: "numeric", month: "long" }) +
@@ -154,12 +147,8 @@ export default function EventDraft() {
   const [submissionStartTime, setSubmissionStartTime] = useState("");
   const [submissionEndDate, setSubmissionEndDate] = useState("");
   const [submissionEndTime, setSubmissionEndTime] = useState("");
-  const [selectedSubStart, setSelectedSubStart] = useState<Date | undefined>(
-    undefined
-  );
-  const [selectedSubEnd, setSelectedSubEnd] = useState<Date | undefined>(
-    undefined
-  );
+  const [selectedSubStart, setSelectedSubStart] = useState<Date | undefined>(undefined);
+  const [selectedSubEnd, setSelectedSubEnd] = useState<Date | undefined>(undefined);
 
   // Committee & Guest
   const [hasCommittee, setHasCommittee] = useState(false);
@@ -193,20 +182,12 @@ export default function EventDraft() {
     setSpecialRewards(specialRewards.filter((r) => r.id !== id));
   };
 
-  const handleRewardChange = (
-    id: string,
-    field: "name" | "description",
-    value: string
-  ) => {
-    setSpecialRewards(
-      specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r))
-    );
+  const handleRewardChange = (id: string, field: "name" | "description", value: string) => {
+    setSpecialRewards(specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
   const rewardFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>(
-    {}
-  );
+  const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>({});
   const [srFiles, setSrFiles] = useState<Record<string, File | null>>({});
   const [srRemoved, setSrRemoved] = useState<Record<string, boolean>>({});
   const [srCropOpen, setSrCropOpen] = useState(false);
@@ -222,10 +203,7 @@ export default function EventDraft() {
     rewardFileRefs.current[id]?.click();
   };
 
-  const handleRewardFileChange = (
-    id: string,
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleRewardFileChange = (id: string, e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!BANNER_TYPES.includes(f.type)) {
@@ -238,8 +216,7 @@ export default function EventDraft() {
       e.target.value = "";
       return;
     }
-    if (srPreviews[id]?.startsWith("blob:"))
-      URL.revokeObjectURL(srPreviews[id] as string);
+    if (srPreviews[id]?.startsWith("blob:")) URL.revokeObjectURL(srPreviews[id] as string);
     const url = URL.createObjectURL(f);
     setSrCropSrc(url);
     setSrPendingMeta({ id, name: f.name, type: f.type || "image/png" });
@@ -249,8 +226,7 @@ export default function EventDraft() {
 
   const handleRewardCropCancel = () => {
     setSrCropOpen(false);
-    if (srCropSrc && srCropSrc.startsWith("blob:"))
-      URL.revokeObjectURL(srCropSrc);
+    if (srCropSrc && srCropSrc.startsWith("blob:")) URL.revokeObjectURL(srCropSrc);
     setSrCropSrc(null);
     setSrPendingMeta(null);
   };
@@ -272,28 +248,17 @@ export default function EventDraft() {
     setSrRemoved((p) => ({ ...p, [id]: true }));
   };
 
-  const toISO = (date: string, time: string) =>
-    date && time ? `${date}T${time}` : null;
+  const toISO = (date: string, time: string) => (date && time ? `${date}T${time}` : null);
   const toDate = (date?: string, time?: string) =>
     date && time ? new Date(`${date}T${time}`) : null;
   const buildPayload = (opts?: { isoDates?: boolean }): EventUpdatePayload => {
     const iso = Boolean(opts?.isoDates);
     const svDate = iso ? toDate(startDate, startTime) : null;
     const evDate = iso ? toDate(endDate, endTime) : null;
-    const sjDate = iso
-      ? toDate(submissionStartDate, submissionStartTime)
-      : null;
+    const sjDate = iso ? toDate(submissionStartDate, submissionStartTime) : null;
     const ejDate = iso ? toDate(submissionEndDate, submissionEndTime) : null;
-    const sv = iso
-      ? svDate
-        ? svDate.toISOString()
-        : null
-      : toISO(startDate, startTime);
-    const ev = iso
-      ? evDate
-        ? evDate.toISOString()
-        : null
-      : toISO(endDate, endTime);
+    const sv = iso ? (svDate ? svDate.toISOString() : null) : toISO(startDate, startTime);
+    const ev = iso ? (evDate ? evDate.toISOString() : null) : toISO(endDate, endTime);
     const sj = iso
       ? sjDate
         ? sjDate.toISOString()
@@ -317,8 +282,7 @@ export default function EventDraft() {
       maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
       maxTeams: maxGroups ? parseInt(maxGroups) : null,
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
-      virtualRewardCommittee:
-        hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
+      virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
       specialRewards,
     };
   };
@@ -326,11 +290,7 @@ export default function EventDraft() {
     const formData = new FormData();
     Object.entries(payload).forEach(([k, v]) => {
       if (v === null || v === undefined) return;
-      if (
-        typeof v === "string" ||
-        typeof v === "number" ||
-        typeof v === "boolean"
-      ) {
+      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
         formData.append(k, String(v));
       } else {
         // For arrays/objects like specialRewards, send as JSON string
@@ -355,9 +315,7 @@ export default function EventDraft() {
       setNameChecked(null);
       const backendMessage =
         typeof e === "object" && e && "response" in e
-          ? ((e as AxiosError<{ message: string }>)?.response?.data?.message as
-              | string
-              | undefined)
+          ? ((e as AxiosError<{ message: string }>)?.response?.data?.message as string | undefined)
           : null;
       if (backendMessage === "Event name already exists") {
         toast.error("ไม่สามารถใช้ชื่อนี้ได้");
@@ -392,43 +350,48 @@ export default function EventDraft() {
     const errors: Record<string, string> = {};
 
     if (!eventTitle.trim()) {
-      errors.eventTitle = "กรุณากรอก Event Title";
+      errors.eventTitle = "กรุณากรอกชื่ออีเว้นต์";
+      toast.error("กรุณากรอกชื่ออีเว้นต์");
+      setActiveSection("event-info");
     }
     if (!(startDate && startTime)) {
-      errors.startDateTime = "กรุณากรอก Start View วันที่และเวลา";
+      errors.startDateTime = "กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์";
+      toast.error("กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์");
+      setActiveSection("event-info");
     }
     if (!(endDate && endTime)) {
-      errors.endDateTime = "กรุณากรอก End View วันที่และเวลา";
+      errors.endDateTime = "กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์";
+      toast.error("กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์");
+      setActiveSection("event-info");
     }
     const sv = toDate(startDate, startTime); // Event Start
     const ev = toDate(endDate, endTime); // Event End
     if (sv && ev && sv > ev) {
-      errors.endDateTime = "Start View ต้องอยู่ก่อน End View";
+      errors.endDateTime = "วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด";
+      toast.error("วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด");
+      setActiveSection("event-info");
     }
     const hasJoinInput = Boolean(
-      submissionStartDate ||
-        submissionStartTime ||
-        submissionEndDate ||
-        submissionEndTime
+      submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime
     );
     const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
     const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
       if (!(submissionStartDate && submissionStartTime)) {
-        errors.submissionStart = "กรุณากรอก Submission Start วันที่และเวลา";
+        errors.submissionStart = "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน";
       }
       if (!(submissionEndDate && submissionEndTime)) {
-        errors.submissionEnd = "กรุณากรอก Submission End วันที่และเวลา";
+        errors.submissionEnd = "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน";
       }
       if (sj && ej && sj > ej) {
-        errors.submissionEnd = "Submission Start ต้องอยู่ก่อน Submission End";
+        errors.submissionEnd = "วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด";
       }
       // Submission Period ต้องอยู่ก่อน Event
       if (sj && sv && sj > sv) {
-        errors.submissionStart = "Submission Start ต้องอยู่ก่อน Event Start";
+        errors.submissionStart = "วันที่-เวลาเริ่มส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์";
       }
       if (ej && sv && ej > sv) {
-        errors.submissionEnd = "Submission End ต้องอยู่ก่อน Event Start";
+        errors.submissionEnd = "วันที่-เวลาสิ้นสุดส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์";
       }
     }
     return errors;
@@ -489,9 +452,7 @@ export default function EventDraft() {
       const res = await checkEventName(eventTitle.trim());
       const ok = Boolean(res?.available);
       setNameChecked(ok);
-      toast[ok ? "success" : "error"](
-        ok ? "ชื่อ Event ใช้ได้" : "ชื่อ Event ถูกใช้แล้ว"
-      );
+      toast[ok ? "success" : "error"](ok ? "ชื่อ Event ใช้ได้" : "ชื่อ Event ถูกใช้แล้ว");
     } catch (e) {
       console.error(e);
       setNameChecked(null);
@@ -515,6 +476,16 @@ export default function EventDraft() {
 
     const okRewards = validateSpecialRewardsDraft();
     if (!okRewards) return;
+    
+    // Validate start/end 
+    const sv = toDate(startDate, startTime);
+    const ev = toDate(endDate, endTime);
+    if (sv && ev && sv > ev) {
+      toast.error("Start View ต้องอยู่ก่อน End View");
+      setActiveSection("event-info");
+      return;
+    }
+
     toast.info("กำลังบันทึก Draft...");
 
     try {
@@ -531,8 +502,7 @@ export default function EventDraft() {
       toast.success("บันทึก Draft สำเร็จ");
     } catch (err) {
       console.error(err);
-      const message =
-        err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
+      const message = err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
       toast.error(mapEventNameMessage(message));
     }
   };
@@ -564,8 +534,7 @@ export default function EventDraft() {
       window.location.reload();
     } catch (err) {
       console.error(err);
-      const message =
-        err instanceof Error ? err.message : "Error publishing event";
+      const message = err instanceof Error ? err.message : "Error publishing event";
       toast.error(mapEventNameMessage(message));
     }
   };
@@ -573,9 +542,7 @@ export default function EventDraft() {
   const syncSpecialRewards = async () => {
     if (!id) return;
     if (!event) return;
-    const existingIds = new Set(
-      (event.specialRewards || []).map((r: any) => r.id)
-    );
+    const existingIds = new Set((event.specialRewards || []).map((r: any) => r.id));
     const removed = (event.specialRewards || []).filter(
       (r: any) => !specialRewards.some((sr) => sr.id === r.id)
     );
@@ -734,12 +701,10 @@ export default function EventDraft() {
         // Dates
         setSelectedStart(data.startView ? new Date(data.startView) : undefined);
         setStartDate(data.startView ? data.startView.split("T")[0] : "");
-        setStartTime(
-          data.startView ? data.startView.split("T")[1]?.slice(0, 5) : ""
-        );
+        setStartTime(data.startView ? data.startView.split("T")[1]?.slice(0, 5) : "00:01");
         setSelectedEnd(data.endView ? new Date(data.endView) : undefined);
         setEndDate(data.endView ? data.endView.split("T")[0] : "");
-        setEndTime(data.endView ? data.endView.split("T")[1]?.slice(0, 5) : "");
+        setEndTime(data.endView ? data.endView.split("T")[1]?.slice(0, 5) : "23:59");
         // Visibility
         setEventVisibility(data.publicView ? "public" : "private");
 
@@ -748,25 +713,15 @@ export default function EventDraft() {
         setMaxGroups(data.maxTeams?.toString() || "");
 
         // ================= SUBMISSION PERIOD =================
-        setSelectedSubStart(
-          data.startJoinDate ? new Date(data.startJoinDate) : undefined
-        );
-        setSubmissionStartDate(
-          data.startJoinDate ? data.startJoinDate.split("T")[0] : ""
-        );
+        setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
+        setSubmissionStartDate(data.startJoinDate ? data.startJoinDate.split("T")[0] : "");
         setSubmissionStartTime(
-          data.startJoinDate
-            ? data.startJoinDate.split("T")[1]?.slice(0, 5)
-            : ""
+          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01"
         );
-        setSelectedSubEnd(
-          data.endJoinDate ? new Date(data.endJoinDate) : undefined
-        );
-        setSubmissionEndDate(
-          data.endJoinDate ? data.endJoinDate.split("T")[0] : ""
-        );
+        setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
+        setSubmissionEndDate(data.endJoinDate ? data.endJoinDate.split("T")[0] : "");
         setSubmissionEndTime(
-          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : ""
+          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59"
         );
 
         // ================= COMMITTEE & GUEST =================
@@ -810,7 +765,7 @@ export default function EventDraft() {
         />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 lg:ml-80 p-6 lg:p-8 w-full">
           {!loading && event && (
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Header */}
@@ -838,10 +793,7 @@ export default function EventDraft() {
                   >
                     Delete / ลบ
                   </Button>
-                  <Button
-                    onClick={handlePublish}
-                    className="px-6 hidden lg:inline-block"
-                  >
+                  <Button onClick={handlePublish} className="px-6 hidden lg:inline-block">
                     Publish / เผยแพร่
                   </Button>
                 </div>
@@ -972,11 +924,7 @@ export default function EventDraft() {
 
               {/* Save Button (Mobile) */}
               <div className="lg:hidden grid grid-cols-3 gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={handleSaveDraft}
-                  className="w-full"
-                >
+                <Button variant="secondary" onClick={handleSaveDraft} className="w-full">
                   Save as Draft / บันทึกดราฟต์
                 </Button>
                 <Button onClick={handlePublish} className="w-full">

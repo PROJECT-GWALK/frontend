@@ -57,7 +57,11 @@ export default function PresenterSection(props: Props) {
     selectedStart,
   } = props;
 
-  const toDateStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const toDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
+      2,
+      "0"
+    )}`;
 
   return (
     <Card id="presenter" className="scroll-mt-6">
@@ -134,7 +138,8 @@ export default function PresenterSection(props: Props) {
                     }}
                     disabled={selectedStart ? (date) => date >= selectedStart : undefined}
                     formatters={{
-                      formatMonthDropdown: (date) => date.toLocaleString("th-TH", { month: "long" }),
+                      formatMonthDropdown: (date) =>
+                        date.toLocaleString("th-TH", { month: "long" }),
                       formatYearDropdown: (date) => String(date.getFullYear() + 543),
                     }}
                     required={false}
@@ -148,11 +153,22 @@ export default function PresenterSection(props: Props) {
               </Label>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="subStartTime" type="time" step="60" min="00:00" max="23:59" className="pl-10" value={submissionStartTime} onChange={(e) => setSubmissionStartTime(e.target.value)} />
+                <Input
+                  id="subStartTime"
+                  type="time"
+                  step="60"
+                  min="00:00"
+                  max="23:59"
+                  className="pl-10"
+                  value={submissionStartTime}
+                  onChange={(e) => setSubmissionStartTime(e.target.value)}
+                />
               </div>
             </div>
           </div>
-          {fieldErrors.submissionStart && <p className="text-xs text-destructive mt-1">{fieldErrors.submissionStart}</p>}
+          {fieldErrors.submissionStart && (
+            <p className="text-xs text-destructive mt-1">{fieldErrors.submissionStart}</p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="subEndDate">
@@ -181,13 +197,18 @@ export default function PresenterSection(props: Props) {
                         setSubmissionEndDate(toDateStr(d));
                       }
                     }}
-                    disabled={selectedSubStart || selectedStart ? (date) => {
-                      if (selectedSubStart && date < selectedSubStart) return true;
-                      if (selectedStart && date >= selectedStart) return true;
-                      return false;
-                    } : undefined}
+                    disabled={
+                      selectedSubStart || selectedStart
+                        ? (date) => {
+                            if (selectedSubStart && date < selectedSubStart) return true;
+                            if (selectedStart && date >= selectedStart) return true;
+                            return false;
+                          }
+                        : undefined
+                    }
                     formatters={{
-                      formatMonthDropdown: (date) => date.toLocaleString("th-TH", { month: "long" }),
+                      formatMonthDropdown: (date) =>
+                        date.toLocaleString("th-TH", { month: "long" }),
                       formatYearDropdown: (date) => String(date.getFullYear() + 543),
                     }}
                   />
@@ -200,11 +221,22 @@ export default function PresenterSection(props: Props) {
               </Label>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="subEndTime" type="time" step="60" min="00:00" max="23:59" className="pl-10" value={submissionEndTime} onChange={(e) => setSubmissionEndTime(e.target.value)} />
+                <Input
+                  id="subEndTime"
+                  type="time"
+                  step="60"
+                  min="00:00"
+                  max="23:59"
+                  className="pl-10"
+                  value={submissionEndTime}
+                  onChange={(e) => setSubmissionEndTime(e.target.value)}
+                />
               </div>
             </div>
           </div>
-          {fieldErrors.submissionEnd && <p className="text-xs text-destructive mt-1">{fieldErrors.submissionEnd}</p>}
+          {fieldErrors.submissionEnd && (
+            <p className="text-xs text-destructive mt-1">{fieldErrors.submissionEnd}</p>
+          )}
         </div>
       </CardContent>
     </Card>

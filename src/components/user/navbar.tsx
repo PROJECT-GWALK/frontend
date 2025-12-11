@@ -54,7 +54,7 @@ export function Navbar() {
   }, [status]);
 
   return (
-    <nav className="border-b">
+    <nav className="sticky top-0 z-50 border-b bg-background">
       <div className="container mx-auto px-8 py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -62,12 +62,7 @@ export function Navbar() {
             <Link href="/" className="text-lg font-bold">
               <div className="flex items-center space-x-4">
                 {appBrand.logo && (
-                  <Image
-                    src={appBrand.logo}
-                    alt={appBrand.name}
-                    width={32}
-                    height={32}
-                  />
+                  <Image src={appBrand.logo} alt={appBrand.name} width={32} height={32} />
                 )}
                 {appBrand.name && <div>{appBrand.name}</div>}
               </div>
@@ -95,24 +90,17 @@ export function Navbar() {
             {user ? (
               <div className="flex items-center space-x-4">
                 <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    className="select-none hover:border-2"
-                  >
+                  <DropdownMenuTrigger asChild className="select-none hover:border-2">
                     <Avatar>
                       <AvatarImage src={user.image || ""} />
-                      <AvatarFallback>
-                        {user.name?.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
+                      <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user.image || ""} />
-                        <AvatarFallback>
-                          {user.name?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="font-semibold">@{user.username}</span>
@@ -123,8 +111,7 @@ export function Navbar() {
                     {menuItems
                       .filter((item) => {
                         if (item.role === "user") return true;
-                        if (item.role === "admin" && user.role === "ADMIN")
-                          return true;
+                        if (item.role === "admin" && user.role === "ADMIN") return true;
                         return false;
                       })
                       .map((item) => (
@@ -136,9 +123,7 @@ export function Navbar() {
                         </Link>
                       ))}
                     <DropdownMenuItem
-                      onClick={() =>
-                        setTheme(theme === "dark" ? "light" : "dark")
-                      }
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                       className="flex items-center gap-1"
                     >
                       <span className="relative flex h-[1.2rem] w-[1.2rem]">
@@ -174,22 +159,13 @@ export function Navbar() {
               <>
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={user.image || ""} />
-                  <AvatarFallback>
-                    {user.name?.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
+                  <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
 
-                <DropdownMenu
-                  open={isMobileMenuOpen}
-                  onOpenChange={setIsMobileMenuOpen}
-                >
+                <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label="Open menu">
-                      {isMobileMenuOpen ? (
-                        <X className="h-6 w-6" />
-                      ) : (
-                        <Menu className="h-6 w-6" />
-                      )}
+                      {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -204,9 +180,7 @@ export function Navbar() {
                       <DropdownMenuLabel className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.image || ""} />
-                          <AvatarFallback>
-                            {user.name?.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
+                          <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                           <span className="font-semibold">@{user.username}</span>
@@ -218,9 +192,7 @@ export function Navbar() {
                     {/* Primary nav */}
                     {navbarItems.map((link) => (
                       <Link key={link.url} href={link.url}>
-                        <DropdownMenuItem key={link.url}>
-                          {link.title}
-                        </DropdownMenuItem>
+                        <DropdownMenuItem key={link.url}>{link.title}</DropdownMenuItem>
                       </Link>
                     ))}
 
@@ -231,8 +203,7 @@ export function Navbar() {
                       {menuItems
                         .filter((item) => {
                           if (item.role === "user") return true;
-                          if (item.role === "admin" && user.role === "ADMIN")
-                            return true;
+                          if (item.role === "admin" && user.role === "ADMIN") return true;
                           return false;
                         })
                         .map((item) => (
@@ -244,9 +215,7 @@ export function Navbar() {
                           </Link>
                         ))}
                       <DropdownMenuItem
-                        onClick={() =>
-                          setTheme(theme === "dark" ? "light" : "dark")
-                        }
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                         className="flex items-center gap-1"
                       >
                         <span className="relative flex h-[1.2rem] w-[1.2rem]">

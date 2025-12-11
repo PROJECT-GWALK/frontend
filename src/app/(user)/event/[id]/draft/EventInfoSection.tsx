@@ -8,8 +8,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import ImageCropDialog from "@/lib/image-crop-dialog";
-import { Calendar as CalendarIcon, Clock, MapPin, Link as LinkIcon, Upload, Info, Check, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  Link as LinkIcon,
+  Upload,
+  Info,
+  Check,
+  X,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Props = {
   eventTitle: string;
@@ -96,7 +111,11 @@ export default function EventInfoSection(props: Props) {
     setLocationLink,
   } = props;
 
-  const toDateStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const toDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
+      2,
+      "0"
+    )}`;
 
   return (
     <Card id="event-info" className="scroll-mt-6">
@@ -171,12 +190,26 @@ export default function EventInfoSection(props: Props) {
           />
           {bannerPreview ? (
             <div className="relative border rounded-lg overflow-hidden aspect-[2/1] bg-muted">
-              <img src={bannerPreview} alt="Event banner preview" className="absolute inset-0 h-full w-full object-cover" />
+              <img
+                src={bannerPreview}
+                alt="Event banner preview"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
               <div className="absolute top-2 right-2 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={openFilePicker}>Change</Button>
-                <Button size="sm" variant="destructive" onClick={onRemoveBanner}>Remove</Button>
+                <Button size="sm" variant="secondary" onClick={openFilePicker}>
+                  Change
+                </Button>
+                <Button size="sm" variant="destructive" onClick={onRemoveBanner}>
+                  Remove
+                </Button>
               </div>
-              <input type="file" className="hidden" accept="image/*" ref={fileInputRef} onChange={onBannerFileChange} />
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={onBannerFileChange}
+              />
             </div>
           ) : (
             <div
@@ -185,124 +218,171 @@ export default function EventInfoSection(props: Props) {
             >
               <Upload className="h-10 w-10 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or GIF (crop to 800x400px)</p>
-              <input type="file" className="hidden" accept="image/*" ref={fileInputRef} onChange={onBannerFileChange} />
+              <p className="text-xs text-muted-foreground mt-1">
+                PNG, JPG, or GIF (crop to 800x400px)
+              </p>
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={onBannerFileChange}
+              />
             </div>
           )}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">
-              Start Date / วันที่เริ่ม <span className="text-destructive">*</span>
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {formatThaiBE(selectedStart)}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0 flex justify-center">
-                <DateCalendar
-                  mode="single"
-                  captionLayout="dropdown"
-                  className="mx-auto"
-                  fixedWeeks
-                  defaultMonth={selectedStart || new Date()}
-                  startMonth={calendarStartMonth}
-                  endMonth={calendarEndMonth}
-                  selected={selectedStart}
-                  onSelect={(d: Date | undefined) => {
-                    if (d) {
-                      setSelectedStart(d);
-                      setStartDate(toDateStr(d));
-                    }
-                  }}
-                  formatters={{
-                    formatMonthDropdown: (date) => date.toLocaleString("th-TH", { month: "long" }),
-                    formatYearDropdown: (date) => String(date.getFullYear() + 543),
-                  }}
-                  required
+        <div className="border-t pt-6">
+          <h4 className="font-medium mb-4">Event Time Period / ช่วงเวลาอีเวนต์</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">
+                Start Date / วันที่เริ่ม <span className="text-destructive">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {formatThaiBE(selectedStart)}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 flex justify-center">
+                  <DateCalendar
+                    mode="single"
+                    captionLayout="dropdown"
+                    className="mx-auto"
+                    fixedWeeks
+                    defaultMonth={selectedStart || new Date()}
+                    startMonth={calendarStartMonth}
+                    endMonth={calendarEndMonth}
+                    selected={selectedStart}
+                    onSelect={(d: Date | undefined) => {
+                      if (d) {
+                        setSelectedStart(d);
+                        setStartDate(toDateStr(d));
+                      }
+                    }}
+                    formatters={{
+                      formatMonthDropdown: (date) =>
+                        date.toLocaleString("th-TH", { month: "long" }),
+                      formatYearDropdown: (date) => String(date.getFullYear() + 543),
+                    }}
+                    required
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="startTime">
+                Start Time / เวลาเริ่ม <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="startTime"
+                  type="time"
+                  step="60"
+                  min="00:00"
+                  max="23:59"
+                  className="pl-10"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
                 />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="startTime">
-              Start Time / เวลาเริ่ม <span className="text-destructive">*</span>
-            </Label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="startTime" type="time" step="60" min="00:00" max="23:59" className="pl-10" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
             </div>
           </div>
-        </div>
-        {fieldErrors.startDateTime && <p className="text-xs text-destructive mt-1">{fieldErrors.startDateTime}</p>}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="endDate">
-              End Date / วันที่สิ้นสุด <span className="text-destructive">*</span>
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {formatThaiBE(selectedEnd)}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0 flex justify-center">
-                <DateCalendar
-                  mode="single"
-                  captionLayout="dropdown"
-                  className="mx-auto"
-                  fixedWeeks
-                  defaultMonth={selectedEnd || selectedStart || new Date()}
-                  startMonth={calendarStartMonth}
-                  endMonth={calendarEndMonth}
-                  selected={selectedEnd}
-                  onSelect={(d: Date | undefined) => {
-                    if (d) {
-                      setSelectedEnd(d);
-                      setEndDate(toDateStr(d));
-                    }
-                  }}
-                  disabled={selectedStart ? (date) => date < selectedStart : undefined}
-                  formatters={{
-                    formatMonthDropdown: (date: Date) => date.toLocaleString("th-TH", { month: "long" }),
-                    formatYearDropdown: (date: Date) => String(date.getFullYear() + 543),
-                  }}
-                  required
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endTime">
-              End Time / เวลาสิ้นสุด <span className="text-destructive">*</span>
-            </Label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="endTime" type="time" step="60" min="00:00" max="23:59" className="pl-10" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          {fieldErrors.startDateTime && (
+            <p className="text-xs text-destructive mt-1">{fieldErrors.startDateTime}</p>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="endDate">
+                End Date / วันที่สิ้นสุด <span className="text-destructive">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                    {formatThaiBE(selectedEnd)}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 flex justify-center">
+                  <DateCalendar
+                    mode="single"
+                    captionLayout="dropdown"
+                    className="mx-auto"
+                    fixedWeeks
+                    defaultMonth={selectedEnd || selectedStart || new Date()}
+                    startMonth={calendarStartMonth}
+                    endMonth={calendarEndMonth}
+                    selected={selectedEnd}
+                    onSelect={(d: Date | undefined) => {
+                      if (d) {
+                        setSelectedEnd(d);
+                        setEndDate(toDateStr(d));
+                      }
+                    }}
+                    disabled={selectedStart ? (date) => date < selectedStart : undefined}
+                    formatters={{
+                      formatMonthDropdown: (date: Date) =>
+                        date.toLocaleString("th-TH", { month: "long" }),
+                      formatYearDropdown: (date: Date) => String(date.getFullYear() + 543),
+                    }}
+                    required
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="endTime">
+                End Time / เวลาสิ้นสุด <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="endTime"
+                  type="time"
+                  step="60"
+                  min="00:00"
+                  max="23:59"
+                  className="pl-10"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+            {fieldErrors.endDateTime && (
+              <p className="text-xs text-destructive mt-1">{fieldErrors.endDateTime}</p>
+            )}
           </div>
         </div>
-        {fieldErrors.endDateTime && <p className="text-xs text-destructive mt-1">{fieldErrors.endDateTime}</p>}
 
         <div className="space-y-2">
           <Label htmlFor="locationPlace">Location / Venue / สถานที่จัดงาน</Label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input id="locationPlace" placeholder="e.g. Convention Center, Hall A" className="pl-10" value={locationPlace} onChange={(e) => setLocationPlace(e.target.value)} />
+            <Input
+              id="locationPlace"
+              placeholder="e.g. Convention Center, Hall A"
+              className="pl-10"
+              value={locationPlace}
+              onChange={(e) => setLocationPlace(e.target.value)}
+            />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="locationLink">Location Link (Google Maps) / ลิงก์ตำแหน่ง (Google Maps)</Label>
+          <Label htmlFor="locationLink">
+            Location Link (Google Maps) / ลิงก์ตำแหน่ง (Google Maps)
+          </Label>
           <div className="relative">
             <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input id="locationLink" placeholder="https://maps.google.com/..." className="pl-10" value={locationLink} onChange={(e) => setLocationLink(e.target.value)} />
+            <Input
+              id="locationLink"
+              placeholder="https://maps.google.com/..."
+              className="pl-10"
+              value={locationLink}
+              onChange={(e) => setLocationLink(e.target.value)}
+            />
           </div>
         </div>
 
