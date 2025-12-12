@@ -1,0 +1,84 @@
+{
+  "navbar": {
+    "dashboard": "Dashboard",
+    "events": "Events",
+    "users": "Users",
+    "logout": "Logout"
+  },
+  "eventDraft": {
+    "editEvent": "Edit Event",
+    "updateEventDetails": "Update your event details",
+    "delete": "Delete",
+    "publish": "Publish",
+    "saveAsDraft": "Save as Draft",
+    "fillDetails": "Fill in the details below",
+    "progress": "Progress"
+  },
+  "eventInfo": {
+    "eventInformation": "Event Information",
+    "eventTitle": "Event Title",
+    "checkName": "Check",
+    "eventDescription": "Event Description",
+    "eventBanner": "Event Banner",
+    "clickToUpload": "Click to upload or drag and drop",
+    "supportedFormats": "PNG, JPG, or GIF (crop to 800x400px)",
+    "change": "Change",
+    "remove": "Remove",
+    "eventTimePeriod": "Event Time Period",
+    "startDate": "Start Date",
+    "startTime": "Start Time",
+    "endDate": "End Date",
+    "endTime": "End Time",
+    "locationVenue": "Location / Venue",
+    "locationLink": "Location Link (Google Maps)",
+    "eventVisibility": "Event Visibility",
+    "public": "Public",
+    "private": "Private"
+  },
+  "presenterSection": {
+    "presenterDetails": "Presenter Details",
+    "maxPresenters": "Max Presenters",
+    "maxTeams": "Max Teams",
+    "submissionPeriod": "Submission Period",
+    "startDateSubmission": "Start Date",
+    "startTimeSubmission": "Start Time",
+    "endDateSubmission": "End Date",
+    "endTimeSubmission": "End Time"
+  },
+  "committeeSection": {
+    "committeeGuest": "Committee & Guest",
+    "hasCommittee": "Include Committee Members",
+    "committeeReward": "Committee Reward Points",
+    "guestReward": "Guest Reward Points"
+  },
+  "rewardsSection": {
+    "specialRewards": "Special Rewards",
+    "rewardName": "Reward Name",
+    "rewardDescription": "Reward Description",
+    "rewardImage": "Reward Image",
+    "addReward": "Add Reward",
+    "remove": "Remove"
+  },
+  "validation": {
+    "eventTitleRequired": "Please enter event title",
+    "startDateTimeRequired": "Please enter start date and time",
+    "endDateTimeRequired": "Please enter end date and time",
+    "startBeforeEnd": "Start must be before end",
+    "submissionStartRequired": "Please enter submission start date and time",
+    "submissionEndRequired": "Please enter submission end date and time",
+    "submissionBeforeEvent": "Submission must be before event start",
+    "rewardNameRequired": "Please enter reward name",
+    "nameTaken": "Event name already in use",
+    "nameAvailable": "Event name available",
+    "checkName": "Check name"
+  },
+  "messages": {
+    "savingDraft": "Saving draft...",
+    "draftSaved": "Draft saved successfully",
+    "draftFailed": "Failed to save draft",
+    "publishing": "Publishing event...",
+    "publishSuccess": "Event published successfully",
+    "publishFailed": "Failed to publish event",
+    "errorLoading": "Failed to load event"
+  }
+}

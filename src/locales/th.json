@@ -1,0 +1,84 @@
+{
+  "navbar": {
+    "dashboard": "แดชบอร์ด",
+    "events": "อีเวนต์",
+    "users": "ผู้ใช้",
+    "logout": "ออกจากระบบ"
+  },
+  "eventDraft": {
+    "editEvent": "แก้ไขอีเวนต์",
+    "updateEventDetails": "อัปเดตรายละเอียดอีเวนต์",
+    "delete": "ลบ",
+    "publish": "เผยแพร่",
+    "saveAsDraft": "บันทึกเป็นแบบร่าง",
+    "fillDetails": "กรอกรายละเอียดด้านล่าง",
+    "progress": "ความคืบหน้า"
+  },
+  "eventInfo": {
+    "eventInformation": "ข้อมูลอีเวนต์",
+    "eventTitle": "หัวข้ออีเวนต์",
+    "checkName": "ตรวจสอบ",
+    "eventDescription": "รายละเอียดอีเวนต์",
+    "eventBanner": "แบนเนอร์อีเวนต์",
+    "clickToUpload": "คลิกเพื่ออัปโหลดหรือลากและวาง",
+    "supportedFormats": "PNG, JPG หรือ GIF (ครอบเป็น 800x400px)",
+    "change": "เปลี่ยน",
+    "remove": "ลบ",
+    "eventTimePeriod": "ช่วงเวลาอีเวนต์",
+    "startDate": "วันที่เริ่ม",
+    "startTime": "เวลาเริ่ม",
+    "endDate": "วันที่สิ้นสุด",
+    "endTime": "เวลาสิ้นสุด",
+    "locationVenue": "สถานที่จัดงาน",
+    "locationLink": "ลิงก์ตำแหน่ง (Google Maps)",
+    "eventVisibility": "การมองเห็นอีเวนต์",
+    "public": "สาธารณะ",
+    "private": "ส่วนตัว"
+  },
+  "presenterSection": {
+    "presenterDetails": "รายละเอียดผู้นำเสนอ",
+    "maxPresenters": "จำนวนผู้นำเสนอสูงสุด",
+    "maxTeams": "จำนวนทีมสูงสุด",
+    "submissionPeriod": "ช่วงการส่งผลงาน",
+    "startDateSubmission": "วันที่เริ่มส่ง",
+    "startTimeSubmission": "เวลาเริ่มส่ง",
+    "endDateSubmission": "วันที่สิ้นสุดส่ง",
+    "endTimeSubmission": "เวลาสิ้นสุดส่ง"
+  },
+  "committeeSection": {
+    "committeeGuest": "คณะกรรมการและผู้เข้าร่วม",
+    "hasCommittee": "รวมสมาชิกคณะกรรมการ",
+    "committeeReward": "แต้มรางวัลคณะกรรมการ",
+    "guestReward": "แต้มรางวัลผู้เข้าร่วม"
+  },
+  "rewardsSection": {
+    "specialRewards": "รางวัลพิเศษ",
+    "rewardName": "ชื่อรางวัล",
+    "rewardDescription": "รายละเอียดรางวัล",
+    "rewardImage": "รูปภาพรางวัล",
+    "addReward": "เพิ่มรางวัล",
+    "remove": "ลบ"
+  },
+  "validation": {
+    "eventTitleRequired": "กรุณากรอก Event Title",
+    "startDateTimeRequired": "กรุณากรอก Start View วันที่และเวลา",
+    "endDateTimeRequired": "กรุณากรอก End View วันที่และเวลา",
+    "startBeforeEnd": "Start View ต้องอยู่ก่อน End View",
+    "submissionStartRequired": "กรุณากรอก Submission Start วันที่และเวลา",
+    "submissionEndRequired": "กรุณากรอก Submission End วันที่และเวลา",
+    "submissionBeforeEvent": "Submission Start ต้องอยู่ก่อน Event Start",
+    "rewardNameRequired": "กรุณากรอกชื่อรางวัล",
+    "nameTaken": "ชื่อ Event ถูกใช้แล้ว",
+    "nameAvailable": "ชื่อ Event ใช้ได้",
+    "checkName": "ตรวจสอบชื่อ"
+  },
+  "messages": {
+    "savingDraft": "กำลังบันทึก Draft...",
+    "draftSaved": "บันทึก Draft สำเร็จ",
+    "draftFailed": "บันทึก Draft ไม่สำเร็จ",
+    "publishing": "กำลังเผยแพร่ Event...",
+    "publishSuccess": "เผยแพร่ Event สำเร็จ",
+    "publishFailed": "เผยแพร่ Event ไม่สำเร็จ",
+    "errorLoading": "โหลด Event ไม่สำเร็จ"
+  }
+}
