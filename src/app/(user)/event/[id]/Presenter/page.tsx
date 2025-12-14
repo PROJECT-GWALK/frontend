@@ -591,17 +591,75 @@ export default function PublishedPresenterView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="project">
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>ผลงานของฉัน</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground">ยังไม่มีข้อมูลผลงาน</div>
-                  </CardContent>
-                </Card>
+  <div className="mt-6 space-y-6">
+
+    {/* My Project */}
+    <div>
+      <h2 className="text-lg font-semibold mb-3">My Project</h2>
+      <Card className="flex items-center gap-4 p-4 rounded-xl">
+        <Image
+          src="/project1.png"
+          alt="Doctor Web App"
+          width={64}
+          height={64}
+          className="rounded-xl"
+        />
+        <div>
+          <div className="font-semibold">01 - Doctor Web App</div>
+          <div className="text-sm text-muted-foreground">
+            Create Appointment, View Medical Records etc.
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    {/* Presenters */}
+    <div>
+      <h2 className="text-lg font-semibold mb-3">10 Presenters</h2>
+
+      <div className="space-y-3">
+        {[
+          {
+            id: "01",
+            title: "Doctor Web App",
+            desc: "Create Appointment, View Medical Records etc.",
+            img: "/project1.png",
+          },
+          {
+            id: "02",
+            title: "Restaurant Application",
+            desc: "Create Reservation, View Menu etc.",
+            img: "/project2.png",
+          },
+          {
+            id: "03",
+            title: "CMU Hub",
+            desc: "Hub for every CMU students.",
+            img: "/project3.png",
+          },
+        ].map((p) => (
+          <Card key={p.id} className="flex items-center gap-4 p-4 rounded-xl">
+            <Image
+              src={p.img}
+              alt={p.title}
+              width={64}
+              height={64}
+              className="rounded-xl"
+            />
+            <div>
+              <div className="font-semibold">
+                {p.id} - {p.title}
               </div>
-            </TabsContent>
+              <div className="text-sm text-muted-foreground">{p.desc}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</TabsContent>
+
 
             <TabsContent value="result">
               <div className="mt-6">
