@@ -90,7 +90,7 @@ export const publishEvent = async (id: string) => {
 
 export const setEventPublicView = async (id: string, publicView: boolean) => {
   const res = await axios.put(
-    `/backend/api/events/${id}/publicview`,
+    `/backend/api/events/${id}/public-view`,
     { publicView },
     { withCredentials: true }
   );
@@ -99,7 +99,7 @@ export const setEventPublicView = async (id: string, publicView: boolean) => {
 
 // ====================== CHECK EVENT NAME ======================
 export const checkEventName = async (eventName: string) => {
-  const res = await axios.get(`/backend/api/events/check-name/check`, {
+  const res = await axios.get(`/backend/api/events/check-name`, {
     params: { eventName },
     withCredentials: true,
   });
@@ -193,4 +193,39 @@ export const deleteSpecialReward = async (eventId: string, rewardId: string) => 
     throw new Error(msg);
   }
   return ct.includes("application/json") ? res.json() : { message: await res.text() };
+};
+
+// ====================== PUBLIC EVENTS & INVITE ======================
+export const getPublishedEvents = async () => {
+  const res = await axios.get("/backend/api/events", {
+    withCredentials: true,
+  });
+  return res.data; // { message, events }
+};
+
+export const signInvite = async (
+  eventId: string,
+  role: "presenter" | "committee" | "guest"
+) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/invite/sign`, {
+    params: { role },
+    withCredentials: true,
+  });
+  return res.data; // { message, sig }
+};
+
+export const joinEvent = async (
+  eventId: string,
+  role: "presenter" | "committee" | "guest",
+  sig: string
+) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/invite`,
+    {},
+    {
+      params: { role, sig },
+      withCredentials: true,
+    }
+  );
+  return res.data; // { message, participant }
 };

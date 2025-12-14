@@ -50,12 +50,15 @@ export const menuItemsAdmin = [
 export const navbarItems = [
   {
     url: "/dashboard",
+    title: "Dashboard",
   },
   {
-    url: "/events",
+    url: "/event",
+    title: "Event",
   },
   {
     url: "/users",
+    title: "Users",
   },
 ];
 

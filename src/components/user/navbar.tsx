@@ -78,7 +78,7 @@ export function Navbar() {
                     <NavigationMenuItem key={link.url}>
                       <NavigationMenuLink asChild>
                         <Link href={link.url} className="font-medium">
-                          {t("navbar." + link.url.split("/")[1])}
+                          {t(link.title)}
                         </Link>
                       </NavigationMenuLink>
                     </NavigationMenuItem>
@@ -178,7 +178,7 @@ export function Navbar() {
                     side="bottom"
                     align="start"
                     sideOffset={12}
-                    className="w-[100vw]"
+                    className="w-screen"
                   >
                     {user && (
                       <DropdownMenuLabel className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export function Navbar() {
                     {navbarItems.map((link) => (
                       <Link key={link.url} href={link.url}>
                         <DropdownMenuItem key={link.url}>
-                          {t("navbar." + link.url.split("/")[1])}
+                          {t(link.title)}
                         </DropdownMenuItem>
                       </Link>
                     ))}

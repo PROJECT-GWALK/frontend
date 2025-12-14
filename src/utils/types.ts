@@ -101,4 +101,48 @@ export type MyEvent = {
   role: string | null;
   isLeader: boolean;
   imageCover?: string | null;
+  publicView?: boolean;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
 };
+
+export type EventData = {
+  id: string;
+  eventName: string;
+  eventDescription?: string;
+  imageCover?: string | null;
+  status?: "DRAFT" | "PUBLISHED";
+  publicView?: boolean;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+  maxTeams?: number;
+  virtualRewardGuest?: number;
+  virtualRewardCommittee?: number;
+  locationName?: string;
+  location?: string;
+  totalParticipants?: number;
+  presentersCount?: number;
+  guestsCount?: number;
+  committeeCount?: number;
+  participantsVirtualTotal?: number;
+  participantsVirtualUsed?: number;
+  participantsCommentCount?: number;
+  committeeVirtualTotal?: number;
+  committeeVirtualUsed?: number;
+  committeeFeedbackCount?: number;
+  opinionsGot?: number;
+  opinionsPresenter?: number;
+  opinionsGuest?: number;
+  opinionsCommittee?: number;
+  vrTotal?: number;
+  vrUsed?: number;
+  specialPrizeCount?: number;
+  specialPrizeUsed?: number;
+  awardsUnused?: string[];
+  specialRewards?: SpecialReward[];
+  presenterTeams?: number;
+}

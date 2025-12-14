@@ -86,6 +86,7 @@ type EventUpdatePayload = {
   virtualRewardGuest: number;
   virtualRewardCommittee: number;
   specialRewards: SpecialReward[];
+  unitReward?: string | null;
 };
 
 const BANNER_MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -154,6 +155,7 @@ export default function EventDraft() {
   const [hasCommittee, setHasCommittee] = useState(false);
   const [committeeReward, setCommitteeReward] = useState("");
   const [guestRewardAmount, setGuestRewardAmount] = useState("");
+  const [unitReward, setUnitReward] = useState<string>("Coin");
 
   // Special Rewards
   const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([
@@ -284,6 +286,7 @@ export default function EventDraft() {
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
       virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
       specialRewards,
+      unitReward: unitReward || null,
     };
   };
   const buildFormData = (payload: EventUpdatePayload, file: File) => {
@@ -728,6 +731,7 @@ export default function EventDraft() {
         setHasCommittee(Boolean(data.hasCommittee));
         setCommitteeReward(data.virtualRewardCommittee?.toString() || "0");
         setGuestRewardAmount(data.virtualRewardGuest?.toString() || "0");
+        setUnitReward((data as any).unitReward || "Coin");
 
         // ================= SPECIAL REWARDS =================
         if (data.specialRewards?.length) {
@@ -878,6 +882,8 @@ export default function EventDraft() {
                 setCommitteeReward={setCommitteeReward}
                 guestRewardAmount={guestRewardAmount}
                 setGuestRewardAmount={setGuestRewardAmount}
+                unitReward={unitReward}
+                setUnitReward={setUnitReward}
               />
 
               {/* Special Rewards Section */}

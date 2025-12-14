@@ -23,10 +23,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createEvent, getMyDraftEvents, getMyEvents } from "@/utils/apievent";
+import { createEvent, getMyDraftEvents, getMyEvents, deleteEvent } from "@/utils/apievent";
 import { DraftEvent, MyEvent } from "@/utils/types";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const mapEventNameMessage = (message: string) =>
   message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
@@ -45,6 +56,10 @@ export default function DashboardPage() {
   const [newEventName, setNewEventName] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "DRAFT" | "UPCOMING" | "LIVE" | "COMPLETED">("ALL");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; eventName: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<"ALL" | "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST">("ALL");
 
   useEffect(() => {
     const load = async () => {
@@ -86,6 +101,40 @@ export default function DashboardPage() {
         }
       }
       toast.error(mapEventNameMessage(message));
+    }
+  };
+
+  const openDeleteConfirm = (event: { id: string; eventName: string }) => {
+    setDeleteTarget({ id: event.id, eventName: event.eventName });
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!deleteTarget) return;
+    try {
+      setDeleting(true);
+      const res = await deleteEvent(deleteTarget.id);
+      const deletedId = (res?.deletedId as string) ?? deleteTarget.id;
+      setDrafts((prev) => prev.filter((d) => d.id !== deletedId));
+      setMyEvents((prev) => prev.filter((e) => e.id !== deletedId));
+      toast.success("Deleted successfully");
+      setDeleteOpen(false);
+      setDeleteTarget(null);
+    } catch (err) {
+      let message = "Failed to delete event";
+      if (typeof err === "object" && err) {
+        const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message as
+          | string
+          | undefined;
+        if (backendMessage) {
+          message = backendMessage;
+        } else if (err instanceof Error && err.message) {
+          message = err.message;
+        }
+      }
+      toast.error(mapEventNameMessage(message));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -271,6 +320,13 @@ export default function DashboardPage() {
                                   <DropdownMenuItem asChild>
                                     <Link href={`/event/${event.id}`}>Open</Link>
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openDeleteConfirm({ id: event.id, eventName: event.eventName })
+                                    }
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -282,19 +338,35 @@ export default function DashboardPage() {
 
                 <div className="mt-8">
                   <h3 className="font-semibold mb-3">My Participating Events</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as typeof roleFilter)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="All Roles" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">All Roles</SelectItem>
+                        <SelectItem value="ORGANIZER">Organizer</SelectItem>
+                        <SelectItem value="PRESENTER">Presenter</SelectItem>
+                        <SelectItem value="COMMITTEE">Committee</SelectItem>
+                        <SelectItem value="GUEST">Guest</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {myEvents.filter((e) => {
                     const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
-                    if (filter === "ALL") return matchText;
-                    if (filter === "LIVE") return matchText && e.status === "PUBLISHED";
-                    return filter !== "DRAFT" && matchText;
+                    const matchRole = roleFilter === "ALL" || e.role === roleFilter;
+                    if (filter === "ALL") return matchText && matchRole;
+                    if (filter === "LIVE") return matchText && matchRole && e.status === "PUBLISHED";
+                    return filter !== "DRAFT" && matchText && matchRole;
                   }).length === 0 && <p className="text-gray-500">No events found.</p>}
                   <div className="space-y-3">
                     {myEvents
                       .filter((e) => {
                         const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
-                        if (filter === "ALL") return matchText;
-                        if (filter === "LIVE") return matchText && e.status === "PUBLISHED";
-                        return filter !== "DRAFT" && matchText;
+                        const matchRole = roleFilter === "ALL" || e.role === roleFilter;
+                        if (filter === "ALL") return matchText && matchRole;
+                        if (filter === "LIVE") return matchText && matchRole && e.status === "PUBLISHED";
+                        return filter !== "DRAFT" && matchText && matchRole;
                       })
                       .map((event) => {
                         const hasBanner = Boolean(event.imageCover);
@@ -349,6 +421,18 @@ export default function DashboardPage() {
                                     <DropdownMenuItem asChild>
                                       <Link href={`/event/${event.id}`}>Open</Link>
                                     </DropdownMenuItem>
+                                    {event.role === "ORGANIZER" && event.isLeader && (
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          openDeleteConfirm({
+                                            id: event.id,
+                                            eventName: event.eventName,
+                                          })
+                                        }
+                                      >
+                                        Delete
+                                      </DropdownMenuItem>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
@@ -398,6 +482,23 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-semibold">{deleteTarget?.eventName}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEvent} disabled={deleting}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

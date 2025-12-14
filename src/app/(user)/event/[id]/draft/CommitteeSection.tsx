@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Gift, UserCheck } from "lucide-react";
+ 
 
 type Props = {
   hasCommittee: boolean;
@@ -13,6 +14,8 @@ type Props = {
   setCommitteeReward: (v: string) => void;
   guestRewardAmount: string;
   setGuestRewardAmount: (v: string) => void;
+  unitReward: string;
+  setUnitReward: (v: string) => void;
 };
 
 export default function CommitteeSection({
@@ -22,6 +25,8 @@ export default function CommitteeSection({
   setCommitteeReward,
   guestRewardAmount,
   setGuestRewardAmount,
+  unitReward,
+  setUnitReward,
 }: Props) {
   return (
     <Card id="committee" className="scroll-mt-6">
@@ -84,6 +89,14 @@ export default function CommitteeSection({
                 }}
               />
             </div>
+          </div>
+          <div className="space-y-2 max-w-xs">
+            <Label>Unit / หน่วย</Label>
+            <Input
+              placeholder="เช่น บาท, Coin, คะแนน"
+              value={unitReward}
+              onChange={(e) => setUnitReward(e.target.value.replace(/\s/g, ""))}
+            />
           </div>
         </div>
       </CardContent>

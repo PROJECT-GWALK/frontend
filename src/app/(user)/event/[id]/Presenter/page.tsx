@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Gift, Clock, MapPin, Building } from "lucide-react";
+import { Users, Building } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,60 +12,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { setEventPublicView, updateEvent } from "@/utils/apievent";
-import { ClipboardCopy, Edit3 } from "lucide-react";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-
-type EventData = {
-  id: string;
-  eventName: string;
-  eventDescription?: string;
-  imageCover?: string | null;
-  status?: "DRAFT" | "PUBLISHED";
-  publicView?: boolean;
-  startView?: string;
-  endView?: string;
-  startJoinDate?: string;
-  endJoinDate?: string;
-  maxTeams?: number;
-  virtualRewardGuest?: number;
-  virtualRewardCommittee?: number;
-  locationName?: string;
-  location?: string;
-  totalParticipants?: number;
-  presentersCount?: number;
-  guestsCount?: number;
-  committeeCount?: number;
-
-  participantsVirtualTotal?: number;
-  participantsVirtualUsed?: number;
-  participantsCommentCount?: number;
-
-  committeeVirtualTotal?: number;
-  committeeVirtualUsed?: number;
-  committeeFeedbackCount?: number;
-
-  opinionsGot?: number;
-  opinionsPresenter?: number;
-  opinionsGuest?: number;
-  opinionsCommittee?: number;
-
-  vrTotal?: number;
-  vrUsed?: number;
-
-  specialPrizeCount?: number;
-  specialPrizeUsed?: number;
-  awardsUnused?: string[];
-
-  presenterTeams?: number;
-};
+import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
+import type { EventData } from "@/utils/types";
+import InformationSection from "../InformationSection";
 
 type Props = {
   id: string;
   event: EventData;
 };
 
-export default function PublishedPresenterView({ id, event }: Props) {
+export default function PresenterView({ id, event }: Props) {
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [updatingPublic, setUpdatingPublic] = useState(false);
   const [localEvent, setLocalEvent] = useState<EventData>(event);
@@ -75,37 +33,6 @@ export default function PublishedPresenterView({ id, event }: Props) {
   >(null);
   const [form, setForm] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
-
-  const timeUntil = (iso?: string) => {
-    if (!iso) return "";
-    const now = new Date();
-    const target = new Date(iso);
-    const diff = target.getTime() - now.getTime();
-    if (diff <= 0) return "เริ่มแล้ว";
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const mins = Math.floor((diff / (1000 * 60)) % 60);
-    if (days > 0) return `${days} วัน ${hours} ชม.`;
-    if (hours > 0) return `${hours} ชม. ${mins} นาที`;
-    return `${mins} นาที`;
-  };
-
-  const toLocalDatetimeValue = (iso: string) => {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const YYYY = d.getFullYear();
-    const MM = pad(d.getMonth() + 1);
-    const DD = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mm = pad(d.getMinutes());
-    return `${YYYY}-${MM}-${DD}T${hh}:${mm}`;
-  };
-
-  const toISOStringFromLocal = (localVal: string) => {
-    // localVal in format YYYY-MM-DDTHH:MM
-    const d = new Date(localVal);
-    return d.toISOString();
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -307,287 +234,7 @@ export default function PublishedPresenterView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="information">
-              <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* รายละเอียดอีเว้นต์ */}
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle>รายละเอียดอีเว้นต์</CardTitle>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingSection("description");
-                          setForm({ eventDescription: localEvent?.eventDescription ?? "" });
-                        }}
-                      >
-                        <Edit3 className="h-4 w-4" /> แก้ไข
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {localEvent?.eventDescription || ""}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* รายละเอียด Event Time */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle className="flex items-center gap-2">
-                        <Clock className="h-5 w-5" /> ช่วงเวลาของอีเว้นต์
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingSection("time");
-                            setForm({
-                              startView: localEvent?.startView ?? "",
-                              endView: localEvent?.endView ?? "",
-                            });
-                          }}
-                        >
-                          <Edit3 className="h-4 w-4" /> แก้ไข
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Changed generic spacing to a Grid layout with 2 columns */}
-                    <div className="grid grid-cols-2 gap-4 items-center">
-                      {/* Column 1: Countdown */}
-                      <div>
-                        {localEvent?.startView && (
-                          <div className="font-bold text-xl">
-                            {" "}
-                            {/* Fixed text-bold to font-bold */}
-                            เริ่มในอีก
-                            <h1 className="text-blue-600">{timeUntil(localEvent.startView)}</h1>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Column 2: Start/End Dates (Aligned to the right) */}
-                      <div>
-                        <div>
-                          {" "}
-                          {/* Optional: Made text slightly smaller/lighter for hierarchy */}
-                          เริ่ม:{" "}
-                          {localEvent?.startView
-                            ? new Date(localEvent.startView).toLocaleString("th-TH")
-                            : "-"}
-                        </div>
-                        <div>
-                          สิ้นสุด:{" "}
-                          {localEvent?.endView
-                            ? new Date(localEvent.endView).toLocaleString("th-TH")
-                            : "-"}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* รายละเอียด Location */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5" /> สถานที่จัดอีเว้นต์
-                      </CardTitle>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingSection("location");
-                          setForm({
-                            locationName: localEvent?.locationName ?? "",
-                            location: localEvent?.location ?? "",
-                          });
-                        }}
-                      >
-                        <Edit3 className="h-4 w-4" /> แก้ไข
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div>{localEvent?.locationName ?? "-"}</div>
-                      {localEvent?.location && (
-                        <a
-                          href={localEvent.location}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary underline"
-                        >
-                          ลิงก์
-                        </a>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* รายละเอียดPresenter */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" /> ผู้นำเสนอ
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingSection("presenter");
-                            setForm({
-                              startJoinDate: localEvent?.startJoinDate ?? "",
-                              endJoinDate: localEvent?.endJoinDate ?? "",
-                              maxTeams: localEvent?.maxTeams ?? 0,
-                            });
-                          }}
-                        >
-                          <Edit3 className="h-4 w-4" /> แก้ไข
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div>
-                        Submission Start:{" "}
-                        {localEvent?.startJoinDate
-                          ? new Date(localEvent.startJoinDate).toLocaleString("th-TH")
-                          : "-"}
-                      </div>
-                      <div>
-                        Submission End:{" "}
-                        {localEvent?.endJoinDate
-                          ? new Date(localEvent.endJoinDate).toLocaleString("th-TH")
-                          : "-"}
-                      </div>
-                      <div>Max Teams: {localEvent?.maxTeams ?? "-"}</div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* รายละเอียด Guest&Committee */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle className="flex items-center gap-2">
-                        <Gift className="h-5 w-5" /> รางวัลและแต้ม
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingSection("guest");
-                            setForm({
-                              guestReward: localEvent?.virtualRewardGuest ?? 0,
-                              committeeReward: localEvent?.virtualRewardCommittee ?? 0,
-                            });
-                          }}
-                        >
-                          <Edit3 className="h-4 w-4" /> แก้ไข
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div>Guest Reward per person: {localEvent?.virtualRewardGuest ?? 0}</div>
-                      <div>
-                        Committee Reward per person: {localEvent?.virtualRewardCommittee ?? 0}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" /> Invite Links
-                      </CardTitle>
-                      <div className="text-sm text-muted-foreground">
-                        Share invite link for roles
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {["presenter", "guest", "committee"].map((role) => {
-                        const link = `${
-                          typeof window !== "undefined" ? window.location.origin : ""
-                        }/event/${id}/invite?role=${role}`;
-                        return (
-                          <div key={role} className="flex items-center justify-between gap-2">
-                            <div className="capitalize">{role}</div>
-                            <div className="flex items-center gap-2">
-                              <a
-                                href={link}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-primary underline"
-                              >
-                                Open
-                              </a>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(link);
-                                  toast.success("Copied");
-                                }}
-                              >
-                                <ClipboardCopy className="h-4 w-4" />
-                              </Button>
-                              <img
-                                src={`https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(
-                                  link
-                                )}`}
-                                alt={`qr-${role}`}
-                                className="h-10 w-10"
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between w-full">
-                      <CardTitle>รางวัลพิเศษ</CardTitle>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingSection("rewards");
-                          setForm({ specialRewards: localEvent?.awardsUnused ?? [] });
-                        }}
-                      >
-                        <Edit3 className="h-4 w-4" /> แก้ไข
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="list-disc pl-5">
-                      {(localEvent?.awardsUnused ?? []).map((a, i) => (
-                        <li key={i}>{a}</li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
+              <InformationSection id={id} event={localEvent as EventData} editable={false} linkLabel="ลิงก์" />
             </TabsContent>
 
             <TabsContent value="project">
