@@ -5,12 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  CalendarPlus,
-  MoreHorizontal,
-  ChevronRight,
-} from "lucide-react";
+import { Search, CalendarPlus, MoreHorizontal, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -49,17 +44,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [newEventName, setNewEventName] = useState("");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"ALL" | "DRAFT" | "LIVE" | "COMPLETED">(
-    "ALL"
-  );
+  const [filter, setFilter] = useState<"ALL" | "DRAFT" | "UPCOMING" | "LIVE" | "COMPLETED">("ALL");
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [dRes, eRes] = await Promise.all([
-          getMyDraftEvents(),
-          getMyEvents(),
-        ]);
+        const [dRes, eRes] = await Promise.all([getMyDraftEvents(), getMyEvents()]);
         setDrafts(dRes.events || []);
         setMyEvents(eRes.events || []);
       } catch (err) {
@@ -86,8 +76,9 @@ export default function DashboardPage() {
     } catch (err) {
       let message = "Failed to create event";
       if (typeof err === "object" && err) {
-        const backendMessage = (err as AxiosError<{ message: string }>)
-          ?.response?.data?.message as string | undefined;
+        const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message as
+          | string
+          | undefined;
         if (backendMessage) {
           message = backendMessage;
         } else if (err instanceof Error && err.message) {
@@ -104,9 +95,6 @@ export default function DashboardPage() {
         <CardHeader className="pb-2">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Overview
-              </p>
               <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
             </div>
             <Dialog>
@@ -120,8 +108,8 @@ export default function DashboardPage() {
                 <DialogHeader>
                   <DialogTitle>Create Event</DialogTitle>
                   <DialogDescription>
-                    Enter an event name. The event will be created as a draft
-                    and you can finish setup later.
+                    Enter an event name. The event will be created as a draft and you can finish
+                    setup later.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4">
@@ -188,6 +176,13 @@ export default function DashboardPage() {
                   </Button>
                   <Button
                     size="sm"
+                    variant={filter === "UPCOMING" ? "default" : "outline"}
+                    onClick={() => setFilter("UPCOMING")}
+                  >
+                    Upcoming
+                  </Button>
+                  <Button
+                    size="sm"
                     variant={filter === "LIVE" ? "default" : "outline"}
                     onClick={() => setFilter("LIVE")}
                   >
@@ -211,9 +206,7 @@ export default function DashboardPage() {
                     (d) =>
                       (filter === "ALL" || filter === "DRAFT") &&
                       d.eventName.toLowerCase().includes(search.toLowerCase())
-                  ).length === 0 && (
-                    <p className="text-gray-500">No drafts found.</p>
-                  )}
+                  ).length === 0 && <p className="text-gray-500">No drafts found.</p>}
                 <div className="space-y-3">
                   {drafts
                     .filter(
@@ -253,26 +246,19 @@ export default function DashboardPage() {
                                     : "bg-amber-500 text-white"
                                 }`}
                               >
-                                {event.status === "PUBLISHED"
-                                  ? "Live"
-                                  : "Draft"}
+                                {event.status === "PUBLISHED" ? "Live" : "Draft"}
                               </span>
                             </div>
                             <div className="space-y-1">
-                              <h4 className="font-semibold line-clamp-1">
-                                {event.eventName}
-                              </h4>
+                              <h4 className="font-semibold line-clamp-1">{event.eventName}</h4>
                               <p className="text-xs text-muted-foreground">
-                                Created at{" "}
-                                {new Date(event.createdAt).toLocaleString()}
+                                Created at {new Date(event.createdAt).toLocaleString()}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Link href={`/event/${event.id}`}>
                                 <Button size="sm">
-                                  {event.status === "PUBLISHED"
-                                    ? "View"
-                                    : "Continue"}
+                                  {event.status === "PUBLISHED" ? "View" : "Continue"}
                                 </Button>
                               </Link>
                               <DropdownMenu>
@@ -283,9 +269,7 @@ export default function DashboardPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem asChild>
-                                    <Link href={`/event/${event.id}`}>
-                                      Open
-                                    </Link>
+                                    <Link href={`/event/${event.id}`}>Open</Link>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -297,29 +281,19 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="mt-8">
-                  <h3 className="font-semibold mb-3">
-                    My Participating Events
-                  </h3>
+                  <h3 className="font-semibold mb-3">My Participating Events</h3>
                   {myEvents.filter((e) => {
-                    const matchText = e.eventName
-                      .toLowerCase()
-                      .includes(search.toLowerCase());
+                    const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
                     if (filter === "ALL") return matchText;
-                    if (filter === "LIVE")
-                      return matchText && e.status === "PUBLISHED";
+                    if (filter === "LIVE") return matchText && e.status === "PUBLISHED";
                     return filter !== "DRAFT" && matchText;
-                  }).length === 0 && (
-                    <p className="text-gray-500">No events found.</p>
-                  )}
+                  }).length === 0 && <p className="text-gray-500">No events found.</p>}
                   <div className="space-y-3">
                     {myEvents
                       .filter((e) => {
-                        const matchText = e.eventName
-                          .toLowerCase()
-                          .includes(search.toLowerCase());
+                        const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
                         if (filter === "ALL") return matchText;
-                        if (filter === "LIVE")
-                          return matchText && e.status === "PUBLISHED";
+                        if (filter === "LIVE") return matchText && e.status === "PUBLISHED";
                         return filter !== "DRAFT" && matchText;
                       })
                       .map((event) => {
@@ -352,16 +326,13 @@ export default function DashboardPage() {
                                 </span>
                               </div>
                               <div className="space-y-1">
-                                <h4 className="font-semibold line-clamp-1">
-                                  {event.eventName}
-                                </h4>
+                                <h4 className="font-semibold line-clamp-1">{event.eventName}</h4>
                                 <p className="text-xs text-muted-foreground">
                                   {event.role}
                                   {event.isLeader ? " • Leader" : ""}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  Joined at{" "}
-                                  {new Date(event.createdAt).toLocaleString()}
+                                  Joined at {new Date(event.createdAt).toLocaleString()}
                                 </p>
                               </div>
                               <div className="flex items-center gap-2">
@@ -376,9 +347,7 @@ export default function DashboardPage() {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem asChild>
-                                      <Link href={`/event/${event.id}`}>
-                                        Open
-                                      </Link>
+                                      <Link href={`/event/${event.id}`}>Open</Link>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -394,37 +363,24 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               <Card className="bg-muted/40 border-dashed">
-                <CardHeader className="text-lg font-semibold">
-                  Dashboard at a Glance
-                </CardHeader>
+                <CardHeader className="text-lg font-semibold">Dashboard at a Glance</CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Total Drafts
-                      </span>
-                      <span className="text-2xl font-bold">
-                        {drafts.length}
-                      </span>
+                      <span className="text-sm text-muted-foreground">Total Drafts</span>
+                      <span className="text-2xl font-bold">{drafts.length}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Live Events
-                      </span>
+                      <span className="text-sm text-muted-foreground">Live Events</span>
                       <span className="text-2xl font-bold">
-                        {
-                          myEvents.filter((e) => e.status === "PUBLISHED")
-                            .length
-                        }
+                        {myEvents.filter((e) => e.status === "PUBLISHED").length}
                       </span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="text-lg font-semibold">
-                  Quick Links
-                </CardHeader>
+                <CardHeader className="text-lg font-semibold">Quick Links</CardHeader>
                 <CardContent className="space-y-2">
                   <Link href="/profile">
                     <Button variant="ghost" className="w-full justify-between">

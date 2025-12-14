@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import PublishedView from "./publish/PublishedView";
 import DraftView from "./draft/DraftView";
+import PublishedPresenterView from "./Presenter/page";
 
 type EventData = EventDetail & { publicView?: boolean };
 
@@ -13,7 +14,6 @@ export default function EventDetail() {
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const [event, setEvent] = useState<EventData | null>(null);
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,7 +34,8 @@ export default function EventDetail() {
     <div>
       {event?.status === "DRAFT" && <DraftView />}
       {event?.status === "PUBLISHED" && event && (
-        <PublishedView id={id} event={event!} />
+        // <PublishedView id={id} event={event!} />
+        <PublishedPresenterView id={id} event={event!} />
       )}
     </div>
   );
