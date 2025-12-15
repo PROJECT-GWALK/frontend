@@ -52,5 +52,6 @@ export function getInviteLink(
   role: "presenter" | "guest" | "committee"
 ) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}/event/${eventId}/invite?role=${role}`;
+  const search = new URLSearchParams({ role, invite: "1" });
+  return `${origin}/event/${eventId}?${search.toString()}`;
 }

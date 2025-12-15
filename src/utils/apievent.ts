@@ -214,6 +214,17 @@ export const signInvite = async (
   return res.data; // { message, sig }
 };
 
+export const getInviteToken = async (
+  eventId: string,
+  role: "presenter" | "committee" | "guest"
+) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/invite/token`, {
+    params: { role },
+    withCredentials: true,
+  });
+  return res.data; // { message, token }
+};
+
 export const joinEvent = async (
   eventId: string,
   role: "presenter" | "committee" | "guest",
@@ -228,4 +239,51 @@ export const joinEvent = async (
     }
   );
   return res.data; // { message, participant }
+};
+
+export const joinEventWithToken = async (
+  eventId: string,
+  token: string
+) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/invite`,
+    {},
+    {
+      params: { token },
+      withCredentials: true,
+    }
+  );
+  return res.data; // { message, participant }
+};
+
+export const getEventParticipants = async (eventId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/participants`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, participants }
+};
+
+export const updateEventParticipant = async (
+  eventId: string,
+  participantId: string,
+  data: {
+    eventGroup?: "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST";
+    isLeader?: boolean;
+    virtualReward?: number;
+    teamId?: string | null;
+  }
+) => {
+  const res = await axios.put(
+    `/backend/api/events/${eventId}/participants/${participantId}`,
+    data,
+    { withCredentials: true }
+  );
+  return res.data; // { message, participant }
+};
+
+export const deleteEventParticipant = async (eventId: string, participantId: string) => {
+  const res = await axios.delete(`/backend/api/events/${eventId}/participants/${participantId}`, {
+    withCredentials: true,
+  });
+  return res.data; // { message }
 };

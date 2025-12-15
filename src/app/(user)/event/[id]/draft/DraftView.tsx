@@ -31,6 +31,7 @@ import {
   Award,
   Check,
   X,
+  Save,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -771,9 +772,9 @@ export default function EventDraft() {
         {/* Main Content */}
         <main className="flex-1 lg:ml-80 p-6 lg:p-8 w-full">
           {!loading && event && (
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Header */}
-              <div className="flex items-center justify-between">
+              <div className="lg:col-span-2 flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
                   <Link href="/dashboard">
                     <Button variant="ghost" size="icon">
@@ -929,20 +930,23 @@ export default function EventDraft() {
               />
 
               {/* Save Button (Mobile) */}
-              <div className="lg:hidden grid grid-cols-3 gap-2">
-                <Button variant="secondary" onClick={handleSaveDraft} className="w-full">
+              <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
+                <Button variant="secondary" onClick={handleSaveDraft} className="w-full h-11 text-base shadow-sm">
+                  <Save className="mr-2 h-4 w-4" />
                   Save as Draft / บันทึกดราฟต์
                 </Button>
-                <Button onClick={handlePublish} className="w-full">
-                  Publish / เผยแพร่
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                  className="w-full"
-                >
-                  Delete / ลบ
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button onClick={handlePublish} className="w-full h-11 text-base shadow-sm">
+                    Publish / เผยแพร่
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="w-full h-11 text-base shadow-sm"
+                  >
+                    Delete / ลบ
+                  </Button>
+                </div>
               </div>
             </div>
           )}

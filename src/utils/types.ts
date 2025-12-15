@@ -122,6 +122,7 @@ export type EventData = {
   maxTeams?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
+  unitReward?: string;
   locationName?: string;
   location?: string;
   totalParticipants?: number;
@@ -140,8 +141,6 @@ export type EventData = {
   opinionsCommittee?: number;
   vrTotal?: number;
   vrUsed?: number;
-  specialPrizeCount?: number;
-  specialPrizeUsed?: number;
   awardsUnused?: string[];
   specialRewards?: SpecialReward[];
   presenterTeams?: number;

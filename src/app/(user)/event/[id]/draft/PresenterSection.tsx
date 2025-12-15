@@ -64,60 +64,77 @@ export default function PresenterSection(props: Props) {
     )}`;
 
   return (
-    <Card id="presenter" className="scroll-mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Users className="h-5 w-5 text-primary" />
-          Presenter Details / รายละเอียดผู้นำเสนอ
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="maxPresenters">Members per Group / จำนวนต่อกลุ่ม</Label>
-          <Input
-            id="maxPresenters"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="e.g. 5"
-            value={maxPresenters}
-            onChange={(e) => {
-              const v = e.target.value;
-              const n = Number(v);
-              setMaxPresenters(!v ? v : n < 0 ? "0" : v);
-            }}
-          />
-        </div>
+    <>
+      <Card id="presenter-config" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+            <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+              <Users className="h-5 w-5" />
+            </div>
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Presenter Configuration / ตั้งค่าผู้นำเสนอ
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="maxPresenters">Members per Group / จำนวนต่อกลุ่ม</Label>
+            <Input
+              id="maxPresenters"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="e.g. 5"
+              value={maxPresenters}
+              onChange={(e) => {
+                const v = e.target.value;
+                const n = Number(v);
+                setMaxPresenters(!v ? v : n < 0 ? "0" : v);
+              }}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="maxGroups">Maximum Groups / จำนวนกลุ่มสูงสุด</Label>
-          <Input
-            id="maxGroups"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="e.g. 20"
-            value={maxGroups}
-            onChange={(e) => {
-              const v = e.target.value;
-              const n = Number(v);
-              setMaxGroups(!v ? v : n < 0 ? "0" : v);
-            }}
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="maxGroups">Maximum Groups / จำนวนกลุ่มสูงสุด</Label>
+            <Input
+              id="maxGroups"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="e.g. 20"
+              value={maxGroups}
+              onChange={(e) => {
+                const v = e.target.value;
+                const n = Number(v);
+                setMaxGroups(!v ? v : n < 0 ? "0" : v);
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="border-t pt-6">
-          <h4 className="font-medium mb-4">Submission Period / ช่วงการส่งผลงาน</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="subStartDate">
-                Start Date / วันที่เริ่มส่ง <span className="text-destructive">*</span>
-              </Label>
+      <Card id="submission-period" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+            <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+              <CalendarIcon className="h-5 w-5" />
+            </div>
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Submission Period / ช่วงเวลาส่งผลงาน
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="subStartDate">
+              Start Date / วันที่เริ่มส่ง <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex flex-col sm:flex-row gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {formatThaiBE(selectedSubStart)}
+                  <Button variant="outline" className="flex-1 justify-start font-normal min-w-0">
+                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="truncate">{formatThaiBE(selectedSubStart)}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 flex justify-center">
@@ -146,20 +163,13 @@ export default function PresenterSection(props: Props) {
                   />
                 </PopoverContent>
               </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subStartTime">
-                Start Time / เวลาเริ่มส่ง <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative">
+              <div className="relative w-full sm:w-32 shrink-0">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="subStartTime"
                   type="time"
                   step="60"
-                  min="00:00"
-                  max="23:59"
-                  className="pl-10"
+                  className="pl-9"
                   value={submissionStartTime}
                   onChange={(e) => setSubmissionStartTime(e.target.value)}
                 />
@@ -167,18 +177,19 @@ export default function PresenterSection(props: Props) {
             </div>
           </div>
           {fieldErrors.submissionStart && (
-            <p className="text-xs text-destructive mt-1">{fieldErrors.submissionStart}</p>
+            <p className="text-xs text-destructive">{fieldErrors.submissionStart}</p>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="subEndDate">
-                End Date / วันที่สิ้นสุดส่ง <span className="text-destructive">*</span>
-              </Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="subEndDate">
+              End Date / วันที่สิ้นสุดส่ง <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex flex-col sm:flex-row gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {formatThaiBE(selectedSubEnd)}
+                  <Button variant="outline" className="flex-1 justify-start font-normal min-w-0">
+                    <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="truncate">{formatThaiBE(selectedSubEnd)}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 flex justify-center">
@@ -214,20 +225,13 @@ export default function PresenterSection(props: Props) {
                   />
                 </PopoverContent>
               </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subEndTime">
-                End Time / เวลาสิ้นสุดส่ง <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative">
+              <div className="relative w-full sm:w-32 shrink-0">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="subEndTime"
                   type="time"
                   step="60"
-                  min="00:00"
-                  max="23:59"
-                  className="pl-10"
+                  className="pl-9"
                   value={submissionEndTime}
                   onChange={(e) => setSubmissionEndTime(e.target.value)}
                 />
@@ -235,10 +239,10 @@ export default function PresenterSection(props: Props) {
             </div>
           </div>
           {fieldErrors.submissionEnd && (
-            <p className="text-xs text-destructive mt-1">{fieldErrors.submissionEnd}</p>
+            <p className="text-xs text-destructive">{fieldErrors.submissionEnd}</p>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 }

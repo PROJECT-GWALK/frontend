@@ -44,6 +44,7 @@ import ImageCropDialog from "@/lib/image-crop-dialog";
 import { toast } from "sonner";
 import InformationSection from "../InformationSection";
 import type { EventData as SharedEventData } from "@/utils/types";
+import ParticipantsSection from "./ParticipantsSection";
 
 type EventData = {
   id: string;
@@ -96,7 +97,7 @@ type Props = {
 };
 
 export default function OrganizerView({ id, event }: Props) {
-  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "information" | "Participants" | "project" | "result">("dashboard");
   const [updatingPublic, setUpdatingPublic] = useState(false);
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -269,6 +270,7 @@ export default function OrganizerView({ id, event }: Props) {
             <TabsList>
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="information">Information</TabsTrigger>
+              <TabsTrigger value="Participants">Participants</TabsTrigger>
               <TabsTrigger value="project">Project</TabsTrigger>
               <TabsTrigger value="result">Result</TabsTrigger>
             </TabsList>
@@ -526,6 +528,20 @@ export default function OrganizerView({ id, event }: Props) {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="Participants">
+              <ParticipantsSection
+                id={id}
+                onRefreshCounts={(list) => {
+                  setLocalEvent((prev) => ({
+                    ...prev,
+                    presentersCount: list.filter((p) => p.eventGroup === "PRESENTER").length,
+                    guestsCount: list.filter((p) => p.eventGroup === "GUEST").length,
+                    committeeCount: list.filter((p) => p.eventGroup === "COMMITTEE").length,
+                  }));
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="result">

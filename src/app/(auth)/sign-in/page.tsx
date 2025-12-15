@@ -5,12 +5,12 @@ import { auth, signIn } from "@/lib/auth";
 import { signInRedirect } from "@/utils/settings";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-
-export default async function SignIn() {
+export default async function SignIn({ searchParams }: { searchParams?: { redirectTo?: string } }) {
   const session = await auth();
+  const fromParam = searchParams?.redirectTo;
 
   if (session) {
-    redirect(signInRedirect);
+    redirect(fromParam || signInRedirect);
   }
 
   return (
@@ -44,7 +44,7 @@ export default async function SignIn() {
                     <form
                       action={async () => {
                         "use server";
-                        await signIn("google", { redirectTo: signInRedirect });
+                        await signIn("google", { redirectTo: fromParam || signInRedirect });
                       }}
                       className="w-full"
                     >

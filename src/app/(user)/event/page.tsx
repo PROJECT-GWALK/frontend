@@ -172,7 +172,7 @@ export default function EventsPage() {
             return (
               <Card
                 key={event.id}
-                className="overflow-hidden hover:shadow-md transition-shadow"
+                className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300"
               >
                 <div className="relative h-36">
                   {hasBanner ? (

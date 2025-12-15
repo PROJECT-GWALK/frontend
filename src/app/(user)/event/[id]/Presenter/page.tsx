@@ -83,25 +83,29 @@ export default function PresenterView({ id, event }: Props) {
           </DialogContent>
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <div className="bg-card rounded-xl shadow-sm border p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 transition-all hover:shadow-md">
-            {/* LEFT SIDE: Title & Status */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
-                  {localEvent?.eventName || "Event"}
-                </h1>
-              </div>
-            </div>
+          <Card className="border-none shadow-md bg-gradient-to-br from-background to-muted/20 mb-6 transition-all hover:shadow-lg">
+            <CardHeader className="p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                {/* LEFT SIDE: Title & Status */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                      {localEvent?.eventName || "Event"}
+                    </CardTitle>
+                  </div>
+                </div>
 
-            {/* RIGHT SIDE: Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              {/* Presenter Label - Styled to match Button height/shape exactly */}
-              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-lime-600 text-white font-medium shadow-sm select-none">
-                <Building className="h-4 w-4" />
-                <span>Presenter</span>
+                {/* RIGHT SIDE: Actions */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {/* Presenter Label */}
+                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-lime-600 text-white font-medium shadow-md select-none">
+                    <Building className="h-4 w-4" />
+                    <span>Presenter</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardHeader>
+          </Card>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList>
@@ -112,21 +116,24 @@ export default function PresenterView({ id, event }: Props) {
             </TabsList>
 
             <TabsContent value="dashboard">
-              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* จำนวนผู้เข้าร่วมทั้งหมด */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" /> จำนวนผู้เข้าร่วมทั้งหมด
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      จำนวนผู้เข้าร่วมทั้งหมด
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
+                    <div className="text-4xl font-bold text-foreground">
                       {(localEvent?.presentersCount ?? 0) +
                         (localEvent?.guestsCount ?? 0) +
                         (localEvent?.committeeCount ?? 0)}
                     </div>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm text-muted-foreground mt-2">
                       ผู้นำเสนอ: {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0} |
                       ผู้เข้าร่วม: {localEvent?.guestsCount ?? 0} | กรรมการ:{" "}
                       {localEvent?.committeeCount ?? 0}
@@ -135,30 +142,36 @@ export default function PresenterView({ id, event }: Props) {
                 </Card>
 
                 {/* ผู้นำเสนอ */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" /> ผู้นำเสนอ
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      ผู้นำเสนอ
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
+                    <div className="text-4xl font-bold text-foreground">
                       {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
                     </div>
-                    <p className="text-muted-foreground">จำนวนทีม</p>
+                    <p className="text-sm text-muted-foreground mt-2">จำนวนทีม</p>
                   </CardContent>
                 </Card>
 
                 {/* ผู้เข้าร่วม */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" /> ผู้เข้าร่วม
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      ผู้เข้าร่วม
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{localEvent?.guestsCount ?? 0}</div>
-                    <p className="text-muted-foreground">
+                    <div className="text-4xl font-bold text-foreground">{localEvent?.guestsCount ?? 0}</div>
+                    <p className="text-sm text-muted-foreground mt-2">
                       ให้คอมเมนต์: {localEvent?.participantsCommentCount ?? 90} / ใช้ไป:{" "}
                       {localEvent?.participantsVirtualUsed ?? 2000}
                     </p>
@@ -166,15 +179,18 @@ export default function PresenterView({ id, event }: Props) {
                 </Card>
 
                 {/* กรรมการ */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" /> กรรมการ
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      กรรมการ
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{localEvent?.committeeCount ?? 0}</div>
-                    <p className="text-muted-foreground">
+                    <div className="text-4xl font-bold text-foreground">{localEvent?.committeeCount ?? 0}</div>
+                    <p className="text-sm text-muted-foreground mt-2">
                       ให้ฟีดแบ็ก: {localEvent?.committeeFeedbackCount ?? 10} / ใช้ไป:{" "}
                       {localEvent?.committeeVirtualUsed ?? 2000}
                     </p>
@@ -182,13 +198,18 @@ export default function PresenterView({ id, event }: Props) {
                 </Card>
 
                 {/* ความคิดเห็นทั้งหมด */}
-                <Card className="lg:col-span-3">
+                <Card className="lg:col-span-2 border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">ความคิดเห็นทั้งหมด</CardTitle>
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      ความคิดเห็นทั้งหมด
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{localEvent?.opinionsGot ?? 33}</div>
-                    <p className="text-muted-foreground">
+                    <div className="text-4xl font-bold text-foreground">{localEvent?.opinionsGot ?? 33}</div>
+                    <p className="text-sm text-muted-foreground mt-2">
                       ผู้นำเสนอ: {localEvent?.opinionsPresenter ?? 10} | ผู้เข้าร่วม:{" "}
                       {localEvent?.opinionsGuest ?? 20} | กรรมการ:{" "}
                       {localEvent?.opinionsCommittee ?? 3}
@@ -197,37 +218,74 @@ export default function PresenterView({ id, event }: Props) {
                 </Card>
 
                 {/* Virtual Rewards */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle>Virtual Rewards</CardTitle>
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      Virtual Rewards
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p>ทั้งหมด: {localEvent?.vrTotal ?? 50000}</p>
-                    <p>ใช้ไป: {localEvent?.vrUsed ?? 20000}</p>
-                    <p>คงเหลือ: {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}</p>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">ใช้ไปแล้ว</span>
+                      <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000}</span>
+                    </div>
+                    <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${
+                            ((localEvent?.vrUsed ?? 20000) / (localEvent?.vrTotal ?? 50000)) * 100
+                          }%`,
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <span>คงเหลือ {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}</span>
+                      <span>ทั้งหมด {localEvent?.vrTotal ?? 50000}</span>
+                    </div>
                   </CardContent>
                 </Card>
 
                 {/* รางวัลพิเศษ */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle>รางวัลพิเศษ</CardTitle>
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      รางวัลพิเศษ
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>ทั้งหมด: {localEvent?.specialPrizeCount ?? 5}</p>
-                    <p>ใช้ไป: {localEvent?.specialPrizeUsed ?? 4}</p>
+                    <div className="text-4xl font-bold text-foreground">
+                      {localEvent?.specialPrizeUsed ?? 4} <span className="text-xl font-normal text-muted-foreground">/ {localEvent?.specialPrizeCount ?? 5}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">ใช้ไป / ทั้งหมด</p>
                   </CardContent>
                 </Card>
 
                 {/* ยังไม่ได้ใช้ */}
-                <Card>
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
-                    <CardTitle>ยังไม่ได้ใช้</CardTitle>
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      ยังไม่ได้ใช้
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {(localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]).map((a, i) => (
-                      <p key={i}>{a}</p>
-                    ))}
+                    <div className="space-y-2">
+                      {(localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]).map((a, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                          <span className="text-sm font-medium">{a}</span>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               </div>

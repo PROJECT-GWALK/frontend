@@ -27,16 +27,20 @@ export default function NotRoleView({ id, event }: Props) {
         </div>
 
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <div className="bg-card rounded-xl shadow-sm border p-6 flex items-center justify-between gap-6">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
-                {event?.eventName || "Event"}
-              </h1>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border">
-                Viewer
-              </span>
-            </div>
-          </div>
+          <Card className="border-none shadow-md bg-gradient-to-br from-background to-muted/20 mb-6">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                    {event?.eventName || "Event"}
+                  </CardTitle>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border shadow-sm">
+                    Viewer
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
 
           <Tabs value="information" className="mt-6">
             <TabsList>
