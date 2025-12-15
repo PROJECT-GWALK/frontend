@@ -125,7 +125,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
       <Card className="lg:col-span-2 border-none shadow-md bg-gradient-to-br from-background to-muted/20">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
-            <CardTitle className="bg-clip-text text-transparent text-xl font-bold">
+            <CardTitle className="text-xl font-bold">
               รายละเอียดอีเว้นต์
             </CardTitle>
             {editable && (
