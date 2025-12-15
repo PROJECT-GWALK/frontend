@@ -225,6 +225,17 @@ export const getInviteToken = async (
   return res.data; // { message, token }
 };
 
+export const previewInvite = async (
+  eventId: string,
+  params: { token?: string; role?: "presenter" | "committee" | "guest" }
+) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/invite/preview`, {
+    params,
+    withCredentials: true,
+  });
+  return res.data; // { message, role }
+};
+
 export const joinEvent = async (
   eventId: string,
   role: "presenter" | "committee" | "guest",

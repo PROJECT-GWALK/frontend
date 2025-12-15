@@ -118,6 +118,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
     role === "presenter" ? qrPresenterRef : role === "guest" ? qrGuestRef : qrCommitteeRef;
   const [qrOpen, setQrOpen] = useState(false);
   const [qrSrc, setQrSrc] = useState<string>("");
+  const [qrTitle, setQrTitle] = useState<string>("");
 
   return (
     <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -363,7 +364,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
                 const r = role as "presenter" | "guest" | "committee";
                 const origin = typeof window !== "undefined" ? window.location.origin : "";
                 const token = tokens[r];
-                const link = token ? `${origin}/event/${id}?invite=1&token=${encodeURIComponent(token)}` : "";
+                const link = token ? `${origin}/event/${id}/invite?token=${encodeURIComponent(token)}` : `${origin}/event/${id}/invite?role=${encodeURIComponent(r)}`;
                 const qrRef = refForRole(r);
                 const qrThumb = qrThumbs[r] || "";
                 const qrLargeUrl = qrLarge[r] || "";
@@ -396,6 +397,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
                             onClick={async () => {
                               if (qrLargeUrl) {
                                 setQrSrc(qrLargeUrl);
+                                setQrTitle(`QR Code สำหรับ ${role}`);
                                 setQrOpen(true);
                                 return;
                               }
@@ -407,6 +409,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
                               try {
                                 const dataUrl = await toPng(node, { cacheBust: true, pixelRatio: 2 });
                                 setQrSrc(dataUrl);
+                                setQrTitle(`QR Code สำหรับ ${role}`);
                                 setQrOpen(true);
                               } catch {
                                 toast.error("แสดงรูป QR ไม่สำเร็จ");
@@ -431,7 +434,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="max-w-[700px]">
           <DialogHeader>
-            <DialogTitle>QR Code</DialogTitle>
+            <DialogTitle>{qrTitle || "QR Code"}</DialogTitle>
           </DialogHeader>
           {qrSrc && <img src={qrSrc} alt="qr" className="w-full h-auto" />}
         </DialogContent>

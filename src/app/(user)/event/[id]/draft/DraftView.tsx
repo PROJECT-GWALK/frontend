@@ -43,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
 
 import {
@@ -771,7 +772,100 @@ export default function EventDraft() {
 
         {/* Main Content */}
         <main className="flex-1 lg:ml-80 p-6 lg:p-8 w-full">
-          {!loading && event && (
+          {loading ? (
+            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Header Skeleton */}
+              <div className="lg:col-span-2 flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-10 rounded-md" />
+                  <div>
+                    <Skeleton className="h-8 w-48 mb-2" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                </div>
+                <div className="space-x-2 hidden lg:flex">
+                  <Skeleton className="h-10 w-32" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              </div>
+
+              {/* Event Info Skeleton */}
+              <Card className="shadow-sm border-border/60">
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                  <Skeleton className="h-48 w-full rounded-lg" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Other sections skeleton */}
+              <div className="space-y-4">
+                <Card className="shadow-sm border-border/60">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-40" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm border-border/60">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-40" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-6 w-12" />
+                    </div>
+                    <Skeleton className="h-px w-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : event ? (
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Header */}
               <div className="lg:col-span-2 flex items-center justify-between mb-2">
@@ -949,7 +1043,7 @@ export default function EventDraft() {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </main>
       </div>
     </div>

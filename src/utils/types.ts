@@ -91,6 +91,12 @@ export type DraftEvent = {
   createdAt: string;
   status?: "DRAFT" | "PUBLISHED";
   imageCover?: string | null;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+  role?: string | null;
+  isLeader?: boolean;
 };
 
 export type MyEvent = {

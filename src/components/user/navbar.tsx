@@ -19,7 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+// import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { UserAvatar } from "@/utils/function";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -95,17 +96,13 @@ export function Navbar() {
                 <LanguageSwitcher />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild className="select-none hover:border-2">
-                    <Avatar>
-                      <AvatarImage src={user.image || ""} />
-                      <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    <button className="rounded-full outline-none">
+                      <UserAvatar user={user} />
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.image || ""} />
-                        <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar user={user} className="h-8 w-8" />
                       <div className="flex flex-col">
                         <span className="font-semibold">@{user.username}</span>
                         <span className="text-sm text-muted-foreground">{user.name}</span>
@@ -161,10 +158,7 @@ export function Navbar() {
           <div className="sm:hidden flex items-center space-x-4">
             {user ? (
               <>
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={user.image || ""} />
-                  <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
+                <UserAvatar user={user} className="w-8 h-8" />
 
                 <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <DropdownMenuTrigger asChild>
@@ -182,10 +176,7 @@ export function Navbar() {
                   >
                     {user && (
                       <DropdownMenuLabel className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.image || ""} />
-                          <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
+                        <UserAvatar user={user} className="h-8 w-8" />
                         <div className="flex flex-col">
                           <span className="font-semibold">@{user.username}</span>
                           <span className="text-sm text-muted-foreground">{user.name}</span>

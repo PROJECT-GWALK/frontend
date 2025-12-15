@@ -1,3 +1,22 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User } from "@/utils/types";
+
+export function UserAvatar({
+  user,
+  className,
+}: {
+  user: Partial<User> | null | undefined;
+  className?: string;
+}) {
+  const fallback = user?.name?.trim() || user?.username || user?.email || "??";
+  return (
+    <Avatar className={className}>
+      <AvatarImage src={user?.image || ""} />
+      <AvatarFallback>{fallback.slice(0, 2).toUpperCase()}</AvatarFallback>
+    </Avatar>
+  );
+}
+
 export function linkify(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return text.split(urlRegex).map((part, index) =>

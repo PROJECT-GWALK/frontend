@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, CalendarPlus, MoreHorizontal, ChevronRight, Trash2 } from "lucide-react";
+import { Search, CalendarPlus, MoreHorizontal, ChevronRight, Calendar, Users, Eye } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -26,7 +26,6 @@ import {
 import { createEvent, getMyDraftEvents, getMyEvents, deleteEvent } from "@/utils/apievent";
 import { DraftEvent, MyEvent } from "@/utils/types";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,16 +37,63 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const mapEventNameMessage = (message: string) =>
   message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
 
-const getInitials = (name: string) => {
-  const parts = name.trim().split(" ");
-  if (!parts.length) return "?";
-  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
-  return (parts[0]!.charAt(0) + parts[1]!.charAt(0)).toUpperCase();
+type FilterType = "all" | "draft" | "upcomingRecruit" | "accepting" | "viewSoon" | "viewOpen" | "finished";
+
+// ฟังก์ชันกำหนดสถานะของอีเวนต์ตามวันที่
+const getEventStatus = (event: MyEvent | DraftEvent): Exclude<FilterType, "all"> => {
+  if (event.status !== "PUBLISHED") return "draft";
+  
+  const now = new Date();
+  const startJoin = event.startJoinDate ? new Date(event.startJoinDate) : null;
+  const endJoin = event.endJoinDate ? new Date(event.endJoinDate) : null;
+  const startView = event.startView ? new Date(event.startView) : null;
+  const endView = event.endView ? new Date(event.endView) : null;
+
+  // finished: หลัง endView
+  if (endView && now > endView) return "finished";
+  
+  // viewOpen: กำลัง startView (ระหว่าง startView ถึง endView)
+  if (startView && now >= startView) return "viewOpen";
+  
+  // viewSoon: ก่อน startView (หลัง endJoin แต่ก่อน startView)
+  if (endJoin && now > endJoin && startView && now < startView) return "viewSoon";
+  
+  // accepting: กำลัง startJoinDate (ระหว่าง startJoin ถึง endJoin)
+  if (startJoin && endJoin && now >= startJoin && now <= endJoin) return "accepting";
+  
+  // upcomingRecruit: ก่อน startJoinDate
+  if (startJoin && now < startJoin) return "upcomingRecruit";
+  
+  return "viewOpen"; // default fallback
+};
+
+const getStatusBadge = (status: Exclude<FilterType, "all">) => {
+  const badges = {
+    draft: { label: "Draft", color: "bg-gray-500" },
+    upcomingRecruit: { label: "Soon", color: "bg-blue-500" },
+    accepting: { label: "Recruiting", color: "bg-green-500" },
+    viewSoon: { label: "Starting Soon", color: "bg-yellow-500" },
+    viewOpen: { label: "Live", color: "bg-emerald-500" },
+    finished: { label: "Ended", color: "bg-red-500" },
+  };
+  return badges[status];
+};
+
+const getFilterLabel = (filter: FilterType) => {
+  const labels = {
+    all: "All Events",
+    draft: "Drafts",
+    upcomingRecruit: "Upcoming",
+    accepting: "Recruiting",
+    viewSoon: "Starting Soon",
+    viewOpen: "Live Now",
+    finished: "Ended",
+  };
+  return labels[filter];
 };
 
 export default function DashboardPage() {
@@ -56,7 +102,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [newEventName, setNewEventName] = useState("");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"ALL" | "DRAFT" | "UPCOMING" | "LIVE" | "COMPLETED">("ALL");
+  const [filter, setFilter] = useState<FilterType>("all");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; eventName: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -81,7 +127,6 @@ export default function DashboardPage() {
     try {
       const resCreate = await createEvent(eventName);
 
-      // ถ้าชื่ออีเวนต์ซ้ำ ให้ toast แจ้งเตือนทันที (สำหรับเคสที่ backend ส่ง 200 แต่มี message)
       if (resCreate?.message === "Event name already exists") {
         toast.error(mapEventNameMessage(resCreate.message));
         return;
@@ -89,12 +134,11 @@ export default function DashboardPage() {
 
       const resDrafts = await getMyDraftEvents();
       setDrafts(resDrafts.events || []);
+      toast.success("Event created successfully!");
     } catch (err) {
       let message = "Failed to create event";
       if (typeof err === "object" && err) {
-        const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message as
-          | string
-          | undefined;
+        const backendMessage = (err as any)?.response?.data?.message;
         if (backendMessage) {
           message = backendMessage;
         } else if (err instanceof Error && err.message) {
@@ -124,9 +168,7 @@ export default function DashboardPage() {
     } catch (err) {
       let message = "Failed to delete event";
       if (typeof err === "object" && err) {
-        const backendMessage = (err as AxiosError<{ message: string }>)?.response?.data?.message as
-          | string
-          | undefined;
+        const backendMessage = (err as any)?.response?.data?.message;
         if (backendMessage) {
           message = backendMessage;
         } else if (err instanceof Error && err.message) {
@@ -139,40 +181,66 @@ export default function DashboardPage() {
     }
   };
 
+  // รวม drafts และ myEvents เข้าด้วยกัน
+  const allEvents = [
+    ...drafts.map(d => ({ ...d, isDraft: true })),
+    ...myEvents.map(e => ({ ...e, isDraft: false }))
+  ];
+
+  // กรองตาม filter และ search
+  const filteredEvents = allEvents.filter((event) => {
+    const matchText = event.eventName.toLowerCase().includes(search.toLowerCase());
+    const matchRole = roleFilter === "ALL" || event.role === roleFilter;
+    const eventStatus = getEventStatus(event);
+    
+    if (filter === "all") return matchText && (event.isDraft || matchRole);
+    return matchText && eventStatus === filter && (event.isDraft || matchRole);
+  });
+
+  // นับจำนวนในแต่ละ category
+  const counts = {
+    all: allEvents.length,
+    draft: allEvents.filter(e => getEventStatus(e) === "draft").length,
+    upcomingRecruit: allEvents.filter(e => getEventStatus(e) === "upcomingRecruit").length,
+    accepting: allEvents.filter(e => getEventStatus(e) === "accepting").length,
+    viewSoon: allEvents.filter(e => getEventStatus(e) === "viewSoon").length,
+    viewOpen: allEvents.filter(e => getEventStatus(e) === "viewOpen").length,
+    finished: allEvents.filter(e => getEventStatus(e) === "finished").length,
+  };
+
   return (
-    <div className="min-h-screen from-background to-muted/40 flex justify-center px-4 py-8">
-      <Card className="w-full max-w-6xl shadow-xl border-border/60 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-6 border-b border-border/40">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex justify-center px-4 py-8">
+      <Card className="w-full max-w-6xl shadow-xl border-border/50">
+        <CardHeader className="pb-4 border-b">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Dashboard
+                Event Dashboard
               </h1>
-              <p className="text-muted-foreground mt-1">
-                จัดการอีเวนต์และกิจกรรมทั้งหมดของคุณ
+              <p className="text-sm text-muted-foreground mt-1">
+                Create, manage, and join events with ease
               </p>
             </div>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground border-0 transition-all duration-300">
+                <Button className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
                   <CalendarPlus className="mr-2 h-5 w-5" />
                   Create New Event
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Event</DialogTitle>
+                  <DialogTitle>Create New Event</DialogTitle>
                   <DialogDescription>
-                    Enter an event name. The event will be created as a draft and you can finish
-                    setup later.
+                    Enter an event name to get started. You can complete the setup later.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4">
+                <div className="grid gap-4 py-4">
                   <div className="grid gap-3">
-                    <Label htmlFor="name-1">Event Name</Label>
+                    <Label htmlFor="event-name">Event Name</Label>
                     <Input
-                      id="name-1"
-                      name="name"
+                      id="event-name"
+                      placeholder="e.g., Annual Tech Conference 2024"
                       value={newEventName}
                       onChange={(e) => setNewEventName(e.target.value)}
                     />
@@ -193,7 +261,7 @@ export default function DashboardPage() {
                       }}
                       disabled={!newEventName.trim()}
                     >
-                      Save changes
+                      Create Event
                     </Button>
                   </DialogClose>
                 </DialogFooter>
@@ -201,189 +269,49 @@ export default function DashboardPage() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
+        
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-3 space-y-6">
               {/* Search and Filters */}
-              <div className="flex flex-col sm:flex-row gap-4 items-stretch">
-                <div className="relative flex-1 group">
+              <div className="space-y-4">
+                <div className="relative">
                   <Input
-                    placeholder="Search by event name..."
-                    className="w-full pl-10 bg-background/50 border-muted-foreground/20 focus:bg-background transition-colors"
+                    placeholder="Search events by name..."
+                    className="w-full pl-10 h-11 bg-background/60 backdrop-blur-sm border-border/60"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
-                <div className="flex gap-2 justify-end overflow-x-auto pb-2 sm:pb-0">
-                  {[
-                    { label: "All", value: "ALL" },
-                    { label: "Draft", value: "DRAFT" },
-                    { label: "Upcoming", value: "UPCOMING" },
-                    { label: "Live", value: "LIVE" },
-                    { label: "Completed", value: "COMPLETED" },
-                  ].map((f) => (
+
+                {/* Filter Pills */}
+                <div className="flex flex-wrap gap-2">
+                  {(["all", "draft", "upcomingRecruit", "accepting", "viewSoon", "viewOpen", "finished"] as FilterType[]).map((f) => (
                     <Button
-                      key={f.value}
+                      key={f}
                       size="sm"
-                      variant={filter === f.value ? "default" : "outline"}
-                      onClick={() => setFilter(f.value as any)}
-                      className={`whitespace-nowrap ${
-                        filter === f.value
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                          : "text-muted-foreground hover:text-foreground"
+                      variant={filter === f ? "default" : "outline"}
+                      onClick={() => setFilter(f)}
+                      className={`rounded-full transition-all ${
+                        filter === f ? "shadow-md" : "hover:border-primary/50"
                       }`}
                     >
-                      {f.label}
+                      {getFilterLabel(f)}
+                      <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-background/20">
+                        {counts[f]}
+                      </span>
                     </Button>
                   ))}
                 </div>
-              </div>
 
-              {/* My Drafts Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span className="w-1 h-6 bg-amber-500 rounded-full"></span>
-                    My Drafts
-                  </h3>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {drafts.filter(d => (filter === "ALL" || filter === "DRAFT") && d.eventName.toLowerCase().includes(search.toLowerCase())).length} items
-                  </span>
-                </div>
-                
-                {loading && (
-                  <div className="space-y-3">
-                    {[...Array(3)].map((_, index) => (
-                      <Card key={index} className="overflow-hidden border-border/40">
-                        <div className="grid grid-cols-[120px_1fr_auto] gap-4 items-center p-3">
-                          <Skeleton className="h-20 w-full rounded-md" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-3 w-1/2" />
-                          </div>
-                          <Skeleton className="h-8 w-20" />
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-                
-                {!loading &&
-                  drafts.filter(
-                    (d) =>
-                      (filter === "ALL" || filter === "DRAFT") &&
-                      d.eventName.toLowerCase().includes(search.toLowerCase())
-                  ).length === 0 && (
-                    <div className="text-center py-12 border-2 border-dashed border-muted rounded-xl bg-muted/20">
-                      <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                        <CalendarPlus className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <p className="text-muted-foreground font-medium">No drafts found</p>
-                      <p className="text-xs text-muted-foreground/70 mt-1">Create a new event to get started</p>
-                    </div>
-                  )}
-                  
-                <div className="space-y-3">
-                  {drafts
-                    .filter(
-                      (d) =>
-                        (filter === "ALL" || filter === "DRAFT") &&
-                        d.eventName.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((event) => {
-                      const hasBanner = Boolean(event.imageCover);
-                      return (
-                        <Card
-                          key={event.id}
-                          className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 group bg-card/50 hover:bg-card"
-                        >
-                          <div className="grid grid-cols-[120px_1fr_auto] sm:grid-cols-[160px_1fr_auto] gap-4 p-3">
-                            {/* Image Section */}
-                            <div className="relative h-24 rounded-lg overflow-hidden bg-muted group-hover:scale-[1.02] transition-transform duration-500">
-                              {hasBanner ? (
-                                <img
-                                  src={event.imageCover as string}
-                                  alt={event.eventName}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10">
-                                  <img
-                                    src="/banner.png"
-                                    alt={event.eventName}
-                                    className="h-full w-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                                  />
-                                </div>
-                              )}
-                              <div className="absolute top-2 left-2">
-                                <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm ${
-                                  event.status === "PUBLISHED"
-                                    ? "bg-emerald-500/90 text-white backdrop-blur-sm"
-                                    : "bg-amber-500/90 text-white backdrop-blur-sm"
-                                }`}>
-                                  {event.status === "PUBLISHED" ? "Live" : "Draft"}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {/* Content Section */}
-                            <div className="flex flex-col justify-center min-w-0 py-1">
-                              <h4 className="font-bold text-lg truncate group-hover:text-primary transition-colors">
-                                {event.eventName}
-                              </h4>
-                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                <CalendarPlus className="h-3 w-3" />
-                                Created {new Date(event.createdAt).toLocaleDateString("th-TH")}
-                              </p>
-                            </div>
-                            
-                            {/* Actions Section */}
-                            <div className="flex items-center gap-2 self-center pr-2">
-                              <Link href={`/event/${event.id}`}>
-                                <Button size="sm" className="hidden sm:flex shadow-sm hover:shadow-primary/20 transition-all">
-                                  {event.status === "PUBLISHED" ? "View" : "Continue"}
-                                </Button>
-                              </Link>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem asChild>
-                                    <Link href={`/event/${event.id}`} className="cursor-pointer">Open</Link>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                                    onClick={() =>
-                                      openDeleteConfirm({ id: event.id, eventName: event.eventName })
-                                    }
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                </div>
-              </div>
-
-              {/* My Participating Events Section */}
-              <div className="space-y-4 pt-4 border-t border-border/40">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span className="w-1 h-6 bg-emerald-500 rounded-full"></span>
-                    My Participating Events
-                  </h3>
+                {/* Role Filter */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">Filter by role:</span>
                   <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as typeof roleFilter)}>
-                    <SelectTrigger className="w-full sm:w-40 bg-background/50 border-muted-foreground/20 h-8 text-xs">
-                      <SelectValue placeholder="All Roles" />
+                    <SelectTrigger className="w-40 h-9">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">All Roles</SelectItem>
@@ -394,201 +322,197 @@ export default function DashboardPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
+              {/* Events List */}
+              <div>
                 {loading && (
-                  <div className="space-y-3">
-                    {[...Array(3)].map((_, index) => (
-                      <Card key={index} className="overflow-hidden border-border/40">
-                        <div className="grid grid-cols-[120px_1fr_auto] gap-4 items-center p-3">
-                          <Skeleton className="h-20 w-full rounded-md" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-3 w-1/2" />
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                )}
+                
+                {!loading && filteredEvents.length === 0 && (
+                  <div className="text-center py-12">
+                    <Calendar className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">No events found</p>
+                    <p className="text-sm text-muted-foreground/70 mt-1">
+                      Try adjusting your filters or create a new event
+                    </p>
                   </div>
                 )}
 
-                {!loading &&
-                  myEvents.filter((e) => {
-                    const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
-                    const matchRole = roleFilter === "ALL" || e.role === roleFilter;
-                    if (filter === "ALL") return matchText && matchRole;
-                    if (filter === "LIVE") return matchText && matchRole && e.status === "PUBLISHED";
-                    return filter !== "DRAFT" && matchText && matchRole;
-                  }).length === 0 && (
-                    <div className="text-center py-12 border-2 border-dashed border-muted rounded-xl bg-muted/20">
-                      <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Search className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <p className="text-muted-foreground font-medium">No events found</p>
-                      <p className="text-xs text-muted-foreground/70 mt-1">Try adjusting your filters</p>
-                    </div>
-                  )}
-
                 <div className="space-y-3">
-                  {myEvents
-                    .filter((e) => {
-                      const matchText = e.eventName.toLowerCase().includes(search.toLowerCase());
-                      const matchRole = roleFilter === "ALL" || e.role === roleFilter;
-                      if (filter === "ALL") return matchText && matchRole;
-                      if (filter === "LIVE") return matchText && matchRole && e.status === "PUBLISHED";
-                      return filter !== "DRAFT" && matchText && matchRole;
-                    })
-                    .map((event) => {
-                      const hasBanner = Boolean(event.imageCover);
-                      return (
-                        <Card
-                          key={event.id}
-                          className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 group bg-card/50 hover:bg-card"
-                        >
-                          <div className="grid grid-cols-[120px_1fr_auto] sm:grid-cols-[160px_1fr_auto] gap-4 p-3">
-                            <div className="relative h-24 rounded-lg overflow-hidden bg-muted group-hover:scale-[1.02] transition-transform duration-500">
-                              {hasBanner ? (
+                  {filteredEvents.map((event) => {
+                    const hasBanner = Boolean(event.imageCover);
+                    const eventStatus = getEventStatus(event);
+                    const badge = getStatusBadge(eventStatus);
+                    
+                    return (
+                      <Card
+                        key={event.id}
+                        className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border/60 hover:border-primary/30"
+                      >
+                        <div className="grid grid-cols-[160px_1fr_auto] gap-4 items-center p-4">
+                          {/* Event Image */}
+                          <Link 
+                            href={`/event/${event.id}`} 
+                            className="relative h-28 w-40 rounded-lg overflow-hidden bg-muted block group"
+                          >
+                            {hasBanner ? (
+                              <img
+                                src={event.imageCover as string}
+                                alt={event.eventName}
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
                                 <img
-                                  src={event.imageCover as string}
+                                  src="/banner.png"
                                   alt={event.eventName}
-                                  className="h-full w-full object-cover"
+                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/10 to-teal-500/10">
-                                  <img
-                                    src="/banner.png"
-                                    alt={event.eventName}
-                                    className="h-full w-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                                  />
-                                </div>
-                              )}
-                              <div className="absolute top-2 left-2">
-                                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/90 text-white backdrop-blur-sm shadow-sm">
-                                  Live
-                                </span>
                               </div>
-                            </div>
+                            )}
+                            <span
+                              className={`absolute top-2 left-2 px-2.5 py-1 text-xs font-semibold rounded-full shadow-lg ${badge.color} text-white`}
+                            >
+                              {badge.label}
+                            </span>
+                          </Link>
+
+                          {/* Event Info */}
+                          <Link href={`/event/${event.id}`} className="space-y-2 block min-w-0">
+                            <h4 className="font-semibold text-base line-clamp-1 hover:text-primary transition-colors">
+                              {event.eventName}
+                            </h4>
                             
-                            <div className="flex flex-col justify-center min-w-0 py-1">
-                              <h4 className="font-bold text-lg truncate group-hover:text-primary transition-colors">
-                                {event.eventName}
-                              </h4>
-                              <div className="flex flex-wrap items-center gap-2 mt-1">
-                                <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium border ${
-                                  event.role === 'ORGANIZER' 
-                                    ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800'
-                                    : event.role === 'PRESENTER'
-                                    ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800'
-                                    : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'
-                                }`}>
-                                  {event.role}
-                                </span>
+                            {!event.isDraft && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Users className="h-3.5 w-3.5" />
+                                <span className="font-medium">{event.role}</span>
                                 {event.isLeader && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800 flex items-center gap-1">
+                                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                                     Leader
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                                <CalendarPlus className="h-3 w-3" />
-                                Joined {new Date(event.createdAt).toLocaleDateString("th-TH")}
-                              </p>
-                            </div>
+                            )}
                             
-                            <div className="flex items-center gap-2 self-center pr-2">
-                              <Link href={`/event/${event.id}`}>
-                                <Button size="sm" className="hidden sm:flex shadow-sm hover:shadow-primary/20 transition-all">View</Button>
-                              </Link>
+                            <p className="text-xs text-muted-foreground">
+                              {event.isDraft ? "Created" : "Joined"} {new Date(event.createdAt).toLocaleDateString()}
+                            </p>
+
+                            {/* Date Info */}
+                            {event.status === "PUBLISHED" && (
+                              <div className="flex gap-3 text-xs text-muted-foreground">
+                                {event.startJoinDate && (
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>Join: {new Date(event.startJoinDate).toLocaleDateString()}</span>
+                                  </div>
+                                )}
+                                {event.startView && (
+                                  <div className="flex items-center gap-1">
+                                    <Eye className="h-3 w-3" />
+                                    <span>View: {new Date(event.startView).toLocaleDateString()}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Link>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            <Link href={`/event/${event.id}`}>
+                              <Button size="sm" variant={event.isDraft ? "default" : "outline"}>
+                                {event.isDraft ? "Edit" : "Open"}
+                              </Button>
+                            </Link>
+                            {(event.isDraft || (event.role === "ORGANIZER" && event.isLeader)) && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem asChild>
-                                    <Link href={`/event/${event.id}`} className="cursor-pointer">Open</Link>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openDeleteConfirm({ id: event.id, eventName: event.eventName })
+                                    }
+                                    className="text-red-600"
+                                  >
+                                    Delete Event
                                   </DropdownMenuItem>
-                                  {event.role === "ORGANIZER" && event.isLeader && (
-                                    <DropdownMenuItem
-                                      className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                                      onClick={() =>
-                                        openDeleteConfirm({
-                                          id: event.id,
-                                          eventName: event.eventName,
-                                        })
-                                      }
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
-                            </div>
+                            )}
                           </div>
-                        </Card>
-                      );
-                    })}
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <Card className="bg-muted/30 border-dashed border-2 shadow-none">
-                <CardHeader className="text-lg font-semibold pb-2">Overview</CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/50 shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                          <CalendarPlus className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-medium">Total Drafts</span>
-                      </div>
-                      <span className="text-xl font-bold">{drafts.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/50 shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                          <Search className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-medium">Live Events</span>
-                      </div>
-                      <span className="text-xl font-bold">
-                        {myEvents.filter((e) => e.status === "PUBLISHED").length}
-                      </span>
-                    </div>
+            {/* Sidebar */}
+            <div className="space-y-4">
+              <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                <CardHeader className="pb-3">
+                  <h3 className="font-semibold text-base">Quick Stats</h3>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-background/60">
+                    <span className="text-sm text-muted-foreground">Total Events</span>
+                    <span className="text-2xl font-bold text-primary">{allEvents.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-background/60">
+                    <span className="text-sm text-muted-foreground">Drafts</span>
+                    <span className="text-2xl font-bold">{counts.draft}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-background/60">
+                    <span className="text-sm text-muted-foreground">Live</span>
+                    <span className="text-2xl font-bold text-green-600">{counts.viewOpen}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-background/60">
+                    <span className="text-sm text-muted-foreground">Recruiting</span>
+                    <span className="text-2xl font-bold text-blue-600">{counts.accepting}</span>
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card className="overflow-hidden border-border/50 shadow-sm">
-                <CardHeader className="text-lg font-semibold pb-2 bg-muted/20">Quick Links</CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-border/40">
-                    <Link href="/profile" className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors group">
-                      <span className="text-sm font-medium group-hover:text-primary transition-colors">View Profile</span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                    <Link href="/settings" className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors group">
-                      <span className="text-sm font-medium group-hover:text-primary transition-colors">Account Settings</span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <h3 className="font-semibold text-base">Quick Links</h3>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                  <Link href="/profile">
+                    <Button variant="ghost" className="w-full justify-between h-10 hover:bg-primary/5">
+                      View Profile <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/settings">
+                    <Button variant="ghost" className="w-full justify-between h-10 hover:bg-primary/5">
+                      Settings <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Event?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{" "}
-              <span className="font-semibold text-foreground">{deleteTarget?.eventName}</span>.
-              <br/>This action cannot be undone.
+              This will permanently delete <span className="font-semibold text-foreground">{deleteTarget?.eventName}</span>. 
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -596,9 +520,9 @@ export default function DashboardPage() {
             <AlertDialogAction 
               onClick={handleDeleteEvent} 
               disabled={deleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700"
             >
-              {deleting ? "Deleting..." : "Delete Event"}
+              {deleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

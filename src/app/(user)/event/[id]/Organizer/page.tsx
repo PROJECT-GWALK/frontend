@@ -60,6 +60,7 @@ type EventData = {
   maxTeams?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
+  unitReward?: string;
   locationName?: string;
   location?: string;
   totalParticipants?: number;
@@ -657,6 +658,14 @@ export default function OrganizerView({ id, event }: Props) {
                       setForm((f) => ({ ...f, committeeReward: Number(e.target.value) }))
                     }
                   />
+                  <Label>Reward Unit (e.g. coins, points)</Label>
+                  <Input
+                    type="text"
+                    value={form.unitReward ?? "coins"}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, unitReward: e.target.value }))
+                    }
+                  />
                 </div>
               )}
 
@@ -987,6 +996,7 @@ export default function OrganizerView({ id, event }: Props) {
                       } else if (editingSection === "guest") {
                         payload.virtualRewardGuest = Number(form.guestReward ?? 0);
                         payload.virtualRewardCommittee = Number(form.committeeReward ?? 0);
+                        payload.unitReward = form.unitReward;
                       } else if (editingSection === "rewards") {
                         // handle create / update / delete of special rewards
                         try {

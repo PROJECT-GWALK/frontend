@@ -36,6 +36,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getEventParticipants,
   updateEventParticipant,
@@ -123,6 +124,10 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
     onRefreshCountsRef.current = onRefreshCounts;
   }, [onRefreshCounts]);
 
+  useEffect(() => {
+    onRefreshCountsRef.current?.(participants);
+  }, [participants]);
+
   const isOrganizerLeader =
     participants.some(
       (p) =>
@@ -148,7 +153,6 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
             const next = all.map((it) =>
               it.id === pid ? res.participant : it
             );
-            onRefreshCountsRef.current?.(next);
             return next;
           });
           toast.success("บันทึกสำเร็จ");
@@ -168,7 +172,6 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
       if (res?.participants) {
         const list = res.participants as ParticipantRow[];
         setParticipants(list);
-        onRefreshCountsRef.current?.(list);
       }
     } catch {
       toast.error("โหลดรายชื่อผู้เข้าร่วมไม่สำเร็จ");
@@ -256,12 +259,40 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
         </CardHeader>
 
         <CardContent>
-          {!participants || participants.length === 0 ? (
+          {loadingParticipants && (!participants || participants.length === 0) ? (
+            <div className="grid grid-cols-1 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <Card
+                  key={i}
+                  className="overflow-hidden border-none shadow-md"
+                >
+                  <Skeleton className="h-2 w-full" />
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-lg" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-6 w-32" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-6 w-8 rounded-full" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : !participants || participants.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
-                {loadingParticipants ? "กำลังโหลด..." : "ยังไม่มีผู้เข้าร่วม"}
-              </p>
+              <p className="text-muted-foreground">ยังไม่มีผู้เข้าร่วม</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
@@ -579,9 +610,6 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                                   setParticipants((all) => {
                                                     const next = all.filter(
                                                       (it) => it.id !== pid
-                                                    );
-                                                    onRefreshCountsRef.current?.(
-                                                      next
                                                     );
                                                     return next;
                                                   });

@@ -11,14 +11,15 @@ import { AxiosError } from "axios";
 import { getPublishedEvents, signInvite, joinEvent } from "@/utils/apievent";
 import type { MyEvent } from "@/utils/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
-    "upcomingRecruit" | "accepting" | "viewSoon" | "viewOpen" | "finished"
-  >("viewOpen");
+    "all" | "upcomingRecruit" | "accepting" | "viewSoon" | "viewOpen" | "finished"
+  >("all");
 
   useEffect(() => {
     const load = async () => {
@@ -65,7 +66,43 @@ export default function EventsPage() {
   };
 
   if (loading) {
-    return <div className="p-6">กำลังโหลด...</div>;
+    return (
+      <div className="p-6 max-w-6xl mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+          <div>
+            <Skeleton className="h-9 w-32 mb-2" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <Skeleton className="h-10 w-full md:w-80" />
+        </div>
+
+        <Skeleton className="h-10 w-full max-w-2xl" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="overflow-hidden border-none shadow-md">
+              <Skeleton className="h-36 w-full" />
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2 w-full">
+                    <Skeleton className="h-5 w-3/4" />
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -88,6 +125,7 @@ export default function EventsPage() {
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
         <TabsList>
+          <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
           <TabsTrigger value="upcomingRecruit">จะเปิดรับสมัครเร็วๆ นี้</TabsTrigger>
           <TabsTrigger value="accepting">เปิดรับสมัครผู้นำเสนอ</TabsTrigger>
           <TabsTrigger value="viewSoon">จะเปิดให้ชมเร็วๆ นี้</TabsTrigger>
@@ -100,6 +138,7 @@ export default function EventsPage() {
       {events
         .filter((e) => e.eventName.toLowerCase().includes(search.toLowerCase()))
         .filter((e) => {
+          if (filter === "all") return true;
           const now = new Date();
           const sv = e.startView ? new Date(e.startView) : undefined;
           const ev = e.endView ? new Date(e.endView) : undefined;
@@ -137,6 +176,7 @@ export default function EventsPage() {
         {events
           .filter((e) => e.eventName.toLowerCase().includes(search.toLowerCase()))
           .filter((e) => {
+            if (filter === "all") return true;
             const now = new Date();
             const sv = e.startView ? new Date(e.startView) : undefined;
             const ev = e.endView ? new Date(e.endView) : undefined;
