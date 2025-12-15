@@ -58,6 +58,7 @@ type EventData = {
   startJoinDate?: string;
   endJoinDate?: string;
   maxTeams?: number;
+  maxTeamMembers?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
   unitReward?: string;
@@ -637,6 +638,14 @@ export default function OrganizerView({ id, event }: Props) {
                     value={form.maxTeams ?? 0}
                     onChange={(e) => setForm((f) => ({ ...f, maxTeams: Number(e.target.value) }))}
                   />
+                  <Label>Members per Group (Max Presenters)</Label>
+                  <Input
+                    type="number"
+                    value={form.maxTeamMembers ?? 0}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, maxTeamMembers: Number(e.target.value) }))
+                    }
+                  />
                 </div>
               )}
 
@@ -993,6 +1002,7 @@ export default function OrganizerView({ id, event }: Props) {
                           ? toISOStringFromLocal(form.endJoinDate)
                           : null;
                         payload.maxTeams = form.maxTeams;
+                        payload.maxTeamMembers = form.maxTeamMembers;
                       } else if (editingSection === "guest") {
                         payload.virtualRewardGuest = Number(form.guestReward ?? 0);
                         payload.virtualRewardCommittee = Number(form.committeeReward ?? 0);

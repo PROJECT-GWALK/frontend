@@ -99,14 +99,19 @@ const groupConfig = {
   },
 };
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 
 export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQueries, setSearchQueries] = useState<Record<EventGroup, string>>({
+    ORGANIZER: "",
+    COMMITTEE: "",
+    PRESENTER: "",
+    GUEST: "",
+  });
   const [currentPages, setCurrentPages] = useState<Record<EventGroup, number>>({
     ORGANIZER: 1,
     COMMITTEE: 1,
@@ -187,22 +192,22 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
       .catch(() => setCurrentUserId(null));
   }, [id, loadParticipants]);
 
-  const filteredParticipants = useMemo(() => {
-    if (!searchQuery) return participants;
-    const query = searchQuery.toLowerCase();
+  const getFilteredList = (group: EventGroup) => {
+    const query = searchQueries[group].toLowerCase();
     return participants.filter(
       (p) =>
-        p.user?.name?.toLowerCase().includes(query) ||
-        p.user?.username?.toLowerCase().includes(query) ||
-        p.user?.email?.toLowerCase().includes(query) ||
-        p.team?.name?.toLowerCase().includes(query)
+        p.eventGroup === group &&
+        (p.user?.name?.toLowerCase().includes(query) ||
+          p.user?.username?.toLowerCase().includes(query) ||
+          p.user?.email?.toLowerCase().includes(query) ||
+          p.team?.name?.toLowerCase().includes(query))
     );
-  }, [participants, searchQuery]);
+  };
 
   const totalCount = participants.length;
 
   const getPaginatedList = (group: EventGroup) => {
-    const list = filteredParticipants.filter((p) => p.eventGroup === group);
+    const list = getFilteredList(group);
     const page = currentPages[group];
     const startIndex = (page - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -245,16 +250,6 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
               />
               รีเฟรช
             </Button>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="ค้นหาผู้เข้าร่วม..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-background/50 border-muted-foreground/20"
-            />
           </div>
         </CardHeader>
 
@@ -311,33 +306,49 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                   >
                     <div className={`h-2 ${config.color}`} />
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${config.badge}`}>
-                            <Icon className="h-5 w-5" />
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${config.badge}`}>
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg font-semibold">
+                                {config.title}
+                              </CardTitle>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {total} คน
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg font-semibold">
-                              {config.title}
-                            </CardTitle>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {total} คน
-                            </p>
-                          </div>
+                          <Badge
+                            variant="secondary"
+                            className={`${config.badge} border-none`}
+                          >
+                            {total}
+                          </Badge>
                         </div>
-                        <Badge
-                          variant="secondary"
-                          className={`${config.badge} border-none`}
-                        >
-                          {total}
-                        </Badge>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder={`ค้นหาใน ${config.title}...`}
+                            value={searchQueries[g]}
+                            onChange={(e) =>
+                              setSearchQueries((prev) => ({
+                                ...prev,
+                                [g]: e.target.value,
+                              }))
+                            }
+                            className="pl-10 bg-background/50 border-muted-foreground/20 h-9"
+                          />
+                        </div>
                       </div>
                     </CardHeader>
 
                     <CardContent>
                       {total === 0 ? (
                         <div className="text-center py-8 text-sm text-muted-foreground">
-                          {searchQuery
+                          {searchQueries[g]
                             ? "ไม่พบผู้เข้าร่วมที่ค้นหา"
                             : "ยังไม่มีผู้เข้าร่วมกลุ่มนี้"}
                         </div>
@@ -350,9 +361,11 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                   <th className="text-left p-3 font-semibold text-sm">
                                     ผู้ใช้
                                   </th>
-                                  <th className="text-left p-3 font-semibold text-sm">
-                                    บทบาท
-                                  </th>
+                                  {(g !== "ORGANIZER" || isOrganizerLeader) && (
+                                    <th className="text-left p-3 font-semibold text-sm">
+                                      บทบาท
+                                    </th>
+                                  )}
                                   {g === "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
                                       ทีม
@@ -361,11 +374,6 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                   {g === "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
                                       หัวหน้าทีม
-                                    </th>
-                                  )}
-                                  {g !== "ORGANIZER" && g !== "PRESENTER" && (
-                                    <th className="text-left p-3 font-semibold text-sm">
-                                      Leader
                                     </th>
                                   )}
                                   {g !== "ORGANIZER" && (
@@ -425,47 +433,49 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                         </div>
                                       </div>
                                     </td>
-                                    <td className="p-3">
-                                      <Select
-                                        value={p.eventGroup}
-                                        onValueChange={(v) => {
-                                          setParticipants((all) =>
-                                            all.map((it) =>
-                                              it.id === p.id
-                                                ? {
-                                                    ...it,
-                                                    eventGroup: v as EventGroup,
-                                                  }
-                                                : it
-                                            )
-                                          );
-                                          applyUpdate(p.id, {
-                                            eventGroup: v as EventGroup,
-                                          });
-                                        }}
-                                        disabled={g === "ORGANIZER"}
-                                      >
-                                        <SelectTrigger className="w-[130px]">
-                                          <SelectValue placeholder="เลือกบทบาท" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {isOrganizerLeader && (
-                                            <SelectItem value="ORGANIZER">
-                                              Organizer
+                                    {(g !== "ORGANIZER" || isOrganizerLeader) && (
+                                      <td className="p-3">
+                                        <Select
+                                          value={p.eventGroup}
+                                          onValueChange={(v) => {
+                                            setParticipants((all) =>
+                                              all.map((it) =>
+                                                it.id === p.id
+                                                  ? {
+                                                      ...it,
+                                                      eventGroup: v as EventGroup,
+                                                    }
+                                                  : it
+                                              )
+                                            );
+                                            applyUpdate(p.id, {
+                                              eventGroup: v as EventGroup,
+                                            });
+                                          }}
+                                          disabled={g === "ORGANIZER"}
+                                        >
+                                          <SelectTrigger className="w-[130px]">
+                                            <SelectValue placeholder="เลือกบทบาท" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {isOrganizerLeader && (
+                                              <SelectItem value="ORGANIZER">
+                                                Organizer
+                                              </SelectItem>
+                                            )}
+                                            <SelectItem value="PRESENTER">
+                                              Presenter
                                             </SelectItem>
-                                          )}
-                                          <SelectItem value="PRESENTER">
-                                            Presenter
-                                          </SelectItem>
-                                          <SelectItem value="COMMITTEE">
-                                            Committee
-                                          </SelectItem>
-                                          <SelectItem value="GUEST">
-                                            Guest
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </td>
+                                            <SelectItem value="COMMITTEE">
+                                              Committee
+                                            </SelectItem>
+                                            <SelectItem value="GUEST">
+                                              Guest
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </td>
+                                    )}
                                     {g === "PRESENTER" && (
                                       <td className="p-3">
                                         <Badge
@@ -507,25 +517,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                         })()}
                                       </td>
                                     )}
-                                    {g !== "ORGANIZER" && g !== "PRESENTER" && (
-                                      <td className="p-3">
-                                        <Switch
-                                          checked={Boolean(p.isLeader)}
-                                          onCheckedChange={(checked) => {
-                                            setParticipants((all) =>
-                                              all.map((it) =>
-                                                it.id === p.id
-                                                  ? { ...it, isLeader: checked }
-                                                  : it
-                                              )
-                                            );
-                                            applyUpdate(p.id, {
-                                              isLeader: checked,
-                                            });
-                                          }}
-                                        />
-                                      </td>
-                                    )}
+
                                     {g !== "ORGANIZER" && (
                                       <td className="p-3">
                                         <Input
@@ -634,7 +626,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                             </table>
                           </div>
 
-                          {totalPages > 1 && (
+                          {total >= 10 && totalPages > 1 && (
                             <div className="flex items-center justify-between mt-4">
                               <div className="text-sm text-muted-foreground">
                                 แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}

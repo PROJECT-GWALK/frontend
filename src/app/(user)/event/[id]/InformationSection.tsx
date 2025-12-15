@@ -275,6 +275,7 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
                     startJoinDate: event?.startJoinDate ?? "",
                     endJoinDate: event?.endJoinDate ?? "",
                     maxTeams: event?.maxTeams ?? 0,
+                    maxTeamMembers: event?.maxTeamMembers ?? 0,
                   })
                 }
               >
@@ -296,6 +297,10 @@ export default function InformationSection({ id, event, editable, onEdit, linkLa
             <div className="flex justify-between">
               <span className="text-muted-foreground">Max Teams:</span>
               <span>{event?.maxTeams ?? "-"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Members per Group:</span>
+              <span>{event?.maxTeamMembers ?? "-"}</span>
             </div>
           </div>
         </CardContent>

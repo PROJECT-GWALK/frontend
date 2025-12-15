@@ -126,6 +126,7 @@ export type EventData = {
   startJoinDate?: string;
   endJoinDate?: string;
   maxTeams?: number;
+  maxTeamMembers?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
   unitReward?: string;
