@@ -3,19 +3,37 @@
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function EventProjectDetailPage() {
   const { id } = useParams();
 
   // 🔹 mock data (ค่าคงที่)
-  const project = {
-    title: "01 - Doctor Web App",
-    description: "Create Appointment, View Medical Records etc.",
-    videoLink: "video link",
-    files: ["File 1", "File 2"],
-    members: ["Member 1", "Member 2"],
-  };
+  const projects = [
+    {
+      id: "01",
+      title: "01 - Doctor Web App",
+      description: "Create Appointment, View Medical Records etc.",
+      img: "/project1.png",
+      videoLink: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      files: ["Proposal.pdf", "Slides.pdf"],
+      members: ["Member 1", "Member 2"],
+    },
+    {
+      id: "02",
+      title: "02 - Restaurant Application",
+      description: "Create Reservation, View Menu etc.",
+      img: "/project2.png",
+      videoLink: "",
+      files: ["Report.pdf"],
+      members: ["Member A", "Member B"],
+    },
+  ];
+
+  const searchParams = useSearchParams();
+  const teamId = searchParams?.get("team");
+
+  const project = projects.find((p) => p.id === teamId) || projects[0];
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -23,7 +41,7 @@ export default function EventProjectDetailPage() {
       <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
         <div className="h-[220px] md:h-[260px] bg-muted rounded-xl flex items-center justify-center overflow-hidden">
           <Image
-            src="/project1.png"
+            src={project.img || "/project1.png"}
             alt="project cover"
             width={220}
             height={220}
@@ -37,14 +55,10 @@ export default function EventProjectDetailPage() {
         {/* Title */}
         <Card className="rounded-xl shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">
-              My Project : {project.title}
-            </CardTitle>
+            <CardTitle className="text-lg">My Project : {project.title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {project.description}
-            </p>
+            <p className="text-sm text-muted-foreground">{project.description}</p>
           </CardContent>
         </Card>
 
@@ -54,9 +68,49 @@ export default function EventProjectDetailPage() {
             <CardTitle className="text-sm">Video Link</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {project.videoLink}
-            </p>
+            {project.videoLink ? (
+              project.videoLink.includes("youtube") || project.videoLink.includes("youtu.be") ? (
+                // embed YouTube video
+                (() => {
+                  const ytRegex = /(?:v=|\/)([0-9A-Za-z_-]{11})/;
+                  const match = project.videoLink.match(ytRegex);
+                  const vid = match ? match[1] : null;
+                  return vid ? (
+                    <div className="w-full aspect-video">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${vid}`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      href={project.videoLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-primary"
+                    >
+                      Open video link
+                    </a>
+                  );
+                })()
+              ) : (
+                <a
+                  href={project.videoLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-primary"
+                >
+                  Open video link
+                </a>
+              )
+            ) : (
+              <div className="text-sm text-muted-foreground">No video provided</div>
+            )}
           </CardContent>
         </Card>
 
