@@ -32,3 +32,14 @@ export const SAMPLE_PROJECTS: PresenterProject[] = [
     members: ["Fiona"],
   },
 ];
+
+export function getProjectById(id: string) {
+  return SAMPLE_PROJECTS.find((p) => p.id === id) || null;
+}
+
+export function updateProject(updated: PresenterProject) {
+  const idx = SAMPLE_PROJECTS.findIndex((p) => p.id === updated.id);
+  if (idx === -1) return false;
+  SAMPLE_PROJECTS[idx] = { ...SAMPLE_PROJECTS[idx], ...updated };
+  return true;
+}
