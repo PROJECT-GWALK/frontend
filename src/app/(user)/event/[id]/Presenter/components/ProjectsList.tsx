@@ -3,27 +3,7 @@
 import React from "react";
 import ProjectCard from "./ProjectCard";
 import type { PresenterProject } from "./types";
-
-export const SAMPLE_PROJECTS: PresenterProject[] = [
-  {
-    id: "01",
-    title: "Doctor Web App",
-    desc: "Create Appointment, View Medical Records etc.",
-    img: "/project1.png",
-  },
-  {
-    id: "02",
-    title: "Restaurant Application",
-    desc: "Create Reservation, View Menu etc.",
-    img: "/project2.png",
-  },
-  {
-    id: "03",
-    title: "CMU Hub",
-    desc: "Hub for every CMU students.",
-    img: "/project3.png",
-  },
-];
+import { SAMPLE_PROJECTS } from "./mockProjects";
 
 type Props = {
   projects?: PresenterProject[];

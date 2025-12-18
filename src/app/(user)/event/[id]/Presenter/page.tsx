@@ -6,20 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
-import { setEventPublicView, updateEvent } from "@/utils/apievent";
-import { DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
 import type { EventData } from "@/utils/types";
 import InformationSection from "../InformationSection";
 import ProjectsList from "./components/ProjectsList";
 import CreateProjectDialog from "./components/CreateProjectDialog";
+import { SAMPLE_PROJECTS } from "./components/mockProjects";
+import type { PresenterProject } from "./components/types";
 
 type Props = {
   id: string;
@@ -29,14 +25,8 @@ type Props = {
 export default function PresenterView({ id, event }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
-  const [updatingPublic, setUpdatingPublic] = useState(false);
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
-  const [editingSection, setEditingSection] = useState<
-    null | "time" | "location" | "description" | "presenter" | "guest" | "committee" | "rewards"
-  >(null);
-  const [form, setForm] = useState<Record<string, any>>({});
-  const [saving, setSaving] = useState(false);
 
   // Local project (mock) state for presenter
   type LocalProject = {
@@ -52,11 +42,12 @@ export default function PresenterView({ id, event }: Props) {
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [createName, setCreateName] = useState("");
+  const [projects, setProjects] = useState<PresenterProject[]>(SAMPLE_PROJECTS);
+
+  // UI state for project viewer/editor
   const [viewOpen, setViewOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
-  const [projectForm, setProjectForm] = useState<LocalProject | null>(null);
-  const [shareOpen, setShareOpen] = useState(false);
+  const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -374,7 +365,19 @@ export default function PresenterView({ id, event }: Props) {
                               <Button
                                 size="sm"
                                 onClick={() => {
-                                  setProjectForm(userProject);
+                                  setProjectForm({
+                                    id: userProject.id,
+                                    title: userProject.title,
+                                    desc: userProject.description,
+                                    img: userProject.img,
+                                    videoLink: userProject.videoLink,
+                                    files: (userProject.files || []).map((f) =>
+                                      typeof f === "string"
+                                        ? { name: f.split("/").pop() || f, url: f }
+                                        : f
+                                    ),
+                                    members: userProject.members || [],
+                                  });
                                   setViewOpen(true);
                                   setEditingProject(false);
                                 }}
@@ -404,8 +407,9 @@ export default function PresenterView({ id, event }: Props) {
                     open={createOpen}
                     onOpenChange={setCreateOpen}
                     onCreate={(pr) => {
-                      setUserProject(pr as any);
+                      setUserProject({ ...pr, members: ["You"] } as any);
                       setProjectForm(pr as any);
+                      setProjects((s) => [pr, ...s]);
                       toast.success("Project created");
                     }}
                   />
@@ -423,7 +427,7 @@ export default function PresenterView({ id, event }: Props) {
                     />
                   </div>
 
-                  <ProjectsList projects={undefined} searchQuery={searchQuery} eventId={event.id} />
+                  <ProjectsList projects={projects} searchQuery={searchQuery} eventId={event.id} />
                 </div>
               </div>
             </TabsContent>

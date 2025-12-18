@@ -43,7 +43,10 @@ export default function ProjectCard({ project, eventId }: Props) {
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             View Project
           </span>
-          <Link href={`./${eventId}/project/${project.id}`} className="inline-flex items-center">
+          <Link
+            href={`/event/${eventId}/Presenter/Projects/${project.id}`}
+            className="inline-flex items-center"
+          >
             <Button size="sm">Open</Button>
           </Link>
         </div>
