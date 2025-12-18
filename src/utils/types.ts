@@ -151,4 +151,6 @@ export type EventData = {
   awardsUnused?: string[];
   specialRewards?: SpecialReward[];
   presenterTeams?: number;
-}
+  specialPrizeUsed?: number;
+  specialPrizeCount?: number;
+};

@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
 import type { EventData } from "@/utils/types";
 import InformationSection from "../InformationSection";
+import ProjectsList from "./components/ProjectsList";
+import CreateProjectDialog from "./components/CreateProjectDialog";
 
 type Props = {
   id: string;
@@ -105,13 +107,13 @@ export default function PresenterView({ id, event }: Props) {
           </DialogContent>
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <Card className="border-none shadow-md bg-gradient-to-br from-background to-muted/20 mb-6 transition-all hover:shadow-lg">
+          <Card className="border-none shadow-md bg-linear-to-br from-background to-muted/20 mb-6 transition-all hover:shadow-lg">
             <CardHeader className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 {/* LEFT SIDE: Title & Status */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <CardTitle className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                    <CardTitle className="text-2xl lg:text-3xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                       {localEvent?.eventName || "Event"}
                     </CardTitle>
                   </div>
@@ -344,12 +346,9 @@ export default function PresenterView({ id, event }: Props) {
                       <div className="text-sm text-muted-foreground">
                         You don't have any project yet. Create or join a group to appear here.
                       </div>
-                      <div className="mt-4 flex gap-2">
+                      <div className="flex gap-2">
                         <Button size="sm" variant="default" onClick={() => setCreateOpen(true)}>
                           Create Project
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          Join Project
                         </Button>
                       </div>
                     </Card>
@@ -382,17 +381,6 @@ export default function PresenterView({ id, event }: Props) {
                               >
                                 View Project
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setProjectForm(userProject);
-                                  setViewOpen(true);
-                                  setEditingProject(true);
-                                }}
-                              >
-                                Edit
-                              </Button>
                             </div>
                           </div>
 
@@ -412,293 +400,15 @@ export default function PresenterView({ id, event }: Props) {
                   )}
 
                   {/* Create Project Dialog */}
-                  <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-                    <DialogContent className="max-w-md">
-                      <DialogTitle>Create Project</DialogTitle>
-                      <div className="mt-4 space-y-3">
-                        <Label>Project name</Label>
-                        <Input value={createName} onChange={(e) => setCreateName(e.target.value)} />
-                        <Label>Description</Label>
-                        <Textarea
-                          value={projectForm?.description || ""}
-                          onChange={(e) =>
-                            setProjectForm((p) => ({ ...(p || {}), description: e.target.value }))
-                          }
-                        />
-                        <div className="flex items-center gap-2 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setCreateOpen(false);
-                              setCreateName("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              const id = `team-${Date.now().toString().slice(-6)}`;
-                              const pr: LocalProject = {
-                                id,
-                                title: createName || `Team ${id}`,
-                                description: (projectForm && projectForm.description) || "",
-                                img: "/project1.png",
-                                videoLink: "",
-                                files: [],
-                                members: ["You"],
-                                owner: true,
-                              };
-                              setUserProject(pr);
-                              setProjectForm(pr);
-                              setCreateOpen(false);
-                              setCreateName("");
-                              toast.success("Project created");
-                            }}
-                          >
-                            Create
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* View / Edit Project Dialog */}
-                  <Dialog
-                    open={viewOpen}
-                    onOpenChange={(o) => {
-                      setViewOpen(o);
-                      if (!o) setEditingProject(false);
+                  <CreateProjectDialog
+                    open={createOpen}
+                    onOpenChange={setCreateOpen}
+                    onCreate={(pr) => {
+                      setUserProject(pr as any);
+                      setProjectForm(pr as any);
+                      toast.success("Project created");
                     }}
-                  >
-                    <DialogContent className="max-w-3xl">
-                      <DialogTitle>{projectForm?.title}</DialogTitle>
-                      <DialogClose className="absolute top-3 right-3">
-                        {/* <X className="h-4 w-4" /> */}
-                      </DialogClose>
-
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-1">
-                          <Image
-                            src={projectForm?.img || "/project1.png"}
-                            alt={projectForm?.title || "project"}
-                            width={320}
-                            height={200}
-                            className="rounded-lg object-cover"
-                          />
-                          <div className="mt-4">
-                            <div className="text-sm font-medium">Members</div>
-                            <div className="mt-2 space-y-2">
-                              {(projectForm?.members || []).map((m) => (
-                                <div key={m} className="flex items-center justify-between gap-2">
-                                  <div className="text-sm">{m}</div>
-                                  {projectForm?.owner && m !== "You" && (
-                                    <Button
-                                      size="xs"
-                                      variant="destructive"
-                                      onClick={() => {
-                                        setProjectForm((p) => ({
-                                          ...(p || {}),
-                                          members: (p?.members || []).filter((mm) => mm !== m),
-                                        }));
-                                      }}
-                                    >
-                                      Remove
-                                    </Button>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-
-                            {projectForm?.owner && (
-                              <div className="mt-4">
-                                <Button size="sm" onClick={() => setShareOpen(true)}>
-                                  Manage Members (Add by link / QR)
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="md:col-span-2 space-y-3">
-                          <div>
-                            <Label>Name</Label>
-                            {editingProject ? (
-                              <Input
-                                value={projectForm?.title || ""}
-                                onChange={(e) =>
-                                  setProjectForm((p) => ({ ...(p || {}), title: e.target.value }))
-                                }
-                              />
-                            ) : (
-                              <div className="font-semibold">{projectForm?.title}</div>
-                            )}
-                          </div>
-
-                          <div>
-                            <Label>Description</Label>
-                            {editingProject ? (
-                              <Textarea
-                                value={projectForm?.description || ""}
-                                onChange={(e) =>
-                                  setProjectForm((p) => ({
-                                    ...(p || {}),
-                                    description: e.target.value,
-                                  }))
-                                }
-                              />
-                            ) : (
-                              <div className="text-sm text-muted-foreground">
-                                {projectForm?.description || "No description"}
-                              </div>
-                            )}
-                          </div>
-
-                          <div>
-                            <Label>Video Link</Label>
-                            {editingProject ? (
-                              <Input
-                                value={projectForm?.videoLink || ""}
-                                onChange={(e) =>
-                                  setProjectForm((p) => ({
-                                    ...(p || {}),
-                                    videoLink: e.target.value,
-                                  }))
-                                }
-                              />
-                            ) : projectForm?.videoLink ? (
-                              <a
-                                href={projectForm.videoLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-sm text-primary"
-                              >
-                                Open video link
-                              </a>
-                            ) : (
-                              <div className="text-sm text-muted-foreground">No video provided</div>
-                            )}
-                          </div>
-
-                          <div>
-                            <Label>Files</Label>
-                            <div className="space-y-2 mt-2">
-                              {(projectForm?.files || []).map((f, i) => (
-                                <div key={i} className="flex items-center justify-between gap-2">
-                                  <div className="text-sm">{f}</div>
-                                  {editingProject && (
-                                    <Button
-                                      size="xs"
-                                      variant="destructive"
-                                      onClick={() =>
-                                        setProjectForm((p) => ({
-                                          ...(p || {}),
-                                          files: (p?.files || []).filter((_, idx) => idx !== i),
-                                        }))
-                                      }
-                                    >
-                                      Remove
-                                    </Button>
-                                  )}
-                                </div>
-                              ))}
-                              {editingProject && (
-                                <div className="flex gap-2">
-                                  <Input
-                                    placeholder="File name (mock)"
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                        const v = (e.target as HTMLInputElement).value.trim();
-                                        if (!v) return;
-                                        setProjectForm((p) => ({
-                                          ...(p || {}),
-                                          files: [...(p?.files || []), v],
-                                        }));
-                                        (e.target as HTMLInputElement).value = "";
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 justify-end">
-                            {editingProject ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setProjectForm(userProject);
-                                    setEditingProject(false);
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    if (projectForm) {
-                                      setUserProject(projectForm);
-                                      setEditingProject(false);
-                                      toast.success("Project updated");
-                                    }
-                                  }}
-                                >
-                                  Save
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingProject(true)}
-                                >
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    setUserProject(null);
-                                    setProjectForm(null);
-                                    setViewOpen(false);
-                                    toast.success("Project deleted");
-                                  }}
-                                >
-                                  Delete
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Share dialog (add members link / QR) */}
-                  <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-                    <DialogContent className="max-w-md">
-                      <DialogTitle>Share Join Link</DialogTitle>
-                      <div className="mt-4 space-y-3">
-                        <div className="text-sm text-muted-foreground">
-                          Share this link to invite members:
-                        </div>
-                        <div className="rounded-md bg-slate-100 p-3 text-sm break-all">{`/event/${id}/detail?team=${userProject?.id}`}</div>
-                        <div className="h-40 w-40 rounded-lg bg-muted flex items-center justify-center">
-                          QR (mock)
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setShareOpen(false)}>
-                            Close
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  />
                 </div>
 
                 {/* Projects in the event */}
@@ -713,56 +423,7 @@ export default function PresenterView({ id, event }: Props) {
                     />
                   </div>
 
-                  <div className="space-y-3">
-                    {[
-                      {
-                        id: "01",
-                        title: "Doctor Web App",
-                        desc: "Create Appointment, View Medical Records etc.",
-                        img: "/project1.png",
-                      },
-                      {
-                        id: "02",
-                        title: "Restaurant Application",
-                        desc: "Create Reservation, View Menu etc.",
-                        img: "/project2.png",
-                      },
-                      {
-                        id: "03",
-                        title: "CMU Hub",
-                        desc: "Hub for every CMU students.",
-                        img: "/project3.png",
-                      },
-                    ]
-                      .filter(
-                        (p) =>
-                          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.id.toLowerCase().includes(searchQuery.toLowerCase())
-                      )
-                      .map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`./detail?team=${encodeURIComponent(p.id)}`}
-                          className="block"
-                        >
-                          <div className="relative group rounded-xl bg-gradient-to-r from-slate-200 to-slate-100 p-[1px] hover:from-blue-500 hover:to-purple-500 transition-all duration-300">
-                            <div className="flex items-center gap-4 p-4 rounded-xl bg-white h-full relative">
-                              <Image
-                                src={p.img}
-                                alt={p.title}
-                                width={80}
-                                height={80}
-                                className="shrink-0 h-20 w-20 rounded-lg object-cover shadow-sm bg-slate-50"
-                              />
-                              <div>
-                                <h3 className="font-bold text-xl text-slate-900 mb-1">{p.title}</h3>
-                                <p className="text-sm text-slate-500 font-medium ">{p.desc}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                  </div>
+                  <ProjectsList projects={undefined} searchQuery={searchQuery} eventId={event.id} />
                 </div>
               </div>
             </TabsContent>

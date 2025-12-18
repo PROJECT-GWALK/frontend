@@ -35,10 +35,7 @@ export default function EventsPage() {
     load();
   }, []);
 
-  const handleJoin = async (
-    eventId: string,
-    role: "presenter" | "committee" | "guest"
-  ) => {
+  const handleJoin = async (eventId: string, role: "presenter" | "committee" | "guest") => {
     try {
       const resSign = await signInvite(eventId, role);
       if (resSign?.message !== "ok" || !resSign?.sig) {
@@ -49,9 +46,7 @@ export default function EventsPage() {
       if (resJoin?.message === "ok") {
         toast.success("เข้าร่วมอีเวนต์สำเร็จ");
         setEvents((prev) =>
-          prev.map((e) =>
-            e.id === eventId ? { ...e, role: role.toUpperCase() } : e
-          )
+          prev.map((e) => (e.id === eventId ? { ...e, role: role.toUpperCase() } : e))
         );
       } else {
         toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
@@ -168,9 +163,7 @@ export default function EventsPage() {
             return now > ev;
           }
           return true;
-        }).length === 0 && (
-        <p className="text-muted-foreground">ยังไม่มีอีเวนต์ที่เผยแพร่</p>
-      )}
+        }).length === 0 && <p className="text-muted-foreground">ยังไม่มีอีเวนต์ที่เผยแพร่</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {events
@@ -230,7 +223,7 @@ export default function EventsPage() {
                       />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
                   <span className="absolute top-2 left-2 px-2 py-1 text-[10px] font-medium rounded-2xl bg-emerald-500 text-white shadow-sm">
                     Live
                   </span>
@@ -246,10 +239,7 @@ export default function EventsPage() {
                       </Link>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                         <Calendar className="h-4 w-4" />
-                        <span>
-                          Published at{" "}
-                          {new Date(event.createdAt).toLocaleString()}
-                        </span>
+                        <span>Published at {new Date(event.createdAt).toLocaleString()}</span>
                       </div>
                     </div>
                     {event.role && (
@@ -265,10 +255,7 @@ export default function EventsPage() {
                       </Link>
                     ) : (
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleJoin(event.id, "presenter")}
-                        >
+                        <Button size="sm" onClick={() => handleJoin(event.id, "presenter")}>
                           Presenter
                         </Button>
                         <Button
