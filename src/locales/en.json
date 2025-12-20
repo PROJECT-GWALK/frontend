@@ -80,5 +80,26 @@
     "publishSuccess": "Event published successfully",
     "publishFailed": "Failed to publish event",
     "errorLoading": "Failed to load event"
+  },
+  
+  "dashboard": {
+    "presenterCount": "Presenters",
+    "guestCount": "Guests",
+    "committeeCount": "Committees",
+    "totalParticipants": "Total Participants",
+    "teamCount": "Teams",
+    "allComments": "Comments",
+    "commentGiven": "Comments Given",
+    "feedbackGiven": "Feedback Given",
+    "used": "Used",
+
+    "usedAlready": "Used",
+    "remaining": "Remaining",
+    "total": "Total",
+    "usedOverTotal": "Used / Total"
+
+
   }
+
+
 }

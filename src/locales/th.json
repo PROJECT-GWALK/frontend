@@ -80,5 +80,24 @@
     "publishSuccess": "เผยแพร่ Event สำเร็จ",
     "publishFailed": "เผยแพร่ Event ไม่สำเร็จ",
     "errorLoading": "โหลด Event ไม่สำเร็จ"
+  },
+  
+  "dashboard": {
+    "presenterCount": "ผู้นำเสนอ",
+    "guestCount": "ผู้เข้าร่วม",
+    "committeeCount": "กรรมการ",
+    "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+    "teamCount": "จำนวนทีม",
+    "allComments": "ความคิดเห็นทั้งหมด",
+    "commentGiven": "ให้คอมเมนต์",
+    "feedbackGiven": "ให้ฟีดแบ็ก",
+    "used": "ใช้ไป",
+
+    "usedAlready": "ใช้ไปแล้ว",
+    "remaining": "คงเหลือ",
+    "total": "ทั้งหมด",
+    "usedOverTotal": "ใช้ไป / ทั้งหมด"
+
+    
   }
 }

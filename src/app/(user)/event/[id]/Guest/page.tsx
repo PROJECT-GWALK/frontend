@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ export default function GuestView({ id, event }: Props) {
     members?: string[];
     owner?: boolean;
   };
+  const { t } = useLanguage();
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -149,7 +152,7 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      จำนวนผู้เข้าร่วมทั้งหมด
+                       {t("dashboard.totalParticipants")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -159,8 +162,8 @@ export default function GuestView({ id, event }: Props) {
                         (localEvent?.committeeCount ?? 0)}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      ผู้นำเสนอ: {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0} |
-                      ผู้เข้าร่วม: {localEvent?.guestsCount ?? 0} | กรรมการ:{" "}
+                      {t("dashboard.presenterCount")}: {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0} | 
+                      {" "}{t("dashboard.guestCount")}: {localEvent?.guestsCount ?? 0} | {t("dashboard.committeeCount")}:{" "}
                       {localEvent?.committeeCount ?? 0}
                     </p>
                   </CardContent>
@@ -173,14 +176,14 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      ผู้นำเสนอ
+                      {t("dashboard.presenterCount")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-4xl font-bold text-foreground">
                       {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">จำนวนทีม</p>
+                    <p className="text-sm text-muted-foreground mt-2">{t("dashboard.teamCount")}</p>
                   </CardContent>
                 </Card>
 
@@ -191,7 +194,7 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      ผู้เข้าร่วม
+                      {t("dashboard.guestCount")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -199,7 +202,7 @@ export default function GuestView({ id, event }: Props) {
                       {localEvent?.guestsCount ?? 0}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      ให้คอมเมนต์: {localEvent?.participantsCommentCount ?? 90} / ใช้ไป:{" "}
+                      {t("dashboard.commentGiven")}: {localEvent?.participantsCommentCount ?? 90} / {t("dashboard.used")}:{" "}
                       {localEvent?.participantsVirtualUsed ?? 2000}
                     </p>
                   </CardContent>
@@ -212,7 +215,7 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      กรรมการ
+                      {t("dashboard.committeeCount")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -220,7 +223,7 @@ export default function GuestView({ id, event }: Props) {
                       {localEvent?.committeeCount ?? 0}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      ให้ฟีดแบ็ก: {localEvent?.committeeFeedbackCount ?? 10} / ใช้ไป:{" "}
+                      {t("dashboard.feedbackGiven")}: {localEvent?.committeeFeedbackCount ?? 10} / {t("dashboard.used")}:{" "}
                       {localEvent?.committeeVirtualUsed ?? 2000}
                     </p>
                   </CardContent>
@@ -233,7 +236,7 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      ความคิดเห็นทั้งหมด
+                      {t("dashboard.allComments")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
