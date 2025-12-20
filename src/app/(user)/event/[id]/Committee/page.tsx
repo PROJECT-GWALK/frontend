@@ -116,13 +116,23 @@ export default function CommitteeView({ id, event }: Props) {
           </DialogContent>
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <Card className="border-none shadow-md bg-linear-to-br from-background to-muted/20 mb-6 transition-all hover:shadow-lg">
+          <Card 
+            className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
+            style={{ borderLeft: "6px solid var(--role-committee)" }}
+          >
+            <div 
+              className="absolute inset-0 pointer-events-none" 
+              style={{ background: "linear-gradient(to right, var(--role-committee), transparent)", opacity: 0.05 }} 
+            />
             <CardHeader className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 {/* LEFT SIDE: Title & Status */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <CardTitle className="text-2xl lg:text-3xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                    <CardTitle 
+                      className="text-2xl lg:text-3xl font-bold"
+                      style={{ color: "var(--role-committee)" }}
+                    >
                       {localEvent?.eventName || "Event"}
                     </CardTitle>
                   </div>
@@ -131,7 +141,7 @@ export default function CommitteeView({ id, event }: Props) {
                 {/* RIGHT SIDE: Actions */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   {/* Role Label */}
-                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-purple-600 text-white font-medium shadow-md select-none">
+                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-[var(--role-committee)] text-white font-medium shadow-md select-none">
                     <Building className="h-4 w-4" />
                     <span>Committee</span>
                   </div>

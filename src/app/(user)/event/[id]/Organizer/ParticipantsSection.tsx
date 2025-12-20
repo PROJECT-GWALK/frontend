@@ -73,29 +73,27 @@ type Props = {
 const groupConfig = {
   ORGANIZER: {
     title: "🎯 Organizers",
-    color: "bg-gradient-to-r from-purple-500 to-pink-500",
-    badge:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    badge: "bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300",
     icon: Crown,
+    roleVar: "var(--role-organizer)",
   },
   COMMITTEE: {
     title: "👥 Committee",
-    color: "bg-gradient-to-r from-blue-500 to-cyan-500",
-    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    badge: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
     icon: Users,
+    roleVar: "var(--role-committee)",
   },
   PRESENTER: {
     title: "🎤 Presenters",
-    color: "bg-gradient-to-r from-orange-500 to-red-500",
-    badge:
-      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+    badge: "bg-lime-100 text-lime-700 dark:bg-lime-900 dark:text-lime-300",
     icon: Award,
+    roleVar: "var(--role-presenter)",
   },
   GUEST: {
     title: "✨ Guests",
-    color: "bg-gradient-to-r from-green-500 to-emerald-500",
-    badge: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+    badge: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
     icon: Users,
+    roleVar: "var(--role-guest)",
   },
 };
 
@@ -302,10 +300,23 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                 return (
                   <Card
                     key={g}
-                    className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300"
+                    className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 relative group"
                   >
-                    <div className={`h-2 ${config.color}`} />
-                    <CardHeader className="pb-3">
+                    {/* Left Border Strip */}
+                    <div
+                      className="absolute left-0 top-0 bottom-0 w-[6px]"
+                      style={{ backgroundColor: config.roleVar }}
+                    />
+
+                    {/* Background Gradient Tint */}
+                    <div
+                      className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.05]"
+                      style={{
+                        background: `linear-gradient(to right, ${config.roleVar}, transparent)`,
+                      }}
+                    />
+
+                    <CardHeader className="pb-3 pl-6">
                       <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -313,7 +324,10 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                               <Icon className="h-5 w-5" />
                             </div>
                             <div>
-                              <CardTitle className="text-lg font-semibold">
+                              <CardTitle
+                                className="text-lg font-semibold"
+                                style={{ color: config.roleVar }}
+                              >
                                 {config.title}
                               </CardTitle>
                               <p className="text-xs text-muted-foreground mt-0.5">

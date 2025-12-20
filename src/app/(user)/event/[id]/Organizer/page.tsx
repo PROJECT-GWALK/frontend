@@ -174,11 +174,21 @@ export default function OrganizerView({ id, event }: Props) {
           </DialogContent>
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <div className="bg-card rounded-xl shadow-sm border p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 transition-all hover:shadow-md">
+          <div 
+            className="bg-card rounded-xl shadow-sm border p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 transition-all hover:shadow-md relative overflow-hidden"
+            style={{ borderLeft: "6px solid var(--role-organizer)" }}
+          >
+            <div 
+              className="absolute inset-0 pointer-events-none" 
+              style={{ background: "linear-gradient(to right, var(--role-organizer), transparent)", opacity: 0.05 }} 
+            />
             {/* LEFT SIDE: Title & Status */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
+                <h1 
+                  className="text-2xl lg:text-3xl font-bold tracking-tight"
+                  style={{ color: "var(--role-organizer)" }}
+                >
                   {localEvent?.eventName || "Event"}
                 </h1>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
@@ -232,7 +242,7 @@ export default function OrganizerView({ id, event }: Props) {
               </Button>
 
               {/* Organizer Label - Styled to match Button height/shape exactly */}
-              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-pink-600 text-white font-medium shadow-sm select-none">
+              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-[var(--role-organizer)] text-white font-medium shadow-sm select-none">
                 <Building className="h-4 w-4" />
                 <span>Organizer</span>
               </div>
