@@ -63,3 +63,8 @@ export const navbarItems = [
 ];
 
 export const signInRedirect = "/dashboard";
+
+const isThai = typeof window !== "undefined" && localStorage.getItem("language") === "th";
+
+export const timeFormat = isThai ? "th-TH" : "en-US";
+export const dateFormat = isThai ? "th-TH" : "en-US";

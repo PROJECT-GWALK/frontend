@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Search, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
-import { getPublishedEvents, signInvite, joinEvent } from "@/utils/apievent";
+import { getPublishedEvents, getInviteToken, joinEventWithToken } from "@/utils/apievent";
+import { formatDateTime } from "@/utils/function";
 import type { MyEvent } from "@/utils/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,12 +38,12 @@ export default function EventsPage() {
 
   const handleJoin = async (eventId: string, role: "presenter" | "committee" | "guest") => {
     try {
-      const resSign = await signInvite(eventId, role);
-      if (resSign?.message !== "ok" || !resSign?.sig) {
+      const token = await getInviteToken(eventId, role);
+      if (token?.message !== "ok" || !token?.token) {
         toast.error("ไม่สามารถเข้าร่วมอีเวนต์ได้");
         return;
       }
-      const resJoin = await joinEvent(eventId, role, resSign.sig);
+      const resJoin = await joinEventWithToken(eventId, token.token);
       if (resJoin?.message === "ok") {
         toast.success("เข้าร่วมอีเวนต์สำเร็จ");
         setEvents((prev) =>
@@ -239,7 +240,7 @@ export default function EventsPage() {
                       </Link>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                         <Calendar className="h-4 w-4" />
-                        <span>Published at {new Date(event.createdAt).toLocaleString()}</span>
+                        <span>Published at {formatDateTime(new Date(event.createdAt))}</span>
                       </div>
                     </div>
                     {event.role && (

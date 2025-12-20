@@ -3,7 +3,7 @@
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { previewInvite, joinEventWithToken, signInvite, joinEvent, getMyEvents, getEvent } from "@/utils/apievent";
+import { previewInvite, joinEventWithToken, getMyEvents, getEvent } from "@/utils/apievent";
 import type { EventData } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { CalendarIcon, MapPinIcon, Users, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDateTime } from "@/utils/function";
 
 type RoleStr = "presenter" | "committee" | "guest";
 
@@ -54,8 +55,6 @@ export default function InviteConfirmPage() {
           } else {
             setInviteRole(null);
           }
-        } else if (roleParam && ["presenter", "committee", "guest"].includes(roleParam)) {
-          setInviteRole(roleParam as RoleStr);
         } else {
           setInviteRole(null);
         }
@@ -65,7 +64,7 @@ export default function InviteConfirmPage() {
         setLoading(false);
       }
     })();
-  }, [id, status, tokenParam, roleParam, router]);
+  }, [id, status, tokenParam, router]);
 
   if (loading) {
     return (
@@ -114,19 +113,8 @@ export default function InviteConfirmPage() {
         } else {
           toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
         }
-      } else if (roleParam && ["presenter", "committee", "guest"].includes(roleParam)) {
-        const resSign = await signInvite(id, roleParam);
-        if (resSign?.message !== "ok" || !resSign?.sig) {
-          toast.error("ไม่สามารถเข้าร่วมอีเวนต์ได้");
-          setJoining(false);
-          return;
-        }
-        const resJoin = await joinEvent(id, roleParam, resSign.sig);
-        if (resJoin?.message === "ok") {
-          toast.success("เข้าร่วมอีเวนต์สำเร็จ");
-        } else {
-          toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
-        }
+      } else {
+         toast.error("ลิงก์เชิญไม่ถูกต้อง");
       }
       try {
         await getMyEvents();
@@ -173,11 +161,7 @@ export default function InviteConfirmPage() {
                     <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
                       <CalendarIcon className="w-4 h-4 text-primary" />
                       <span>
-                        {new Date(event.startView).toLocaleDateString("th-TH", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
+                        {formatDateTime(new Date(event.startView))}
                       </span>
                     </div>
                   )}

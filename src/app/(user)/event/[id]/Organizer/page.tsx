@@ -45,6 +45,8 @@ import { toast } from "sonner";
 import InformationSection from "../InformationSection";
 import type { EventData as SharedEventData } from "@/utils/types";
 import ParticipantsSection from "./ParticipantsSection";
+import { timeUntil, toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
+import { timeFormat } from "@/utils/settings";
 
 type EventData = {
   id: string;
@@ -122,37 +124,6 @@ export default function OrganizerView({ id, event }: Props) {
   } | null>(null);
   const [removedRewardIds, setRemovedRewardIds] = useState<string[]>([]);
   const [rewardErrors, setRewardErrors] = useState<Record<string, string>>({});
-
-  const timeUntil = (iso?: string) => {
-    if (!iso) return "";
-    const now = new Date();
-    const target = new Date(iso);
-    const diff = target.getTime() - now.getTime();
-    if (diff <= 0) return "เริ่มแล้ว";
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const mins = Math.floor((diff / (1000 * 60)) % 60);
-    if (days > 0) return `${days} วัน ${hours} ชม.`;
-    if (hours > 0) return `${hours} ชม. ${mins} นาที`;
-    return `${mins} นาที`;
-  };
-
-  const toLocalDatetimeValue = (iso: string) => {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const YYYY = d.getFullYear();
-    const MM = pad(d.getMonth() + 1);
-    const DD = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mm = pad(d.getMinutes());
-    return `${YYYY}-${MM}-${DD}T${hh}:${mm}`;
-  };
-
-  const toISOStringFromLocal = (localVal: string) => {
-    // localVal in format YYYY-MM-DDTHH:MM
-    const d = new Date(localVal);
-    return d.toISOString();
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -359,10 +330,10 @@ export default function OrganizerView({ id, event }: Props) {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-end">
                       <span className="text-3xl font-bold text-amber-600">
-                        {localEvent?.vrUsed?.toLocaleString() ?? "20,000"}
+                        {localEvent?.vrUsed?.toLocaleString(timeFormat) ?? "20,000"}
                       </span>
                       <span className="text-sm text-muted-foreground mb-1">
-                        / {localEvent?.vrTotal?.toLocaleString() ?? "50,000"} coins
+                        / {localEvent?.vrTotal?.toLocaleString(timeFormat) ?? "50,000"} coins
                       </span>
                     </div>
 

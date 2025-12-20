@@ -203,17 +203,6 @@ export const getPublishedEvents = async () => {
   return res.data; // { message, events }
 };
 
-export const signInvite = async (
-  eventId: string,
-  role: "presenter" | "committee" | "guest"
-) => {
-  const res = await axios.get(`/backend/api/events/${eventId}/invite/sign`, {
-    params: { role },
-    withCredentials: true,
-  });
-  return res.data; // { message, sig }
-};
-
 export const getInviteToken = async (
   eventId: string,
   role: "presenter" | "committee" | "guest"
@@ -234,22 +223,6 @@ export const previewInvite = async (
     withCredentials: true,
   });
   return res.data; // { message, role }
-};
-
-export const joinEvent = async (
-  eventId: string,
-  role: "presenter" | "committee" | "guest",
-  sig: string
-) => {
-  const res = await axios.post(
-    `/backend/api/events/${eventId}/invite`,
-    {},
-    {
-      params: { role, sig },
-      withCredentials: true,
-    }
-  );
-  return res.data; // { message, participant }
 };
 
 export const joinEventWithToken = async (

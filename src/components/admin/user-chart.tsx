@@ -21,6 +21,7 @@ import {
 import { userDailyActive } from "@/utils/apiadmin";
 import { UserActiveChartData } from "@/utils/types";
 import { ChartBar } from "lucide-react";
+import { timeFormat } from "@/utils/settings";
 
 const chartConfig = {
   active: {
@@ -31,7 +32,7 @@ const chartConfig = {
 
 const generateMonths = () =>
   Array.from({ length: 12 }, (_, i) => ({
-    label: new Date(2000, i).toLocaleString("en-US", { month: "long" }),
+    label: new Date(2000, i).toLocaleString(timeFormat, { month: "long" }),
     value: i + 1,
   }));
 
@@ -73,9 +74,9 @@ export default function AdminUserChart() {
 
       const rawChart: { label: string; count: number }[] = res.data.chart;
       let filled: { date: string; active: number; fullLabel: string }[] = [];
+      const christianYear = (year ?? currentYear) - 543;
 
       if (month) {
-        const christianYear = (year ?? currentYear) - 543;
         const days = generateDays(christianYear, month);
 
         filled = days.map((d) => {
@@ -83,11 +84,7 @@ export default function AdminUserChart() {
           return {
             date: d.label,
             active: found ? found.count : 0,
-            fullLabel: `${d.label}/${month.toString().padStart(2, "0")}/${(
-              year ?? currentYear
-            )
-              .toString()
-              .slice(-2)}`,
+            fullLabel: new Date(christianYear, month - 1, parseInt(d.label)).toLocaleDateString(timeFormat),
           };
         });
       } else {
@@ -98,11 +95,7 @@ export default function AdminUserChart() {
           return {
             date: m.label,
             active: found ? found.count : 0,
-            fullLabel: `${m.value.toString().padStart(2, "0")}/${(
-              year ?? currentYear
-            )
-              .toString()
-              .slice(-2)}`,
+            fullLabel: new Date(christianYear, m.value - 1).toLocaleDateString(timeFormat, { month: 'long', year: 'numeric' }),
           };
         });
       }

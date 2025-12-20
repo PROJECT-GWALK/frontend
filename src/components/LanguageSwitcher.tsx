@@ -13,6 +13,11 @@ import {
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
 
+  const handleLanguageChange = (lang: "en" | "th") => {
+    setLanguage(lang);
+    window.location.reload();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -23,13 +28,13 @@ export function LanguageSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => setLanguage("en")}
+          onClick={() => handleLanguageChange("en")}
           className={language === "en" ? "bg-accent" : ""}
         >
           English
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setLanguage("th")}
+          onClick={() => handleLanguageChange("th")}
           className={language === "th" ? "bg-accent" : ""}
         >
           ไทย

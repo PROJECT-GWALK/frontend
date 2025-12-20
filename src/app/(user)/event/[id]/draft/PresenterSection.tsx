@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon, Clock, Users } from "lucide-react";
+import { timeFormat } from "@/utils/settings";
+import { toYYYYMMDD, formatDate } from "@/utils/function";
 
 type Props = {
   maxPresenters: string;
@@ -28,7 +30,6 @@ type Props = {
   fieldErrors: Record<string, string>;
   calendarStartMonth: Date;
   calendarEndMonth: Date;
-  formatThaiBE: (d?: Date) => string;
   selectedStart?: Date;
 };
 
@@ -40,28 +41,21 @@ export default function PresenterSection(props: Props) {
     setMaxGroups,
     selectedSubStart,
     setSelectedSubStart,
-    submissionStartDate,
     setSubmissionStartDate,
     submissionStartTime,
     setSubmissionStartTime,
     selectedSubEnd,
     setSelectedSubEnd,
-    submissionEndDate,
     setSubmissionEndDate,
     submissionEndTime,
     setSubmissionEndTime,
     fieldErrors,
     calendarStartMonth,
     calendarEndMonth,
-    formatThaiBE,
     selectedStart,
   } = props;
 
-  const toDateStr = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
-      2,
-      "0"
-    )}`;
+
 
   return (
     <>
@@ -134,7 +128,7 @@ export default function PresenterSection(props: Props) {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="flex-1 justify-start font-normal min-w-0">
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{formatThaiBE(selectedSubStart)}</span>
+                    <span className="truncate">{formatDate(selectedSubStart, "เลือกวันที่")}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 flex justify-center">
@@ -150,14 +144,15 @@ export default function PresenterSection(props: Props) {
                     onSelect={(d: Date | undefined) => {
                       if (d) {
                         setSelectedSubStart(d);
-                        setSubmissionStartDate(toDateStr(d));
+                        setSubmissionStartDate(toYYYYMMDD(d));
                       }
                     }}
                     disabled={selectedStart ? (date) => date >= selectedStart : undefined}
                     formatters={{
                       formatMonthDropdown: (date) =>
-                        date.toLocaleString("th-TH", { month: "long" }),
-                      formatYearDropdown: (date) => String(date.getFullYear() + 543),
+                        date.toLocaleString(timeFormat, { month: "long" }),
+                      formatYearDropdown: (date) =>
+                        date.toLocaleDateString(timeFormat, { year: "numeric" }),
                     }}
                     required={false}
                   />
@@ -189,7 +184,7 @@ export default function PresenterSection(props: Props) {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="flex-1 justify-start font-normal min-w-0">
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{formatThaiBE(selectedSubEnd)}</span>
+                    <span className="truncate">{formatDate(selectedSubEnd, "เลือกวันที่")}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 flex justify-center">
@@ -205,7 +200,7 @@ export default function PresenterSection(props: Props) {
                     onSelect={(d: Date | undefined) => {
                       if (d) {
                         setSelectedSubEnd(d);
-                        setSubmissionEndDate(toDateStr(d));
+                        setSubmissionEndDate(toYYYYMMDD(d));
                       }
                     }}
                     disabled={
@@ -219,8 +214,9 @@ export default function PresenterSection(props: Props) {
                     }
                     formatters={{
                       formatMonthDropdown: (date) =>
-                        date.toLocaleString("th-TH", { month: "long" }),
-                      formatYearDropdown: (date) => String(date.getFullYear() + 543),
+                        date.toLocaleString(timeFormat, { month: "long" }),
+                      formatYearDropdown: (date) =>
+                        date.toLocaleDateString(timeFormat, { year: "numeric" }),
                     }}
                   />
                 </PopoverContent>

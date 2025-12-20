@@ -3,8 +3,6 @@
 import {
   getEvent,
   getMyEvents,
-  signInvite,
-  joinEvent,
   joinEventWithToken,
   previewInvite,
 } from "@/utils/apievent";
@@ -156,24 +154,8 @@ export default function EventDetail() {
         } else {
           toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
         }
-      } else if (roleParam && ["presenter", "committee", "guest"].includes(roleParam)) {
-        const resSign = await signInvite(id, roleParam as "presenter" | "committee" | "guest");
-        if (resSign?.message !== "ok" || !resSign?.sig) {
-          toast.error("ไม่สามารถเข้าร่วมอีเวนต์ได้");
-          return;
-        }
-        const resJoin = await joinEvent(
-          id,
-          roleParam as "presenter" | "committee" | "guest",
-          resSign.sig
-        );
-        if (resJoin?.message === "ok") {
-          toast.success("เข้าร่วมอีเวนต์สำเร็จ");
-          const upper = roleParam.toUpperCase() as Exclude<Role, null>;
-          setRole(upper);
-        } else {
-          toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
-        }
+      } else {
+         toast.error("ลิงก์เชิญไม่ถูกต้อง");
       }
     } catch (err) {
       let message = "เข้าร่วมอีเวนต์ไม่สำเร็จ";

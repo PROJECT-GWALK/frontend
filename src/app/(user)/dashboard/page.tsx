@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDateTime } from "@/utils/function";
 
 const mapEventNameMessage = (message: string) =>
   message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
@@ -400,7 +401,7 @@ export default function DashboardPage() {
                             )}
                             
                             <p className="text-xs text-muted-foreground">
-                              {event.isDraft ? "Created" : "Joined"} {new Date(event.createdAt).toLocaleDateString()}
+                              {event.isDraft ? "Created" : "Joined"} {formatDateTime(new Date(event.createdAt))}
                             </p>
 
                             {/* Date Info */}
@@ -409,13 +410,13 @@ export default function DashboardPage() {
                                 {event.startJoinDate && (
                                   <div className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    <span>Join: {new Date(event.startJoinDate).toLocaleDateString()}</span>
+                                    <span>Join: {formatDateTime(new Date(event.startJoinDate))}</span>
                                   </div>
                                 )}
                                 {event.startView && (
                                   <div className="flex items-center gap-1">
                                     <Eye className="h-3 w-3" />
-                                    <span>View: {new Date(event.startView).toLocaleDateString()}</span>
+                                    <span>View: {formatDateTime(new Date(event.startView))}</span>
                                   </div>
                                 )}
                               </div>

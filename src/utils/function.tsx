@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/utils/types";
+import { timeFormat, dateFormat } from "@/utils/settings";
 
 export function UserAvatar({
   user,
@@ -66,11 +67,89 @@ export function toISOStringFromLocal(localVal: string) {
   return d.toISOString();
 }
 
-export function getInviteLink(
-  eventId: string,
-  role: "presenter" | "guest" | "committee"
-) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const search = new URLSearchParams({ role, invite: "1" });
-  return `${origin}/event/${eventId}?${search.toString()}`;
+export function formatDateTime(d?: Date) {
+  if (!d) return "-";
+  return d.toLocaleString(timeFormat, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
+
+export function toYYYYMMDD(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export function formatDate(d?: Date, emptyText: string = "-") {
+  if (!d) return emptyText;
+  return d.toLocaleDateString(dateFormat, { day: "numeric", month: "long", year: "numeric" });
+}
+
+export const toDate = (date?: string, time?: string) =>
+  date && time ? new Date(`${date}T${time}`) : null;
+
+export const getDateTimeString = (
+  date: string,
+  time: string,
+  asIso: boolean = false
+) => {
+  if (!date || !time) return null;
+  if (asIso) {
+    const d = new Date(`${date}T${time}`);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  return `${date}T${time}`;
+};
+
+export const validateEventTime = (
+  startDate: string,
+  startTime: string,
+  endDate: string,
+  endTime: string,
+  submissionStartDate: string,
+  submissionStartTime: string,
+  submissionEndDate: string,
+  submissionEndTime: string
+) => {
+  const errors: Record<string, string> = {};
+  const startPresenter = toDate(submissionStartDate, submissionStartTime);
+  const endPresenter = toDate(submissionEndDate, submissionEndTime);
+  const startView = toDate(startDate, startTime);
+  const endView = toDate(endDate, endTime);
+
+  // วันที่เข้าชมต้องอยู่ก่อนวันที่-เวลาสิ้นสุด
+  if (startView && endView) {
+    if (startView.getTime() >= endView.getTime()) {
+      errors.endDateTime = "วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด";
+    }
+  }
+
+  // วันที่-เวลาเริ่มส่งผลงานต้องอยู่ก่อนวันที่-เวลาสิ้นสุดส่งผลงาน
+  if (startPresenter && endPresenter) {
+    if (startPresenter.getTime() >= endPresenter.getTime()) {
+      errors.submissionEnd =
+        "วันที่-เวลาเริ่มส่งผลงานต้องอยู่ก่อนวันที่-เวลาสิ้นสุดส่งผลงาน";
+    }
+  }
+
+  // วันที่-เวลาเริ่มส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์
+  if (startPresenter && startView) {
+    if (startPresenter.getTime() >= startView.getTime()) {
+      errors.submissionStart =
+        "วันที่-เวลาเริ่มส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์";
+    }
+  }
+
+  // วันที่-เวลาสิ้นสุดส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์
+  if (endPresenter && startView) {
+    if (endPresenter.getTime() >= startView.getTime()) {
+      errors.submissionEnd =
+        "วันที่-เวลาสิ้นสุดส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์";
+    }
+  }
+
+  return errors;
+};

@@ -26,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { timeFormat, dateFormat } from "@/utils/settings";
+import { toYYYYMMDD, formatDate } from "@/utils/function";
 
 type Props = {
   eventTitle: string;
@@ -53,13 +55,14 @@ type Props = {
   setStartTime: (v: string) => void;
   selectedEnd?: Date;
   setSelectedEnd: (d: Date | undefined) => void;
+  selectedSubEnd?: Date;
+  selectedSubStart?: Date;
   endDate: string;
   setEndDate: (v: string) => void;
   endTime: string;
   setEndTime: (v: string) => void;
   calendarStartMonth: Date;
   calendarEndMonth: Date;
-  formatThaiBE: (d?: Date) => string;
   eventVisibility: string;
   setEventVisibility: (v: string) => void;
   fieldErrors: Record<string, string>;
@@ -90,19 +93,18 @@ export default function EventInfoSection(props: Props) {
     onRemoveBanner,
     selectedStart,
     setSelectedStart,
-    startDate,
     setStartDate,
     startTime,
     setStartTime,
     selectedEnd,
     setSelectedEnd,
-    endDate,
+    selectedSubEnd,
+    selectedSubStart,
     setEndDate,
     endTime,
     setEndTime,
     calendarStartMonth,
     calendarEndMonth,
-    formatThaiBE,
     eventVisibility,
     setEventVisibility,
     fieldErrors,
@@ -111,12 +113,6 @@ export default function EventInfoSection(props: Props) {
     locationLink,
     setLocationLink,
   } = props;
-
-  const toDateStr = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(
-      2,
-      "0"
-    )}`;
 
   return (
     <>
@@ -256,7 +252,7 @@ export default function EventInfoSection(props: Props) {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                   <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {formatThaiBE(selectedStart)}
+                  {formatDate(selectedStart, "เลือกวันที่")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 flex justify-center">
@@ -272,13 +268,23 @@ export default function EventInfoSection(props: Props) {
                   onSelect={(d: Date | undefined) => {
                     if (d) {
                       setSelectedStart(d);
-                      setStartDate(toDateStr(d));
+                      setStartDate(toYYYYMMDD(d));
                     }
                   }}
+                  disabled={
+                    selectedSubEnd || selectedSubStart
+                      ? (date) => {
+                          if (selectedSubEnd && date <= selectedSubEnd) return true;
+                          if (selectedSubStart && date <= selectedSubStart) return true;
+                          return false;
+                        }
+                      : undefined
+                  }
                   formatters={{
                     formatMonthDropdown: (date) =>
-                      date.toLocaleString("th-TH", { month: "long" }),
-                    formatYearDropdown: (date) => String(date.getFullYear() + 543),
+                      date.toLocaleString(dateFormat, { month: "long" }),
+                    formatYearDropdown: (date) =>
+                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
                   }}
                   required
                 />
@@ -315,7 +321,7 @@ export default function EventInfoSection(props: Props) {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                   <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {formatThaiBE(selectedEnd)}
+                  {formatDate(selectedEnd, "เลือกวันที่")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 flex justify-center">
@@ -331,14 +337,15 @@ export default function EventInfoSection(props: Props) {
                   onSelect={(d: Date | undefined) => {
                     if (d) {
                       setSelectedEnd(d);
-                      setEndDate(toDateStr(d));
+                      setEndDate(toYYYYMMDD(d));
                     }
                   }}
                   disabled={selectedStart ? (date) => date < selectedStart : undefined}
                   formatters={{
                     formatMonthDropdown: (date: Date) =>
-                      date.toLocaleString("th-TH", { month: "long" }),
-                    formatYearDropdown: (date: Date) => String(date.getFullYear() + 543),
+                      date.toLocaleString(dateFormat, { month: "long" }),
+                    formatYearDropdown: (date: Date) =>
+                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
                   }}
                   required
                 />

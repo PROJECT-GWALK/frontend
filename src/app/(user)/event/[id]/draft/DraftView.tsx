@@ -4,48 +4,19 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Calendar as CalendarIcon,
-  Clock,
-  MapPin,
-  Link as LinkIcon,
-  Upload,
   Users,
-  Gift,
-  Plus,
-  Trash2,
   ArrowLeft,
   Info,
   UserCheck,
   Award,
-  Check,
-  X,
   Save,
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
 
+import { validateEventTime, toDate, getDateTimeString } from "@/utils/function";
 import {
   getEvent,
   publishEvent,
@@ -56,6 +27,7 @@ import {
   updateSpecialReward,
   deleteSpecialReward,
 } from "@/utils/apievent";
+
 import { EventDetail } from "@/utils/types";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
@@ -122,14 +94,7 @@ export default function EventDraft() {
   const [endTime, setEndTime] = useState("");
   const [selectedStart, setSelectedStart] = useState<Date | undefined>(undefined);
   const [selectedEnd, setSelectedEnd] = useState<Date | undefined>(undefined);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const toDateStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const formatThaiBE = (d?: Date) =>
-    d
-      ? d.toLocaleDateString("th-TH", { day: "numeric", month: "long" }) +
-        " " +
-        String(d.getFullYear() + 543)
-      : "เลือกวันที่";
+
   const [locationPlace, setLocationPlace] = useState("");
   const [locationLink, setLocationLink] = useState("");
   const calendarStartMonth = new Date(new Date().getFullYear() - 5, 0);
@@ -160,18 +125,7 @@ export default function EventDraft() {
   const [unitReward, setUnitReward] = useState<string>("Coin");
 
   // Special Rewards
-  const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([
-    {
-      id: "1",
-      name: "Best Presentation",
-      description: "Awarded to the most engaging presentation",
-    },
-    {
-      id: "2",
-      name: "Innovation Award",
-      description: "For the most innovative idea presented",
-    },
-  ]);
+  const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
 
   const handleAddSpecialReward = () => {
     const newReward: SpecialReward = {
@@ -252,37 +206,18 @@ export default function EventDraft() {
     setSrRemoved((p) => ({ ...p, [id]: true }));
   };
 
-  const toISO = (date: string, time: string) => (date && time ? `${date}T${time}` : null);
-  const toDate = (date?: string, time?: string) =>
-    date && time ? new Date(`${date}T${time}`) : null;
   const buildPayload = (opts?: { isoDates?: boolean }): EventUpdatePayload => {
     const iso = Boolean(opts?.isoDates);
-    const svDate = iso ? toDate(startDate, startTime) : null;
-    const evDate = iso ? toDate(endDate, endTime) : null;
-    const sjDate = iso ? toDate(submissionStartDate, submissionStartTime) : null;
-    const ejDate = iso ? toDate(submissionEndDate, submissionEndTime) : null;
-    const sv = iso ? (svDate ? svDate.toISOString() : null) : toISO(startDate, startTime);
-    const ev = iso ? (evDate ? evDate.toISOString() : null) : toISO(endDate, endTime);
-    const sj = iso
-      ? sjDate
-        ? sjDate.toISOString()
-        : null
-      : toISO(submissionStartDate, submissionStartTime);
-    const ej = iso
-      ? ejDate
-        ? ejDate.toISOString()
-        : null
-      : toISO(submissionEndDate, submissionEndTime);
     return {
       eventName: eventTitle,
       eventDescription,
       location: locationLink,
       locationName: locationPlace,
       publicView: eventVisibility === "public",
-      startView: sv,
-      endView: ev,
-      startJoinDate: sj,
-      endJoinDate: ej,
+      startView: getDateTimeString(startDate, startTime, iso),
+      endView: getDateTimeString(endDate, endTime, iso),
+      startJoinDate: getDateTimeString(submissionStartDate, submissionStartTime, iso),
+      endJoinDate: getDateTimeString(submissionEndDate, submissionEndTime, iso),
       maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
       maxTeams: maxGroups ? parseInt(maxGroups) : null,
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
@@ -369,34 +304,35 @@ export default function EventDraft() {
       toast.error("กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์");
       setActiveSection("event-info");
     }
-    const sv = toDate(startDate, startTime); // Event Start
-    const ev = toDate(endDate, endTime); // Event End
-    if (sv && ev && sv > ev) {
-      errors.endDateTime = "วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด";
-      toast.error("วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด");
+
+    const timeErrors = validateEventTime(
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      submissionStartDate,
+      submissionStartTime,
+      submissionEndDate,
+      submissionEndTime
+    );
+    Object.assign(errors, timeErrors);
+
+    if (timeErrors.endDateTime) {
+      toast.error(timeErrors.endDateTime);
       setActiveSection("event-info");
     }
+
     const hasJoinInput = Boolean(
       submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime
     );
-    const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
-    const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
+    // const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
+    // const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
       if (!(submissionStartDate && submissionStartTime)) {
         errors.submissionStart = "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน";
       }
       if (!(submissionEndDate && submissionEndTime)) {
         errors.submissionEnd = "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน";
-      }
-      if (sj && ej && sj > ej) {
-        errors.submissionEnd = "วันที่-เวลาเริ่มต้องอยู่ก่อนวันที่-เวลาสิ้นสุด";
-      }
-      // Submission Period ต้องอยู่ก่อน Event
-      if (sj && sv && sj > sv) {
-        errors.submissionStart = "วันที่-เวลาเริ่มส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์";
-      }
-      if (ej && sv && ej > sv) {
-        errors.submissionEnd = "วันที่-เวลาสิ้นสุดส่งผลงานต้องอยู่ก่อนวันที่-เวลาเริ่มอีเว้นต์";
       }
     }
     return errors;
@@ -483,10 +419,19 @@ export default function EventDraft() {
     if (!okRewards) return;
     
     // Validate start/end 
-    const sv = toDate(startDate, startTime);
-    const ev = toDate(endDate, endTime);
-    if (sv && ev && sv > ev) {
-      toast.error("Start View ต้องอยู่ก่อน End View");
+    const timeErrors = validateEventTime(
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      submissionStartDate,
+      submissionStartTime,
+      submissionEndDate,
+      submissionEndTime
+    );
+
+    if (timeErrors.endDateTime) {
+      toast.error(timeErrors.endDateTime);
       setActiveSection("event-info");
       return;
     }
@@ -928,13 +873,14 @@ export default function EventDraft() {
                 setStartTime={setStartTime}
                 selectedEnd={selectedEnd}
                 setSelectedEnd={setSelectedEnd}
+                selectedSubEnd={selectedSubEnd}
+                selectedSubStart={selectedSubStart}
                 endDate={endDate}
                 setEndDate={setEndDate}
                 endTime={endTime}
                 setEndTime={setEndTime}
                 calendarStartMonth={calendarStartMonth}
                 calendarEndMonth={calendarEndMonth}
-                formatThaiBE={formatThaiBE}
                 eventVisibility={eventVisibility}
                 setEventVisibility={setEventVisibility}
                 fieldErrors={fieldErrors}
@@ -965,7 +911,6 @@ export default function EventDraft() {
                 fieldErrors={fieldErrors}
                 calendarStartMonth={calendarStartMonth}
                 calendarEndMonth={calendarEndMonth}
-                formatThaiBE={formatThaiBE}
                 selectedStart={selectedStart}
               />
 

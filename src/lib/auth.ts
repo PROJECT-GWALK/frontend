@@ -17,7 +17,7 @@ function getThailandDateOnly() {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   pages: {
     signIn: "/sign-in",
     error: "/error",
@@ -56,21 +56,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           try {
             const dateOnly = getThailandDateOnly();
 
-            await prisma.userDailyActive.upsert({
-              where: {
-                userId_date: {
-                  userId: user.id,
-                  date: dateOnly,
-                },
-              },
-              update: {},
-              create: {
+            await prisma.userDailyActive.create({
+              data: {
                 userId: user.id,
                 date: dateOnly,
               },
             });
-          } catch (err) {
-            console.error("Failed to log daily active user:", err);
+          } catch (err: any) {
+            if (err.code !== 'P2002') {
+              console.error("Failed to log daily active user:", err);
+            }
           }
         }
       }
