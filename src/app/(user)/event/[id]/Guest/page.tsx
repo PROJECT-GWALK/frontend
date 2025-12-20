@@ -244,8 +244,8 @@ export default function GuestView({ id, event }: Props) {
                       {localEvent?.opinionsGot ?? 33}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      ผู้นำเสนอ: {localEvent?.opinionsPresenter ?? 10} | ผู้เข้าร่วม:{" "}
-                      {localEvent?.opinionsGuest ?? 20} | กรรมการ:{" "}
+                      {t("dashboard.presenterCount")}: {localEvent?.opinionsPresenter ?? 10} | {t("dashboard.guestCount")}:{" "}
+                      {localEvent?.opinionsGuest ?? 20} | {t("dashboard.committeeCount")}:{" "}
                       {localEvent?.opinionsCommittee ?? 3}
                     </p>
                   </CardContent>
@@ -258,12 +258,12 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      Virtual Rewards
+                      {t("dashboard.reward")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">ใช้ไปแล้ว</span>
+                      <span className="text-sm text-muted-foreground">{t("dashboard.usedAlready")}</span>
                       <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000}</span>
                     </div>
                     <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
@@ -278,9 +278,9 @@ export default function GuestView({ id, event }: Props) {
                     </div>
                     <div className="flex justify-between items-center text-sm text-muted-foreground">
                       <span>
-                        คงเหลือ {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
+                        {t("dashboard.remaining")} {t("dashboard.total")} {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
                       </span>
-                      <span>ทั้งหมด {localEvent?.vrTotal ?? 50000}</span>
+                      <span>{t("dashboard.total")} {localEvent?.vrTotal ?? 50000}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -292,7 +292,7 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      รางวัลพิเศษ
+                      {t("dashboard.specialAwards")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -302,7 +302,7 @@ export default function GuestView({ id, event }: Props) {
                         / {localEvent?.specialPrizeCount ?? 5}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">ใช้ไป / ทั้งหมด</p>
+                    <p className="text-sm text-muted-foreground mt-2">{t("dashboard.usedOverTotal")}</p>
                   </CardContent>
                 </Card>
 
@@ -313,7 +313,7 @@ export default function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
                         <Users className="h-5 w-5" />
                       </div>
-                      ยังไม่ได้ใช้
+                      {t("dashboard.remainingAwards")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

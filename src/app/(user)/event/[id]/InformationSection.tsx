@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import {
   Clock,
@@ -105,6 +106,7 @@ export default function InformationSection({
   const [maxTeamMembers, setMaxTeamMembers] = useState<number>(0);
   const [fileRequirements, setFileRequirements] = useState<EventFileType[]>([]);
   const [updatingPresenter, setUpdatingPresenter] = useState(false);
+  const { t } = useLanguage();
 
   const handleEdit = (
     section: EditSection,
@@ -400,7 +402,7 @@ export default function InformationSection({
       <Card className="lg:col-span-2 border-none shadow-md bg-gradient-to-br from-background to-muted/20">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-bold">Event Details</CardTitle>
+            <CardTitle className="text-xl font-bold">{t("information.eventDetails")}</CardTitle>
             {editable && (
               <Button
                 size="sm"
@@ -430,7 +432,7 @@ export default function InformationSection({
               <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                 <Clock className="h-5 w-5" />
               </div>
-              Event Duration
+              {t("information.eventDuration")}
             </CardTitle>
             {editable && (
               <Button
@@ -462,7 +464,7 @@ export default function InformationSection({
                 if (sv && now < sv) {
                   return (
                     <div className="font-bold text-xl">
-                      Starts in
+                      {t("information.startin")}
                       <h1 className="text-blue-600">
                         {timeUntil(event.startView)}
                       </h1>
@@ -491,7 +493,7 @@ export default function InformationSection({
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Start:</span>
+                <span className="text-muted-foreground">{t("information.start")}:</span>
                 <span>
                   {event?.startView
                     ? formatDateTime(new Date(event.startView))
@@ -499,7 +501,7 @@ export default function InformationSection({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">End:</span>
+                <span className="text-muted-foreground">{t("information.end")}:</span>
                 <span>
                   {event?.endView
                     ? formatDateTime(new Date(event.endView))
@@ -518,7 +520,7 @@ export default function InformationSection({
               <div className="p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                 <MapPin className="h-5 w-5" />
               </div>
-              Event Location
+              {t("information.eventLocation")}
             </CardTitle>
             {editable && (
               <Button
@@ -560,7 +562,7 @@ export default function InformationSection({
               <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                 <Users className="h-5 w-5" />
               </div>
-              Presenter
+              {t("dashboard.presenterCount")}
             </CardTitle>
             {editable && (
               <Button
@@ -583,7 +585,7 @@ export default function InformationSection({
         <CardContent>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Submission Start:</span>
+              <span className="text-muted-foreground">{t("information.submissionStart")}:</span>
               <span>
                 {event?.startJoinDate
                   ? formatDateTime(new Date(event.startJoinDate))
@@ -591,7 +593,7 @@ export default function InformationSection({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Submission End:</span>
+              <span className="text-muted-foreground">{t("information.submissionEnd")}:</span>
               <span>
                 {event?.endJoinDate
                   ? formatDateTime(new Date(event.endJoinDate))
@@ -599,11 +601,11 @@ export default function InformationSection({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Max Teams:</span>
+              <span className="text-muted-foreground">{t("information.maxTeams")}:</span>
               <span>{event?.maxTeams ?? "-"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Members per Group:</span>
+              <span className="text-muted-foreground">{t("information.memberPerGroup")}:</span>
               <span>{event?.maxTeamMembers ?? "-"}</span>
             </div>
 
@@ -645,7 +647,7 @@ export default function InformationSection({
               <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
                 <Gift className="h-5 w-5" />
               </div>
-              Rewards and Points
+              {t("information.rewardPoints")}
             </CardTitle>
             {editable && (
               <Button
@@ -1312,7 +1314,7 @@ export default function InformationSection({
                 <Award className="h-5 w-5" />
               </div>
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Special Rewards
+                {t("dashboard.specialAwards")}
               </span>
             </CardTitle>
             {editable && (

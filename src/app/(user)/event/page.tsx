@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Search, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
-import { getPublishedEvents, getInviteToken, joinEventWithToken } from "@/utils/apievent";
+import {
+  getPublishedEvents,
+  getInviteToken,
+  joinEventWithToken,
+} from "@/utils/apievent";
 import { formatDateTime } from "@/utils/function";
 import type { MyEvent } from "@/utils/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -19,7 +23,12 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
-    "all" | "upcomingRecruit" | "accepting" | "viewSoon" | "viewOpen" | "finished"
+    | "all"
+    | "upcomingRecruit"
+    | "accepting"
+    | "viewSoon"
+    | "viewOpen"
+    | "finished"
   >("all");
 
   useEffect(() => {
@@ -36,7 +45,10 @@ export default function EventsPage() {
     load();
   }, []);
 
-  const handleJoin = async (eventId: string, role: "presenter" | "committee" | "guest") => {
+  const handleJoin = async (
+    eventId: string,
+    role: "presenter" | "committee" | "guest"
+  ) => {
     try {
       const token = await getInviteToken(eventId, role);
       if (token?.message !== "ok" || !token?.token) {
@@ -47,7 +59,9 @@ export default function EventsPage() {
       if (resJoin?.message === "ok") {
         toast.success("เข้าร่วมอีเวนต์สำเร็จ");
         setEvents((prev) =>
-          prev.map((e) => (e.id === eventId ? { ...e, role: role.toUpperCase() } : e))
+          prev.map((e) =>
+            e.id === eventId ? { ...e, role: role.toUpperCase() } : e
+          )
         );
       } else {
         toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
@@ -121,12 +135,11 @@ export default function EventsPage() {
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
         <TabsList>
-          <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
-          <TabsTrigger value="upcomingRecruit">จะเปิดรับสมัครเร็วๆ นี้</TabsTrigger>
-          <TabsTrigger value="accepting">เปิดรับสมัครผู้นำเสนอ</TabsTrigger>
-          <TabsTrigger value="viewSoon">จะเปิดให้ชมเร็วๆ นี้</TabsTrigger>
-          <TabsTrigger value="viewOpen">กำลังเปิดให้ชม</TabsTrigger>
-          <TabsTrigger value="finished">จบแล้ว</TabsTrigger>
+          <TabsTrigger value="upcomingRecruit">Coming Soon</TabsTrigger>
+          <TabsTrigger value="accepting">Accepting Presenters</TabsTrigger>
+          <TabsTrigger value="viewSoon">Viewing Soon</TabsTrigger>
+          <TabsTrigger value="viewOpen">Open for Viewing</TabsTrigger>
+          <TabsTrigger value="finished">Finished</TabsTrigger>
         </TabsList>
         <TabsContent value={filter} />
       </Tabs>
@@ -164,11 +177,15 @@ export default function EventsPage() {
             return now > ev;
           }
           return true;
-        }).length === 0 && <p className="text-muted-foreground">ยังไม่มีอีเวนต์ที่เผยแพร่</p>}
+        }).length === 0 && (
+        <p className="text-muted-foreground">ยังไม่มีอีเวนต์ที่เผยแพร่</p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {events
-          .filter((e) => e.eventName.toLowerCase().includes(search.toLowerCase()))
+          .filter((e) =>
+            e.eventName.toLowerCase().includes(search.toLowerCase())
+          )
           .filter((e) => {
             if (filter === "all") return true;
             const now = new Date();
@@ -240,7 +257,10 @@ export default function EventsPage() {
                       </Link>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                         <Calendar className="h-4 w-4" />
-                        <span>Published at {formatDateTime(new Date(event.createdAt))}</span>
+                        <span>
+                          Published at{" "}
+                          {formatDateTime(new Date(event.createdAt))}
+                        </span>
                       </div>
                     </div>
                     {event.role && (
@@ -256,7 +276,10 @@ export default function EventsPage() {
                       </Link>
                     ) : (
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleJoin(event.id, "presenter")}>
+                        <Button
+                          size="sm"
+                          onClick={() => handleJoin(event.id, "presenter")}
+                        >
                           Presenter
                         </Button>
                         <Button

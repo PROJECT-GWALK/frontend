@@ -92,14 +92,26 @@
     "commentGiven": "Comments Given",
     "feedbackGiven": "Feedback Given",
     "used": "Used",
-
+    "reward": "Virtual Rewards",
     "usedAlready": "Used",
     "remaining": "Remaining",
     "total": "Total",
-    "usedOverTotal": "Used / Total"
-
-
+    "usedOverTotal": "Used / Total",
+    "specialAwards": "Special Rewards",
+    "remainingAwards": "Remaining Awards"
+  },
+  "information": {
+    "eventDetails": "Event Details",
+    "eventDuration": "Event Duration",
+    "eventLocation": "Event Location",
+    "submissionStart": "Submission Start",
+    "submissionEnd": "Submission End",
+    "maxTeams":"Max Teams",
+    "memberPerGroup": "member per Groups",
+    "rewardPoints": "Reward and Points",
+    "startin": "Starting in",
+    "link": "Link",
+    "start": "Start",
+    "end": "End"
   }
-
-
 }

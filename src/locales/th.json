@@ -81,7 +81,6 @@
     "publishFailed": "เผยแพร่ Event ไม่สำเร็จ",
     "errorLoading": "โหลด Event ไม่สำเร็จ"
   },
-  
   "dashboard": {
     "presenterCount": "ผู้นำเสนอ",
     "guestCount": "ผู้เข้าร่วม",
@@ -92,12 +91,26 @@
     "commentGiven": "ให้คอมเมนต์",
     "feedbackGiven": "ให้ฟีดแบ็ก",
     "used": "ใช้ไป",
-
+    "reward": "รางวัล",
     "usedAlready": "ใช้ไปแล้ว",
     "remaining": "คงเหลือ",
     "total": "ทั้งหมด",
-    "usedOverTotal": "ใช้ไป / ทั้งหมด"
-
-    
+    "usedOverTotal": "ใช้ไป / ทั้งหมด",
+    "specialAwards": "รางวัลพิเศษ",
+    "remainingAwards": "รางวัลที่ยังไม่ได้แจก"
+  },
+   "information": {
+    "eventDetails": "รายละเอียดอีเวนต์",
+    "eventDuration": "ระยะเวลาอีเวนต์",
+    "eventLocation": "สถานที่จัดงาน",
+    "submissionStart": "วันที่เริ่มส่งผลงาน",
+    "submissionEnd": "วันที่สิ้นสุดส่งผลงาน",
+    "maxTeams":"จำนวนทีมสูงสุด",
+    "memberPerGroup": "สมาชิกต่อทีม",
+    "rewardPoints": "รางวัลและคะแนน",
+    "startin": "เริ่มใน",
+    "link": "ลิงก์",
+    "start": "เริ่ม",
+    "end": "สิ้นสุด"
   }
 }
