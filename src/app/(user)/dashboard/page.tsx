@@ -97,6 +97,16 @@ const getFilterLabel = (filter: FilterType) => {
   return labels[filter];
 };
 
+const getRoleColorVar = (role?: string) => {
+  switch (role) {
+    case "ORGANIZER": return "var(--role-organizer)";
+    case "PRESENTER": return "var(--role-presenter)";
+    case "COMMITTEE": return "var(--role-committee)";
+    case "GUEST": return "var(--role-guest)";
+    default: return undefined;
+  }
+};
+
 export default function DashboardPage() {
   const [drafts, setDrafts] = useState<DraftEvent[]>([]);
   const [myEvents, setMyEvents] = useState<MyEvent[]>([]);
@@ -210,12 +220,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex justify-center px-4 py-8">
+    <div className="min-h-screen from-background via-background to-muted/20 flex justify-center px-4 py-8">
       <Card className="w-full max-w-6xl shadow-xl border-border/50">
         <CardHeader className="pb-4 border-b">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold tracking-tight">
                 Event Dashboard
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -348,17 +358,33 @@ export default function DashboardPage() {
                     const hasBanner = Boolean(event.imageCover);
                     const eventStatus = getEventStatus(event);
                     const badge = getStatusBadge(eventStatus);
+                    const roleColor = getRoleColorVar(event.role ?? undefined);
                     
                     return (
                       <Card
                         key={event.id}
-                        className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border/60 hover:border-primary/30"
+                        className="relative overflow-hidden hover:shadow-lg transition-all duration-300 border-border/60 hover:border-primary/30"
                       >
-                        <div className="grid grid-cols-[160px_1fr_auto] gap-4 items-center p-4">
+                        {roleColor && (
+                          <>
+                            <div 
+                              className="absolute top-0 left-0 right-0 h-1.5 z-10" 
+                              style={{ backgroundColor: roleColor }} 
+                            />
+                            <div 
+                              className="absolute inset-0 pointer-events-none z-0"
+                              style={{ 
+                                background: `linear-gradient(to bottom, ${roleColor}, transparent 40%)`,
+                                opacity: 0.15
+                              }} 
+                            />
+                          </>
+                        )}
+                        <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_auto] gap-4 items-start sm:items-center p-4 relative z-10">
                           {/* Event Image */}
                           <Link 
                             href={`/event/${event.id}`} 
-                            className="relative h-28 w-40 rounded-lg overflow-hidden bg-muted block group"
+                            className="relative h-40 w-full sm:h-28 sm:w-40 rounded-lg overflow-hidden bg-muted block group"
                           >
                             {hasBanner ? (
                               <img
@@ -389,36 +415,57 @@ export default function DashboardPage() {
                             </h4>
                             
                             {!event.isDraft && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div 
+                                className={`flex items-center gap-2 text-xs ${!roleColor ? "text-muted-foreground" : ""}`}
+                                style={roleColor ? { color: roleColor } : {}}
+                              >
                                 <Users className="h-3.5 w-3.5" />
                                 <span className="font-medium">{event.role}</span>
                                 {event.isLeader && (
-                                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                  <span 
+                                    className="px-2 py-0.5 rounded-full font-medium border"
+                                    style={roleColor ? { borderColor: roleColor, color: roleColor } : { backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))", border: "none" }}
+                                  >
                                     Leader
                                   </span>
                                 )}
                               </div>
                             )}
                             
-                            <p className="text-xs text-muted-foreground">
-                              {event.isDraft ? "Created" : "Joined"} {formatDateTime(new Date(event.createdAt))}
-                            </p>
-
-                            {/* Date Info */}
-                            {event.status === "PUBLISHED" && (
-                              <div className="flex gap-3 text-xs text-muted-foreground">
-                                {event.startJoinDate && (
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>Join: {formatDateTime(new Date(event.startJoinDate))}</span>
-                                  </div>
-                                )}
-                                {event.startView && (
-                                  <div className="flex items-center gap-1">
-                                    <Eye className="h-3 w-3" />
-                                    <span>View: {formatDateTime(new Date(event.startView))}</span>
-                                  </div>
-                                )}
+                            {event.isDraft ? (
+                              <p className="text-xs text-muted-foreground">
+                                Created {formatDateTime(new Date(event.createdAt))}
+                              </p>
+                            ) : (
+                              <div className="space-y-1.5 mt-1">
+                                {(() => {
+                                  const now = new Date();
+                                  const subStart = event.startJoinDate ? new Date(event.startJoinDate) : null;
+                                  const subEnd = event.endJoinDate ? new Date(event.endJoinDate) : null;
+                                  const eventStart = event.startView ? new Date(event.startView) : null;
+                                  const eventEnd = event.endView ? new Date(event.endView) : null;
+                                  
+                                  const isOrgOrPres = event.role === "ORGANIZER" || event.role === "PRESENTER";
+                                  const inSubmission = subStart && subEnd && now >= subStart && now <= subEnd;
+                                  
+                                  return (
+                                    <>
+                                      {isOrgOrPres && inSubmission && subStart && subEnd && (
+                                        <div className="flex items-center gap-2 text-xs font-medium text-amber-600 dark:text-amber-500">
+                                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                                          <span>Submission: {formatDateTime(subStart)} - {formatDateTime(subEnd)}</span>
+                                        </div>
+                                      )}
+                                      
+                                      {eventStart && eventEnd && (
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                          <Eye className="h-3.5 w-3.5 shrink-0" />
+                                          <span>Event: {formatDateTime(eventStart)} - {formatDateTime(eventEnd)}</span>
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             )}
                           </Link>
