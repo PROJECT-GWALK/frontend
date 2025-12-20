@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building } from "lucide-react";
+import { Users, Building, MessageSquare, BadgeCheck, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
@@ -159,276 +159,323 @@ export default function CommitteeView({ id, event }: Props) {
             </TabsList>
 
             <TabsContent value="dashboard">
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="mt-4">
                 {/* Personal Virtual Rewards summary */}
-                <div className="lg:col-span-3">
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 p-4">
-                    <div className="max-w-2xl mx-auto">
-                      <h3 className="text-lg font-semibold mb-3">Virtual Rewards ของฉัน</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white rounded-xl shadow-sm p-4 text-center">
-                          <div className="text-sm text-muted-foreground">คงเหลือ</div>
-                          <div className="text-2xl font-bold text-emerald-600">
-                            {localEvent?.committeeVirtualRemaining ?? 2000}
-                          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 1. My Virtual Rewards */}
+                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                        <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                          <BadgeCheck className="h-5 w-5" />
                         </div>
-                        <div className="bg-white rounded-xl shadow-sm p-4 text-center">
-                          <div className="text-sm text-muted-foreground">ใช้ไป</div>
-                          <div className="text-2xl font-bold text-rose-600">
-                            {localEvent?.committeeVirtualUsed ?? 8000}
+                        My Virtual Rewards
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-sm text-muted-foreground">ใช้ไปแล้ว</p>
+                          <span className="text-2xl font-bold">
+                            {localEvent?.committeeVirtualUsed ?? 20000}
+                          </span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          ทั้งหมด {localEvent?.committeeVirtualTotal ?? 50000}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                          style={{
+                            width: `${
+                              ((localEvent?.committeeVirtualUsed ?? 20000) /
+                                (localEvent?.committeeVirtualTotal ?? 50000)) *
+                              100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-amber-600 font-medium text-right">
+                        คงเหลือ{" "}
+                        {(localEvent?.committeeVirtualTotal ?? 50000) -
+                          (localEvent?.committeeVirtualUsed ?? 20000)}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* 2. จำนวนผู้เข้าร่วมทั้งหมด */}
+                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                        <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          <Users className="h-5 w-5" />
+                        </div>
+                        จำนวนผู้เข้าร่วมทั้งหมด
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-4xl font-bold text-foreground py-2">
+                        {(localEvent?.presentersCount ?? 0) +
+                          (localEvent?.guestsCount ?? 0) +
+                          (localEvent?.committeeCount ?? 0)}
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs mt-2 text-muted-foreground">
+                        <span className="px-2 py-1 bg-slate-100 rounded">
+                          ผู้นำเสนอ: {localEvent?.presentersCount ?? 0}
+                        </span>
+                        <span className="px-2 py-1 bg-slate-100 rounded">
+                          ผู้เข้าร่วม: {localEvent?.guestsCount ?? 0}
+                        </span>
+                        <span className="px-2 py-1 bg-slate-100 rounded">
+                          กรรมการ: {localEvent?.committeeCount ?? 0}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* 3. รางวัลพิเศษ (Updated with Progress Bar & List) */}
+                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                          <Award className="h-5 w-5" />
+                        </div>
+                        รางวัลพิเศษ
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <span className="text-2xl font-bold">
+                          {localEvent?.specialPrizeUsed ?? 4}{" "}
+                          <span className="text-sm font-normal text-muted-foreground">
+                            / {localEvent?.specialPrizeCount ?? 5}
+                          </span>
+                        </span>
+                        <span className="text-sm text-muted-foreground">ใช้ไป / ทั้งหมด</span>
+                      </div>
+                      <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                          style={{
+                            width: `${
+                              ((localEvent?.specialPrizeUsed ?? 4) /
+                                (localEvent?.specialPrizeCount ?? 5)) *
+                              100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      {/* <div className="flex flex-wrap gap-2"> */}
+                      {/* Placeholder for remaining rewards */}
+                      {/* {Array.from({
+                          length:
+                            (localEvent?.specialPrizeCount ?? 5) -
+                            (localEvent?.specialPrizeUsed ?? 4),
+                        }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="text-[10px] px-2 py-1 border border-indigo-200 text-indigo-500 rounded bg-indigo-50/50"
+                          >
+                            Available Reward {i + 1}
+                          </div>
+                        ))}
+                      </div> */}
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-indigo-500 uppercase">
+                          Wait for VOTE:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {/* Example of projects that haven't received feedback */}
+                          <div className="text-[10px] px-2 py-1 bg-indigo-50/50 text-indigo-500 rounded border border-indigo-200">
+                            Best Innovatic Project
+                          </div>
+                          <div className="text-[10px] px-2 py-1 bg-indigo-50/50 text-indigo-500 rounded border border-indigo-200">
+                            Best Design Project
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* 4. Feedback (New Card) */}
+                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                        <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+                          <MessageSquare className="h-5 w-5" />
+                        </div>
+                        Feedback Progress
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <span className="text-2xl font-bold text-foreground">
+                          {localEvent?.feedbackGiven ?? 8}{" "}
+                          <span className="text-sm font-normal text-muted-foreground">
+                            / {localEvent?.totalProjects ?? 10}
+                          </span>
+                        </span>
+                        <span className="text-sm text-muted-foreground">ให้ความเห็นแล้ว</span>
+                      </div>
+                      <div className="h-2 w-full bg-rose-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-rose-500 rounded-full transition-all duration-1000"
+                          style={{
+                            width: `${
+                              ((localEvent?.feedbackGiven ?? 8) /
+                                (localEvent?.totalProjects ?? 10)) *
+                              100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-rose-600 uppercase">
+                          Wait for Feedback:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {/* Example of projects that haven't received feedback */}
+                          <div className="text-[10px] px-2 py-1 bg-rose-50 text-rose-600 rounded border border-rose-100">
+                            Project Alpha
+                          </div>
+                          <div className="text-[10px] px-2 py-1 bg-rose-50 text-rose-600 rounded border border-rose-100">
+                            Project Gamma
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
                   </Card>
                 </div>
 
-                {/* จำนวนผู้เข้าร่วมทั้งหมด */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      จำนวนผู้เข้าร่วมทั้งหมด
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {(localEvent?.presentersCount ?? 0) +
-                        (localEvent?.guestsCount ?? 0) +
-                        (localEvent?.committeeCount ?? 0)}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      ผู้นำเสนอ: {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0} |
-                      ผู้เข้าร่วม: {localEvent?.guestsCount ?? 0} | กรรมการ:{" "}
-                      {localEvent?.committeeCount ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* ผู้นำเสนอ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      ผู้นำเสนอ
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">จำนวนทีม</p>
-                  </CardContent>
-                </Card>
-
-                {/* กรรมการ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      กรรมการ
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.committeeCount ?? 0}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      ให้ฟีดแบ็ก: {localEvent?.committeeFeedbackCount ?? 10} / ใช้ไป:{" "}
-                      {localEvent?.committeeVirtualUsed ?? 2000}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Virtual Rewards */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      Virtual Rewards
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">ใช้ไปแล้ว</span>
-                      <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000}</span>
-                    </div>
-                    <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out"
-                        style={{
-                          width: `${
-                            ((localEvent?.vrUsed ?? 20000) / (localEvent?.vrTotal ?? 50000)) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>
-                        คงเหลือ {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
-                      </span>
-                      <span>ทั้งหมด {localEvent?.vrTotal ?? 50000}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* รางวัลพิเศษ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      รางวัลพิเศษ
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.specialPrizeUsed ?? 4}{" "}
-                      <span className="text-xl font-normal text-muted-foreground">
-                        / {localEvent?.specialPrizeCount ?? 5}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">ใช้ไป / ทั้งหมด</p>
-                  </CardContent>
-                </Card>
-
-                {/* ยังไม่ได้ใช้ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      ยังไม่ได้ใช้
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {(localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]).map((a, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                          <span className="text-sm font-medium">{a}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Projects overview for committee with action buttons */}
                 <div className="lg:col-span-3">
-                  <h3 className="text-xl font-semibold mt-6 mb-4">Projects</h3>
-                  <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-4 mb-3 mt-4">
+                    <h2 className="text-xl font-semibold">Projects</h2>
+                    {/* Search Input Unable to search */}
+                    <Input
+                      placeholder="Search projects by name..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="max-w-sm"
+                    />
+                  </div>
+                  <div className="space-y-6">
                     {projects.map((p) => (
                       <Card
                         key={p.id}
-                        className="border-none shadow-md hover:shadow-xl transition-all duration-300"
+                        className="group border-none shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white/50 backdrop-blur-sm"
                       >
-                        <CardHeader>
-                          <div className="flex items-center justify-between w-full">
-                            <div>
-                              <div className="text-sm text-muted-foreground">{p.teamName}</div>
-                              <CardTitle className="text-lg font-semibold">{p.title}</CardTitle>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm text-muted-foreground">ให้ไป</div>
-                              <div className="text-2xl font-bold text-foreground">
-                                {projectRewards[p.id]?.vrGiven ?? 0}
-                              </div>
+                        <div className="flex flex-col md:flex-row">
+                          {/* Project Image Section */}
+                          <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden bg-slate-100">
+                            <img
+                              src={p.imageUrl || "/api/placeholder/400/300"} // Fallback image
+                              alt={p.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute top-2 left-2">
+                              <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-slate-700 rounded shadow-sm">
+                                {p.teamName}
+                              </span>
                             </div>
                           </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="space-y-2">
-                              <div className="text-sm text-muted-foreground">ประเภทรางวัลพิเศษ</div>
-                              <div className="text-sm font-medium">
-                                {projectRewards[p.id]?.specialGiven ?? "-"}
+
+                          {/* Content Section */}
+                          <div className="flex-1 p-5 flex flex-col justify-between">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="space-y-1">
+                                <CardTitle className="text-xl font-bold text-slate-800 leading-tight">
+                                  {p.title}
+                                </CardTitle>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    ประเภทรางวัลพิเศษ:
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                      projectRewards[p.id]?.specialGiven
+                                        ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                        : "bg-slate-100 text-slate-400"
+                                    }`}
+                                  >
+                                    {projectRewards[p.id]?.specialGiven ?? "ยังไม่ได้รับ"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="text-right bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-[100px]">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                  Virtual Reward Given
+                                </div>
+                                <div className="text-3xl font-black text-blue-600">
+                                  {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0}
+                                </div>
                               </div>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
+                            {/* Action Buttons Grid */}
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mt-6">
+                              {/* Primary Actions */}
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 onClick={() => {
                                   setSelectedProjectId(p.id);
                                   setViewProjectOpen(true);
                                 }}
-                                className="bg-sky-500 text-white hover:bg-sky-600"
+                                className="hover:bg-sky-50 hover:text-sky-600 border-slate-200"
                               >
-                                ดูข้อมูลโครงการ
+                                ดูข้อมูล
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 onClick={() => {
                                   setSelectedProjectId(p.id);
                                   setCommentOpen(true);
                                 }}
-                                className="bg-pink-400 text-white hover:bg-pink-500"
+                                className="hover:bg-pink-50 hover:text-pink-600 border-slate-200"
                               >
-                                แสดงความคิดเห็น
+                                แสดงความเห็น
                               </Button>
+
+                              {/* Reward Actions */}
                               <Button
-                                variant="ghost"
                                 onClick={() => {
                                   setSelectedProjectId(p.id);
                                   setVrDialogOpen(true);
                                 }}
-                                className="bg-green-500 text-white hover:bg-green-600"
+                                className="bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
                               >
                                 ให้ Virtual Reward
                               </Button>
                               <Button
-                                variant="ghost"
                                 onClick={() => {
-                                  if (confirm("ยืนยันการขอคืน Virtual Reward สำหรับโครงการนี้?")) {
-                                    setProjectRewards((prev) => ({
-                                      ...prev,
-                                      [p.id]: { ...prev[p.id], vrGiven: 0 },
-                                    }));
-                                    toast.success("คืน Virtual Reward เรียบร้อย");
-                                  }
+                                  setSelectedProjectId(p.id);
+                                  setSpecialDialogOpen(true);
                                 }}
-                                className="bg-red-500 text-white hover:bg-red-600"
+                                className="bg-amber-500 text-white hover:bg-amber-600 shadow-sm"
+                              >
+                                ให้รางวัลพิเศษ
+                              </Button>
+
+                              {/* Undo Actions - Styled more subtly */}
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleResetVR(p.id)}
+                                className="text-slate-400 hover:text-red-500 hover:bg-red-50 text-xs"
                               >
                                 ขอคืน Virtual Reward
                               </Button>
                               <Button
                                 variant="ghost"
-                                onClick={() => {
-                                  setSelectedProjectId(p.id);
-                                  setSpecialDialogOpen(true);
-                                }}
-                                className="bg-amber-500 text-white hover:bg-amber-600"
-                              >
-                                ให้รางวัลพิเศษ
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                onClick={() => {
-                                  if (confirm("ยืนยันการขอคืนรางวัลพิเศษสำหรับโครงการนี้?")) {
-                                    setProjectRewards((prev) => ({
-                                      ...prev,
-                                      [p.id]: { ...prev[p.id], specialGiven: null },
-                                    }));
-                                    toast.success("คืนรางวัลพิเศษเรียบร้อย");
-                                  }
-                                }}
-                                className="bg-rose-500 text-white hover:bg-rose-600"
+                                onClick={() => handleResetSpecial(p.id)}
+                                className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 text-xs"
                               >
                                 ขอคืนรางวัลพิเศษ
                               </Button>
                             </div>
                           </div>
-                        </CardContent>
+                        </div>
                       </Card>
                     ))}
                   </div>
