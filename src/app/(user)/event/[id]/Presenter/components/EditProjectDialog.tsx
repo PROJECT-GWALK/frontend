@@ -8,18 +8,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Edit2 } from "lucide-react";
 import type { PresenterProject } from "./types";
+import { uploadTeamFile } from "@/utils/apievent";
+import type { EventFileType } from "@/utils/types";
+import { toast } from "sonner";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   project: PresenterProject;
   onSave: (p: PresenterProject) => void;
+  eventId: string;
+  fileTypes: EventFileType[];
 };
 
-export default function EditProjectDialog({ open, onOpenChange, project, onSave }: Props) {
+export default function EditProjectDialog({
+  open,
+  onOpenChange,
+  project,
+  onSave,
+  eventId,
+  fileTypes,
+}: Props) {
   const [form, setForm] = useState<PresenterProject>(project);
   const [newMember, setNewMember] = useState("");
-  const [newFileUrl, setNewFileUrl] = useState("");
 
   React.useEffect(() => setForm(project), [project]);
 
@@ -33,20 +44,43 @@ export default function EditProjectDialog({ open, onOpenChange, project, onSave 
     setForm((f) => ({ ...f, members: (f.members || []).filter((x) => x !== m) }));
   };
 
-  const addFile = () => {
-    if (!newFileUrl.trim()) return;
-    const name = newFileUrl.split("/").pop() || newFileUrl;
-    setForm((f) => ({ ...f, files: [...(f.files || []), { name, url: newFileUrl.trim() }] }));
-    setNewFileUrl("");
-  };
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fileTypeId: string
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const removeFile = (url: string) => {
-    setForm((f) => ({ ...f, files: (f.files || []).filter((x) => x.url !== url) }));
+    try {
+      const res = await uploadTeamFile(eventId, project.id, fileTypeId, file);
+      if (res.message === "ok") {
+        const newUrl = res.teamFile.fileUrl;
+        const name = file.name;
+
+        // Update form
+        setForm((f) => {
+          const newFiles = [...(f.files || [])];
+          // Remove existing file for this type if any
+          const existingIdx = newFiles.findIndex(
+            (x) => x.fileTypeId === fileTypeId
+          );
+          if (existingIdx >= 0) {
+            newFiles[existingIdx] = { name, url: newUrl, fileTypeId };
+          } else {
+            newFiles.push({ name, url: newUrl, fileTypeId });
+          }
+          return { ...f, files: newFiles };
+        });
+        toast.success("File uploaded");
+      }
+    } catch (err) {
+      toast.error("Upload failed");
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="flex items-center gap-2">
           <Edit2 className="w-4 h-4" /> Edit Project
         </DialogTitle>
@@ -85,35 +119,48 @@ export default function EditProjectDialog({ open, onOpenChange, project, onSave 
 
           <div>
             <Label>Files</Label>
-            <div className="space-y-2">
-              {(form.files || []).map((f) => (
-                <div key={f.url} className="flex items-center justify-between gap-2">
-                  <div className="text-sm">{f.name}</div>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={f.url}
-                      className="text-sm text-blue-600 underline"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open
-                    </a>
-                    <Button size="sm" variant="ghost" onClick={() => removeFile(f.url)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+            <div className="space-y-4 mt-2">
+              {(fileTypes || []).map((ft) => {
+                const uploaded = form.files?.find((f) => f.fileTypeId === ft.id);
+                return (
+                  <div key={ft.id} className="border p-3 rounded-md">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="font-medium">
+                          {ft.name} {ft.isRequired && <span className="text-red-500">*</span>}
+                        </div>
+                        {ft.description && (
+                          <div className="text-xs text-muted-foreground">{ft.description}</div>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Allowed: {ft.allowedFileTypes.join(", ")}
+                        </div>
+                      </div>
+                      {uploaded && (
+                        <a
+                          href={uploaded.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:underline"
+                        >
+                          View Uploaded
+                        </a>
+                      )}
+                    </div>
+
+                    <Input
+                      type="file"
+                      accept={ft.allowedFileTypes.map((t) => "." + t).join(",")}
+                      onChange={(e) => handleFileUpload(e, ft.id!)}
+                    />
                   </div>
+                );
+              })}
+              {(!fileTypes || fileTypes.length === 0) && (
+                <div className="text-sm text-muted-foreground">
+                  No file requirements configured for this event.
                 </div>
-              ))}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="https://.../file.pdf"
-                  value={newFileUrl}
-                  onChange={(e) => setNewFileUrl(e.target.value)}
-                />
-                <Button size="sm" onClick={addFile}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              )}
             </div>
           </div>
 

@@ -99,7 +99,7 @@ export const setEventPublicView = async (id: string, publicView: boolean) => {
 
 // ====================== CHECK EVENT NAME ======================
 export const checkEventName = async (eventName: string) => {
-  const res = await axios.get(`/backend/api/events/check-name`, {
+  const res = await axios.get("/backend/api/events/check-name", {
     params: { eventName },
     withCredentials: true,
   });
@@ -200,13 +200,27 @@ export const getPublishedEvents = async () => {
   const res = await axios.get("/backend/api/events", {
     withCredentials: true,
   });
-  return res.data; // { message, events }
+  return res.data; // { message, sig }
 };
 
-export const getInviteToken = async (
+export const joinEventWithToken = async (
   eventId: string,
-  role: "presenter" | "committee" | "guest"
+  token?: string,
+  role?: string,
+  sig?: string
 ) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/invite`,
+    {},
+    {
+      params: { token, role, sig },
+      withCredentials: true,
+    }
+  );
+  return res.data; // { message, participant }
+};
+
+export const getInviteToken = async (eventId: string, role: string) => {
   const res = await axios.get(`/backend/api/events/${eventId}/invite/token`, {
     params: { role },
     withCredentials: true,
@@ -214,10 +228,19 @@ export const getInviteToken = async (
   return res.data; // { message, token }
 };
 
-export const previewInvite = async (
-  eventId: string,
-  params: { token?: string; role?: "presenter" | "committee" | "guest" }
-) => {
+export const refreshInviteToken = async (eventId: string, role: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/invite/token/refresh`,
+    {},
+    {
+      params: { role },
+      withCredentials: true,
+    }
+  );
+  return res.data; // { message, token }
+};
+
+export const previewInvite = async (eventId: string, params: { token?: string; role?: string }) => {
   const res = await axios.get(`/backend/api/events/${eventId}/invite/preview`, {
     params,
     withCredentials: true,
@@ -225,49 +248,53 @@ export const previewInvite = async (
   return res.data; // { message, role }
 };
 
-export const joinEventWithToken = async (
-  eventId: string,
-  token: string
-) => {
-  const res = await axios.post(
-    `/backend/api/events/${eventId}/invite`,
-    {},
-    {
-      params: { token },
-      withCredentials: true,
-    }
-  );
-  return res.data; // { message, participant }
-};
-
-export const getEventParticipants = async (eventId: string) => {
+// ====================== PARTICIPANTS ======================
+export const getParticipants = async (eventId: string) => {
   const res = await axios.get(`/backend/api/events/${eventId}/participants`, {
     withCredentials: true,
   });
   return res.data; // { message, participants }
 };
 
-export const updateEventParticipant = async (
-  eventId: string,
-  participantId: string,
-  data: {
-    eventGroup?: "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST";
-    isLeader?: boolean;
-    virtualReward?: number;
-    teamId?: string | null;
-  }
-) => {
+export const updateParticipant = async (eventId: string, pid: string, data: any) => {
   const res = await axios.put(
-    `/backend/api/events/${eventId}/participants/${participantId}`,
+    `/backend/api/events/${eventId}/participants/${pid}`,
     data,
     { withCredentials: true }
   );
   return res.data; // { message, participant }
 };
 
-export const deleteEventParticipant = async (eventId: string, participantId: string) => {
-  const res = await axios.delete(`/backend/api/events/${eventId}/participants/${participantId}`, {
-    withCredentials: true,
-  });
+export const deleteParticipant = async (eventId: string, pid: string) => {
+  const res = await axios.delete(
+    `/backend/api/events/${eventId}/participants/${pid}`,
+    { withCredentials: true }
+  );
   return res.data; // { message }
+};
+
+// ====================== TEAMS ======================
+export const createTeam = async (eventId: string, teamName: string, description?: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/teams`,
+    { teamName, description },
+    { withCredentials: true }
+  );
+  return res.data; // { message, team }
+};
+
+export const uploadTeamFile = async (eventId: string, teamId: string, fileTypeId: string, file: File) => {
+  const formData = new FormData();
+  formData.append("fileTypeId", fileTypeId);
+  formData.append("file", file);
+
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/teams/${teamId}/files`,
+    formData,
+    {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
+  return res.data; // { message, teamFile }
 };

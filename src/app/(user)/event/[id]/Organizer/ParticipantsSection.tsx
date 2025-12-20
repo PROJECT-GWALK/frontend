@@ -38,9 +38,9 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getEventParticipants,
-  updateEventParticipant,
-  deleteEventParticipant,
+  getParticipants,
+  updateParticipant,
+  deleteParticipant,
 } from "@/utils/apievent";
 import { getCurrentUser } from "@/utils/apiuser";
 
@@ -150,7 +150,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
       }
     ) => {
       try {
-        const res = await updateEventParticipant(id, pid, data);
+        const res = await updateParticipant(id, pid, data);
         if (res?.participant) {
           setParticipants((all) => {
             const next = all.map((it) =>
@@ -171,7 +171,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
     if (!id) return;
     setLoadingParticipants(true);
     try {
-      const res = await getEventParticipants(id);
+      const res = await getParticipants(id);
       if (res?.participants) {
         const list = res.participants as ParticipantRow[];
         setParticipants(list);
@@ -609,7 +609,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                                 const pid = deleteTarget;
                                                 if (!pid) return;
                                                 try {
-                                                  await deleteEventParticipant(
+                                                  await deleteParticipant(
                                                     id,
                                                     pid
                                                   );

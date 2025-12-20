@@ -68,6 +68,7 @@ export type EventDetail = {
   submissionEndTime?: string;
   fileRequirement?: string;
   linkRequirement?: string;
+  fileTypes?: EventFileType[];
 
   hasCommittee?: boolean;
   committeeCount?: number;
@@ -153,4 +154,20 @@ export type EventData = {
   presenterTeams?: number;
   specialPrizeUsed?: number;
   specialPrizeCount?: number;
+  fileTypes?: EventFileType[];
+};
+
+export enum FileType {
+  jpg = "jpg",
+  png = "png",
+  pdf = "pdf",
+  url = "url",
+}
+
+export type EventFileType = {
+  id?: string;
+  name: string;
+  description?: string | null;
+  allowedFileTypes: FileType[];
+  isRequired: boolean;
 };

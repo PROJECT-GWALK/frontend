@@ -4,6 +4,6 @@ export type PresenterProject = {
   desc?: string;
   img?: string;
   videoLink?: string;
-  files?: { name: string; url: string }[];
+  files?: { name: string; url: string; fileTypeId?: string }[];
   members?: string[];
 };

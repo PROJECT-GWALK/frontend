@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building } from "lucide-react";
@@ -14,8 +14,11 @@ import type { EventData } from "@/utils/types";
 import InformationSection from "../InformationSection";
 import ProjectsList from "./components/ProjectsList";
 import CreateProjectDialog from "./components/CreateProjectDialog";
+import EditProjectDialog from "./components/EditProjectDialog";
 import { SAMPLE_PROJECTS } from "./components/mockProjects";
 import type { PresenterProject } from "./components/types";
+import { createTeam } from "@/utils/apievent";
+import { useSession } from "next-auth/react";
 
 type Props = {
   id: string;
@@ -23,6 +26,9 @@ type Props = {
 };
 
 export default function PresenterView({ id, event }: Props) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
@@ -35,12 +41,39 @@ export default function PresenterView({ id, event }: Props) {
     description?: string;
     img?: string;
     videoLink?: string;
-    files?: string[];
+    files?: { name: string; url: string; fileTypeId?: string }[];
     members?: string[];
     owner?: boolean;
   };
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
+
+  useEffect(() => {
+    if (userId && localEvent) {
+      const participants = (localEvent as any).participants;
+      if (Array.isArray(participants)) {
+        const me = participants.find((p: any) => p.userId === userId);
+        if (me && me.team) {
+          setUserProject({
+            id: me.team.id,
+            title: me.team.teamName,
+            description: me.team.description,
+            img: "/project1.png",
+            files: me.team.files
+              ? me.team.files.map((f: any) => ({
+                  name: f.fileUrl.split("/").pop() || "File",
+                  url: f.fileUrl,
+                  fileTypeId: f.fileTypeId,
+                }))
+              : [],
+            members: ["You"],
+            owner: me.isLeader,
+          });
+        }
+      }
+    }
+  }, [userId, localEvent]);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<PresenterProject[]>(SAMPLE_PROJECTS);
 
@@ -381,11 +414,7 @@ export default function PresenterView({ id, event }: Props) {
                                     desc: userProject.description,
                                     img: userProject.img,
                                     videoLink: userProject.videoLink,
-                                    files: (userProject.files || []).map((f) =>
-                                      typeof f === "string"
-                                        ? { name: f.split("/").pop() || f, url: f }
-                                        : f
-                                    ),
+                                    files: userProject.files || [],
                                     members: userProject.members || [],
                                   });
                                   setViewOpen(true);
@@ -416,11 +445,31 @@ export default function PresenterView({ id, event }: Props) {
                   <CreateProjectDialog
                     open={createOpen}
                     onOpenChange={setCreateOpen}
-                    onCreate={(pr) => {
-                      setUserProject({ ...pr, members: ["You"] } as any);
-                      setProjectForm(pr as any);
-                      setProjects((s) => [pr, ...s]);
-                      toast.success("Project created");
+                    onCreate={async (pr) => {
+                      try {
+                        const res = await createTeam(id, pr.title, pr.desc);
+                        if (res.message === "ok") {
+                          const newTeam = res.team;
+                          setUserProject({
+                            id: newTeam.id,
+                            title: newTeam.teamName,
+                            description: newTeam.description,
+                            img: "/project1.png",
+                            files: [],
+                            members: ["You"],
+                            owner: true,
+                          });
+                          setProjects((s) => [
+                            { ...pr, id: newTeam.id },
+                            ...s,
+                          ]);
+                          toast.success("Project created");
+                        }
+                      } catch (e: any) {
+                        toast.error(
+                          e.response?.data?.message || "Failed to create project"
+                        );
+                      }
                     }}
                   />
                 </div>
@@ -456,7 +505,23 @@ export default function PresenterView({ id, event }: Props) {
             </TabsContent>
           </Tabs>
         </div>
-        {/* Edit Dialog (existing code left intact) */}
+        {/* Edit Dialog */}
+        {projectForm && (
+          <EditProjectDialog
+            open={viewOpen}
+            onOpenChange={setViewOpen}
+            project={projectForm}
+            eventId={id}
+            fileTypes={localEvent.fileTypes || []}
+            onSave={(p) => {
+              setUserProject((prev) => (prev ? { ...prev, ...p } : null) as any);
+              setProjectForm(p);
+              // In a real app, you would also call an API to update title/desc here
+              // For files, they are uploaded immediately in the dialog
+              toast.success("Project updated (local)");
+            }}
+          />
+        )}
       </div>
     </div>
   );

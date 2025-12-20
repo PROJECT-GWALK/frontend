@@ -28,7 +28,7 @@ import {
   deleteSpecialReward,
 } from "@/utils/apievent";
 
-import { EventDetail } from "@/utils/types";
+import { EventDetail, EventFileType } from "@/utils/types";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
@@ -61,6 +61,7 @@ type EventUpdatePayload = {
   virtualRewardCommittee: number;
   specialRewards: SpecialReward[];
   unitReward?: string | null;
+  fileTypes?: EventFileType[];
 };
 
 const BANNER_MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -117,6 +118,7 @@ export default function EventDraft() {
   const [submissionEndTime, setSubmissionEndTime] = useState("");
   const [selectedSubStart, setSelectedSubStart] = useState<Date | undefined>(undefined);
   const [selectedSubEnd, setSelectedSubEnd] = useState<Date | undefined>(undefined);
+  const [fileRequirements, setFileRequirements] = useState<EventFileType[]>([]);
 
   // Committee & Guest
   const [hasCommittee, setHasCommittee] = useState(false);
@@ -224,6 +226,7 @@ export default function EventDraft() {
       virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
       specialRewards,
       unitReward: unitReward || null,
+      fileTypes: fileRequirements,
     };
   };
   const buildFormData = (payload: EventUpdatePayload, file: File) => {
@@ -636,6 +639,10 @@ export default function EventDraft() {
         const res = await getEvent(id);
         const data = res.event;
 
+        if (data.fileTypes) {
+          setFileRequirements(data.fileTypes);
+        }
+
         setEvent(data);
 
         // ================= EVENT INFO =================
@@ -912,6 +919,8 @@ export default function EventDraft() {
                 calendarStartMonth={calendarStartMonth}
                 calendarEndMonth={calendarEndMonth}
                 selectedStart={selectedStart}
+                fileRequirements={fileRequirements}
+                setFileRequirements={setFileRequirements}
               />
 
               {/* Committee & Guest Section */}

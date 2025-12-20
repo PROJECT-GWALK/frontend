@@ -153,3 +153,39 @@ export const validateEventTime = (
 
   return errors;
 };
+
+export function getMapEmbedUrl(locationUrl: string | undefined, locationName: string | undefined): string {
+  let query = locationName || "";
+  
+  if (locationUrl) {
+    try {
+      const urlStr = locationUrl.trim();
+      // Try to extract coordinates from @lat,lng
+      const coordMatch = urlStr.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordMatch) {
+        query = `${coordMatch[1]},${coordMatch[2]}`;
+      } else {
+        // Try to parse URL
+        if (urlStr.includes("google.com/maps") || urlStr.includes("maps.google.com")) {
+             const url = new URL(urlStr.startsWith("http") ? urlStr : `https://${urlStr}`);
+             const q = url.searchParams.get("q");
+             if (q) {
+                 query = q;
+             } else if (url.pathname.includes("/place/")) {
+                 const parts = url.pathname.split("/place/");
+                 if (parts[1]) {
+                     query = decodeURIComponent(parts[1].split("/")[0].replace(/\+/g, " "));
+                 }
+             }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  
+  query = query.trim();
+  if (!query) return "";
+  
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&output=embed`;
+}
