@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -43,8 +42,8 @@ import {
   deleteParticipant,
 } from "@/utils/apievent";
 import { getCurrentUser } from "@/utils/apiuser";
+import type { EventGroup } from "@/utils/types";
 
-type EventGroup = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST";
 type ParticipantUser = {
   id: string;
   name?: string | null;
@@ -223,11 +222,11 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
 
   return (
     <div className="mt-8 space-y-6">
-      <Card className="border-none shadow-lg bg-gradient-to-br from-background to-muted/20">
+      <Card className="border-none shadow-lg">
         <CardHeader className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <CardTitle className="text-2xl font-bold">
                 จัดการผู้เข้าร่วม
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
@@ -304,7 +303,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                   >
                     {/* Left Border Strip */}
                     <div
-                      className="absolute left-0 top-0 bottom-0 w-[6px]"
+                      className="absolute left-0 top-0 bottom-0 w-1.5"
                       style={{ backgroundColor: config.roleVar }}
                     />
 
@@ -408,7 +407,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                   >
                                     <td className="p-3">
                                       <div className="flex items-center gap-3">
-                                        <div className="relative flex-shrink-0">
+                                        <div className="relative shrink-0">
                                           {p.user?.image ? (
                                             <Image
                                               src={p.user.image}
@@ -422,7 +421,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                               className="rounded-full ring-2 ring-background shadow-sm"
                                             />
                                           ) : (
-                                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center ring-2 ring-background">
+                                            <div className="h-10 w-10 rounded-full flex items-center justify-center ring-2 ring-background">
                                               <Users className="h-5 w-5 text-primary" />
                                             </div>
                                           )}
@@ -466,7 +465,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                               eventGroup: v as EventGroup,
                                             });
                                           }}
-                                          disabled={g === "ORGANIZER"}
+                                          disabled={g === "ORGANIZER" && !isOrganizerLeader}
                                         >
                                           <SelectTrigger className="w-[130px]">
                                             <SelectValue placeholder="เลือกบทบาท" />
@@ -518,7 +517,7 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                           const u = leader?.user;
                                           return (
                                             <div className="flex items-center gap-2">
-                                              <Crown className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                                              <Crown className="h-4 w-4 text-yellow-500 shrink-0" />
                                               <span className="text-sm truncate max-w-[150px]">
                                                 {u?.name ||
                                                   u?.username ||

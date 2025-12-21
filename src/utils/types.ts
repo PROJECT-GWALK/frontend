@@ -171,3 +171,43 @@ export type EventFileType = {
   allowedFileTypes: FileType[];
   isRequired: boolean;
 };
+
+export type EventEditSection =
+  | "description"
+  | "time"
+  | "location"
+  | "presenter"
+  | "guest"
+  | "rewards"
+  | "committee";
+
+export type SpecialRewardEdit = SpecialReward & {
+  pendingFile?: File;
+  preview?: string | null;
+  removeImage?: boolean;
+  _dirty?: boolean;
+};
+
+export type EventFormState = {
+  eventDescription?: string;
+  locationName?: string;
+  location?: string;
+  guestReward?: number;
+  committeeReward?: number;
+  unitReward?: string;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+  maxTeams?: number;
+  maxTeamMembers?: number;
+};
+
+export type EventGroup = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST";
+
+export type ParticipantUpdatePayload = {
+  eventGroup?: EventGroup;
+  isLeader?: boolean;
+  virtualReward?: number;
+  teamId?: string | null;
+};

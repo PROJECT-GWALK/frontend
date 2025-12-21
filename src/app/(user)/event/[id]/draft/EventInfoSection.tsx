@@ -26,8 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { timeFormat, dateFormat } from "@/utils/settings";
 import { toYYYYMMDD, formatDate } from "@/utils/function";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   eventTitle: string;
@@ -73,6 +73,7 @@ type Props = {
 };
 
 export default function EventInfoSection(props: Props) {
+  const { dateFormat } = useLanguage();
   const {
     eventTitle,
     setEventTitle,
@@ -252,7 +253,7 @@ export default function EventInfoSection(props: Props) {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                   <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {formatDate(selectedStart, "เลือกวันที่")}
+                  {formatDate(selectedStart, "เลือกวันที่", dateFormat)}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 flex justify-center">
@@ -321,7 +322,7 @@ export default function EventInfoSection(props: Props) {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                   <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  {formatDate(selectedEnd, "เลือกวันที่")}
+                  {formatDate(selectedEnd, "เลือกวันที่", dateFormat)}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 flex justify-center">

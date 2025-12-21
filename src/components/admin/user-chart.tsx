@@ -21,7 +21,7 @@ import {
 import { userDailyActive } from "@/utils/apiadmin";
 import { UserActiveChartData } from "@/utils/types";
 import { ChartBar } from "lucide-react";
-import { timeFormat } from "@/utils/settings";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const chartConfig = {
   active: {
@@ -30,9 +30,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const generateMonths = () =>
+const generateMonths = (locale: string) =>
   Array.from({ length: 12 }, (_, i) => ({
-    label: new Date(2000, i).toLocaleString(timeFormat, { month: "long" }),
+    label: new Date(2000, i).toLocaleString(locale, { month: "long" }),
     value: i + 1,
   }));
 
@@ -45,6 +45,7 @@ const generateDays = (year: number, month: number) => {
 };
 
 export default function AdminUserChart() {
+  const { timeFormat } = useLanguage();
   const now = new Date();
   const currentYear = now.getFullYear() + 543;
 
@@ -88,7 +89,7 @@ export default function AdminUserChart() {
           };
         });
       } else {
-        const months = generateMonths();
+        const months = generateMonths(timeFormat);
 
         filled = months.map((m) => {
           const found = rawChart.find((c) => c.label === m.label);
@@ -105,7 +106,7 @@ export default function AdminUserChart() {
     fetchData();
   }, [year, month, currentYear]);
 
-  const monthOptions = generateMonths();
+  const monthOptions = generateMonths(timeFormat);
 
   return (
       <Card className="w-full">

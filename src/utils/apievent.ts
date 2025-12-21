@@ -248,6 +248,8 @@ export const previewInvite = async (eventId: string, params: { token?: string; r
   return res.data; // { message, role }
 };
 
+import type { ParticipantUpdatePayload } from "@/utils/types";
+
 // ====================== PARTICIPANTS ======================
 export const getParticipants = async (eventId: string) => {
   const res = await axios.get(`/backend/api/events/${eventId}/participants`, {
@@ -256,7 +258,7 @@ export const getParticipants = async (eventId: string) => {
   return res.data; // { message, participants }
 };
 
-export const updateParticipant = async (eventId: string, pid: string, data: any) => {
+export const updateParticipant = async (eventId: string, pid: string, data: ParticipantUpdatePayload) => {
   const res = await axios.put(
     `/backend/api/events/${eventId}/participants/${pid}`,
     data,

@@ -15,10 +15,12 @@ import {
 } from "@/utils/apievent";
 import { formatDateTime } from "@/utils/function";
 import type { MyEvent } from "@/utils/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EventsPage() {
+  const { timeFormat } = useLanguage();
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -259,7 +261,7 @@ export default function EventsPage() {
                         <Calendar className="h-4 w-4" />
                         <span>
                           Published at{" "}
-                          {formatDateTime(new Date(event.createdAt))}
+                          {formatDateTime(new Date(event.createdAt), timeFormat)}
                         </span>
                       </div>
                     </div>

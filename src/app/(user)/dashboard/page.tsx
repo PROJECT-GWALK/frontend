@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDateTime } from "@/utils/function";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const mapEventNameMessage = (message: string) =>
   message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
@@ -108,6 +109,7 @@ const getRoleColorVar = (role?: string) => {
 };
 
 export default function DashboardPage() {
+  const { timeFormat } = useLanguage();
   const [drafts, setDrafts] = useState<DraftEvent[]>([]);
   const [myEvents, setMyEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -434,7 +436,7 @@ export default function DashboardPage() {
                             
                             {event.isDraft ? (
                               <p className="text-xs text-muted-foreground">
-                                Created {formatDateTime(new Date(event.createdAt))}
+                                Created {formatDateTime(new Date(event.createdAt), timeFormat)}
                               </p>
                             ) : (
                               <div className="space-y-1.5 mt-1">
@@ -453,14 +455,14 @@ export default function DashboardPage() {
                                       {isOrgOrPres && inSubmission && subStart && subEnd && (
                                         <div className="flex items-center gap-2 text-xs font-medium text-amber-600 dark:text-amber-500">
                                           <Calendar className="h-3.5 w-3.5 shrink-0" />
-                                          <span>Submission: {formatDateTime(subStart)} - {formatDateTime(subEnd)}</span>
+                                          <span>Submission: {formatDateTime(subStart, timeFormat)} - {formatDateTime(subEnd, timeFormat)}</span>
                                         </div>
                                       )}
                                       
                                       {eventStart && eventEnd && (
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                           <Eye className="h-3.5 w-3.5 shrink-0" />
-                                          <span>Event: {formatDateTime(eventStart)} - {formatDateTime(eventEnd)}</span>
+                                          <span>Event: {formatDateTime(eventStart, timeFormat)} - {formatDateTime(eventEnd, timeFormat)}</span>
                                         </div>
                                       )}
                                     </>

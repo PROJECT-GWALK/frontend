@@ -10,6 +10,7 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { timeFormat } from "@/utils/settings"
 
 function Calendar({
@@ -25,6 +26,7 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const { timeFormat } = useLanguage()
 
   return (
     <DayPicker

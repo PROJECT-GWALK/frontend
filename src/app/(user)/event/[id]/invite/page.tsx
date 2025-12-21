@@ -13,10 +13,12 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/utils/function";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type RoleStr = "presenter" | "committee" | "guest";
 
 export default function InviteConfirmPage() {
+  const { timeFormat } = useLanguage();
   const { data: session, status } = useSession();
   const params = useParams();
   const id = (params?.id as string) ?? "";
@@ -161,7 +163,7 @@ export default function InviteConfirmPage() {
                     <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
                       <CalendarIcon className="w-4 h-4 text-primary" />
                       <span>
-                        {formatDateTime(new Date(event.startView))}
+                        {formatDateTime(new Date(event.startView), timeFormat)}
                       </span>
                     </div>
                   )}

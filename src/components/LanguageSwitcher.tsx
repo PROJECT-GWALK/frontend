@@ -15,7 +15,6 @@ export function LanguageSwitcher() {
 
   const handleLanguageChange = (lang: "en" | "th") => {
     setLanguage(lang);
-    window.location.reload();
   };
 
   return (

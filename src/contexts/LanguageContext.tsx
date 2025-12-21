@@ -10,6 +10,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  timeFormat: string;
+  dateFormat: string;
 }
 
 const translations: Record<Language, any> = {
@@ -37,6 +39,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("language", lang);
   };
 
+  const timeFormat = language === "th" ? "th-TH" : "en-US";
+  const dateFormat = language === "th" ? "th-TH" : "en-US";
+
   const t = (key: string): string => {
     const keys = key.split(".");
     let value: any = translations[language];
@@ -55,7 +60,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // if (!mounted) return <>{children}</>;
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, timeFormat, dateFormat }}>
       {children}
     </LanguageContext.Provider>
   );

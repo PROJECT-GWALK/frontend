@@ -18,7 +18,6 @@ import {
   FileText,
 } from "lucide-react";
 import { timeUntil, formatDateTime, getMapEmbedUrl } from "@/utils/function";
-import { timeFormat } from "@/utils/settings";
 import { toast } from "sonner";
 import type { EventData, EventFileType } from "@/utils/types";
 import { FileType } from "@/utils/types";
@@ -106,7 +105,7 @@ export default function InformationSection({
   const [maxTeamMembers, setMaxTeamMembers] = useState<number>(0);
   const [fileRequirements, setFileRequirements] = useState<EventFileType[]>([]);
   const [updatingPresenter, setUpdatingPresenter] = useState(false);
-  const { t } = useLanguage();
+  const { t, timeFormat } = useLanguage();
 
   const handleEdit = (
     section: EditSection,
@@ -207,8 +206,8 @@ export default function InformationSection({
       toast.success("Time saved successfully");
       setEditTimeOpen(false);
       router.refresh();
-    } catch (e: any) {
-      toast.error(e?.message || "Save failed");
+    } catch (e: unknown) {
+      toast.error((e as Error)?.message || "Save failed");
     } finally {
       setUpdatingTime(false);
     }
@@ -251,8 +250,8 @@ export default function InformationSection({
       toast.success("Presenter info saved successfully");
       setEditPresenterOpen(false);
       router.refresh();
-    } catch (e: any) {
-      toast.error(e?.message || "Save failed");
+    } catch (e: unknown) {
+      toast.error((e as Error)?.message || "Save failed");
     } finally {
       setUpdatingPresenter(false);
     }
@@ -270,8 +269,8 @@ export default function InformationSection({
       await deleteSpecialReward(id, rid);
       setRewards((prev) => prev.filter((r) => r.id !== rid));
       toast.success("Reward deleted");
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to delete reward");
+    } catch (e: unknown) {
+      toast.error((e as Error)?.message || "Failed to delete reward");
     } finally {
       setDeletingId(null);
     }
@@ -402,7 +401,9 @@ export default function InformationSection({
       <Card className="lg:col-span-2 border-none shadow-md bg-gradient-to-br from-background to-muted/20">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-bold">{t("information.eventDetails")}</CardTitle>
+            <CardTitle className="text-xl font-bold">
+              {t("information.eventDetails")}
+            </CardTitle>
             {editable && (
               <Button
                 size="sm"
@@ -438,14 +439,7 @@ export default function InformationSection({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() =>
-                  handleEdit("time", {
-                    startView: event?.startView ?? "",
-                    endView: event?.endView ?? "",
-                    startTime: event?.startJoinDate ?? "",
-                    endTime: event?.endJoinDate ?? "",
-                  })
-                }
+                onClick={() => handleEdit("time", {})}
               >
                 Edit
               </Button>
@@ -493,18 +487,22 @@ export default function InformationSection({
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("information.start")}:</span>
+                <span className="text-muted-foreground">
+                  {t("information.start")}:
+                </span>
                 <span>
                   {event?.startView
-                    ? formatDateTime(new Date(event.startView))
+                    ? formatDateTime(new Date(event.startView), timeFormat)
                     : "-"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("information.end")}:</span>
+                <span className="text-muted-foreground">
+                  {t("information.end")}:
+                </span>
                 <span>
                   {event?.endView
-                    ? formatDateTime(new Date(event.endView))
+                    ? formatDateTime(new Date(event.endView), timeFormat)
                     : "-"}
                 </span>
               </div>
@@ -585,27 +583,35 @@ export default function InformationSection({
         <CardContent>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("information.submissionStart")}:</span>
+              <span className="text-muted-foreground">
+                {t("information.submissionStart")}:
+              </span>
               <span>
                 {event?.startJoinDate
-                  ? formatDateTime(new Date(event.startJoinDate))
+                  ? formatDateTime(new Date(event.startJoinDate), timeFormat)
                   : "-"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("information.submissionEnd")}:</span>
+              <span className="text-muted-foreground">
+                {t("information.submissionEnd")}:
+              </span>
               <span>
                 {event?.endJoinDate
-                  ? formatDateTime(new Date(event.endJoinDate))
+                  ? formatDateTime(new Date(event.endJoinDate), timeFormat)
                   : "-"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("information.maxTeams")}:</span>
+              <span className="text-muted-foreground">
+                {t("information.maxTeams")}:
+              </span>
               <span>{event?.maxTeams ?? "-"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("information.memberPerGroup")}:</span>
+              <span className="text-muted-foreground">
+                {t("information.memberPerGroup")}:
+              </span>
               <span>{event?.maxTeamMembers ?? "-"}</span>
             </div>
 
@@ -853,137 +859,133 @@ export default function InformationSection({
       </AlertDialog>
 
       <Dialog open={editTimeOpen} onOpenChange={setEditTimeOpen}>
-        <DialogContent className="max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="max-w-[600px] max-h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="p-6 pb-2 shrink-0">
             <DialogTitle>Edit Event Duration</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-1 justify-start font-normal min-w-0"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="truncate">
-                        {formatDateTime(selectedStartDate)}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 flex justify-center">
-                    <DateCalendar
-                      mode="single"
-                      captionLayout="dropdown"
-                      className="mx-auto"
-                      fixedWeeks
-                      defaultMonth={selectedStartDate || new Date()}
-                      selected={selectedStartDate}
-                      onSelect={(d) => {
-                        if (d) {
-                          setSelectedStartDate(d);
-                        }
-                      }}
-                      formatters={{
-                        formatMonthDropdown: (date) =>
-                          date.toLocaleString(timeFormat, { month: "long" }),
-                        formatYearDropdown: (date) =>
-                          date.toLocaleDateString(timeFormat, {
-                            year: "numeric",
-                          }),
-                      }}
-                      disabled={(date) => {
-                        if (event.endJoinDate) {
-                          const d = new Date(event.endJoinDate);
-                          if (date <= d) return true;
-                        }
-                        if (event.startJoinDate) {
-                          const d = new Date(event.startJoinDate);
-                          if (date <= d) return true;
-                        }
-                        return false;
-                      }}
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4">
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+              <div className="space-y-1 pb-2 border-b border-border/50">
+                <h3 className="font-semibold text-base flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
+                  ช่วงเวลาจัดงาน (Event Duration)
+                </h3>
+                <p className="text-xs text-muted-foreground ml-6">
+                  กำหนดวันและเวลาเริ่มต้น-สิ้นสุด ของงานอีเวนต์
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 justify-start font-normal min-w-0"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="truncate">
+                          {formatDateTime(selectedStartDate, timeFormat)}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 flex justify-center">
+                      <DateCalendar
+                        mode="single"
+                        captionLayout="dropdown"
+                        className="mx-auto"
+                        fixedWeeks
+                        defaultMonth={selectedStartDate || new Date()}
+                        selected={selectedStartDate}
+                        onSelect={(d) => d && setSelectedStartDate(d)}
+                        formatters={{
+                          formatMonthDropdown: (date) =>
+                            date.toLocaleString(timeFormat, { month: "long" }),
+                          formatYearDropdown: (date) =>
+                            date.toLocaleString(timeFormat, {
+                              year: "numeric",
+                            }),
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <div className="relative w-full sm:w-32 shrink-0">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="time"
+                      step="60"
+                      className="pl-9"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
                     />
-                  </PopoverContent>
-                </Popover>
-                <div className="relative w-full sm:w-32 shrink-0">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="time"
-                    step="60"
-                    className="pl-9"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                  />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-1 justify-start font-normal min-w-0"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="truncate">
-                        {formatDateTime(selectedEndDate)}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 flex justify-center">
-                    <DateCalendar
-                      mode="single"
-                      captionLayout="dropdown"
-                      className="mx-auto"
-                      fixedWeeks
-                      defaultMonth={
-                        selectedEndDate || selectedStartDate || new Date()
-                      }
-                      selected={selectedEndDate}
-                      onSelect={(d) => {
-                        if (d) {
-                          setSelectedEndDate(d);
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 justify-start font-normal min-w-0"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="truncate">
+                          {formatDateTime(selectedEndDate, timeFormat)}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 flex justify-center">
+                      <DateCalendar
+                        mode="single"
+                        captionLayout="dropdown"
+                        className="mx-auto"
+                        fixedWeeks
+                        defaultMonth={
+                          selectedEndDate || selectedStartDate || new Date()
                         }
-                      }}
-                      disabled={
-                        selectedStartDate
-                          ? (date) => {
-                              if (selectedStartDate && date < selectedStartDate)
-                                return true;
-                              return false;
-                            }
-                          : undefined
-                      }
-                      formatters={{
-                        formatMonthDropdown: (date) =>
-                          date.toLocaleString(timeFormat, { month: "long" }),
-                        formatYearDropdown: (date) =>
-                          String(date.getFullYear()),
-                      }}
+                        selected={selectedEndDate}
+                        onSelect={(d) => d && setSelectedEndDate(d)}
+                        disabled={(date) => {
+                          if (selectedStartDate && date < selectedStartDate)
+                            return true;
+                          return false;
+                        }}
+                        formatters={{
+                          formatMonthDropdown: (date) =>
+                            date.toLocaleString(timeFormat, {
+                              month: "long",
+                            }),
+                          formatYearDropdown: (date) =>
+                            date.toLocaleString(timeFormat, {
+                              year: "numeric",
+                            }),
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <div className="relative w-full sm:w-32 shrink-0">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="time"
+                      step="60"
+                      className="pl-9"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
                     />
-                  </PopoverContent>
-                </Popover>
-                <div className="relative w-full sm:w-32 shrink-0">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="time"
-                    step="60"
-                    className="pl-9"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                  />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTimeOpen(false)}>
+          <DialogFooter className="p-6 pt-2 shrink-0 bg-background z-10 border-t mt-auto">
+            <Button
+              variant="outline"
+              onClick={() => setEditTimeOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleSaveTime} disabled={updatingTime}>
@@ -1023,7 +1025,7 @@ export default function InformationSection({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
                         <span className="truncate">
-                          {formatDateTime(presenterStart)}
+                          {formatDateTime(presenterStart, timeFormat)}
                         </span>
                       </Button>
                     </PopoverTrigger>
@@ -1044,7 +1046,9 @@ export default function InformationSection({
                           formatMonthDropdown: (date) =>
                             date.toLocaleString(timeFormat, { month: "long" }),
                           formatYearDropdown: (date) =>
-                            String(date.getFullYear()),
+                            date.toLocaleString(timeFormat, {
+                              year: "numeric",
+                            }),
                         }}
                       />
                     </PopoverContent>
@@ -1072,7 +1076,7 @@ export default function InformationSection({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
                           <span className="truncate">
-                            {formatDateTime(presenterEnd)}
+                            {formatDateTime(presenterEnd, timeFormat)}
                           </span>
                         </Button>
                       </PopoverTrigger>
@@ -1106,7 +1110,9 @@ export default function InformationSection({
                                 month: "long",
                               }),
                             formatYearDropdown: (date) =>
-                              String(date.getFullYear()),
+                              date.toLocaleString(timeFormat, {
+                                year: "numeric",
+                              }),
                           }}
                         />
                       </PopoverContent>
@@ -1126,172 +1132,167 @@ export default function InformationSection({
               </div>
             </div>
 
-              {/* Zone 2: Team Constraints */}
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                <div className="space-y-1 pb-2 border-b border-border/50">
-                  <h3 className="font-semibold text-base flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" /> 2. ข้อมูลทีม
-                    (Team Constraints)
-                  </h3>
-                  <p className="text-xs text-muted-foreground ml-6">
-                    กำหนดจำนวนทีมที่รับสมัครสูงสุด และจำนวนสมาชิกต่อกลุ่ม
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Max Teams</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={maxTeams}
-                      onChange={(e) => setMaxTeams(Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Members per Group</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={maxTeamMembers}
-                      onChange={(e) =>
-                        setMaxTeamMembers(Number(e.target.value))
-                      }
-                    />
-                  </div>
-                </div>
+            {/* Zone 2: Team Constraints */}
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+              <div className="space-y-1 pb-2 border-b border-border/50">
+                <h3 className="font-semibold text-base flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" /> 2. ข้อมูลทีม (Team
+                  Constraints)
+                </h3>
+                <p className="text-xs text-muted-foreground ml-6">
+                  กำหนดจำนวนทีมที่รับสมัครสูงสุด และจำนวนสมาชิกต่อกลุ่ม
+                </p>
               </div>
-
-              {/* Zone 3: File Requirements */}
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                <div className="space-y-1 pb-2 border-b border-border/50">
-                  <h3 className="font-semibold text-base flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" /> 3.
-                    เอกสารที่ต้องส่ง (File Requirements)
-                  </h3>
-                  <p className="text-xs text-muted-foreground ml-6">
-                    กำหนดรายการไฟล์ที่ผู้สมัครจำเป็นต้องอัปโหลด เช่น สไลด์นำเสนอ
-                    หรือเอกสารประกอบ
-                  </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Max Teams</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={maxTeams}
+                    onChange={(e) => setMaxTeams(Number(e.target.value))}
+                  />
                 </div>
-
-                {fileRequirements.map((req, index) => (
-                  <div
-                    key={req.id || index}
-                    className="p-4 border rounded-lg bg-background space-y-3"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-1 mr-4">
-                        <Label>Title</Label>
-                        <Input
-                          value={req.name}
-                          onChange={(e) => {
-                            const newReqs = [...fileRequirements];
-                            newReqs[index].name = e.target.value;
-                            setFileRequirements(newReqs);
-                          }}
-                          placeholder="e.g. Presentation Slides"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                        onClick={() => {
-                          const newReqs = [...fileRequirements];
-                          newReqs.splice(index, 1);
-                          setFileRequirements(newReqs);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Description (Optional)</Label>
-                      <Input
-                        value={req.description || ""}
-                        onChange={(e) => {
-                          const newReqs = [...fileRequirements];
-                          newReqs[index].description = e.target.value;
-                          setFileRequirements(newReqs);
-                        }}
-                        placeholder="e.g. PDF format only"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Allowed Types</Label>
-                      <div className="flex flex-wrap gap-4">
-                        {Object.values(FileType).map((type) => (
-                          <div
-                            key={type}
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id={`req-${index}-${type}`}
-                              checked={req.allowedFileTypes.includes(type)}
-                              onCheckedChange={(checked) => {
-                                const newReqs = [...fileRequirements];
-                                if (checked) {
-                                  newReqs[index].allowedFileTypes.push(type);
-                                } else {
-                                  newReqs[index].allowedFileTypes = newReqs[
-                                    index
-                                  ].allowedFileTypes.filter((t) => t !== type);
-                                }
-                                setFileRequirements(newReqs);
-                              }}
-                            />
-                            <label
-                              htmlFor={`req-${index}-${type}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase"
-                            >
-                              {type}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 pt-2">
-                      <Checkbox
-                        id={`req-${index}-required`}
-                        checked={req.isRequired}
-                        onCheckedChange={(checked) => {
-                          const newReqs = [...fileRequirements];
-                          newReqs[index].isRequired = !!checked;
-                          setFileRequirements(newReqs);
-                        }}
-                      />
-                      <label
-                        htmlFor={`req-${index}-required`}
-                        className="text-sm font-medium leading-none"
-                      >
-                        Required
-                      </label>
-                    </div>
-                  </div>
-                ))}
-
-                <Button
-                  variant="outline"
-                  className="w-full border-dashed"
-                  onClick={() => {
-                    setFileRequirements([
-                      ...fileRequirements,
-                      {
-                        name: "",
-                        description: "",
-                        allowedFileTypes: [FileType.pdf],
-                        isRequired: true,
-                      },
-                    ]);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add File Requirement
-                </Button>
+                <div className="space-y-2">
+                  <Label>Members per Group</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={maxTeamMembers}
+                    onChange={(e) => setMaxTeamMembers(Number(e.target.value))}
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Zone 3: File Requirements */}
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+              <div className="space-y-1 pb-2 border-b border-border/50">
+                <h3 className="font-semibold text-base flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" /> 3.
+                  เอกสารที่ต้องส่ง (File Requirements)
+                </h3>
+                <p className="text-xs text-muted-foreground ml-6">
+                  กำหนดรายการไฟล์ที่ผู้สมัครจำเป็นต้องอัปโหลด เช่น สไลด์นำเสนอ
+                  หรือเอกสารประกอบ
+                </p>
+              </div>
+
+              {fileRequirements.map((req, index) => (
+                <div
+                  key={req.id || index}
+                  className="p-4 border rounded-lg bg-background space-y-3"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 flex-1 mr-4">
+                      <Label>Title</Label>
+                      <Input
+                        value={req.name}
+                        onChange={(e) => {
+                          const newReqs = [...fileRequirements];
+                          newReqs[index].name = e.target.value;
+                          setFileRequirements(newReqs);
+                        }}
+                        placeholder="e.g. Presentation Slides"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => {
+                        const newReqs = [...fileRequirements];
+                        newReqs.splice(index, 1);
+                        setFileRequirements(newReqs);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Description (Optional)</Label>
+                    <Input
+                      value={req.description || ""}
+                      onChange={(e) => {
+                        const newReqs = [...fileRequirements];
+                        newReqs[index].description = e.target.value;
+                        setFileRequirements(newReqs);
+                      }}
+                      placeholder="e.g. PDF format only"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Allowed Types</Label>
+                    <div className="flex flex-wrap gap-4">
+                      {Object.values(FileType).map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`req-${index}-${type}`}
+                            checked={req.allowedFileTypes.includes(type)}
+                            onCheckedChange={(checked) => {
+                              const newReqs = [...fileRequirements];
+                              if (checked) {
+                                newReqs[index].allowedFileTypes.push(type);
+                              } else {
+                                newReqs[index].allowedFileTypes = newReqs[
+                                  index
+                                ].allowedFileTypes.filter((t) => t !== type);
+                              }
+                              setFileRequirements(newReqs);
+                            }}
+                          />
+                          <label
+                            htmlFor={`req-${index}-${type}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase"
+                          >
+                            {type}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox
+                      id={`req-${index}-required`}
+                      checked={req.isRequired}
+                      onCheckedChange={(checked) => {
+                        const newReqs = [...fileRequirements];
+                        newReqs[index].isRequired = !!checked;
+                        setFileRequirements(newReqs);
+                      }}
+                    />
+                    <label
+                      htmlFor={`req-${index}-required`}
+                      className="text-sm font-medium leading-none"
+                    >
+                      Required
+                    </label>
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                variant="outline"
+                className="w-full border-dashed"
+                onClick={() => {
+                  setFileRequirements([
+                    ...fileRequirements,
+                    {
+                      name: "",
+                      description: "",
+                      allowedFileTypes: [FileType.pdf],
+                      isRequired: true,
+                    },
+                  ]);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add File Requirement
+              </Button>
+            </div>
+          </div>
           <DialogFooter className="p-6 pt-2 shrink-0 bg-background z-10 border-t mt-auto">
             <Button
               variant="outline"

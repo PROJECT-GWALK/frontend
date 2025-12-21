@@ -67,9 +67,9 @@ export function toISOStringFromLocal(localVal: string) {
   return d.toISOString();
 }
 
-export function formatDateTime(d?: Date) {
+export function formatDateTime(d?: Date, locale?: string) {
   if (!d) return "-";
-  return d.toLocaleString(timeFormat, {
+  return d.toLocaleString(locale || timeFormat, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -83,9 +83,9 @@ export function toYYYYMMDD(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function formatDate(d?: Date, emptyText: string = "-") {
+export function formatDate(d?: Date, emptyText: string = "-", locale?: string) {
   if (!d) return emptyText;
-  return d.toLocaleDateString(dateFormat, { day: "numeric", month: "long", year: "numeric" });
+  return d.toLocaleDateString(locale || dateFormat, { day: "numeric", month: "long", year: "numeric" });
 }
 
 export const toDate = (date?: string, time?: string) =>

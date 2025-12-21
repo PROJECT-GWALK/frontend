@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon, Clock, Users, FileText, Plus, Trash2 } from "lucide-react";
-import { timeFormat } from "@/utils/settings";
 import { toYYYYMMDD, formatDate } from "@/utils/function";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EventFileType, FileType } from "@/utils/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   maxPresenters: string;
@@ -38,6 +38,7 @@ type Props = {
 };
 
 export default function PresenterSection(props: Props) {
+  const { timeFormat } = useLanguage();
   const {
     maxPresenters,
     setMaxPresenters,
@@ -134,7 +135,7 @@ export default function PresenterSection(props: Props) {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="flex-1 justify-start font-normal min-w-0">
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{formatDate(selectedSubStart, "เลือกวันที่")}</span>
+                    <span className="truncate">{formatDate(selectedSubStart, "เลือกวันที่", timeFormat)}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 flex justify-center">
@@ -190,7 +191,7 @@ export default function PresenterSection(props: Props) {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="flex-1 justify-start font-normal min-w-0">
                     <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{formatDate(selectedSubEnd, "เลือกวันที่")}</span>
+                    <span className="truncate">{formatDate(selectedSubEnd, "เลือกวันที่", timeFormat)}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 flex justify-center">

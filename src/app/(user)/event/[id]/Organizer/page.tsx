@@ -1,14 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef, type ChangeEvent } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
   Gift,
-  Clock,
-  MapPin,
   Upload,
   Trash2,
   Plus,
@@ -29,7 +27,6 @@ import {
   DialogContent,
   DialogTitle,
   DialogClose,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import {
@@ -43,57 +40,10 @@ import {
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import { toast } from "sonner";
 import InformationSection from "../InformationSection";
-import type { EventData as SharedEventData } from "@/utils/types";
+import type { EventData, EventEditSection, SpecialRewardEdit, EventFormState } from "@/utils/types";
 import ParticipantsSection from "./ParticipantsSection";
-import { timeUntil, toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
-import { timeFormat } from "@/utils/settings";
-
-type EventData = {
-  id: string;
-  eventName: string;
-  eventDescription?: string;
-  imageCover?: string | null;
-  status?: "DRAFT" | "PUBLISHED";
-  publicView?: boolean;
-  startView?: string;
-  endView?: string;
-  startJoinDate?: string;
-  endJoinDate?: string;
-  maxTeams?: number;
-  maxTeamMembers?: number;
-  virtualRewardGuest?: number;
-  virtualRewardCommittee?: number;
-  unitReward?: string;
-  locationName?: string;
-  location?: string;
-  totalParticipants?: number;
-  presentersCount?: number;
-  guestsCount?: number;
-  committeeCount?: number;
-
-  participantsVirtualTotal?: number;
-  participantsVirtualUsed?: number;
-  participantsCommentCount?: number;
-
-  committeeVirtualTotal?: number;
-  committeeVirtualUsed?: number;
-  committeeFeedbackCount?: number;
-
-  opinionsGot?: number;
-  opinionsPresenter?: number;
-  opinionsGuest?: number;
-  opinionsCommittee?: number;
-
-  vrTotal?: number;
-  vrUsed?: number;
-
-  specialPrizeCount?: number;
-  specialPrizeUsed?: number;
-  awardsUnused?: string[];
-  specialRewards?: { id: string; name: string; description?: string; image?: string | null }[];
-
-  presenterTeams?: number;
-};
+import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   id: string;
@@ -101,18 +51,17 @@ type Props = {
 };
 
 export default function OrganizerView({ id, event }: Props) {
+  const { timeFormat } = useLanguage();
   const [tab, setTab] = useState<"dashboard" | "information" | "Participants" | "project" | "result">("dashboard");
   const [updatingPublic, setUpdatingPublic] = useState(false);
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
-  const [editingSection, setEditingSection] = useState<
-    null | "time" | "location" | "description" | "presenter" | "guest" | "committee" | "rewards"
-  >(null);
-  const [form, setForm] = useState<Record<string, any>>({});
+  const [editingSection, setEditingSection] = useState<EventEditSection | null>(null);
+  const [form, setForm] = useState<EventFormState>({});
   const [saving, setSaving] = useState(false);
 
   // Special rewards editing state
-  const [srList, setSrList] = useState<Array<any>>([]);
+  const [srList, setSrList] = useState<SpecialRewardEdit[]>([]);
   const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>({});
   const rewardFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [srCropOpen, setSrCropOpen] = useState(false);
@@ -242,7 +191,7 @@ export default function OrganizerView({ id, event }: Props) {
               </Button>
 
               {/* Organizer Label - Styled to match Button height/shape exactly */}
-              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-[var(--role-organizer)] text-white font-medium shadow-sm select-none">
+              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-organizer) text-white font-medium shadow-sm select-none">
                 <Building className="h-4 w-4" />
                 <span>Organizer</span>
               </div>
@@ -490,11 +439,11 @@ export default function OrganizerView({ id, event }: Props) {
             <TabsContent value="information">
               <InformationSection
                 id={id}
-                event={localEvent as SharedEventData}
+                event={localEvent}
                 editable
                 onEdit={(section, initialForm) => {
-                  setEditingSection(section as any);
-                  setForm(initialForm);
+                  setEditingSection(section);
+                  setForm(initialForm as EventFormState);
                 }}
                 linkLabel="Google Map Link of location"
               />
@@ -557,23 +506,6 @@ export default function OrganizerView({ id, event }: Props) {
           <DialogContent className="max-w-lg">
             <DialogTitle>แก้ไขข้อมูล</DialogTitle>
             <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
-              {editingSection === "time" && (
-                <div className="grid grid-cols-1 gap-2">
-                  <Label>Start (date & time)</Label>
-                  <Input
-                    type="datetime-local"
-                    value={form.startView ? toLocalDatetimeValue(form.startView) : ""}
-                    onChange={(e) => setForm((f) => ({ ...f, startView: e.target.value }))}
-                  />
-                  <Label>End (date & time)</Label>
-                  <Input
-                    type="datetime-local"
-                    value={form.endView ? toLocalDatetimeValue(form.endView) : ""}
-                    onChange={(e) => setForm((f) => ({ ...f, endView: e.target.value }))}
-                  />
-                </div>
-              )}
-
               {editingSection === "location" && (
                 <div className="grid grid-cols-1 gap-2">
                   <Label>Location Name</Label>
@@ -589,43 +521,39 @@ export default function OrganizerView({ id, event }: Props) {
                 </div>
               )}
 
+              {editingSection === "time" && (
+                <div className="grid grid-cols-1 gap-2">
+                  <Label>Start Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.startView ? toLocalDatetimeValue(form.startView) : ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        startView: toISOStringFromLocal(e.target.value),
+                      }))
+                    }
+                  />
+                  <Label>End Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.endView ? toLocalDatetimeValue(form.endView) : ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        endView: toISOStringFromLocal(e.target.value),
+                      }))
+                    }
+                  />
+                </div>
+              )}
+
               {editingSection === "description" && (
                 <div className="grid grid-cols-1 gap-2">
                   <Label>Description</Label>
                   <Textarea
                     value={form.eventDescription || ""}
                     onChange={(e) => setForm((f) => ({ ...f, eventDescription: e.target.value }))}
-                  />
-                </div>
-              )}
-
-              {editingSection === "presenter" && (
-                <div className="grid grid-cols-1 gap-2">
-                  <Label>Submission Start</Label>
-                  <Input
-                    type="datetime-local"
-                    value={form.startJoinDate ? toLocalDatetimeValue(form.startJoinDate) : ""}
-                    onChange={(e) => setForm((f) => ({ ...f, startJoinDate: e.target.value }))}
-                  />
-                  <Label>Submission End</Label>
-                  <Input
-                    type="datetime-local"
-                    value={form.endJoinDate ? toLocalDatetimeValue(form.endJoinDate) : ""}
-                    onChange={(e) => setForm((f) => ({ ...f, endJoinDate: e.target.value }))}
-                  />
-                  <Label>Max Teams</Label>
-                  <Input
-                    type="number"
-                    value={form.maxTeams ?? 0}
-                    onChange={(e) => setForm((f) => ({ ...f, maxTeams: Number(e.target.value) }))}
-                  />
-                  <Label>Members per Group (Max Presenters)</Label>
-                  <Input
-                    type="number"
-                    value={form.maxTeamMembers ?? 0}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, maxTeamMembers: Number(e.target.value) }))
-                    }
                   />
                 </div>
               )}
@@ -776,9 +704,10 @@ export default function OrganizerView({ id, event }: Props) {
                             {srPreviews[reward.id] ? (
                               <>
                                 <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
-                                  <img
+                                  <Image
                                     src={srPreviews[reward.id] as string}
                                     alt="Reward image preview"
+                                    fill
                                     className="absolute inset-0 h-full w-full object-cover"
                                   />
                                   <input
@@ -788,8 +717,9 @@ export default function OrganizerView({ id, event }: Props) {
                                     ref={(el) => {
                                       rewardFileRefs.current[reward.id] = el;
                                       if (el) {
-                                        el.onchange = (e: any) => {
-                                          const f = e.target.files?.[0];
+                                        el.onchange = (e: Event) => {
+                                          const target = e.target as HTMLInputElement;
+                                          const f = target.files?.[0];
                                           if (!f) return;
                                           const url = URL.createObjectURL(f);
                                           setSrCropSrc(url);
@@ -866,8 +796,9 @@ export default function OrganizerView({ id, event }: Props) {
                                       ref={(el) => {
                                         rewardFileRefs.current[reward.id] = el;
                                         if (el) {
-                                          el.onchange = (e: any) => {
-                                            const f = e.target.files?.[0];
+                                          el.onchange = (e: Event) => {
+                                            const target = e.target as HTMLInputElement;
+                                            const f = target.files?.[0];
                                             if (!f) return;
                                             const url = URL.createObjectURL(f);
                                             setSrCropSrc(url);
@@ -964,26 +895,15 @@ export default function OrganizerView({ id, event }: Props) {
                     if (!id) return;
                     setSaving(true);
                     try {
-                      let payload: Record<string, any> = {};
-                      if (editingSection === "time") {
-                        payload.startView = form.startView
-                          ? toISOStringFromLocal(form.startView)
-                          : null;
-                        payload.endView = form.endView ? toISOStringFromLocal(form.endView) : null;
-                      } else if (editingSection === "location") {
+                      const payload: Partial<EventData> = {};
+                      if (editingSection === "location") {
                         payload.locationName = form.locationName;
                         payload.location = form.location;
+                      } else if (editingSection === "time") {
+                        payload.startView = form.startView;
+                        payload.endView = form.endView;
                       } else if (editingSection === "description") {
                         payload.eventDescription = form.eventDescription;
-                      } else if (editingSection === "presenter") {
-                        payload.startJoinDate = form.startJoinDate
-                          ? toISOStringFromLocal(form.startJoinDate)
-                          : null;
-                        payload.endJoinDate = form.endJoinDate
-                          ? toISOStringFromLocal(form.endJoinDate)
-                          : null;
-                        payload.maxTeams = form.maxTeams;
-                        payload.maxTeamMembers = form.maxTeamMembers;
                       } else if (editingSection === "guest") {
                         payload.virtualRewardGuest = Number(form.guestReward ?? 0);
                         payload.virtualRewardCommittee = Number(form.committeeReward ?? 0);
@@ -1036,7 +956,7 @@ export default function OrganizerView({ id, event }: Props) {
                                   fd.append("image", r.pendingFile);
                                   await updateSpecialReward(id, r.id, fd);
                                 } else {
-                                  const up: Record<string, any> = {
+                                  const up: { name: string; description: string; image?: null } = {
                                     name: r.name || "",
                                     description: r.description || "",
                                   };
@@ -1053,34 +973,35 @@ export default function OrganizerView({ id, event }: Props) {
                             if (fresh.message === "ok") {
                               setLocalEvent(
                                 (prev) =>
-                                  ({ ...(prev || {}), ...(fresh.event as any) } as EventData)
+                                  ({ ...(prev || {}), ...(fresh.event || {}) } as EventData)
                               );
                             }
                           } catch (e) {
                             // ignore refresh errors
+                            console.error("Failed to refresh event after rewards update", e);
                           }
 
                           toast.success("Updated");
                           setEditingSection(null);
-                        } catch (e: any) {
+                        } catch (e) {
                           console.error(e);
-                          toast.error(e?.message || "Failed to save rewards");
+                          toast.error((e as Error)?.message || "Failed to save rewards");
                         } finally {
                           setSaving(false);
                         }
                         return;
                       }
 
-                      const res = await updateEvent(id, payload);
+                      await updateEvent(id, payload);
                       // optimistic update
                       setLocalEvent(
-                        (prev) => ({ ...(prev || {}), ...(payload as any) } as EventData)
+                        (prev) => ({ ...(prev || {}), ...payload } as EventData)
                       );
                       toast.success("Updated");
                       setEditingSection(null);
-                    } catch (e: any) {
+                    } catch (e) {
                       console.error(e);
-                      toast.error(e?.message || "Update failed");
+                      toast.error((e as Error)?.message || "Update failed");
                     } finally {
                       setSaving(false);
                     }
