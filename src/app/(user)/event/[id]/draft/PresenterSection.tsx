@@ -66,13 +66,13 @@ export default function PresenterSection(props: Props) {
 
   return (
     <>
-      <Card id="presenter-config" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card id="presenter-config" className="border-none shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg font-semibold">
             <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
               <Users className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <span className="">
               Presenter Configuration / ตั้งค่าผู้นำเสนอ
             </span>
           </CardTitle>
@@ -114,13 +114,13 @@ export default function PresenterSection(props: Props) {
         </CardContent>
       </Card>
 
-      <Card id="submission-period" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card id="submission-period" className="border-none shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg font-semibold">
             <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
               <CalendarIcon className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <span className="">
               Submission Period / ช่วงเวลาส่งผลงาน
             </span>
           </CardTitle>
@@ -247,13 +247,13 @@ export default function PresenterSection(props: Props) {
         </CardContent>
       </Card>
 
-      <Card id="file-requirements" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card id="file-requirements" className="border-none shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg font-semibold">
             <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
               <FileText className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <span className="">
               File Requirements / ข้อกำหนดไฟล์งาน
             </span>
           </CardTitle>

@@ -30,13 +30,13 @@ export default function CommitteeSection({
 }: Props) {
   return (
     <>
-      <Card id="committee-config" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card id="committee-config" className="border-none shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg font-semibold">
             <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
               <UserCheck className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <span className="">
               Committee Configuration / ตั้งค่าคณะกรรมการ
             </span>
           </CardTitle>
@@ -46,7 +46,15 @@ export default function CommitteeSection({
             <Checkbox 
               id="hasCommittee" 
               checked={hasCommittee} 
-              onCheckedChange={(checked) => setHasCommittee(!!checked)} 
+              onCheckedChange={(checked) => {
+                const isChecked = !!checked;
+                setHasCommittee(isChecked);
+                if (isChecked) {
+                  setCommitteeReward("1000");
+                } else {
+                  setCommitteeReward("0");
+                }
+              }} 
               className="mt-1"
             />
             <Label htmlFor="hasCommittee" className="cursor-pointer font-normal leading-relaxed">
@@ -64,7 +72,7 @@ export default function CommitteeSection({
                   type="number"
                   min="0"
                   step="1"
-                  placeholder="e.g. 100"
+                  placeholder="e.g. 1000"
                   className="pl-10"
                   value={committeeReward}
                   onChange={(e) => {
@@ -79,13 +87,13 @@ export default function CommitteeSection({
         </CardContent>
       </Card>
 
-      <Card id="guest-rewards" className="border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card id="guest-rewards" className="border-none shadow-md ">
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-lg font-semibold">
             <div className="p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
               <Gift className="h-5 w-5" />
             </div>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <span className="">
               Guest Rewards / รางวัลผู้เข้าร่วม
             </span>
           </CardTitle>

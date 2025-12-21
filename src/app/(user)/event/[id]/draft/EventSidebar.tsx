@@ -36,7 +36,7 @@ export function EventSidebar({
 
   return (
     <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:flex flex-col w-72 h-screen bg-background border-r border-border/60 z-30 pt-20 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
-      <div className="px-6 py-6 border-b border-border/60 flex-shrink-0 bg-gradient-to-b from-muted/30 to-background">
+      <div className="px-6 py-6 border-b border-border/60 shrink-0">
         <h2 className="font-semibold text-lg text-foreground tracking-tight">Edit Event</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Complete details below / กรอกรายละเอียด
@@ -104,7 +104,7 @@ export function EventSidebar({
         })}
       </nav>
 
-      <div className="p-6 border-t border-border/60 flex-shrink-0 bg-muted/10">
+      <div className="p-6 border-t border-border/60 shrink-0 bg-muted/10">
         <Button
           variant="default"
           className="w-full h-11 rounded-xl shadow-sm hover:shadow-md transition-all font-medium"

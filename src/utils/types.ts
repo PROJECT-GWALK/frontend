@@ -130,6 +130,7 @@ export type EventData = {
   maxTeamMembers?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
+  hasCommittee?: boolean;
   unitReward?: string;
   locationName?: string;
   location?: string;
@@ -155,6 +156,16 @@ export type EventData = {
   specialPrizeUsed?: number;
   specialPrizeCount?: number;
   fileTypes?: EventFileType[];
+  participants?: EventParticipant[];
+};
+
+export type EventParticipant = {
+  id: string;
+  userId: string;
+  eventId: string;
+  eventGroup: string;
+  isLeader: boolean;
+  user?: User;
 };
 
 export enum FileType {

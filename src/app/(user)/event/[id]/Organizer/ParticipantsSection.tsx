@@ -66,6 +66,7 @@ type ParticipantRow = {
 
 type Props = {
   id: string;
+  hasCommittee?: boolean;
   onRefreshCounts?: (list: ParticipantRow[]) => void;
 };
 
@@ -98,7 +99,7 @@ const groupConfig = {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
+export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts }: Props) {
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -290,7 +291,9 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
             <div className="grid grid-cols-1 gap-6">
               {(
                 ["ORGANIZER", "COMMITTEE", "PRESENTER", "GUEST"] as EventGroup[]
-              ).map((g) => {
+              )
+                .filter((g) => hasCommittee || g !== "COMMITTEE")
+                .map((g) => {
                 const config = groupConfig[g];
                 const { items, total, totalPages, currentPage } =
                   getPaginatedList(g);
@@ -479,9 +482,11 @@ export default function ParticipantsSection({ id, onRefreshCounts }: Props) {
                                             <SelectItem value="PRESENTER">
                                               Presenter
                                             </SelectItem>
-                                            <SelectItem value="COMMITTEE">
-                                              Committee
-                                            </SelectItem>
+                                            {hasCommittee && (
+                                              <SelectItem value="COMMITTEE">
+                                                Committee
+                                              </SelectItem>
+                                            )}
                                             <SelectItem value="GUEST">
                                               Guest
                                             </SelectItem>

@@ -59,6 +59,7 @@ type EventUpdatePayload = {
   maxTeams: number | null;
   virtualRewardGuest: number;
   virtualRewardCommittee: number;
+  hasCommittee: boolean;
   specialRewards: SpecialReward[];
   unitReward?: string | null;
   fileTypes?: EventFileType[];
@@ -223,7 +224,12 @@ export default function EventDraft() {
       maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
       maxTeams: maxGroups ? parseInt(maxGroups) : null,
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
-      virtualRewardCommittee: hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
+      virtualRewardCommittee: hasCommittee
+        ? committeeReward
+          ? parseInt(committeeReward)
+          : 1000
+        : 0,
+      hasCommittee,
       specialRewards,
       unitReward: unitReward || null,
       fileTypes: fileRequirements,

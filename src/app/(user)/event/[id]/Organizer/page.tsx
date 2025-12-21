@@ -44,6 +44,7 @@ import type { EventData, EventEditSection, SpecialRewardEdit, EventFormState } f
 import ParticipantsSection from "./ParticipantsSection";
 import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Props = {
   id: string;
@@ -58,6 +59,7 @@ export default function OrganizerView({ id, event }: Props) {
   const [bannerOpen, setBannerOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<EventEditSection | null>(null);
   const [form, setForm] = useState<EventFormState>({});
+  const [showCommitteeInput, setShowCommitteeInput] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Special rewards editing state
@@ -444,6 +446,11 @@ export default function OrganizerView({ id, event }: Props) {
                 onEdit={(section, initialForm) => {
                   setEditingSection(section);
                   setForm(initialForm as EventFormState);
+                  if (section === "guest") {
+                    setShowCommitteeInput(
+                      (initialForm as any).hasCommittee ?? (Number((initialForm as any).committeeReward ?? 0) > 0)
+                    );
+                  }
                 }}
                 linkLabel="Google Map Link of location"
               />
@@ -465,6 +472,7 @@ export default function OrganizerView({ id, event }: Props) {
             <TabsContent value="Participants">
               <ParticipantsSection
                 id={id}
+                hasCommittee={localEvent?.hasCommittee}
                 onRefreshCounts={(list) => {
                   setLocalEvent((prev) => ({
                     ...prev,
@@ -568,14 +576,45 @@ export default function OrganizerView({ id, event }: Props) {
                       setForm((f) => ({ ...f, guestReward: Number(e.target.value) }))
                     }
                   />
-                  <Label>Committee Reward per person</Label>
-                  <Input
-                    type="number"
-                    value={form.committeeReward ?? 0}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, committeeReward: Number(e.target.value) }))
-                    }
-                  />
+                  
+                  <div className="flex items-center space-x-2 my-2">
+                    <Checkbox
+                      id="hasCommittee"
+                      checked={showCommitteeInput}
+                      onCheckedChange={(checked) => {
+                        const isChecked = checked === true;
+                        setShowCommitteeInput(isChecked);
+                        if (!isChecked) {
+                          setForm((f) => ({ ...f, committeeReward: 0 }));
+                        } else if ((form.committeeReward ?? 0) === 0) {
+                          setForm((f) => ({ ...f, committeeReward: 1000 })); // Default value
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor="hasCommittee"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      มีกรรมการตัดสิน / Have Committee
+                    </Label>
+                  </div>
+
+                  {showCommitteeInput && (
+                    <>
+                      <Label>Committee Reward per person</Label>
+                      <Input
+                        type="number"
+                        value={form.committeeReward ?? 0}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            committeeReward: Number(e.target.value),
+                          }))
+                        }
+                      />
+                    </>
+                  )}
+
                   <Label>Reward Unit (e.g. coins, points)</Label>
                   <Input
                     type="text"
@@ -907,6 +946,7 @@ export default function OrganizerView({ id, event }: Props) {
                       } else if (editingSection === "guest") {
                         payload.virtualRewardGuest = Number(form.guestReward ?? 0);
                         payload.virtualRewardCommittee = Number(form.committeeReward ?? 0);
+                        payload.hasCommittee = showCommitteeInput;
                         payload.unitReward = form.unitReward;
                       } else if (editingSection === "rewards") {
                         // handle create / update / delete of special rewards

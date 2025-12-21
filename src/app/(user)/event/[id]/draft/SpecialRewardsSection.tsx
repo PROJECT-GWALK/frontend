@@ -55,13 +55,13 @@ export default function SpecialRewardsSection({
   onRewardCropConfirm,
 }: Props) {
   return (
-    <Card id="rewards" className="scroll-mt-6 lg:col-span-2 border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+    <Card id="rewards" className="scroll-mt-6 lg:col-span-2 border-none shadow-md">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-3 text-lg font-semibold">
           <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
             <Award className="h-5 w-5" />
           </div>
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <span className="">
             Special Rewards / รางวัลพิเศษ
           </span>
         </CardTitle>

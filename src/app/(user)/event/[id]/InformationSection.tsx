@@ -16,8 +16,11 @@ import {
   X,
   Plus,
   FileText,
+  Edit,
+  RefreshCcw,
+  Link,
 } from "lucide-react";
-import { timeUntil, formatDateTime, getMapEmbedUrl } from "@/utils/function";
+import { timeUntil, formatDateTime, getMapEmbedUrl, UserAvatar } from "@/utils/function";
 import { toast } from "sonner";
 import type { EventData, EventFileType } from "@/utils/types";
 import { FileType } from "@/utils/types";
@@ -48,7 +51,6 @@ import { Calendar as DateCalendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -396,9 +398,13 @@ export default function InformationSection({
     }
   };
 
+  const organizers =
+    event.participants?.filter((p) => p.eventGroup === "ORGANIZER") || [];
+  const [organizerListOpen, setOrganizerListOpen] = useState(false);
+
   return (
     <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="lg:col-span-2 border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card className="lg:col-span-2 border-none shadow-md bg-linear-to-br from-background to-muted/20">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
             <CardTitle className="text-xl font-bold">
@@ -426,96 +432,222 @@ export default function InformationSection({
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300">
-        <CardHeader>
-          <div className="flex items-center justify-between w-full">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                <Clock className="h-5 w-5" />
-              </div>
-              {t("information.eventDuration")}
-            </CardTitle>
-            {editable && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleEdit("time", {})}
-              >
-                Edit
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 items-center">
-            <div>
-              {(() => {
-                const now = new Date();
-                const sv = event?.startView
-                  ? new Date(event.startView)
-                  : undefined;
-                const ev = event?.endView ? new Date(event.endView) : undefined;
-                if (sv && now < sv) {
-                  return (
-                    <div className="font-bold text-xl">
-                      {t("information.startin")}
-                      <h1 className="text-blue-600">
-                        {timeUntil(event.startView)}
-                      </h1>
-                    </div>
-                  );
-                }
-                if (sv && (!ev || now <= ev)) {
-                  return (
-                    <div className="font-bold text-xl">
-                      Ends in
-                      <h1 className="text-red-600">
-                        {event?.endView ? timeUntil(event.endView) : "Ongoing"}
-                      </h1>
-                    </div>
-                  );
-                }
-                if (ev && now > ev) {
-                  return (
-                    <div className="font-bold text-xl text-muted-foreground">
-                      Ended
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="h-full border-none shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col">
+          <CardHeader>
+            <div className="flex items-center justify-between w-full">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+                <div className="p-2.5 rounded-xl bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300">
+                  <Users className="h-5 w-5" />
+                </div>
+                Organizers
+              </CardTitle>
             </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {t("information.start")}:
-                </span>
-                <span>
-                  {event?.startView
-                    ? formatDateTime(new Date(event.startView), timeFormat)
-                    : "-"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {t("information.end")}:
-                </span>
-                <span>
-                  {event?.endView
-                    ? formatDateTime(new Date(event.endView), timeFormat)
-                    : "-"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col">
+            <div className="flex flex-col gap-4 h-full">
+              {organizers.length > 0 ? (
+                <div className="space-y-3 flex-1">
+                  {organizers.slice(0, 3).map((org) => (
+                    <div
+                      key={org.id}
+                      className="flex items-center gap-4 p-3 rounded-2xl"
+                    >
+                      <UserAvatar
+                        user={org.user}
+                        className="h-12 w-12 border-2 border-white shadow-sm ring-2 ring-pink-50"
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-sm truncate text-foreground/90">
+                          {org.user?.name || "Unknown"}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-(--role-organizer)"></span>
+                          Event Organizer
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {organizers.length > 3 && (
+                    <div className="pl-4 text-xs font-medium text-(--role-organizer) flex items-center gap-1">
+                      <div className="w-6 h-px bg-pink-200"></div>+{" "}
+                      {organizers.length - 3} more organizers
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-4 bg-linear-to-b from-pink-50/50 to-transparent dark:from-pink-900/10 rounded-3xl border-2 border-dashed border-pink-200 dark:border-pink-900/30">
+                  <div className="p-4 rounded-full bg-pink-100 dark:bg-pink-900/20 text-pink-500 dark:text-pink-400 shadow-inner">
+                    <Users className="h-8 w-8" />
+                  </div>
+                  <div className="space-y-1 max-w-[200px] mx-auto">
+                    <p className="text-base font-semibold text-foreground/80">
+                      No organizers listed
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      This event currently has no assigned organizers visible here.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300">
+              <Button
+                variant="outline"
+                className="w-full justify-between mt-auto border-(--role-organizer) hover:border-(--role-organizer) hover:text-(--role-organizer) hover:bg-(--role-organizer)/50 transition-all duration-300 group/btn"
+                onClick={() => setOrganizerListOpen(true)}
+              >
+                View All Organizers
+                <Users className="h-4 w-4 opacity-50 group-hover/btn:opacity-100 transition-opacity" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="h-full border-none shadow-md hover:shadow-lg transition-all duration-300 group">
+          <CardHeader>
+            <div className="flex items-center justify-between w-full">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+                <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  <Clock className="h-5 w-5" />
+                </div>
+                {t("information.eventDuration")}
+              </CardTitle>
+              {editable && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 rounded-full hover:bg-muted"
+                  onClick={() => handleEdit("time", {})}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20">
+                {(() => {
+                  const now = new Date();
+                  const sv = event?.startView
+                    ? new Date(event.startView)
+                    : undefined;
+                  const ev = event?.endView
+                    ? new Date(event.endView)
+                    : undefined;
+
+                  if (sv && now < sv) {
+                    return (
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                          Starts In
+                        </div>
+                        <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                          {timeUntil(event.startView)}
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (sv && (!ev || now <= ev)) {
+                    return (
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-1">
+                          Ends In
+                        </div>
+                        <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                          {event?.endView
+                            ? timeUntil(event.endView)
+                            : "Ongoing"}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                        Status
+                      </div>
+                      <div className="text-xl font-bold text-muted-foreground">
+                        Event Ended
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
+                      <span className="font-bold">
+                        {event?.startView
+                          ? new Date(event.startView).getDate()
+                          : "-"}
+                      </span>
+                      <span className="text-[10px] uppercase text-muted-foreground">
+                        {event?.startView
+                          ? new Date(event.startView).toLocaleString(
+                              "default",
+                              { month: "short" }
+                            )
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase font-medium">
+                        {t("information.start")}
+                      </span>
+                      <span className="font-medium text-sm">
+                        {event?.startView
+                          ? formatDateTime(
+                              new Date(event.startView),
+                              timeFormat
+                            )
+                          : "-"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
+                      <span className="font-bold">
+                        {event?.endView
+                          ? new Date(event.endView).getDate()
+                          : "-"}
+                      </span>
+                      <span className="text-[10px] uppercase text-muted-foreground">
+                        {event?.endView
+                          ? new Date(event.endView).toLocaleString("default", {
+                              month: "short",
+                            })
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase font-medium">
+                        {t("information.end")}
+                      </span>
+                      <span className="font-medium text-sm">
+                        {event?.endView
+                          ? formatDateTime(new Date(event.endView), timeFormat)
+                          : "-"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 group overflow-hidden">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+              <div className="p-2.5 rounded-xl bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
                 <MapPin className="h-5 w-5" />
               </div>
               {t("information.eventLocation")}
@@ -524,6 +656,7 @@ export default function InformationSection({
               <Button
                 size="sm"
                 variant="ghost"
+                className="h-8 w-8 p-0 rounded-full hover:bg-muted"
                 onClick={() =>
                   handleEdit("location", {
                     locationName: event?.locationName ?? "",
@@ -531,33 +664,44 @@ export default function InformationSection({
                   })
                 }
               >
-                Edit
+                <Edit className="h-4 w-4" />
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="font-medium">{event?.locationName ?? "-"}</div>
-            {event?.location && (
-              <a
-                href={(event?.location || "").replace(/`/g, "").trim()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline hover:text-primary/80 transition-colors"
-              >
-                {linkLabel}
-              </a>
-            )}
+        <CardContent className="space-y-4">
+          <div className="font-medium px-1">
+            {event?.locationName ?? "No location specified"}
           </div>
+
+          {event?.location ? (
+            <div className="space-y-3">
+              <div>
+                <a
+                  href={event.location}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline bg-primary/10 px-4 py-2 rounded-full hover:bg-primary/20 transition-colors"
+                >
+                  <Link className="h-4 w-4" />
+                  Open in Link
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="h-32 rounded-xl bg-muted/50 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed">
+              <MapPin className="h-8 w-8 mb-2 opacity-50" />
+              <span className="text-sm">No map location available</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300">
+      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 group">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-(--role-presenter) transition-colors">
+              <div className="p-2.5 rounded-xl bg-(--role-presenter)/10 text-(--role-presenter)">
                 <Users className="h-5 w-5" />
               </div>
               {t("dashboard.presenterCount")}
@@ -566,6 +710,7 @@ export default function InformationSection({
               <Button
                 size="sm"
                 variant="ghost"
+                className="h-8 w-8 p-0 rounded-full hover:bg-(--role-presenter)/10 hover:text-(--role-presenter)"
                 onClick={() =>
                   handleEdit("presenter", {
                     startJoinDate: event?.startJoinDate ?? "",
@@ -575,82 +720,133 @@ export default function InformationSection({
                   })
                 }
               >
-                Edit
+                <Edit className="h-4 w-4" />
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("information.submissionStart")}:
-              </span>
-              <span>
-                {event?.startJoinDate
-                  ? formatDateTime(new Date(event.startJoinDate), timeFormat)
-                  : "-"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("information.submissionEnd")}:
-              </span>
-              <span>
-                {event?.endJoinDate
-                  ? formatDateTime(new Date(event.endJoinDate), timeFormat)
-                  : "-"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("information.maxTeams")}:
-              </span>
-              <span>{event?.maxTeams ?? "-"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("information.memberPerGroup")}:
-              </span>
-              <span>{event?.maxTeamMembers ?? "-"}</span>
+          <div className="space-y-6">
+            {/* Timeline Section */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-(--role-presenter) uppercase tracking-wider flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-(--role-presenter)"></span>
+                Submission Timeline
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border bg-linear-to-br from-background to-(--role-presenter)/5 flex items-start gap-3 hover:border-(--role-presenter)/30 hover:shadow-md transition-all duration-300">
+                  <div className="p-2 rounded-lg bg-white dark:bg-muted border shadow-sm text-(--role-presenter)">
+                    <CalendarIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                      {t("information.submissionStart")}
+                    </div>
+                    <div className="text-base font-bold text-foreground/90">
+                      {event?.startJoinDate
+                        ? formatDateTime(
+                            new Date(event.startJoinDate),
+                            timeFormat
+                          )
+                        : "-"}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl border bg-linear-to-br from-background to-(--role-presenter)/5 flex items-start gap-3 hover:border-(--role-presenter)/30 hover:shadow-md transition-all duration-300">
+                  <div className="p-2 rounded-lg bg-white dark:bg-muted border shadow-sm text-(--role-presenter)">
+                    <CalendarIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                      {t("information.submissionEnd")}
+                    </div>
+                    <div className="text-base font-bold text-foreground/90">
+                      {event?.endJoinDate
+                        ? formatDateTime(
+                            new Date(event.endJoinDate),
+                            timeFormat
+                          )
+                        : "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
+            {/* Constraints Section */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-(--role-presenter) uppercase tracking-wider flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-(--role-presenter)"></span>
+                Constraints
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-(--role-presenter)/5 border border-(--role-presenter)/10 hover:bg-(--role-presenter)/10 transition-colors">
+                  <div className="text-3xl font-black text-(--role-presenter)">
+                    {event?.maxTeams ?? "-"}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-bold uppercase mt-2 tracking-wide text-center">
+                    {t("information.maxTeams")}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-(--role-presenter)/5 border border-(--role-presenter)/10 hover:bg-(--role-presenter)/10 transition-colors">
+                  <div className="text-3xl font-black text-(--role-presenter)">
+                    {event?.maxTeamMembers ?? "-"}
+                  </div>
+                  <div className="text-xs text-muted-foreground font-bold uppercase mt-2 tracking-wide text-center">
+                    {t("information.memberPerGroup")}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* File Requirements Section */}
             {event?.fileTypes && event.fileTypes.length > 0 && (
-              <div className="pt-4 border-t mt-4">
-                <div className="font-semibold mb-2">File Requirements</div>
-                <ul className="space-y-2">
+              <div className="space-y-3 pt-2">
+                <h4 className="text-sm font-bold text-(--role-presenter) uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-1 h-4 rounded-full bg-(--role-presenter)"></span>
+                  File Requirements
+                </h4>
+                <div className="grid gap-3">
                   {event.fileTypes.map((file, idx) => (
-                    <li key={idx} className="bg-muted/30 p-2 rounded text-xs">
-                      <div className="flex justify-between font-medium">
-                        <span>{file.name}</span>
-                        {file.isRequired && (
-                          <span className="text-red-500 text-[10px] border border-red-200 px-1 rounded bg-red-50">
-                            Required
-                          </span>
+                    <div
+                      key={idx}
+                      className="flex items-start gap-4 p-4 rounded-xl border bg-card hover:bg-(--role-presenter)/5 hover:border-(--role-presenter)/30 transition-all duration-300 group/file"
+                    >
+                      <div className="p-2.5 rounded-lg bg-(--role-presenter)/10 text-(--role-presenter) group-hover/file:scale-110 transition-transform">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm">{file.name}</span>
+                          {file.isRequired && (
+                            <span className="text-[10px] font-extrabold text-white bg-(--role-presenter) px-2 py-0.5 rounded-full shadow-sm">
+                              REQUIRED
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs font-mono bg-muted/50 px-2 py-1 rounded w-fit text-foreground/70">
+                          {file.allowedFileTypes.join(", ").toUpperCase()}
+                        </div>
+                        {file.description && (
+                          <div className="text-xs text-muted-foreground italic border-l-2 border-(--role-presenter)/20 pl-2">
+                            "{file.description}"
+                          </div>
                         )}
                       </div>
-                      <div className="text-muted-foreground mt-1">
-                        {file.allowedFileTypes.join(", ").toUpperCase()}
-                      </div>
-                      {file.description && (
-                        <div className="text-muted-foreground italic mt-0.5">
-                          {file.description}
-                        </div>
-                      )}
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300">
+      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 group">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+              <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                 <Gift className="h-5 w-5" />
               </div>
               {t("information.rewardPoints")}
@@ -659,45 +855,70 @@ export default function InformationSection({
               <Button
                 size="sm"
                 variant="ghost"
+                className="h-8 w-8 p-0 rounded-full hover:bg-muted"
                 onClick={() =>
                   handleEdit("guest", {
                     guestReward: event?.virtualRewardGuest ?? 0,
                     committeeReward: event?.virtualRewardCommittee ?? 0,
                     unitReward: event?.unitReward ?? "coins",
+                    hasCommittee: event?.hasCommittee ?? false,
                   })
                 }
               >
-                Edit
+                <Edit className="h-4 w-4" />
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border border-indigo-100 dark:border-indigo-900/50 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600/70 dark:text-indigo-400 mb-1">
-                Committee Reward
-              </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">
-                  {event?.virtualRewardCommittee ?? 0}
+          <div className={`grid grid-cols-1 ${event?.hasCommittee ? "sm:grid-cols-2" : "sm:grid-cols-1"} gap-6`}>
+            {event?.hasCommittee && (
+            <div className="relative overflow-hidden flex flex-col justify-between p-6 rounded-3xl bg-linear-to-br from-(--role-committee) via-(--role-committee)/80 to-(--role-committee) text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-(--role-committee)/25 min-h-[180px] group/card">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                <Gift className="h-40 w-40 rotate-12 -mr-12 -mt-12" />
+              </div>
+              <div className="relative z-10">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md border border-white/10">
+                  <Award className="w-3 h-3" />
+                  Committee Reward
                 </span>
-                <span className="text-sm font-medium text-indigo-600/80 dark:text-indigo-500">
-                  {event?.unitReward ?? "coins"}
-                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-6xl font-black tracking-tighter drop-shadow-md">
+                    {event?.virtualRewardCommittee ?? 0}
+                  </span>
+                  <span className="text-xl font-bold opacity-90 capitalize">
+                    {event?.unitReward ?? "coins"}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4 text-xs font-medium opacity-80 relative z-10 flex items-center gap-2">
+                <div className="w-8 h-1 rounded-full bg-white/30"></div>
+                Base points
               </div>
             </div>
-            <div className="flex flex-col items-center p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-100 dark:border-amber-900/50 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600/70 dark:text-amber-400 mb-1">
-                Guest Reward
-              </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">
-                  {event?.virtualRewardGuest ?? 0}
+            )}
+
+            <div className="relative overflow-hidden flex flex-col justify-between p-6 rounded-3xl bg-linear-to-br from-(--role-guest) via-(--role-guest)/80 to-(--role-guest) text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-(--role-guest)/25 min-h-[180px] group/card">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                <Gift className="h-40 w-40 rotate-12 -mr-12 -mt-12" />
+              </div>
+              <div className="relative z-10">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md border border-white/10">
+                  <Users className="w-3 h-3" />
+                  Guest Reward
                 </span>
-                <span className="text-sm font-medium text-amber-600/80 dark:text-amber-500">
-                  {event?.unitReward ?? "coins"}
-                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-6xl font-black tracking-tighter drop-shadow-md">
+                    {event?.virtualRewardGuest ?? 0}
+                  </span>
+                  <span className="text-xl font-bold opacity-90 capitalize">
+                    {event?.unitReward ?? "coins"}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4 text-xs font-medium opacity-80 relative z-10 flex items-center gap-2">
+                <div className="w-8 h-1 rounded-full bg-white/30"></div>
+                Base points
               </div>
             </div>
           </div>
@@ -705,24 +926,26 @@ export default function InformationSection({
       </Card>
 
       {editable && (
-        <Card className="lg:col-span-2 border-none shadow-md hover:shadow-lg transition-all duration-300">
+        <Card className="lg:col-span-2 border-none shadow-md hover:shadow-lg transition-all duration-300 group">
           <CardHeader>
             <div className="flex items-center justify-between w-full">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+                <div className="p-2.5 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
                   <Users className="h-5 w-5" />
                 </div>
                 Invite Links
               </CardTitle>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
                 Share invite link for roles
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {["presenter", "guest", "committee"].map((role) => {
-                const r = role as "presenter" | "guest" | "committee";
+              {["committee", "presenter", "guest"]
+                .filter((r) => event?.hasCommittee || r !== "committee")
+                .map((role) => {
+                const r = role as "committee" | "presenter" | "guest";
                 const origin =
                   typeof window !== "undefined" ? window.location.origin : "";
                 const token = tokens[r];
@@ -739,30 +962,41 @@ export default function InformationSection({
                 return (
                   <div
                     key={role}
-                    className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 rounded-lg bg-muted/30"
+                    className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 rounded-xl border bg-card hover:bg-muted/30 transition-all duration-200 hover:border-primary/20"
                   >
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <div className="capitalize font-medium min-w-[80px]">
-                        {role}
-                      </div>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                        title="Reset Token"
-                        onClick={() => setRefreshRole(r)}
+                    <div className="flex items-center gap-4 w-full lg:w-auto">
+                      <div
+                        className={`
+                        w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm
+                        ${
+                          role === "presenter"
+                            ? "bg-orange-500"
+                            : role === "committee"
+                            ? "bg-blue-500"
+                            : "bg-green-500"
+                        }
+                      `}
                       >
-                        <RefreshCw className="h-3 w-3" />
-                      </Button>
+                        {role[0].toUpperCase()}
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="capitalize font-bold text-base">
+                          {role}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-xs">
+                          {link}
+                        </div>
+                      </div>
                     </div>
+
                     <div
-                      className="flex items-center gap-2 w-full sm:w-auto justify-end"
+                      className="flex items-center gap-2 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-3 lg:pt-0 mt-1 lg:mt-0"
                       ref={qrRef}
                     >
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="hover:bg-background"
+                        variant="outline"
+                        className="h-9 gap-2"
                         onClick={() => {
                           if (!link) {
                             toast.error("Preparing invite link...");
@@ -772,19 +1006,26 @@ export default function InformationSection({
                           toast.success("Copied");
                         }}
                       >
-                        <ClipboardCopy className="h-4 w-4 mr-2" />
+                        <ClipboardCopy className="h-3.5 w-3.5" />
                         Copy Link
                       </Button>
+
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        title="Reset Token"
+                        onClick={() => setRefreshRole(r)}
+                      >
+                        <RefreshCcw className="h-4 w-4" />
+                      </Button>
+
+                      <div className="h-8 w-px bg-border mx-1"></div>
+
                       {qrThumb ? (
-                        <>
-                          <img
-                            src={qrThumb}
-                            alt={`qr-${role}`}
-                            className="h-10 w-10 rounded border"
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="relative group/qr cursor-pointer"
                             onClick={async () => {
                               if (qrLargeUrl) {
                                 setQrSrc(qrLargeUrl);
@@ -792,30 +1033,21 @@ export default function InformationSection({
                                 setQrOpen(true);
                                 return;
                               }
-                              const node = qrRef.current;
-                              if (!node) {
-                                toast.error("Preparing QR...");
-                                return;
-                              }
-                              try {
-                                const dataUrl = await toPng(node, {
-                                  cacheBust: true,
-                                  pixelRatio: 2,
-                                });
-                                setQrSrc(dataUrl);
-                                setQrTitle(`QR Code for ${role}`);
-                                setQrOpen(true);
-                              } catch {
-                                toast.error("Failed to display QR");
-                              }
                             }}
                           >
-                            View QR
-                          </Button>
-                        </>
+                            <img
+                              src={qrThumb}
+                              alt={`qr-${role}`}
+                              className="h-10 w-10 rounded border bg-white p-0.5 shadow-sm hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity">
+                              <Users className="h-4 w-4 text-white" />
+                            </div>
+                          </div>
+                        </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">
-                          Preparing...
+                        <span className="text-xs text-muted-foreground animate-pulse">
+                          QR...
                         </span>
                       )}
                     </div>
@@ -826,6 +1058,37 @@ export default function InformationSection({
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={organizerListOpen} onOpenChange={setOrganizerListOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Organizers</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-2">
+            {organizers.map((org) => (
+              <div
+                key={org.id}
+                className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                <UserAvatar user={org.user} />
+                <div>
+                  <div className="font-medium">
+                    {org.user?.name || "Unknown"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    @{org.user?.username}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {organizers.length === 0 && (
+              <div className="text-center text-muted-foreground py-4">
+                No organizers found
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="max-w-[700px]">
@@ -876,7 +1139,7 @@ export default function InformationSection({
               </div>
 
               <div className="space-y-2">
-                <Label>Start Time</Label>
+                <Label>Start Time (เวลาเริ่มงาน)</Label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Popover>
                     <PopoverTrigger asChild>
@@ -924,7 +1187,7 @@ export default function InformationSection({
               </div>
 
               <div className="space-y-2">
-                <Label>End Time</Label>
+                <Label>End Time (เวลาสิ้นสุดงาน)</Label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Popover>
                     <PopoverTrigger asChild>
@@ -982,10 +1245,7 @@ export default function InformationSection({
             </div>
           </div>
           <DialogFooter className="p-6 pt-2 shrink-0 bg-background z-10 border-t mt-auto">
-            <Button
-              variant="outline"
-              onClick={() => setEditTimeOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setEditTimeOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleSaveTime} disabled={updatingTime}>
@@ -1307,16 +1567,14 @@ export default function InformationSection({
         </DialogContent>
       </Dialog>
 
-      <Card className="lg:col-span-2 border-none shadow-md bg-gradient-to-br from-background to-muted/20">
+      <Card className="lg:col-span-2 border-none shadow-md">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
             <CardTitle className="flex items-center gap-3 text-lg font-semibold">
               <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
                 <Award className="h-5 w-5" />
               </div>
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {t("dashboard.specialAwards")}
-              </span>
+              <span>{t("dashboard.specialAwards")}</span>
             </CardTitle>
             {editable && (
               <Button
