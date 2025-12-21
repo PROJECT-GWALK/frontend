@@ -46,11 +46,22 @@
     "endTimeSubmission": "เวลาสิ้นสุดส่ง"
   },
   "committeeSection": {
-    "committeeGuest": "คณะกรรมการและผู้เข้าร่วม",
-    "hasCommittee": "รวมสมาชิกคณะกรรมการ",
-    "committeeReward": "แต้มรางวัลคณะกรรมการ",
-    "guestReward": "แต้มรางวัลผู้เข้าร่วม"
-  },
+  "used": "ใช้ไปแล้ว",
+  "total": "ทั้งหมด",
+  "remaining": "คงเหลือ",
+  "totalParticipants": "จำนวนผู้เข้าร่วมทั้งหมด",
+  "ties": "เสมอ",
+  "participants": "ผู้เข้าร่วม",
+  "judges": "กรรมการ",
+  "specialAwards": "รางวัลพิเศษ",
+  "usedOverTotal": "ใช้ไป / ทั้งหมด",
+  "feedbackGiven": "ให้ความคิดเห็นแล้ว",
+  "myVirtualRewards": "Virtual Reward ของฉัน",
+  "waitForVote": "รอการโหวต",
+  "waitForFeedback": "รอการให้ความคิดเห็น"
+}
+
+,
   "rewardsSection": {
     "specialRewards": "รางวัลพิเศษ",
     "rewardName": "ชื่อรางวัล",
@@ -91,7 +102,7 @@
     "commentGiven": "ให้คอมเมนต์",
     "feedbackGiven": "ให้ฟีดแบ็ก",
     "used": "ใช้ไป",
-    "reward": "รางวัล",
+    "reward": "Virtual Rewards",
     "usedAlready": "ใช้ไปแล้ว",
     "remaining": "คงเหลือ",
     "total": "ทั้งหมด",
@@ -112,5 +123,40 @@
     "link": "ลิงก์",
     "start": "เริ่ม",
     "end": "สิ้นสุด"
-  }
+  },
+  "userDashboard": {
+    "eventdashboard": "Event Dashboard",
+    "recruting": "กำลังรับสมัคร",
+    "startingSoon": "เร็วๆ นี้จะเริ่ม",
+    "draft": "ร่าง",
+    "liveNow": "กำลังดำเนินอยู่",
+    "ended": "สิ้นสุดแล้ว"
+  },
+  "organizerDashboard": {
+  "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+  "totalPeopleInEvent": "คนรวมทั้งหมดในงาน",
+  "team": "ทีม",
+  "presenters": "ผู้นำเสนอ",
+  "outOfTotalTeams": "จากทั้งหมด",
+  "people": "คน",
+  "guests": "ผู้เข้าร่วม",
+  "comments": "คอมเมนต์",
+  "committee": "กรรมการ",
+  "feedback": "ฟีดแบ็ก",
+  "virtualRewards": "Virtual Rewards",
+  "usedPercent": "ใช้ไปแล้ว",
+  "remaining": "คงเหลือ",
+  "specialAwards": "รางวัลพิเศษ",
+  "awarded": "แจกแล้ว",
+  "total": "ทั้งหมด",
+  "notYetAwarded": "ยังไม่ได้แจก",
+  "awardDistributionProgress": "แจกครบทุกครั้งแล้ว",
+  "totalFeedbackReceived": "ความคิดเห็นทั้งหมดที่ได้รับ",
+  "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม"
+  
+}
+
+    
+  
+  
 }

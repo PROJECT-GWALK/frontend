@@ -1,5 +1,6 @@
 "use client";
 
+
 import Image from "next/image";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export default function OrganizerView({ id, event }: Props) {
   const [form, setForm] = useState<EventFormState>({});
   const [showCommitteeInput, setShowCommitteeInput] = useState(false);
   const [saving, setSaving] = useState(false);
+  const {t} = useLanguage();
 
   // Special rewards editing state
   const [srList, setSrList] = useState<SpecialRewardEdit[]>([]);
@@ -216,7 +218,7 @@ export default function OrganizerView({ id, event }: Props) {
                 <Card className="col-span-1 md:col-span-2 lg:col-span-1 border-l-4 border-l-blue-600 shadow-sm hover:shadow-md transition-all">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                      ผู้เข้าร่วมทั้งหมด
+                      {t("dashboard.totalParticipants")}
                       <Users className="h-4 w-4 text-blue-600" />
                     </CardTitle>
                   </CardHeader>
@@ -226,7 +228,7 @@ export default function OrganizerView({ id, event }: Props) {
                         (localEvent?.guestsCount ?? 0) +
                         (localEvent?.committeeCount ?? 0)}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">คนรวมทั้งหมดในงาน</p>
+                    <p className="text-xs text-muted-foreground mt-2">{t("organizerDashboard.totalPeopleInEvent")}</p>
                   </CardContent>
                 </Card>
 
@@ -234,16 +236,16 @@ export default function OrganizerView({ id, event }: Props) {
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      ผู้นำเสนอ
+                      {t("dashboard.presenterCount")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
-                      <span className="text-sm font-normal text-muted-foreground ml-2">คน</span>
+                      <span className="text-sm font-normal text-muted-foreground ml-2">{t("organizerDashboard.people")}</span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      จากทั้งหมด {localEvent?.maxTeams ?? 0} ทีม
+                      {t("organizerDashboard.outOfTotalTeams")} {localEvent?.maxTeams ?? 0} {t("organizerDashboard.team")}
                     </div>
                   </CardContent>
                 </Card>
@@ -251,14 +253,14 @@ export default function OrganizerView({ id, event }: Props) {
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      ผู้เข้าร่วม (Guests)
+                      {t("organizerDashboard.guests")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{localEvent?.guestsCount ?? 0}</div>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
-                      คอมเมนต์: {localEvent?.participantsCommentCount ?? 90}
+                      {t("organizerDashboard.comments")}: {localEvent?.participantsCommentCount ?? 90}
                     </div>
                   </CardContent>
                 </Card>
@@ -266,14 +268,14 @@ export default function OrganizerView({ id, event }: Props) {
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      กรรมการ
+                      {t("organizerDashboard.committee")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{localEvent?.committeeCount ?? 0}</div>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
-                      ฟีดแบ็ก: {localEvent?.committeeFeedbackCount ?? 10}
+                      {t("organizerDashboard.feedback")}: {localEvent?.committeeFeedbackCount ?? 10}
                     </div>
                   </CardContent>
                 </Card>
@@ -312,14 +314,14 @@ export default function OrganizerView({ id, event }: Props) {
 
                     <div className="text-xs text-muted-foreground pt-1 flex justify-between">
                       <span>
-                        ใช้ไปแล้ว{" "}
+                        {t("organizerDashboard.remaining")}{" "}
                         {localEvent?.vrUsed && localEvent?.vrTotal
                           ? Math.round((localEvent.vrUsed / localEvent.vrTotal) * 100)
                           : 40}
                         %
                       </span>
                       <span>
-                        คงเหลือ {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
+                        {t("organizerDashboard.remaining")} {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
                       </span>
                     </div>
                   </CardContent>
@@ -329,7 +331,7 @@ export default function OrganizerView({ id, event }: Props) {
                 <Card className="lg:col-span-1 shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-purple-600" /> รางวัลพิเศษ
+                      <Trophy className="h-5 w-5 text-purple-600" />{t("organizerDashboard.specialAwards")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -338,13 +340,13 @@ export default function OrganizerView({ id, event }: Props) {
                         <div className="text-2xl font-bold text-purple-700">
                           {localEvent?.specialPrizeUsed ?? 4}
                         </div>
-                        <div className="text-xs text-purple-900/60">แจกแล้ว</div>
+                        <div className="text-xs text-purple-900/60">{t("organizerDashboard.awarded")}</div>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg text-center border">
                         <div className="text-2xl font-bold text-gray-700">
                           {localEvent?.specialPrizeCount ?? 5}
                         </div>
-                        <div className="text-xs text-muted-foreground">ทั้งหมด</div>
+                        <div className="text-xs text-muted-foreground">{t("organizerDashboard.total")}</div>
                       </div>
                     </div>
                   </CardContent>
@@ -370,7 +372,7 @@ export default function OrganizerView({ id, event }: Props) {
                         ))
                       ) : (
                         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                          <AlertCircle className="h-4 w-4" /> แจกครบทุกรางวัลแล้ว
+                          <AlertCircle className="h-4 w-4" />{t("organizerDashboard.awardDistributionProgress")}
                         </div>
                       )}
                       {/* Fallback for demo if data is null */}
@@ -392,9 +394,9 @@ export default function OrganizerView({ id, event }: Props) {
                       <MessageSquare className="h-8 w-8 text-slate-700" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">ความคิดเห็นทั้งหมดที่ได้รับ</h3>
+                      <h3 className="font-semibold text-lg">{t("organizerDashboard.totalFeedbackReceived")}</h3>
                       <p className="text-muted-foreground text-sm">
-                        รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม
+                        {t("organizerDashboard.feedbackSummary")}
                       </p>
                     </div>
                   </div>
@@ -405,7 +407,7 @@ export default function OrganizerView({ id, event }: Props) {
                         {localEvent?.opinionsGot ?? 33}
                       </div>
                       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Total
+                        {t("organizerDashboard.total")}
                       </div>
                     </div>
                     <div className="h-10 w-px bg-slate-300"></div> {/* Divider */}
@@ -414,19 +416,19 @@ export default function OrganizerView({ id, event }: Props) {
                         <div className="text-xl font-bold text-slate-700">
                           {localEvent?.opinionsPresenter ?? 10}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">ผู้นำเสนอ</div>
+                        <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.presenters")}</div>
                       </div>
                       <div>
                         <div className="text-xl font-bold text-slate-700">
                           {localEvent?.opinionsGuest ?? 20}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">ผู้เข้าร่วม</div>
+                        <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.guests")}</div>
                       </div>
                       <div>
                         <div className="text-xl font-bold text-slate-700">
                           {localEvent?.opinionsCommittee ?? 3}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">กรรมการ</div>
+                        <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.committee")}</div>
                       </div>
                     </div>
                   </div>

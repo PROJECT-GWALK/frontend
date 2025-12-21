@@ -136,15 +136,55 @@ export default function EventsPage() {
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-        <TabsList>
-          <TabsTrigger value="upcomingRecruit">Coming Soon</TabsTrigger>
-          <TabsTrigger value="accepting">Accepting Presenters</TabsTrigger>
-          <TabsTrigger value="viewSoon">Viewing Soon</TabsTrigger>
-          <TabsTrigger value="viewOpen">Open for Viewing</TabsTrigger>
-          <TabsTrigger value="finished">Finished</TabsTrigger>
-        </TabsList>
-        <TabsContent value={filter} />
-      </Tabs>
+  <TabsList className="h-auto flex-wrap gap-2 p-2 bg-transparent">
+    <TabsTrigger 
+      value="upcomingRecruit"
+      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+    >
+      Coming Soon
+      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
+        0
+      </span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="accepting"
+      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+    >
+      Accepting
+      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
+        3
+      </span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="viewSoon"
+      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+    >
+      Viewing Soon
+      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
+        1
+      </span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="viewOpen"
+      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+    >
+      Open for Viewing
+      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
+        0
+      </span>
+    </TabsTrigger>
+    <TabsTrigger 
+      value="finished"
+      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+    >
+      Finished
+      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
+        0
+      </span>
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value={filter} className="mt-4" />
+</Tabs>
 
       {events
         .filter((e) => e.eventName.toLowerCase().includes(search.toLowerCase()))

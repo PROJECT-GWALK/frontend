@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ export default function CommitteeView({ id, event }: Props) {
   const [viewOpen, setViewOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
   const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,19 +171,19 @@ export default function CommitteeView({ id, event }: Props) {
                         <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
                           <BadgeCheck className="h-5 w-5" />
                         </div>
-                        My Virtual Rewards
+                        {t("committeeSection.myVirtualRewards")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-sm text-muted-foreground">ใช้ไปแล้ว</p>
+                          <p className="text-sm text-muted-foreground">{t("committeeSection.used")}</p>
                           <span className="text-2xl font-bold">
                             {localEvent?.committeeVirtualUsed ?? 20000}
                           </span>
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          ทั้งหมด {localEvent?.committeeVirtualTotal ?? 50000}
+                          {t("committeeSection.total")} {localEvent?.committeeVirtualTotal ?? 50000}
                         </span>
                       </div>
                       <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
@@ -197,7 +199,7 @@ export default function CommitteeView({ id, event }: Props) {
                         />
                       </div>
                       <p className="text-xs text-amber-600 font-medium text-right">
-                        คงเหลือ{" "}
+                        {t("committeeSection.remaining")}{" "}
                         {(localEvent?.committeeVirtualTotal ?? 50000) -
                           (localEvent?.committeeVirtualUsed ?? 20000)}
                       </p>
@@ -211,7 +213,7 @@ export default function CommitteeView({ id, event }: Props) {
                         <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                           <Users className="h-5 w-5" />
                         </div>
-                        จำนวนผู้เข้าร่วมทั้งหมด
+                        {t("committeeSection.totalParticipants")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -222,13 +224,13 @@ export default function CommitteeView({ id, event }: Props) {
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs mt-2 text-muted-foreground">
                         <span className="px-2 py-1 bg-slate-100 rounded">
-                          ผู้นำเสนอ: {localEvent?.presentersCount ?? 0}
+                          {t("dashboard.presenterCount")}: {localEvent?.presentersCount ?? 0}
                         </span>
                         <span className="px-2 py-1 bg-slate-100 rounded">
-                          ผู้เข้าร่วม: {localEvent?.guestsCount ?? 0}
+                          {t("dashboard.guestCount")}: {localEvent?.guestsCount ?? 0}
                         </span>
                         <span className="px-2 py-1 bg-slate-100 rounded">
-                          กรรมการ: {localEvent?.committeeCount ?? 0}
+                          {t("dashboard.committeeCount")}: {localEvent?.committeeCount ?? 0}
                         </span>
                       </div>
                     </CardContent>
@@ -241,7 +243,7 @@ export default function CommitteeView({ id, event }: Props) {
                         <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
                           <Award className="h-5 w-5" />
                         </div>
-                        รางวัลพิเศษ
+                        {t("committeeSection.specialAwards")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -252,7 +254,7 @@ export default function CommitteeView({ id, event }: Props) {
                             / {localEvent?.specialPrizeCount ?? 5}
                           </span>
                         </span>
-                        <span className="text-sm text-muted-foreground">ใช้ไป / ทั้งหมด</span>
+                        <span className="text-sm text-muted-foreground">{t("committeeSection.usedOverTotal")}</span>
                       </div>
                       <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden">
                         <div
@@ -283,7 +285,7 @@ export default function CommitteeView({ id, event }: Props) {
                       </div> */}
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold text-indigo-500 uppercase">
-                          Wait for VOTE:
+                          {t("committeeSection.waitForVote")} :
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {/* Example of projects that haven't received feedback */}
@@ -316,7 +318,7 @@ export default function CommitteeView({ id, event }: Props) {
                             / {localEvent?.totalProjects ?? 10}
                           </span>
                         </span>
-                        <span className="text-sm text-muted-foreground">ให้ความเห็นแล้ว</span>
+                        <span className="text-sm text-muted-foreground">{t("committeeSection.feedbackGiven")}</span>
                       </div>
                       <div className="h-2 w-full bg-rose-100 rounded-full overflow-hidden">
                         <div

@@ -46,11 +46,21 @@
     "endTimeSubmission": "End Time"
   },
   "committeeSection": {
-    "committeeGuest": "Committee & Guest",
-    "hasCommittee": "Include Committee Members",
-    "committeeReward": "Committee Reward Points",
-    "guestReward": "Guest Reward Points"
-  },
+  "used": "Used",
+  "total": "Total",
+  "remaining": "Remaining",
+  "totalParticipants": "Total Participants",
+  "ties": "Ties",
+  "participants": "Participants",
+  "judges": "Judges",
+  "specialAwards": "Special Awards",
+  "usedOverTotal": "Used / Total",
+  "feedbackGiven": "Feedback Given",
+  "myVirtualRewards": "My Virtual Rewards",
+  "waitForVote": "Waiting for Vote",
+  "waitForFeedback": "Waiting for Feedback"
+}
+,
   "rewardsSection": {
     "specialRewards": "Special Rewards",
     "rewardName": "Reward Name",
@@ -113,5 +123,40 @@
     "link": "Link",
     "start": "Start",
     "end": "End"
+  },
+  "userDashboard": {
+    "eventdashboard": "Event Dashboard",
+    "recruting": "Recruting",
+    "startingSoon": "Starting Soon",
+    "draft": "Draft",
+    "liveNow": "Live Now",
+    "ended": "Ended"
+  },
+  "organizerDashboard": 
+    {
+  "totalParticipants": "Total Participants",
+  "totalPeopleInEvent": "Total People in Event",
+  "team": "Teams",
+  "presenters": "Presenters",
+  "outOfTotalTeams": "Out of",
+  "people": "people",
+  "guests": "Guests",
+  "comments": "Comments",
+  "committee": "Committee",
+  "feedback": "Feedback",
+  "virtualRewards": "Virtual Rewards",
+  "usedPercent": "Used",
+  "remaining": "Remaining",
+  "specialAwards": "Special Awards",
+  "awarded": "Awarded",
+  "total": "Total",
+  "notYetAwarded": "Not Yet Awarded",
+  "awardDistributionProgress": "All Awards Have Been Distributed",
+  "totalFeedbackReceived": "Total Feedback Received",
+  "feedbackSummary": "Combined from presenters, committee, and Guest"
+
+
+
+    
   }
 }
