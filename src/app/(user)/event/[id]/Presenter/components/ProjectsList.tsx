@@ -1,20 +1,21 @@
 "use client";
 
 import React from "react";
-import ProjectCard from "./ProjectCard";
 import type { PresenterProject } from "./types";
-import { SAMPLE_PROJECTS } from "./mockProjects";
+import ProjectCard from "./ProjectCard";
 
 type Props = {
   projects?: PresenterProject[];
   searchQuery?: string;
   eventId: string;
+  basePath?: string;
 };
 
 export default function ProjectsList({
-  projects = SAMPLE_PROJECTS,
+  projects = [],
   searchQuery = "",
   eventId,
+  basePath,
 }: Props) {
   const filtered = projects.filter(
     (p) =>
@@ -29,7 +30,7 @@ export default function ProjectsList({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
       {filtered.map((p) => (
-        <ProjectCard key={p.id} project={p} eventId={eventId} />
+        <ProjectCard key={p.id} project={p} eventId={eventId} basePath={basePath} />
       ))}
     </div>
   );

@@ -2,7 +2,9 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { createTeam, getTeams, getEvent } from "@/utils/apievent";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, MessageSquare, BadgeCheck, Award } from "lucide-react";
@@ -13,21 +15,49 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData } from "@/utils/types";
 import InformationSection from "../InformationSection";
-import ProjectsList from "../Presenter/components/ProjectsList";
-import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
-import { SAMPLE_PROJECTS } from "../Presenter/components/mockProjects";
 import type { PresenterProject } from "../Presenter/components/types";
+import React from "react";
+import ProjectsList from "../Presenter/components/ProjectsList";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useParams } from "next/navigation";
 
 type Props = {
-  id: string;
-  event: EventData;
+  params?: Promise<{ id: string }>;
+  id?: string;
+  event?: EventData;
 };
 
-export default function CommitteeView({ id, event }: Props) {
+export default function CommitteePage(props: Props) {
+  const paramsHook = useParams();
+  const idFromParams = paramsHook?.id as string;
+  const id = props.id || idFromParams;
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
-  const [localEvent, setLocalEvent] = useState<EventData>(event);
+  const [localEvent, setLocalEvent] = useState<EventData | null>(props.event || null);
   const [bannerOpen, setBannerOpen] = useState(false);
+  const [loading, setLoading] = useState(!props.event);
+
+  useEffect(() => {
+    if (props.event) {
+      setLocalEvent(props.event);
+      setLoading(false);
+    } else if (id) {
+      const fetchEvent = async () => {
+        try {
+          const res = await getEvent(id);
+          if (res.message === "ok") {
+            setLocalEvent(res.event);
+          }
+        } catch (error) {
+          console.error("Failed to fetch event:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchEvent();
+    }
+  }, [id, props.event]);
 
   // Local project (mock) state for presenter
   type LocalProject = {
@@ -43,17 +73,53 @@ export default function CommitteeView({ id, event }: Props) {
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [projects, setProjects] = useState<PresenterProject[]>(SAMPLE_PROJECTS);
+  const [projects, setProjects] = useState<PresenterProject[]>([]);
 
   // Committee-specific UI state for project interactions
   const [projectRewards, setProjectRewards] = useState<
     Record<string, { vrGiven: number; specialGiven: string | null }>
-  >(
-    SAMPLE_PROJECTS.reduce((acc, p) => {
-      acc[p.id] = { vrGiven: 0, specialGiven: null };
-      return acc;
-    }, {} as Record<string, { vrGiven: number; specialGiven: string | null }>)
-  );
+  >({});
+
+  const fetchTeamsData = async () => {
+    try {
+      const res = await getTeams(id);
+      if (res.message === "ok") {
+        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+          id: t.id,
+          title: t.teamName,
+          desc: t.description || "",
+          img: t.imageCover || "/banner.png",
+          videoLink: t.videoLink,
+          files:
+            t.files?.map((f: any) => ({
+              name: f.fileUrl.split("/").pop() || "File",
+              url: f.fileUrl,
+              fileTypeId: f.fileTypeId,
+            })) || [],
+          members:
+            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+        }));
+        setProjects(mappedProjects);
+
+        // Initialize rewards state for new projects
+        setProjectRewards((prev) => {
+          const newState = { ...prev };
+          mappedProjects.forEach((p) => {
+            if (!newState[p.id]) {
+              newState[p.id] = { vrGiven: 0, specialGiven: null };
+            }
+          });
+          return newState;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch teams:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamsData();
+  }, [id]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [viewProjectOpen, setViewProjectOpen] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
@@ -68,6 +134,66 @@ export default function CommitteeView({ id, event }: Props) {
   const [editingProject, setEditingProject] = useState(false);
   const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
   const { t } = useLanguage();
+
+  const handleResetVR = (projectId: string) => {
+    setProjectRewards((prev) => ({
+      ...prev,
+      [projectId]: {
+        ...prev[projectId],
+        vrGiven: 0,
+      },
+    }));
+    toast.success("Reset Virtual Reward");
+  };
+
+  const handleResetSpecial = (projectId: string) => {
+    setProjectRewards((prev) => ({
+      ...prev,
+      [projectId]: {
+        ...prev[projectId],
+        specialGiven: null,
+      },
+    }));
+    toast.success("Reset Special Reward");
+  };
+
+  if (loading || !localEvent) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="w-full">
+          {/* Banner Skeleton */}
+          <div className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden">
+            <Skeleton className="w-full h-full" />
+          </div>
+          <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
+            {/* Header Card Skeleton */}
+            <div className="border rounded-xl shadow-md mb-6 p-6 h-[100px] bg-card">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 h-full">
+                 <Skeleton className="h-8 w-1/3" />
+                 <Skeleton className="h-10 w-32" />
+              </div>
+            </div>
+
+            {/* Tabs Skeleton */}
+            <div className="mt-6 flex gap-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-24" />
+            </div>
+
+            {/* Content Skeleton */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-64 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -313,9 +439,9 @@ export default function CommitteeView({ id, event }: Props) {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <span className="text-2xl font-bold text-foreground">
-                          {localEvent?.feedbackGiven ?? 8}{" "}
+                          {localEvent?.committeeFeedbackCount ?? 8}{" "}
                           <span className="text-sm font-normal text-muted-foreground">
-                            / {localEvent?.totalProjects ?? 10}
+                            / {localEvent?.presenterTeams ?? 10}
                           </span>
                         </span>
                         <span className="text-sm text-muted-foreground">{t("committeeSection.feedbackGiven")}</span>
@@ -325,8 +451,8 @@ export default function CommitteeView({ id, event }: Props) {
                           className="h-full bg-rose-500 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
-                              ((localEvent?.feedbackGiven ?? 8) /
-                                (localEvent?.totalProjects ?? 10)) *
+                              ((localEvent?.committeeFeedbackCount ?? 8) /
+                                (localEvent?.presenterTeams ?? 10)) *
                               100
                             }%`,
                           }}
@@ -372,13 +498,13 @@ export default function CommitteeView({ id, event }: Props) {
                           {/* Project Image Section */}
                           <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden bg-slate-100">
                             <img
-                              src={p.imageUrl || "/api/placeholder/400/300"} // Fallback image
+                              src={p.img || "/banner.png"} // Fallback image
                               alt={p.title}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                             <div className="absolute top-2 left-2">
                               <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-slate-700 rounded shadow-sm">
-                                {p.teamName}
+                                {p.title}
                               </span>
                             </div>
                           </div>
@@ -419,16 +545,14 @@ export default function CommitteeView({ id, event }: Props) {
                             {/* Action Buttons Grid */}
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mt-6">
                               {/* Primary Actions */}
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedProjectId(p.id);
-                                  setViewProjectOpen(true);
-                                }}
-                                className="hover:bg-sky-50 hover:text-sky-600 border-slate-200"
-                              >
-                                ดูข้อมูล
-                              </Button>
+                              <Link href={`/event/${id}/Projects/${p.id}`} className="flex-1 sm:flex-none">
+                                <Button
+                                  variant="outline"
+                                  className="w-full sm:w-auto hover:bg-sky-50 hover:text-sky-600 border-slate-200"
+                                >
+                                  ดูข้อมูล
+                                </Button>
+                              </Link>
                               <Button
                                 variant="outline"
                                 onClick={() => {
@@ -495,7 +619,7 @@ export default function CommitteeView({ id, event }: Props) {
                           {projects.find((pr) => pr.id === selectedProjectId)?.title}
                         </h4>
                         <p className="text-sm text-muted-foreground mt-2">
-                          {projects.find((pr) => pr.id === selectedProjectId)?.description}
+                          {projects.find((pr) => pr.id === selectedProjectId)?.desc}
                         </p>
                       </div>
                     ) : (
@@ -653,7 +777,12 @@ export default function CommitteeView({ id, event }: Props) {
                     />
                   </div>
 
-                  <ProjectsList projects={projects} searchQuery={searchQuery} eventId={event.id} />
+                  <ProjectsList
+                    projects={projects} 
+                    searchQuery={searchQuery} 
+                    eventId={id} 
+                    basePath={`/event/${id}/Projects`}
+                  />
                 </div>
               </div>
             </TabsContent>

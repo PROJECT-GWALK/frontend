@@ -9,9 +9,14 @@ import { Button } from "@/components/ui/button";
 type Props = {
   project: PresenterProject;
   eventId: string;
+  basePath?: string;
 };
 
-export default function ProjectCard({ project, eventId }: Props) {
+export default function ProjectCard({ project, eventId, basePath }: Props) {
+  const path = basePath 
+    ? `${basePath}/${project.id}` 
+    : `/event/${eventId}/Presenter/Projects/${project.id}`;
+
   return (
     <div className="group flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">
       <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
@@ -44,7 +49,7 @@ export default function ProjectCard({ project, eventId }: Props) {
             View Project
           </span>
           <Link
-            href={`/event/${eventId}/Presenter/Projects/${project.id}`}
+            href={path}
             className="inline-flex items-center"
           >
             <Button size="sm">Open</Button>

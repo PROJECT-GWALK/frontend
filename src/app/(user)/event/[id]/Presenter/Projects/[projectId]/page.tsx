@@ -5,31 +5,68 @@ import Image from "next/image";
 import Link from "next/link";
 import * as QRCode from "qrcode";
 import { toast } from "sonner";
-import { Edit3, Share2, Users, FileText, Plus, Search, Loader2, X } from "lucide-react";
-import { getTeamById, getEvent, uploadTeamFile, searchCandidates, addTeamMember } from "@/utils/apievent";
+import {
+  Edit3,
+  Share2,
+  Users,
+  FileText,
+  Plus,
+  Search,
+  Loader2,
+  X,
+  ChevronLeft,
+} from "lucide-react";
+import {
+  getTeamById,
+  getEvent,
+  uploadTeamFile,
+  searchCandidates,
+  addTeamMember,
+  getMyEvents,
+  removeTeamMember,
+  deleteTeamFile,
+} from "@/utils/apievent";
 import EditProjectDialog from "../../components/EditProjectDialog";
 import type { PresenterProject } from "../../components/types";
-import type { EventData } from "@/utils/types";
+import { type EventData, FileType } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   params: { id: string; projectId: string };
 };
 
 export default function ProjectDetailPage({ params }: Props) {
-  const paramsResolved = (React as any).use ? (React as any).use(params) : params;
+  const paramsResolved = (React as any).use
+    ? (React as any).use(params)
+    : params;
   const { projectId, id } = paramsResolved as { projectId: string; id: string };
   const [project, setProject] = useState<PresenterProject | null>(null);
   const [membersData, setMembersData] = useState<any[]>([]);
   const [eventData, setEventData] = useState<EventData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
-  
+
   // Files Dialog
   const [filesOpen, setFilesOpen] = useState(false);
 
@@ -38,24 +75,38 @@ export default function ProjectDetailPage({ params }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [bannerOpen, setBannerOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Upload loading state per fileTypeId
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   const [qrThumb, setQrThumb] = useState<string | null>(null);
   const [qrThumbCommittee, setQrThumbCommittee] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const [teamRes, eventRes] = await Promise.all([
+      const [teamRes, eventRes, myEventsRes] = await Promise.all([
         getTeamById(id, projectId),
         getEvent(id),
+        getMyEvents(),
       ]);
 
       if (teamRes.message === "ok") {
         const t = teamRes.team;
+
+        // Check if current user is leader based on getMyEvents
+        const myEvent =
+          myEventsRes.message === "ok"
+            ? myEventsRes.events.find((e: any) => e.id === id)
+            : null;
+        const isLeader = myEvent?.isLeader || false;
+
         setProject({
           id: t.id,
           title: t.teamName,
           desc: t.description || "",
-          img: t.imageCover || "/project1.png",
+          img: t.imageCover,
           videoLink: t.videoLink,
           files:
             t.files?.map((f: any) => ({
@@ -65,14 +116,17 @@ export default function ProjectDetailPage({ params }: Props) {
             })) || [],
           members:
             t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+          isLeader: isLeader,
         });
-        setMembersData(t.participants?.map((p: any) => ({
-          id: p.user.id,
-          name: p.user.name,
-          username: p.user.username,
-          image: p.user.image,
-          isLeader: p.isLeader,
-        })) || []);
+        setMembersData(
+          t.participants?.map((p: any) => ({
+            id: p.user.id,
+            name: p.user.name,
+            username: p.user.username,
+            image: p.user.image,
+            isLeader: p.isLeader,
+          })) || []
+        );
       }
 
       if (eventRes.message === "ok") {
@@ -80,6 +134,8 @@ export default function ProjectDetailPage({ params }: Props) {
       }
     } catch (e) {
       console.error("Failed to fetch data", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -138,18 +194,44 @@ export default function ProjectDetailPage({ params }: Props) {
     }
   };
 
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    fileTypeId?: string
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file || !project || !fileTypeId) return;
-
+  const handleRemoveMember = async (userId: string) => {
+    if (!confirm("Are you sure you want to remove this member?")) return;
     try {
-      const res = await uploadTeamFile(id, project.id, fileTypeId, file);
+      const res = await removeTeamMember(id, projectId, userId);
+      if (res.message === "ok") {
+        toast.success("Member removed");
+        fetchData();
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to remove member");
+    }
+  };
+
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement> | null,
+    fileTypeId?: string,
+    urlValue?: string
+  ) => {
+    if (!project || !fileTypeId) return;
+
+    // Prevent duplicate uploads
+    if (uploading[fileTypeId]) return;
+
+    let fileOrUrl: File | string | undefined;
+    if (e) {
+      fileOrUrl = e.target.files?.[0];
+    } else if (urlValue) {
+      fileOrUrl = urlValue;
+    }
+
+    if (!fileOrUrl) return;
+
+    setUploading((prev) => ({ ...prev, [fileTypeId]: true }));
+    try {
+      const res = await uploadTeamFile(id, project.id, fileTypeId, fileOrUrl);
       if (res.message === "ok") {
         const newUrl = res.teamFile.fileUrl;
-        const name = file.name;
+        const name = fileOrUrl instanceof File ? fileOrUrl.name : "Link";
 
         setProject((prev) => {
           if (!prev) return null;
@@ -168,6 +250,35 @@ export default function ProjectDetailPage({ params }: Props) {
       }
     } catch (err) {
       toast.error("Upload failed");
+    } finally {
+      setUploading((prev) => ({ ...prev, [fileTypeId]: false }));
+    }
+  };
+
+  const handleDeleteFile = async (fileTypeId: string) => {
+    if (!project || !confirm("Are you sure you want to delete this file?"))
+      return;
+    try {
+      const res = await deleteTeamFile(id, project.id, fileTypeId);
+      if (res.message === "ok") {
+        setProject((prev) => {
+          if (!prev) return null;
+          const newFiles = (prev.files || []).filter(
+            (f) => f.fileTypeId !== fileTypeId
+          );
+          return { ...prev, files: newFiles };
+        });
+
+        // Clear input if exists (for URL type)
+        const input = document.getElementById(
+          `url-input-${fileTypeId}`
+        ) as HTMLInputElement;
+        if (input) input.value = "";
+
+        toast.success("File deleted");
+      }
+    } catch (e) {
+      toast.error("Failed to delete file");
     }
   };
 
@@ -175,6 +286,53 @@ export default function ProjectDetailPage({ params }: Props) {
     navigator.clipboard.writeText(t);
     toast.success("Copied to clipboard");
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto p-6 space-y-8">
+        <Skeleton className="h-10 w-32" />
+        <Card>
+          <Skeleton className="h-48 w-full rounded-t-lg" />
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-6 items-start justify-between">
+              <div className="space-y-4 flex-1">
+                <div>
+                  <Skeleton className="h-10 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <div className="flex gap-4">
+                  <Skeleton className="h-9 w-32" />
+                  <Skeleton className="h-9 w-32" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-24" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+           <CardHeader>
+             <Skeleton className="h-6 w-48" />
+           </CardHeader>
+           <CardContent>
+             <div className="space-y-4">
+               {[1, 2, 3].map((i) => (
+                 <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-32 mb-1" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                 </div>
+               ))}
+             </div>
+           </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -189,15 +347,36 @@ export default function ProjectDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
+      <div>
+        <Button
+          variant="ghost"
+          className="gap-2 pl-0 text-muted-foreground hover:text-foreground"
+          asChild
+        >
+          <Link href={`/event/${id}`}>
+            <ChevronLeft className="w-4 h-4" />
+            Back to Event Dashboard
+          </Link>
+        </Button>
+      </div>
+
       {/* Header Section */}
       <Card>
         <div className="relative h-48 w-full bg-slate-100 rounded-t-lg overflow-hidden">
           {project.img ? (
-            <Image src={project.img} alt={project.title} fill className="object-cover" />
+            <Image
+              src={project.img}
+              alt={project.title}
+              fill
+              className="object-cover"
+            />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-slate-300 text-5xl font-bold">
-              {project.title.charAt(0)}
-            </div>
+            <Image
+              src="/banner.png"
+              alt={project.title}
+              fill
+              className="object-cover"
+            />
           )}
         </div>
         <CardContent className="pt-6">
@@ -209,13 +388,21 @@ export default function ProjectDetailPage({ params }: Props) {
                   {project.desc || "No description provided."}
                 </p>
               </div>
-              
+
               <div className="flex gap-4">
-                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(true)}
+                >
                   <Edit3 className="w-4 h-4 mr-2" />
                   Edit Project
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setFilesOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilesOpen(true)}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Manage Files
                   {project.files && project.files.length > 0 && (
@@ -228,10 +415,18 @@ export default function ProjectDetailPage({ params }: Props) {
             </div>
 
             <div className="flex gap-2">
-               <Button variant="secondary" size="sm" onClick={() => copyToClipboard(`${location.origin}/event/${id}/Projects/${projectId}`)}>
-                 <Share2 className="w-4 h-4 mr-2" />
-                 Share
-               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  copyToClipboard(
+                    `${location.origin}/event/${id}/Projects/${projectId}`
+                  )
+                }
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -265,29 +460,172 @@ export default function ProjectDetailPage({ params }: Props) {
             <Users className="w-5 h-5" />
             Team Members
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Member
-          </Button>
+          {project.isLeader && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInviteOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Member
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {membersData.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
+              <div
+                key={m.id}
+                className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm relative group"
+              >
                 <Avatar>
                   <AvatarImage src={m.image} />
                   <AvatarFallback>{m.name?.charAt(0) || "?"}</AvatarFallback>
                 </Avatar>
                 <div className="overflow-hidden">
                   <div className="font-medium truncate">{m.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">@{m.username || "user"}</div>
-                  {m.isLeader && <Badge variant="secondary" className="mt-1 text-[10px] h-5">Leader</Badge>}
+                  <div className="text-xs text-muted-foreground truncate">
+                    @{m.username || "user"}
+                  </div>
+                  {m.isLeader && (
+                    <Badge variant="secondary" className="mt-1 text-[10px] h-5">
+                      Leader
+                    </Badge>
+                  )}
                 </div>
+                {project.isLeader && !m.isLeader && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    onClick={() => handleRemoveMember(m.id)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             ))}
             {membersData.length === 0 && (
               <div className="col-span-full text-center py-8 text-muted-foreground">
                 No members yet. Invite someone to join your team!
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Project Works Display */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Project Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-6">
+            {project.files && project.files.length > 0 ? (
+              project.files.map((file, idx) => {
+                const ft = eventData?.fileTypes?.find(
+                  (t) => t.id === file.fileTypeId
+                );
+                const isPdf = file.url.toLowerCase().endsWith(".pdf");
+                const isImage =
+                  file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+                const isUrlType = ft?.allowedFileTypes?.includes(FileType.url);
+
+                // YouTube check
+                const youtubeMatch = file.url.match(
+                  /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+                );
+                const isYoutube = !!youtubeMatch;
+                const youtubeId = youtubeMatch ? youtubeMatch[1] : null;
+
+                return (
+                  <div key={idx} className="space-y-2">
+                    <div className="font-semibold text-lg">
+                      {ft?.name || file.name}
+                    </div>
+                    {ft?.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {ft.description}
+                      </p>
+                    )}
+
+                    <div className="border rounded-lg overflow-hidden bg-slate-50">
+                      {isImage ? (
+                        <div
+                          className="relative w-full h-[400px] cursor-zoom-in group"
+                          onClick={() => setPreviewImage(file.url)}
+                        >
+                          <Image
+                            src={file.url}
+                            alt={file.name}
+                            fill
+                            className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
+                          </div>
+                        </div>
+                      ) : isPdf ? (
+                        <iframe
+                          src={`${file.url}#toolbar=0`}
+                          className="w-full h-[500px]"
+                          title={file.name}
+                        />
+                      ) : isYoutube && youtubeId ? (
+                        <div className="aspect-video w-full">
+                          <iframe
+                            src={`https://www.youtube.com/embed/${youtubeId}`}
+                            title={file.name}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col">
+                          {/* Preview attempt for other links if it is a URL type */}
+                          {isUrlType && (
+                            <div className="w-full h-[400px] bg-white border-b relative">
+                              <iframe
+                                src={file.url}
+                                className="w-full h-full"
+                                title={file.name}
+                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                              />
+                            </div>
+                          )}
+                          <div className="p-4 flex items-center justify-between bg-slate-50">
+                            <div className="truncate flex-1 mr-4 text-blue-600 underline">
+                              <a
+                                href={file.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {file.url}
+                              </a>
+                            </div>
+                            <Button variant="outline" size="sm" asChild>
+                              <a
+                                href={file.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Open Link
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No works uploaded yet.
               </div>
             )}
           </div>
@@ -302,8 +640,12 @@ export default function ProjectDetailPage({ params }: Props) {
             <CardDescription>Share this project with everyone</CardDescription>
           </CardHeader>
           <CardContent className="flex gap-4">
-             {qrThumb ? (
-              <img src={qrThumb} alt="QR invite" className="w-32 h-32 rounded border" />
+            {qrThumb ? (
+              <img
+                src={qrThumb}
+                alt="QR invite"
+                className="w-32 h-32 rounded border"
+              />
             ) : (
               <div className="w-32 h-32 bg-slate-100 rounded animate-pulse" />
             )}
@@ -311,7 +653,15 @@ export default function ProjectDetailPage({ params }: Props) {
               <div className="text-sm text-muted-foreground break-all">
                 {`${location.origin}/event/${id}/Projects/${projectId}`}
               </div>
-              <Button size="sm" variant="secondary" onClick={() => copyToClipboard(`${location.origin}/event/${id}/Projects/${projectId}`)}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  copyToClipboard(
+                    `${location.origin}/event/${id}/Projects/${projectId}`
+                  )
+                }
+              >
                 Copy Link
               </Button>
             </div>
@@ -320,12 +670,18 @@ export default function ProjectDetailPage({ params }: Props) {
 
         <Card>
           <CardHeader>
-             <CardTitle className="text-base">Committee / VR Link</CardTitle>
-             <CardDescription>Share with committees or for VR viewing</CardDescription>
+            <CardTitle className="text-base">Committee / VR Link</CardTitle>
+            <CardDescription>
+              Share with committees or for VR viewing
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex gap-4">
             {qrThumbCommittee ? (
-              <img src={qrThumbCommittee} alt="QR committee" className="w-32 h-32 rounded border" />
+              <img
+                src={qrThumbCommittee}
+                alt="QR committee"
+                className="w-32 h-32 rounded border"
+              />
             ) : (
               <div className="w-32 h-32 bg-slate-100 rounded animate-pulse" />
             )}
@@ -333,13 +689,63 @@ export default function ProjectDetailPage({ params }: Props) {
               <div className="text-sm text-muted-foreground break-all">
                 {`${location.origin}/event/${id}/Projects/${projectId}?role=committee`}
               </div>
-              <Button size="sm" variant="secondary" onClick={() => copyToClipboard(`${location.origin}/event/${id}/Projects/${projectId}?role=committee`)}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  copyToClipboard(
+                    `${location.origin}/event/${id}/Projects/${projectId}?role=committee`
+                  )
+                }
+              >
                 Copy Link
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Banner Dialog */}
+      <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <DialogTitle className="sr-only">Event Banner</DialogTitle>
+          <div className="relative w-full aspect-video">
+            <Image
+              src={eventData?.imageCover || "/banner.png"}
+              alt={eventData?.eventName || "Event banner"}
+              fill
+              className="object-contain rounded-lg"
+            />
+            <DialogClose className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2">
+              <X className="w-5 h-5" />
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog
+        open={!!previewImage}
+        onOpenChange={(open) => !open && setPreviewImage(null)}
+      >
+        <DialogContent className="max-w-[90vw] h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+          <DialogTitle className="sr-only">Image Preview</DialogTitle>
+          <div className="relative w-full h-full">
+            {previewImage && (
+              <Image
+                src={previewImage}
+                alt="Preview"
+                fill
+                className="object-contain"
+                priority
+              />
+            )}
+            <DialogClose className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 z-50">
+              <X className="w-6 h-6" />
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Files Dialog */}
       <Dialog open={filesOpen} onOpenChange={setFilesOpen}>
@@ -350,60 +756,173 @@ export default function ProjectDetailPage({ params }: Props) {
               Upload required documents and files for your project.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-6 py-4">
+
+          <div className="space-y-4 py-4">
             {(eventData?.fileTypes || []).map((ft) => {
-              const uploaded = project.files?.find((f) => f.fileTypeId === ft.id);
-              const isPdf = uploaded?.url?.toLowerCase().endsWith(".pdf");
+              const uploaded = project.files?.find(
+                (f) => f.fileTypeId === ft.id
+              );
+              const isUrlType = ft.allowedFileTypes.includes(FileType.url);
+              const isUploading = ft.id ? uploading[ft.id] : false;
 
               return (
-                <div key={ft.id} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        {ft.name}
-                        {ft.isRequired && <Badge variant="destructive">Required</Badge>}
-                        {uploaded && <Badge variant="default" className="bg-green-600">Uploaded</Badge>}
-                      </div>
-                      {ft.description && <p className="text-sm text-muted-foreground mt-1">{ft.description}</p>}
-                      <p className="text-xs text-muted-foreground mt-1">Allowed: {ft.allowedFileTypes.join(", ")}</p>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 items-end">
-                      <Input
-                        type="file"
-                        id={`file-${ft.id}`}
-                        className="hidden"
-                        accept={ft.allowedFileTypes.map((t) => "." + t).join(",")}
-                        onChange={(e) => handleFileUpload(e, ft.id)}
-                      />
-                      <Button variant="outline" size="sm" onClick={() => document.getElementById(`file-${ft.id}`)?.click()}>
-                        {uploaded ? "Replace File" : "Upload File"}
-                      </Button>
-                      
+                <div
+                  key={ft.id}
+                  className="grid grid-cols-1 md:grid-cols-12 gap-4 border rounded-lg p-4 bg-slate-50/50"
+                >
+                  {/* Info Section */}
+                  <div className="md:col-span-5 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold">{ft.name}</span>
+                      {ft.isRequired && (
+                        <Badge variant="destructive" className="text-[10px]">
+                          Required
+                        </Badge>
+                      )}
                       {uploaded && (
-                        <Button variant="link" size="sm" asChild className="h-auto p-0 text-blue-600">
-                          <a href={uploaded.url} target="_blank" rel="noreferrer">
-                            Download / View
-                          </a>
-                        </Button>
+                        <Badge className="bg-green-600 hover:bg-green-700 text-[10px]">
+                          Uploaded
+                        </Badge>
                       )}
                     </div>
+                    {ft.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {ft.description}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground font-mono bg-slate-100 w-fit px-1 rounded">
+                      Allowed: {ft.allowedFileTypes.join(", ")}
+                    </p>
                   </div>
 
-                  {/* PDF Preview */}
-                  {uploaded && isPdf && (
-                    <div className="mt-4 border rounded-md overflow-hidden bg-slate-50">
-                      <div className="p-2 bg-slate-100 text-xs font-medium text-center border-b text-muted-foreground">
-                        PDF Preview
+                  {/* Actions Section */}
+                  <div className="md:col-span-7 flex flex-col justify-center gap-3">
+                    {isUrlType ? (
+                      <div className="flex flex-col gap-2 w-full">
+                        <div className="flex gap-2 w-full items-center">
+                          <Input
+                            id={`url-input-${ft.id}`}
+                            placeholder="https://..."
+                            defaultValue={uploaded?.url || ""}
+                            disabled={isUploading}
+                            className="text-sm bg-white"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleFileUpload(
+                                  null,
+                                  ft.id,
+                                  e.currentTarget.value
+                                );
+                              }
+                            }}
+                            onBlur={(e) => {
+                              if (
+                                e.target.value &&
+                                e.target.value !== uploaded?.url
+                              ) {
+                                handleFileUpload(null, ft.id, e.target.value);
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            disabled={isUploading}
+                            onClick={() => {
+                              const input = document.getElementById(
+                                `url-input-${ft.id}`
+                              ) as HTMLInputElement;
+                              if (input) {
+                                handleFileUpload(null, ft.id, input.value);
+                              }
+                            }}
+                          >
+                            {isUploading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              "Save"
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Secondary Actions Row */}
+                        <div className="flex justify-end gap-2">
+                          {uploaded && (
+                            <>
+                              <Button size="sm" variant="outline" asChild>
+                                <a
+                                  href={uploaded.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2"
+                                >
+                                  <Share2 className="w-3 h-3" /> Open Link
+                                </a>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteFile(ft.id!)}
+                              >
+                                <X className="w-3 h-3 mr-1" /> Delete
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <iframe 
-                        src={`${uploaded.url}#toolbar=0`} 
-                        className="w-full h-[400px]" 
-                        title="PDF Preview"
-                      />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex flex-col items-end gap-2 w-full">
+                        <Input
+                          type="file"
+                          id={`file-${ft.id}`}
+                          className="hidden"
+                          accept={ft.allowedFileTypes
+                            .map((t) => "." + t)
+                            .join(",")}
+                          onChange={(e) => handleFileUpload(e, ft.id)}
+                          disabled={isUploading}
+                        />
+                        <div className="flex gap-2 w-full justify-end">
+                          <Button
+                            variant={uploaded ? "outline" : "default"}
+                            size="sm"
+                            disabled={isUploading}
+                            onClick={() =>
+                              document.getElementById(`file-${ft.id}`)?.click()
+                            }
+                          >
+                            {isUploading ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <Plus className="w-4 h-4 mr-2" />
+                            )}
+                            {uploaded ? "Replace File" : "Upload File"}
+                          </Button>
+                        </div>
+
+                        {uploaded && (
+                          <div className="flex gap-2 justify-end w-full">
+                            <Button size="sm" variant="secondary" asChild>
+                              <a
+                                href={uploaded.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-2"
+                              >
+                                <FileText className="w-3 h-3" /> Download
+                              </a>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => ft.id && handleDeleteFile(ft.id)}
+                            >
+                              <X className="w-3 h-3 mr-1" /> Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -415,7 +934,7 @@ export default function ProjectDetailPage({ params }: Props) {
             )}
           </div>
           <DialogFooter>
-             <Button onClick={() => setFilesOpen(false)}>Close</Button>
+            <Button onClick={() => setFilesOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -426,10 +945,11 @@ export default function ProjectDetailPage({ params }: Props) {
           <DialogHeader>
             <DialogTitle>Add Team Member</DialogTitle>
             <DialogDescription>
-              Search for a presenter by name or username to add them to your team.
+              Search for a presenter by name or username to add them to your
+              team.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -450,7 +970,10 @@ export default function ProjectDetailPage({ params }: Props) {
               ) : candidates.length > 0 ? (
                 <div className="space-y-2">
                   {candidates.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md group">
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md group"
+                    >
                       <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
                           <AvatarImage src={c.image} />
@@ -458,10 +981,17 @@ export default function ProjectDetailPage({ params }: Props) {
                         </Avatar>
                         <div>
                           <div className="text-sm font-medium">{c.name}</div>
-                          <div className="text-xs text-muted-foreground">@{c.username}</div>
+                          <div className="text-xs text-muted-foreground">
+                            @{c.username}
+                          </div>
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100" onClick={() => handleAddMember(c.userId)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="opacity-0 group-hover:opacity-100"
+                        onClick={() => handleAddMember(c.userId)}
+                      >
                         <Plus className="w-4 h-4" />
                         Add
                       </Button>

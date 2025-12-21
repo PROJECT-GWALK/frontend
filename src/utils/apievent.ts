@@ -275,6 +275,14 @@ export const deleteParticipant = async (eventId: string, pid: string) => {
   return res.data; // { message }
 };
 
+export const deleteTeamFile = async (eventId: string, teamId: string, fileTypeId: string) => {
+  const res = await axios.delete(
+    `/backend/api/events/${eventId}/teams/${teamId}/files/${fileTypeId}`,
+    { withCredentials: true }
+  );
+  return res.data; // { message }
+};
+
 // ====================== TEAMS ======================
 export const createTeam = async (eventId: string, teamName: string, description?: string, videoLink?: string, imageCover?: string | File) => {
   let body: any;
@@ -369,10 +377,23 @@ export const getTeamById = async (eventId: string, teamId: string) => {
   return res.data; // { message, team }
 };
 
-export const uploadTeamFile = async (eventId: string, teamId: string, fileTypeId: string, file: File) => {
+export const removeTeamMember = async (eventId: string, teamId: string, userId: string) => {
+  const res = await axios.delete(
+    `/backend/api/events/${eventId}/teams/${teamId}/members/${userId}`,
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
+export const uploadTeamFile = async (eventId: string, teamId: string, fileTypeId: string, fileOrUrl: File | string) => {
   const formData = new FormData();
   formData.append("fileTypeId", fileTypeId);
-  formData.append("file", file);
+  
+  if (fileOrUrl instanceof File) {
+    formData.append("file", fileOrUrl);
+  } else {
+    formData.append("url", fileOrUrl);
+  }
 
   const res = await axios.post(
     `/backend/api/events/${eventId}/teams/${teamId}/files`,

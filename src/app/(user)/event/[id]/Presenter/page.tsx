@@ -8,18 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData } from "@/utils/types";
 import InformationSection from "../InformationSection";
-import ProjectsList from "./components/ProjectsList";
 import CreateProjectDialog from "./components/CreateProjectDialog";
 import EditProjectDialog from "./components/EditProjectDialog";
-import { SAMPLE_PROJECTS } from "./components/mockProjects";
 import type { PresenterProject } from "./components/types";
 import { createTeam, getTeams } from "@/utils/apievent";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+import ProjectsList from "./components/ProjectsList";
 
 type Props = {
   id: string;
@@ -31,7 +36,9 @@ export default function PresenterView({ id, event }: Props) {
   const userId = session?.user?.id;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<
+    "dashboard" | "information" | "project" | "result"
+  >("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
 
@@ -59,34 +66,44 @@ export default function PresenterView({ id, event }: Props) {
           id: t.id,
           title: t.teamName,
           desc: t.description || "",
-          img: t.imageCover || "/project1.png",
+          img: t.imageCover || "/banner.png",
           videoLink: t.videoLink,
-          files: t.files?.map((f: any) => ({
-             name: f.fileUrl.split("/").pop() || "File",
-             url: f.fileUrl,
-             fileTypeId: f.fileTypeId,
-          })) || [],
-          members: t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+          files:
+            t.files?.map((f: any) => ({
+              name: f.fileUrl.split("/").pop() || "File",
+              url: f.fileUrl,
+              fileTypeId: f.fileTypeId,
+            })) || [],
+          members:
+            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
         }));
         setProjects(mappedProjects);
 
         // Update userProject if user is in one of these teams
         if (userId) {
-          const myTeam = res.teams.find((t: any) => t.participants.some((p: any) => p.userId === userId));
+          const myTeam = res.teams.find((t: any) =>
+            t.participants.some((p: any) => p.userId === userId)
+          );
           if (myTeam) {
-            const me = myTeam.participants.find((p: any) => p.userId === userId);
+            const me = myTeam.participants.find(
+              (p: any) => p.userId === userId
+            );
             setUserProject({
               id: myTeam.id,
               title: myTeam.teamName,
               description: myTeam.description,
-              img: myTeam.imageCover || "/project1.png",
+              img: myTeam.imageCover || "/banner.png",
               videoLink: myTeam.videoLink,
-              files: myTeam.files?.map((f: any) => ({
-                name: f.fileUrl.split("/").pop() || "File",
-                url: f.fileUrl,
-                fileTypeId: f.fileTypeId,
-              })) || [],
-              members: myTeam.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+              files:
+                myTeam.files?.map((f: any) => ({
+                  name: f.fileUrl.split("/").pop() || "File",
+                  url: f.fileUrl,
+                  fileTypeId: f.fileTypeId,
+                })) || [],
+              members:
+                myTeam.participants?.map(
+                  (p: any) => p.user?.name || "Unknown"
+                ) || [],
               owner: me?.isLeader || false,
             });
           } else {
@@ -104,7 +121,7 @@ export default function PresenterView({ id, event }: Props) {
   }, [id, userId]);
 
   const [createOpen, setCreateOpen] = useState(false);
-  
+
   // UI state for project viewer/editor
   const [viewOpen, setViewOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
@@ -159,20 +176,24 @@ export default function PresenterView({ id, event }: Props) {
           </DialogContent>
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <Card 
+          <Card
             className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-presenter)" }}
           >
-            <div 
-              className="absolute inset-0 pointer-events-none" 
-              style={{ background: "linear-gradient(to right, var(--role-presenter), transparent)", opacity: 0.05 }} 
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(to right, var(--role-presenter), transparent)",
+                opacity: 0.05,
+              }}
             />
             <CardHeader className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 {/* LEFT SIDE: Title & Status */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <CardTitle 
+                    <CardTitle
                       className="text-2xl lg:text-3xl font-bold"
                       style={{ color: "var(--role-presenter)" }}
                     >
@@ -193,7 +214,11 @@ export default function PresenterView({ id, event }: Props) {
             </CardHeader>
           </Card>
 
-          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
+          <Tabs
+            value={tab}
+            onValueChange={(v) => setTab(v as typeof tab)}
+            className="mt-6"
+          >
             <TabsList>
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="information">Information</TabsTrigger>
@@ -210,7 +235,7 @@ export default function PresenterView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                         <Users className="h-5 w-5" />
                       </div>
-                       {t("dashboard.totalParticipants")}
+                      {t("dashboard.totalParticipants")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -220,8 +245,11 @@ export default function PresenterView({ id, event }: Props) {
                         (localEvent?.committeeCount ?? 0)}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.presenterCount")}: {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0} | 
-                      {" "}{t("dashboard.guestCount")}: {localEvent?.guestsCount ?? 0} | {t("dashboard.committeeCount")}:{" "}
+                      {t("dashboard.presenterCount")}:{" "}
+                      {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}{" "}
+                      | {t("dashboard.guestCount")}:{" "}
+                      {localEvent?.guestsCount ?? 0} |{" "}
+                      {t("dashboard.committeeCount")}:{" "}
                       {localEvent?.committeeCount ?? 0}
                     </p>
                   </CardContent>
@@ -241,7 +269,9 @@ export default function PresenterView({ id, event }: Props) {
                     <div className="text-4xl font-bold text-foreground">
                       {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">{t("dashboard.teamCount")}</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {t("dashboard.teamCount")}
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -260,7 +290,9 @@ export default function PresenterView({ id, event }: Props) {
                       {localEvent?.guestsCount ?? 0}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.commentGiven")}: {localEvent?.participantsCommentCount ?? 90} / {t("dashboard.used")}:{" "}
+                      {t("dashboard.commentGiven")}:{" "}
+                      {localEvent?.participantsCommentCount ?? 90} /{" "}
+                      {t("dashboard.used")}:{" "}
                       {localEvent?.participantsVirtualUsed ?? 2000}
                     </p>
                   </CardContent>
@@ -281,7 +313,9 @@ export default function PresenterView({ id, event }: Props) {
                       {localEvent?.committeeCount ?? 0}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.feedbackGiven")}: {localEvent?.committeeFeedbackCount ?? 10} / {t("dashboard.used")}:{" "}
+                      {t("dashboard.feedbackGiven")}:{" "}
+                      {localEvent?.committeeFeedbackCount ?? 10} /{" "}
+                      {t("dashboard.used")}:{" "}
                       {localEvent?.committeeVirtualUsed ?? 2000}
                     </p>
                   </CardContent>
@@ -302,8 +336,11 @@ export default function PresenterView({ id, event }: Props) {
                       {localEvent?.opinionsGot ?? 33}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.presenterCount")}: {localEvent?.opinionsPresenter ?? 10} | {t("dashboard.guestCount")}:{" "}
-                      {localEvent?.opinionsGuest ?? 20} | {t("dashboard.committeeCount")}:{" "}
+                      {t("dashboard.presenterCount")}:{" "}
+                      {localEvent?.opinionsPresenter ?? 10} |{" "}
+                      {t("dashboard.guestCount")}:{" "}
+                      {localEvent?.opinionsGuest ?? 20} |{" "}
+                      {t("dashboard.committeeCount")}:{" "}
                       {localEvent?.opinionsCommittee ?? 3}
                     </p>
                   </CardContent>
@@ -321,24 +358,34 @@ export default function PresenterView({ id, event }: Props) {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">{t("dashboard.usedAlready")}</span>
-                      <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {t("dashboard.usedAlready")}
+                      </span>
+                      <span className="text-lg font-bold">
+                        {localEvent?.vrUsed ?? 20000}
+                      </span>
                     </div>
                     <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out"
                         style={{
                           width: `${
-                            ((localEvent?.vrUsed ?? 20000) / (localEvent?.vrTotal ?? 50000)) * 100
+                            ((localEvent?.vrUsed ?? 20000) /
+                              (localEvent?.vrTotal ?? 50000)) *
+                            100
                           }%`,
                         }}
                       />
                     </div>
                     <div className="flex justify-between items-center text-sm text-muted-foreground">
                       <span>
-                        {t("dashboard.remaining")} {t("dashboard.total")} {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
+                        {t("dashboard.remaining")} {t("dashboard.total")}{" "}
+                        {(localEvent?.vrTotal ?? 50000) -
+                          (localEvent?.vrUsed ?? 20000)}
                       </span>
-                      <span>{t("dashboard.total")} {localEvent?.vrTotal ?? 50000}</span>
+                      <span>
+                        {t("dashboard.total")} {localEvent?.vrTotal ?? 50000}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -360,7 +407,9 @@ export default function PresenterView({ id, event }: Props) {
                         / {localEvent?.specialPrizeCount ?? 5}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">{t("dashboard.usedOverTotal")}</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {t("dashboard.usedOverTotal")}
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -376,7 +425,9 @@ export default function PresenterView({ id, event }: Props) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {(localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]).map((a, i) => (
+                      {(
+                        localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]
+                      ).map((a, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                           <span className="text-sm font-medium">{a}</span>
@@ -406,64 +457,64 @@ export default function PresenterView({ id, event }: Props) {
                   {!userProject ? (
                     <Card className="p-6 rounded-xl">
                       <div className="text-sm text-muted-foreground">
-                        You don't have any project yet. Create or join a group to appear here.
+                        You don't have any project yet. Create or join a group
+                        to appear here.
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="default" onClick={() => setCreateOpen(true)}>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => setCreateOpen(true)}
+                        >
                           Create Project
                         </Button>
                       </div>
                     </Card>
                   ) : (
-                    <Card className="p-4 rounded-xl">
-                      <div className="flex items-start gap-4">
-                        <Image
-                          src={userProject.img || "/project1.png"}
-                          alt={userProject.title}
-                          width={96}
-                          height={96}
-                          className="rounded-lg object-cover bg-slate-50"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <div className="font-semibold text-lg">{userProject.title}</div>
-                              <div className="text-sm text-muted-foreground mt-1">
-                                {userProject.description || "No description provided"}
-                              </div>
+                    <Card className="p-4 rounded-xl border">
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                        <Link
+                          href={`/event/${id}/Presenter/Projects/${userProject.id}`}
+                          className="relative w-full md:w-[180px] h-[120px] shrink-0 block overflow-hidden rounded-lg group border bg-muted"
+                        >
+                          <Image
+                            src={userProject.img || "/banner.png"}
+                            alt={userProject.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                        </Link>
+
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div>
+                            <div className="font-semibold text-lg truncate">
+                              {userProject.title}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setProjectForm({
-                                    id: userProject.id,
-                                    title: userProject.title,
-                                    desc: userProject.description,
-                                    img: userProject.img,
-                                    videoLink: userProject.videoLink,
-                                    files: userProject.files || [],
-                                    members: userProject.members || [],
-                                  });
-                                  setViewOpen(true);
-                                  setEditingProject(false);
-                                }}
-                              >
-                                View Project
-                              </Button>
+                            <div className="text-sm text-muted-foreground line-clamp-1">
+                              {userProject.description ||
+                                "No description provided"}
                             </div>
                           </div>
 
-                          <div className="mt-3">
-                            <div className="text-sm font-medium">Members</div>
-                            <div className="flex gap-2 mt-2 flex-wrap">
-                              {(userProject.members || []).map((m) => (
-                                <div key={m} className="px-3 py-1 rounded-full bg-muted text-sm">
-                                  {m}
-                                </div>
-                              ))}
-                            </div>
+                          <div className="flex flex-wrap gap-2">
+                            {(userProject.members || []).map((m) => (
+                              <div
+                                key={m}
+                                className="px-2 py-0.5 rounded-md bg-muted text-xs text-muted-foreground"
+                              >
+                                {m}
+                              </div>
+                            ))}
                           </div>
+                        </div>
+
+                        <div className="shrink-0 flex items-center gap-2 mt-2 md:mt-0">
+                          <Link
+                            href={`/event/${id}/Presenter/Projects/${userProject.id}`}
+                          >
+                            <Button variant="outline">Open</Button>
+                          </Link>
                         </div>
                       </div>
                     </Card>
@@ -489,7 +540,11 @@ export default function PresenterView({ id, event }: Props) {
                     />
                   </div>
 
-                  <ProjectsList projects={projects} searchQuery={searchQuery} eventId={event.id} />
+                  <ProjectsList
+                    projects={projects}
+                    searchQuery={searchQuery}
+                    eventId={event.id}
+                  />
                 </div>
               </div>
             </TabsContent>
@@ -501,7 +556,9 @@ export default function PresenterView({ id, event }: Props) {
                     <CardTitle>ผลการจัดอันดับ</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-muted-foreground">ยังไม่มีผลการจัดอันดับ</div>
+                    <div className="text-muted-foreground">
+                      ยังไม่มีผลการจัดอันดับ
+                    </div>
                   </CardContent>
                 </Card>
               </div>

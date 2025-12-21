@@ -256,12 +256,7 @@ export default function EditProjectDialog({
             </div>
           </div>
 
-          <div>
-            <Label>Files</Label>
-            <div className="text-sm text-muted-foreground mt-1">
-              File management has been moved to the project details page.
-            </div>
-          </div>
+
 
           <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
             <Button

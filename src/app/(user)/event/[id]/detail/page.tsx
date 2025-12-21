@@ -14,7 +14,7 @@ export default function EventProjectDetailPage() {
       id: "01",
       title: "01 - Doctor Web App",
       description: "Create Appointment, View Medical Records etc.",
-      img: "/project1.png",
+      img: "/banner.png",
       videoLink: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       files: ["Proposal.pdf", "Slides.pdf"],
       members: ["Member 1", "Member 2"],
@@ -23,7 +23,7 @@ export default function EventProjectDetailPage() {
       id: "02",
       title: "02 - Restaurant Application",
       description: "Create Reservation, View Menu etc.",
-      img: "/project2.png",
+      img: "/banner.png",
       videoLink: "",
       files: ["Report.pdf"],
       members: ["Member A", "Member B"],
@@ -41,7 +41,7 @@ export default function EventProjectDetailPage() {
       <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
         <div className="h-[220px] md:h-[260px] bg-muted rounded-xl flex items-center justify-center overflow-hidden">
           <Image
-            src={project.img || "/project1.png"}
+            src={project.img || "/banner.png"}
             alt="project cover"
             width={220}
             height={220}

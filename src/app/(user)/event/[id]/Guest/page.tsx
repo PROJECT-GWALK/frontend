@@ -14,10 +14,9 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData } from "@/utils/types";
 import InformationSection from "../InformationSection";
-import ProjectsList from "../Presenter/components/ProjectsList";
 import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
-import { SAMPLE_PROJECTS } from "../Presenter/components/mockProjects";
 import type { PresenterProject } from "../Presenter/components/types";
+import ProjectsList from "../Presenter/components/ProjectsList";
 
 type Props = {
   id: string;
@@ -45,7 +44,7 @@ export default function GuestView({ id, event }: Props) {
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [projects, setProjects] = useState<PresenterProject[]>(SAMPLE_PROJECTS);
+  const [projects, setProjects] = useState<PresenterProject[]>([]);
 
   // UI state for project viewer/editor
   const [viewOpen, setViewOpen] = useState(false);

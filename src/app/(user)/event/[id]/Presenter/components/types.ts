@@ -6,4 +6,5 @@ export type PresenterProject = {
   videoLink?: string;
   files?: { name: string; url: string; fileTypeId?: string }[];
   members?: string[];
+  isLeader?: boolean;
 };
