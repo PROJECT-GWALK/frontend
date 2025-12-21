@@ -276,12 +276,96 @@ export const deleteParticipant = async (eventId: string, pid: string) => {
 };
 
 // ====================== TEAMS ======================
-export const createTeam = async (eventId: string, teamName: string, description?: string) => {
+export const createTeam = async (eventId: string, teamName: string, description?: string, videoLink?: string, imageCover?: string | File) => {
+  let body: any;
+  let headers: any = {};
+
+  if (imageCover instanceof File) {
+    const formData = new FormData();
+    formData.append("teamName", teamName);
+    if (description) formData.append("description", description);
+    if (videoLink) formData.append("videoLink", videoLink);
+    formData.append("imageCover", imageCover);
+    body = formData;
+    // Axios handles multipart headers automatically when FormData is used
+  } else {
+    body = { teamName, description, videoLink, imageCover };
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await axios.post(
     `/backend/api/events/${eventId}/teams`,
-    { teamName, description },
+    body,
+    { 
+      withCredentials: true,
+      headers: Object.keys(headers).length > 0 ? headers : undefined
+    }
+  );
+  return res.data; // { message, team }
+};
+
+export const updateTeam = async (
+  eventId: string, 
+  teamId: string, 
+  data: { teamName?: string; description?: string; imageCover?: string | File | null }
+) => {
+  let body: any;
+  let headers: any = {};
+
+  if (data.imageCover instanceof File) {
+    const formData = new FormData();
+    if (data.teamName) formData.append("teamName", data.teamName);
+    if (data.description) formData.append("description", data.description);
+    formData.append("imageCover", data.imageCover);
+    body = formData;
+  } else {
+    // If imageCover is null (removed), send "null" string or null value
+    // If we want to remove it, we might need to send null.
+    // Backend logic: if (typeof imageCover === "string") data.imageCover = imageCover === "null" ? null : imageCover;
+    // So if we want to remove, we can send "null" string in FormData, or null in JSON.
+    // Let's stick to JSON for non-file updates unless mixed.
+    // But wait, if we want to remove image, we should be able to send null.
+    body = { ...data };
+    if (data.imageCover === null) body.imageCover = "null"; // Handle removal in JSON if backend expects string "null" for FormData compatibility, but JSON can handle null.
+    // My backend update: `if (typeof imageCover === "string") data.imageCover = imageCover === "null" ? null : imageCover;`
+    // So if JSON sends null, `typeof null` is "object", so it won't be picked up.
+    // I should fix backend to handle null or change frontend to send "null".
+    // Let's send "null" string for now to be safe with my backend logic.
+    if (data.imageCover === null) body.imageCover = "null";
+    
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await axios.put(
+    `/backend/api/events/${eventId}/teams/${teamId}`,
+    body,
+    { 
+      withCredentials: true,
+      headers: Object.keys(headers).length > 0 ? headers : undefined
+    }
+  );
+  return res.data; // { message, team }
+};
+
+export const deleteTeam = async (eventId: string, teamId: string) => {
+  const res = await axios.delete(
+    `/backend/api/events/${eventId}/teams/${teamId}`,
     { withCredentials: true }
   );
+  return res.data; // { message }
+};
+
+export const getTeams = async (eventId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/teams`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, teams }
+};
+
+export const getTeamById = async (eventId: string, teamId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/teams/${teamId}`, {
+    withCredentials: true,
+  });
   return res.data; // { message, team }
 };
 
@@ -299,4 +383,21 @@ export const uploadTeamFile = async (eventId: string, teamId: string, fileTypeId
     }
   );
   return res.data; // { message, teamFile }
+};
+
+export const searchCandidates = async (eventId: string, query: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/presenters/candidates`, {
+    params: { q: query },
+    withCredentials: true,
+  });
+  return res.data; // { message, candidates }
+};
+
+export const addTeamMember = async (eventId: string, teamId: string, userId: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/teams/${teamId}/members`,
+    { userId },
+    { withCredentials: true }
+  );
+  return res.data; // { message }
 };

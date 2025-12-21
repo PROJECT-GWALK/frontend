@@ -18,7 +18,7 @@ import CreateProjectDialog from "./components/CreateProjectDialog";
 import EditProjectDialog from "./components/EditProjectDialog";
 import { SAMPLE_PROJECTS } from "./components/mockProjects";
 import type { PresenterProject } from "./components/types";
-import { createTeam } from "@/utils/apievent";
+import { createTeam, getTeams } from "@/utils/apievent";
 import { useSession } from "next-auth/react";
 
 type Props = {
@@ -48,37 +48,63 @@ export default function PresenterView({ id, event }: Props) {
   };
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
-
-  useEffect(() => {
-    if (userId && localEvent) {
-      const participants = (localEvent as any).participants;
-      if (Array.isArray(participants)) {
-        const me = participants.find((p: any) => p.userId === userId);
-        if (me && me.team) {
-          setUserProject({
-            id: me.team.id,
-            title: me.team.teamName,
-            description: me.team.description,
-            img: "/project1.png",
-            files: me.team.files
-              ? me.team.files.map((f: any) => ({
-                  name: f.fileUrl.split("/").pop() || "File",
-                  url: f.fileUrl,
-                  fileTypeId: f.fileTypeId,
-                }))
-              : [],
-            members: ["You"],
-            owner: me.isLeader,
-          });
-        }
-      }
-    }
-  }, [userId, localEvent]);
-
-  const [createOpen, setCreateOpen] = useState(false);
-  const [projects, setProjects] = useState<PresenterProject[]>(SAMPLE_PROJECTS);
+  const [projects, setProjects] = useState<PresenterProject[]>([]);
   const { t } = useLanguage();
 
+  const fetchTeamsData = async () => {
+    try {
+      const res = await getTeams(id);
+      if (res.message === "ok") {
+        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+          id: t.id,
+          title: t.teamName,
+          desc: t.description || "",
+          img: t.imageCover || "/project1.png",
+          videoLink: t.videoLink,
+          files: t.files?.map((f: any) => ({
+             name: f.fileUrl.split("/").pop() || "File",
+             url: f.fileUrl,
+             fileTypeId: f.fileTypeId,
+          })) || [],
+          members: t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+        }));
+        setProjects(mappedProjects);
+
+        // Update userProject if user is in one of these teams
+        if (userId) {
+          const myTeam = res.teams.find((t: any) => t.participants.some((p: any) => p.userId === userId));
+          if (myTeam) {
+            const me = myTeam.participants.find((p: any) => p.userId === userId);
+            setUserProject({
+              id: myTeam.id,
+              title: myTeam.teamName,
+              description: myTeam.description,
+              img: myTeam.imageCover || "/project1.png",
+              videoLink: myTeam.videoLink,
+              files: myTeam.files?.map((f: any) => ({
+                name: f.fileUrl.split("/").pop() || "File",
+                url: f.fileUrl,
+                fileTypeId: f.fileTypeId,
+              })) || [],
+              members: myTeam.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+              owner: me?.isLeader || false,
+            });
+          } else {
+            setUserProject(null);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch teams", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamsData();
+  }, [id, userId]);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  
   // UI state for project viewer/editor
   const [viewOpen, setViewOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(false);
@@ -447,32 +473,7 @@ export default function PresenterView({ id, event }: Props) {
                   <CreateProjectDialog
                     open={createOpen}
                     onOpenChange={setCreateOpen}
-                    onCreate={async (pr) => {
-                      try {
-                        const res = await createTeam(id, pr.title, pr.desc);
-                        if (res.message === "ok") {
-                          const newTeam = res.team;
-                          setUserProject({
-                            id: newTeam.id,
-                            title: newTeam.teamName,
-                            description: newTeam.description,
-                            img: "/project1.png",
-                            files: [],
-                            members: ["You"],
-                            owner: true,
-                          });
-                          setProjects((s) => [
-                            { ...pr, id: newTeam.id },
-                            ...s,
-                          ]);
-                          toast.success("Project created");
-                        }
-                      } catch (e: any) {
-                        toast.error(
-                          e.response?.data?.message || "Failed to create project"
-                        );
-                      }
-                    }}
+                    onSuccess={fetchTeamsData}
                   />
                 </div>
 
@@ -514,14 +515,7 @@ export default function PresenterView({ id, event }: Props) {
             onOpenChange={setViewOpen}
             project={projectForm}
             eventId={id}
-            fileTypes={localEvent.fileTypes || []}
-            onSave={(p) => {
-              setUserProject((prev) => (prev ? { ...prev, ...p } : null) as any);
-              setProjectForm(p);
-              // In a real app, you would also call an API to update title/desc here
-              // For files, they are uploaded immediately in the dialog
-              toast.success("Project updated (local)");
-            }}
+            onSuccess={fetchTeamsData}
           />
         )}
       </div>

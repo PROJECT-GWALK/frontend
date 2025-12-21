@@ -1,47 +1,124 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Upload } from "lucide-react";
 import type { PresenterProject } from "./types";
-import { uploadTeamFile } from "@/utils/apievent";
+import { uploadTeamFile, updateTeam, deleteTeam } from "@/utils/apievent";
 import type { EventFileType } from "@/utils/types";
 import { toast } from "sonner";
+import ImageCropDialog from "@/lib/image-crop-dialog";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   project: PresenterProject;
-  onSave: (p: PresenterProject) => void;
+  onSuccess: () => void;
   eventId: string;
-  fileTypes: EventFileType[];
 };
 
 export default function EditProjectDialog({
   open,
   onOpenChange,
   project,
-  onSave,
+  onSuccess,
   eventId,
-  fileTypes,
 }: Props) {
   const [form, setForm] = useState<PresenterProject>(project);
-  const [newMember, setNewMember] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => setForm(project), [project]);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [pendingFileMeta, setPendingFileMeta] = useState<{ name: string; type: string } | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(project.img || null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const addMember = () => {
-    if (!newMember.trim()) return;
-    setForm((f) => ({ ...f, members: [...(f.members || []), newMember.trim()] }));
-    setNewMember("");
+  useEffect(() => {
+    setForm(project);
+    setBannerPreview(project.img || null);
+    setImageFile(null);
+  }, [project]);
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
-  const removeMember = (m: string) => {
-    setForm((f) => ({ ...f, members: (f.members || []).filter((x) => x !== m) }));
+  const onBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setPendingFileMeta({ name: file.name, type: file.type });
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ""; // reset
+  };
+
+  const onCropCancel = () => {
+    setCropOpen(false);
+    setCropSrc(null);
+    setPendingFileMeta(null);
+  };
+
+  const onCropConfirm = (file: File, previewUrl: string) => {
+    setImageFile(file);
+    setBannerPreview(previewUrl);
+    setCropOpen(false);
+    setCropSrc(null);
+    setPendingFileMeta(null);
+  };
+
+  const onRemoveBanner = () => {
+    setImageFile(null);
+    setBannerPreview(null);
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      let imageCover: string | File | null | undefined = undefined;
+      if (imageFile) {
+        imageCover = imageFile;
+      } else if (bannerPreview !== (project.img || null)) {
+         // changed (removed)
+         imageCover = null;
+      }
+
+      await updateTeam(eventId, project.id, {
+        teamName: form.title,
+        description: form.desc,
+        imageCover,
+      });
+      toast.success("Project updated");
+      onSuccess();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update project");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this project?")) return;
+    setLoading(true);
+    try {
+      await deleteTeam(eventId, project.id);
+      toast.success("Project deleted");
+      onSuccess();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete project");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileUpload = async (
@@ -102,107 +179,108 @@ export default function EditProjectDialog({
           </div>
 
           <div>
-            <Label>Image URL</Label>
-            <Input
-              value={form.img || ""}
-              onChange={(e) => setForm({ ...form, img: e.target.value })}
+            <Label>Image Cover</Label>
+            <ImageCropDialog
+              open={cropOpen}
+              src={cropSrc}
+              fileName={pendingFileMeta?.name}
+              fileType={pendingFileMeta?.type}
+              aspect={2}
+              title="Crop to 800x400"
+              outputWidth={800}
+              outputHeight={400}
+              onOpenChange={(o) => {
+                if (!o) onCropCancel();
+              }}
+              onCancel={onCropCancel}
+              onConfirm={onCropConfirm}
             />
-          </div>
-
-          <div>
-            <Label>Video Link (embed url)</Label>
-            <Input
-              value={form.videoLink || ""}
-              onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <Label>Files</Label>
-            <div className="space-y-4 mt-2">
-              {(fileTypes || []).map((ft) => {
-                const uploaded = form.files?.find((f) => f.fileTypeId === ft.id);
-                return (
-                  <div key={ft.id} className="border p-3 rounded-md">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="font-medium">
-                          {ft.name} {ft.isRequired && <span className="text-red-500">*</span>}
-                        </div>
-                        {ft.description && (
-                          <div className="text-xs text-muted-foreground">{ft.description}</div>
-                        )}
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Allowed: {ft.allowedFileTypes.join(", ")}
-                        </div>
-                      </div>
-                      {uploaded && (
-                        <a
-                          href={uploaded.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:underline"
-                        >
-                          View Uploaded
-                        </a>
-                      )}
-                    </div>
-
-                    <Input
-                      type="file"
-                      accept={ft.allowedFileTypes.map((t) => "." + t).join(",")}
-                      onChange={(e) => handleFileUpload(e, ft.id!)}
-                    />
-                  </div>
-                );
-              })}
-              {(!fileTypes || fileTypes.length === 0) && (
-                <div className="text-sm text-muted-foreground">
-                  No file requirements configured for this event.
+            {bannerPreview ? (
+              <div className="relative border rounded-lg overflow-hidden aspect-video bg-muted mt-2">
+                <img
+                  src={bannerPreview}
+                  alt="Project cover preview"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={openFilePicker}>
+                    Change
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={onRemoveBanner}>
+                    Remove
+                  </Button>
                 </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={onBannerFileChange}
+                />
+              </div>
+            ) : (
+              <div
+                className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-video flex flex-col items-center justify-center mt-2"
+                onClick={openFilePicker}
+              >
+                <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Click to upload</p>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={onBannerFileChange}
+                />
+              </div>
+            )}
+          </div>
+
+
+
+          <div>
+            <Label>Members</Label>
+            <div className="flex gap-2 flex-wrap mt-2">
+              {(form.members || []).length > 0 ? (
+                (form.members || []).map((m) => (
+                  <div
+                    key={m}
+                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm"
+                  >
+                    <span>{m}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground">No members yet.</div>
               )}
             </div>
           </div>
 
           <div>
-            <Label>Members</Label>
-            <div className="flex gap-2 flex-wrap">
-              {(form.members || []).map((m) => (
-                <div
-                  key={m}
-                  className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm"
-                >
-                  <span>{m}</span>
-                  <Button size="sm" variant="ghost" onClick={() => removeMember(m)}>
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 flex gap-2">
-              <Input
-                placeholder="New member name"
-                value={newMember}
-                onChange={(e) => setNewMember(e.target.value)}
-              />
-              <Button size="sm" onClick={addMember}>
-                <Plus className="w-4 h-4" />
-              </Button>
+            <Label>Files</Label>
+            <div className="text-sm text-muted-foreground mt-1">
+              File management has been moved to the project details page.
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+          <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
             <Button
-              onClick={() => {
-                onSave(form);
-                onOpenChange(false);
-              }}
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={loading}
             >
-              Save
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Project
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
