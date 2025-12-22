@@ -157,6 +157,9 @@ export type EventData = {
   specialPrizeCount?: number;
   fileTypes?: EventFileType[];
   participants?: EventParticipant[];
+  myVirtualTotal?: number;
+  myVirtualUsed?: number;
+  myFeedbackCount?: number;
 };
 
 export type EventParticipant = {

@@ -17,14 +17,14 @@ import {
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData } from "@/utils/types";
-import InformationSection from "../InformationSection";
+import InformationSection from "../components/InformationSection";
 import CreateProjectDialog from "./components/CreateProjectDialog";
 import EditProjectDialog from "./components/EditProjectDialog";
 import type { PresenterProject } from "./components/types";
 import { createTeam, getTeams } from "@/utils/apievent";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import ProjectsList from "./components/ProjectsList";
+import UnifiedProjectList from "../components/UnifiedProjectList";
 
 type Props = {
   id: string;
@@ -56,9 +56,11 @@ export default function PresenterView({ id, event }: Props) {
 
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
   const { t } = useLanguage();
 
   const fetchTeamsData = async () => {
+    setProjectsLoading(true);
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
@@ -113,6 +115,8 @@ export default function PresenterView({ id, event }: Props) {
       }
     } catch (e) {
       console.error("Failed to fetch teams", e);
+    } finally {
+      setProjectsLoading(false);
     }
   };
 
@@ -452,7 +456,12 @@ export default function PresenterView({ id, event }: Props) {
               <div className="mt-6 space-y-6">
                 {/* My Project */}
                 <div>
-                  <h2 className="text-lg font-semibold mb-3">My Project</h2>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold">My Project</h2>
+                    <span className="text-sm text-muted-foreground">
+                      Teams: {projects.length} / {localEvent?.maxTeams || "-"}
+                    </span>
+                  </div>
 
                   {!userProject ? (
                     <Card className="p-6 rounded-xl">
@@ -465,6 +474,7 @@ export default function PresenterView({ id, event }: Props) {
                           size="sm"
                           variant="default"
                           onClick={() => setCreateOpen(true)}
+                          disabled={!!localEvent?.maxTeams && projects.length >= localEvent.maxTeams}
                         >
                           Create Project
                         </Button>
@@ -513,7 +523,7 @@ export default function PresenterView({ id, event }: Props) {
                           <Link
                             href={`/event/${id}/Presenter/Projects/${userProject.id}`}
                           >
-                            <Button variant="outline">Open</Button>
+                            <Button variant="outline">Edit</Button>
                           </Link>
                         </div>
                       </div>
@@ -540,10 +550,12 @@ export default function PresenterView({ id, event }: Props) {
                     />
                   </div>
 
-                  <ProjectsList
+                  <UnifiedProjectList
                     projects={projects}
                     searchQuery={searchQuery}
                     eventId={event.id}
+                    role="PRESENTER"
+                    loading={projectsLoading}
                   />
                 </div>
               </div>

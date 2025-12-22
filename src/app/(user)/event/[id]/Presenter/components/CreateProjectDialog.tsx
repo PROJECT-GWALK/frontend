@@ -189,7 +189,11 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: P
                   onSuccess();
                 } catch (e: any) {
                   console.error(e);
-                  toast.error(e.message || "Failed to create project");
+                  if (e.response?.status === 400) {
+                    toast.error(e.response.data?.message || "Failed to create project: Bad Request");
+                  } else {
+                    toast.error(e.message || "Failed to create project");
+                  }
                 } finally {
                   setLoading(false);
                 }

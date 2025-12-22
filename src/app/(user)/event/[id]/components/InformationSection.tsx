@@ -20,7 +20,7 @@ import {
   RefreshCcw,
   Link,
 } from "lucide-react";
-import { timeUntil, formatDateTime, getMapEmbedUrl, UserAvatar } from "@/utils/function";
+import { timeUntil, formatDateTime, UserAvatar } from "@/utils/function";
 import { toast } from "sonner";
 import type { EventData, EventFileType } from "@/utils/types";
 import { FileType } from "@/utils/types";
@@ -76,6 +76,14 @@ type Props = {
   editable?: boolean;
   onEdit?: (section: EditSection, initialForm: Record<string, unknown>) => void;
   linkLabel?: string;
+};
+
+const getRewardFontSize = (val: number | undefined | null) => {
+  const v = val ?? 0;
+  const s = String(v);
+  if (s.length > 8) return "text-2xl sm:text-3xl lg:text-4xl";
+  if (s.length > 5) return "text-3xl sm:text-4xl lg:text-5xl";
+  return "text-4xl sm:text-5xl lg:text-6xl";
 };
 
 export default function InformationSection({
@@ -670,7 +678,7 @@ export default function InformationSection({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="font-medium px-1">
+          <div className="font-medium px-1 text-lg">
             {event?.locationName ?? "No location specified"}
           </div>
 
@@ -689,9 +697,11 @@ export default function InformationSection({
               </div>
             </div>
           ) : (
-            <div className="h-32 rounded-xl bg-muted/50 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed">
-              <MapPin className="h-8 w-8 mb-2 opacity-50" />
-              <span className="text-sm">No map location available</span>
+            <div className="h-48 rounded-xl bg-muted/30 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed">
+              <MapPin className="h-10 w-10 mb-3 opacity-30" />
+              <span className="text-sm font-medium">
+                No map location available
+              </span>
             </div>
           )}
         </CardContent>
@@ -882,11 +892,14 @@ export default function InformationSection({
                   <Award className="w-3 h-3" />
                   Committee Reward
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-6xl font-black tracking-tighter drop-shadow-md">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0 overflow-hidden">
+                  <span 
+                    className={`${getRewardFontSize(event?.virtualRewardCommittee)} font-black tracking-tighter drop-shadow-md`}
+                    title={String(event?.virtualRewardCommittee ?? 0)}
+                  >
                     {event?.virtualRewardCommittee ?? 0}
                   </span>
-                  <span className="text-xl font-bold opacity-90 capitalize">
+                  <span className="text-xl font-bold opacity-90 capitalize shrink-0">
                     {event?.unitReward ?? "coins"}
                   </span>
                 </div>
@@ -907,11 +920,14 @@ export default function InformationSection({
                   <Users className="w-3 h-3" />
                   Guest Reward
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-6xl font-black tracking-tighter drop-shadow-md">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0 overflow-hidden">
+                  <span 
+                    className={`${getRewardFontSize(event?.virtualRewardGuest)} font-black tracking-tighter drop-shadow-md`}
+                    title={String(event?.virtualRewardGuest ?? 0)}
+                  >
                     {event?.virtualRewardGuest ?? 0}
                   </span>
-                  <span className="text-xl font-bold opacity-90 capitalize">
+                  <span className="text-xl font-bold opacity-90 capitalize shrink-0">
                     {event?.unitReward ?? "coins"}
                   </span>
                 </div>
@@ -1494,7 +1510,18 @@ export default function InformationSection({
                             onCheckedChange={(checked) => {
                               const newReqs = [...fileRequirements];
                               if (checked) {
-                                newReqs[index].allowedFileTypes.push(type);
+                                if (type === FileType.url) {
+                                  newReqs[index].allowedFileTypes = [
+                                    FileType.url,
+                                  ];
+                                } else {
+                                  newReqs[index].allowedFileTypes = newReqs[
+                                    index
+                                  ].allowedFileTypes.filter(
+                                    (t) => t !== FileType.url
+                                  );
+                                  newReqs[index].allowedFileTypes.push(type);
+                                }
                               } else {
                                 newReqs[index].allowedFileTypes = newReqs[
                                   index

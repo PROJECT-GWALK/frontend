@@ -2,7 +2,7 @@
 
 
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -29,6 +29,16 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { X } from "lucide-react";
 import {
   setEventPublicView,
@@ -37,12 +47,16 @@ import {
   updateSpecialReward,
   deleteSpecialReward,
   getEvent,
+  getTeams,
+  deleteTeam,
 } from "@/utils/apievent";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import { toast } from "sonner";
-import InformationSection from "../InformationSection";
+import InformationSection from "../components/InformationSection";
 import type { EventData, EventEditSection, SpecialRewardEdit, EventFormState } from "@/utils/types";
+import type { PresenterProject } from "../Presenter/components/types";
 import ParticipantsSection from "./ParticipantsSection";
+import UnifiedProjectList from "../components/UnifiedProjectList";
 import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,6 +91,70 @@ export default function OrganizerView({ id, event }: Props) {
   } | null>(null);
   const [removedRewardIds, setRemovedRewardIds] = useState<string[]>([]);
   const [rewardErrors, setRewardErrors] = useState<Record<string, string>>({});
+  
+  const [projects, setProjects] = useState<PresenterProject[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
+
+  const handleAction = (action: string, projectId: string) => {
+    if (action === "comment") {
+      setSelectedProjectId(projectId);
+      setCommentOpen(true);
+    } else if (action === "delete_team") {
+      setTeamToDelete(projectId);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!teamToDelete) return;
+    try {
+      await deleteTeam(id, teamToDelete);
+      toast.success("ลบทีมเรียบร้อยแล้ว");
+      fetchTeamsData();
+    } catch (error) {
+      console.error(error);
+      toast.error("เกิดข้อผิดพลาดในการลบทีม");
+    } finally {
+      setDeleteDialogOpen(false);
+      setTeamToDelete(null);
+    }
+  };
+
+  const fetchTeamsData = async () => {
+    try {
+      const res = await getTeams(id);
+      if (res.message === "ok") {
+        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+          id: t.id,
+          title: t.teamName,
+          desc: t.description || "",
+          img: t.imageCover || "/banner.png",
+          videoLink: t.videoLink,
+          files:
+            t.files?.map((f: any) => ({
+              name: f.fileUrl.split("/").pop() || "File",
+              url: f.fileUrl,
+              fileTypeId: f.fileTypeId,
+            })) || [],
+          members:
+            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+          createdAt: t.createdAt,
+        }));
+        setProjects(mappedProjects);
+      }
+    } catch (error) {
+      console.error("Failed to fetch teams:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamsData();
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -459,15 +537,75 @@ export default function OrganizerView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="project">
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>ผลงาน</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground">ยังไม่มีข้อมูลผลงาน</div>
-                  </CardContent>
-                </Card>
+              <div className="mt-6 space-y-6">
+                <div className="flex items-center justify-between gap-4 mb-3">
+                  <h2 className="text-lg font-semibold">Projects</h2>
+                  <Input
+                    placeholder="Search projects by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="max-w-sm"
+                  />
+                </div>
+                <UnifiedProjectList
+                  projects={projects}
+                  role="ORGANIZER"
+                  eventId={id}
+                  searchQuery={searchQuery}
+                  onAction={handleAction}
+                />
+                
+                <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
+                  <DialogContent>
+                    <DialogTitle>แสดงความคิดเห็น</DialogTitle>
+                    <div className="mt-2">
+                      <textarea
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        className="w-full rounded-md border p-2"
+                        rows={6}
+                        placeholder="เขียนความคิดเห็น..."
+                      />
+                      <div className="flex justify-end gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setCommentOpen(false);
+                            setCommentText("");
+                          }}
+                        >
+                          ยกเลิก
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            toast.success("ส่งความคิดเห็นเรียบร้อย");
+                            setCommentOpen(false);
+                            setCommentText("");
+                          }}
+                        >
+                          ส่งความคิดเห็น
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>ยืนยันการลบทีม?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        การกระทำนี้ไม่สามารถย้อนกลับได้ ข้อมูลทีมและสมาชิกทั้งหมดจะถูกลบออกจากกิจกรรมนี้
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={() => setTeamToDelete(null)}>ยกเลิก</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteTeam} className="bg-red-600 hover:bg-red-700 text-white">
+                        ยืนยันการลบ
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </TabsContent>
 
@@ -1056,6 +1194,26 @@ export default function OrganizerView({ id, event }: Props) {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>ยืนยันการลบทีม</AlertDialogTitle>
+              <AlertDialogDescription>
+                คุณแน่ใจหรือไม่ที่จะลบทีมนี้? การกระทำนี้ไม่สามารถย้อนกลับได้
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteTeam}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              >
+                ลบทีม
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

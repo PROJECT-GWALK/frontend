@@ -85,7 +85,7 @@ export default function PresenterSection(props: Props) {
               type="number"
               min="0"
               step="1"
-              placeholder="e.g. 5"
+              placeholder="e.g. 3"
               value={maxPresenters}
               onChange={(e) => {
                 const v = e.target.value;
@@ -102,7 +102,7 @@ export default function PresenterSection(props: Props) {
               type="number"
               min="0"
               step="1"
-              placeholder="e.g. 20"
+              placeholder="e.g. 30"
               value={maxGroups}
               onChange={(e) => {
                 const v = e.target.value;
@@ -312,9 +312,20 @@ export default function PresenterSection(props: Props) {
                         onCheckedChange={(checked) => {
                           const newReqs = [...fileRequirements];
                           if (checked) {
-                            newReqs[index].allowedFileTypes.push(type);
+                            if (type === FileType.url) {
+                              newReqs[index].allowedFileTypes = [FileType.url];
+                            } else {
+                              newReqs[index].allowedFileTypes = newReqs[
+                                index
+                              ].allowedFileTypes.filter(
+                                (t) => t !== FileType.url
+                              );
+                              newReqs[index].allowedFileTypes.push(type);
+                            }
                           } else {
-                            newReqs[index].allowedFileTypes = newReqs[index].allowedFileTypes.filter((t) => t !== type);
+                            newReqs[index].allowedFileTypes = newReqs[
+                              index
+                            ].allowedFileTypes.filter((t) => t !== type);
                           }
                           setFileRequirements(newReqs);
                         }}

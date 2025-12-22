@@ -422,3 +422,4 @@ export const addTeamMember = async (eventId: string, teamId: string, userId: str
   );
   return res.data; // { message }
 };
+

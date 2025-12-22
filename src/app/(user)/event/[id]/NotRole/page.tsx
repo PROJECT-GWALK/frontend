@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import InformationSection from "../InformationSection";
+import InformationSection from "../components/InformationSection";
 import type { EventData } from "@/utils/types";
 
 type Props = {

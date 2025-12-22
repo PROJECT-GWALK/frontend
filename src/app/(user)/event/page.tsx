@@ -33,6 +33,39 @@ export default function EventsPage() {
     | "finished"
   >("all");
 
+  const getEventStatus = (event: MyEvent): string => {
+    const now = new Date();
+    const startJoin = event.startJoinDate ? new Date(event.startJoinDate) : null;
+    const endJoin = event.endJoinDate ? new Date(event.endJoinDate) : null;
+    const startView = event.startView ? new Date(event.startView) : null;
+    const endView = event.endView ? new Date(event.endView) : null;
+
+    // finished: หลัง endView
+    if (endView && now > endView) return "finished";
+    
+    // viewOpen: กำลัง startView (ระหว่าง startView ถึง endView)
+    if (startView && now >= startView) return "viewOpen";
+    
+    // viewSoon: ก่อน startView (หลัง endJoin แต่ก่อน startView)
+    if (endJoin && now > endJoin && startView && now < startView) return "viewSoon";
+    
+    // accepting: กำลัง startJoinDate (ระหว่าง startJoin ถึง endJoin)
+    if (startJoin && endJoin && now >= startJoin && now <= endJoin) return "accepting";
+    
+    // upcomingRecruit: ก่อน startJoinDate
+    if (startJoin && now < startJoin) return "upcomingRecruit";
+    
+    return "viewOpen"; // default fallback
+  };
+
+  const counts = {
+    upcomingRecruit: events.filter(e => getEventStatus(e) === "upcomingRecruit").length,
+    accepting: events.filter(e => getEventStatus(e) === "accepting").length,
+    viewSoon: events.filter(e => getEventStatus(e) === "viewSoon").length,
+    viewOpen: events.filter(e => getEventStatus(e) === "viewOpen").length,
+    finished: events.filter(e => getEventStatus(e) === "finished").length,
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -117,6 +150,18 @@ export default function EventsPage() {
     );
   }
 
+  const getFilterLabel = (f: string) => {
+    const labels: Record<string, string> = {
+      all: "All Events",
+      upcomingRecruit: "Coming Soon",
+      accepting: "Accepting",
+      viewSoon: "Viewing Soon",
+      viewOpen: "Live Now",
+      finished: "Finished",
+    };
+    return labels[f] || f;
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
@@ -135,90 +180,33 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-  <TabsList className="h-auto flex-wrap gap-2 p-2 bg-transparent">
-    <TabsTrigger 
-      value="upcomingRecruit"
-      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-    >
-      Coming Soon
-      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
-        0
-      </span>
-    </TabsTrigger>
-    <TabsTrigger 
-      value="accepting"
-      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-    >
-      Accepting
-      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
-        3
-      </span>
-    </TabsTrigger>
-    <TabsTrigger 
-      value="viewSoon"
-      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-    >
-      Viewing Soon
-      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
-        1
-      </span>
-    </TabsTrigger>
-    <TabsTrigger 
-      value="viewOpen"
-      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-    >
-      Open for Viewing
-      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
-        0
-      </span>
-    </TabsTrigger>
-    <TabsTrigger 
-      value="finished"
-      className="rounded-full px-4 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-    >
-      Finished
-      <span className="ml-2 rounded-full bg-background/20 px-2 py-0.5 text-xs">
-        0
-      </span>
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value={filter} className="mt-4" />
-</Tabs>
+      <div className="flex flex-wrap gap-2">
+        {(["all", "upcomingRecruit", "accepting", "viewSoon", "viewOpen", "finished"] as const).map((f) => {
+          const count = f === "all" ? events.length : counts[f];
+          return (
+            <Button
+              key={f}
+              size="sm"
+              variant={filter === f ? "default" : "outline"}
+              onClick={() => setFilter(f)}
+              className={`rounded-full transition-all ${
+                filter === f ? "shadow-md" : "hover:border-primary/50"
+              }`}
+            >
+              {getFilterLabel(f)}
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-background/20">
+                {count}
+              </span>
+            </Button>
+          );
+        })}
+      </div>
 
       {events
         .filter((e) => e.eventName.toLowerCase().includes(search.toLowerCase()))
         .filter((e) => {
           if (filter === "all") return true;
-          const now = new Date();
-          const sv = e.startView ? new Date(e.startView) : undefined;
-          const ev = e.endView ? new Date(e.endView) : undefined;
-          const sj = e.startJoinDate ? new Date(e.startJoinDate) : undefined;
-          const ej = e.endJoinDate ? new Date(e.endJoinDate) : undefined;
-          if (filter === "upcomingRecruit") {
-            if (!sj) return false;
-            return now < sj;
-          }
-          if (filter === "accepting") {
-            if (sj && ej) return now >= sj && now <= ej;
-            if (sj && !ej) return now >= sj;
-            if (!sj && ej) return now <= ej;
-            return false;
-          }
-          if (filter === "viewSoon") {
-            if (!sv) return false;
-            return now < sv;
-          }
-          if (filter === "viewOpen") {
-            if (!sv) return false;
-            const within = ev ? now >= sv && now <= ev : now >= sv;
-            return (e.publicView ?? false) && within;
-          }
-          if (filter === "finished") {
-            if (!ev) return false;
-            return now > ev;
-          }
-          return true;
+          return getEventStatus(e) === filter;
         }).length === 0 && (
         <p className="text-muted-foreground">ยังไม่มีอีเวนต์ที่เผยแพร่</p>
       )}
@@ -230,114 +218,125 @@ export default function EventsPage() {
           )
           .filter((e) => {
             if (filter === "all") return true;
-            const now = new Date();
-            const sv = e.startView ? new Date(e.startView) : undefined;
-            const ev = e.endView ? new Date(e.endView) : undefined;
-            const sj = e.startJoinDate ? new Date(e.startJoinDate) : undefined;
-            const ej = e.endJoinDate ? new Date(e.endJoinDate) : undefined;
-            if (filter === "upcomingRecruit") {
-              if (!sj) return false;
-              return now < sj;
-            }
-            if (filter === "accepting") {
-              if (sj && ej) return now >= sj && now <= ej;
-              if (sj && !ej) return now >= sj;
-              if (!sj && ej) return now <= ej;
-              return false;
-            }
-            if (filter === "viewSoon") {
-              if (!sv) return false;
-              return now < sv;
-            }
-            if (filter === "viewOpen") {
-              if (!sv) return false;
-              const within = ev ? now >= sv && now <= ev : now >= sv;
-              return (e.publicView ?? false) && within;
-            }
-            if (filter === "finished") {
-              if (!ev) return false;
-              return now > ev;
-            }
-            return true;
+            return getEventStatus(e) === filter;
           })
           .map((event) => {
             const hasBanner = Boolean(event.imageCover);
+            const status = getEventStatus(event);
+            const statusConfig = {
+              upcomingRecruit: { label: "Coming Soon", color: "bg-amber-500" },
+              accepting: { label: "Accepting", color: "bg-emerald-500" },
+              viewSoon: { label: "Viewing Soon", color: "bg-blue-500" },
+              viewOpen: { label: "Live", color: "bg-rose-500" },
+              finished: { label: "Finished", color: "bg-slate-500" },
+            };
+            const config = statusConfig[status as keyof typeof statusConfig] || { label: status, color: "bg-gray-500" };
+
             return (
               <Card
                 key={event.id}
-                className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300"
+                className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-all duration-300 hover:border-primary hover:shadow-xl"
               >
-                <div className="relative h-36">
+                <div className="relative aspect-video w-full overflow-hidden">
                   {hasBanner ? (
                     <img
                       src={event.imageCover as string}
                       alt={event.eventName}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="h-full w-full bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 flex items-center justify-center">
+                    <div className="h-full w-full bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
                       <img
                         src="/banner.png"
                         alt={event.eventName}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover opacity-80"
                       />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
-                  <span className="absolute top-2 left-2 px-2 py-1 text-[10px] font-medium rounded-2xl bg-emerald-500 text-white shadow-sm">
-                    Live
-                  </span>
-                </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Link
-                        href={`/event/${event.id}`}
-                        className="font-semibold hover:underline line-clamp-1"
-                      >
-                        {event.eventName}
-                      </Link>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>
-                          Published at{" "}
-                          {formatDateTime(new Date(event.createdAt), timeFormat)}
-                        </span>
-                      </div>
-                    </div>
-                    {event.role && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-40" />
+                  
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md ${config.color} text-white shadow-sm backdrop-blur-md`}>
+                      {config.label}
+                    </span>
+                  </div>
+
+                  {event.role && (
+                    <div className="absolute top-3 right-3">
+                      <span className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md bg-white/90 text-primary shadow-sm backdrop-blur-md">
                         {event.role}
                       </span>
-                    )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="mb-4 space-y-2">
+                    <Link
+                      href={`/event/${event.id}`}
+                      className="block"
+                    >
+                      <h3 className="font-bold text-lg leading-tight tracking-tight text-foreground transition-colors group-hover:text-primary line-clamp-2">
+                        {event.eventName}
+                      </h3>
+                    </Link>
+                    
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>
+                        {formatDateTime(new Date(event.createdAt), timeFormat)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
+
+                  <div className="mt-auto pt-2">
                     {event.role ? (
-                      <Link href={`/event/${event.id}`}>
-                        <Button size="sm">View</Button>
+                      <Link href={`/event/${event.id}`} className="block w-full">
+                        <Button className="w-full group-hover:bg-primary/90 transition-colors" size="default">
+                          View Event
+                        </Button>
                       </Link>
                     ) : (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleJoin(event.id, "presenter")}
-                        >
-                          Presenter
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleJoin(event.id, "committee")}
-                        >
-                          Committee
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleJoin(event.id, "guest")}
-                        >
-                          Guest
-                        </Button>
+                      <div className="space-y-3">
+                        {status === "accepting" && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className="h-px flex-1 bg-border" />
+                              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                Join As
+                              </span>
+                              <div className="h-px flex-1 bg-border" />
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                              onClick={() => handleJoin(event.id, "presenter")}
+                            >
+                              Presenter
+                            </Button>
+                          </>
+                        )}
+
+                        {(status === "viewSoon" || status === "viewOpen") && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <div className="h-px flex-1 bg-border" />
+                              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                Join As
+                              </span>
+                              <div className="h-px flex-1 bg-border" />
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                              onClick={() => handleJoin(event.id, "guest")}
+                            >
+                              Guest
+                            </Button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

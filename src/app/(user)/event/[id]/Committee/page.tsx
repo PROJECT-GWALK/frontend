@@ -14,10 +14,11 @@ import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData } from "@/utils/types";
-import InformationSection from "../InformationSection";
+import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
 import React from "react";
 import ProjectsList from "../Presenter/components/ProjectsList";
+import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
 
@@ -155,6 +156,26 @@ export default function CommitteePage(props: Props) {
       },
     }));
     toast.success("Reset Special Reward");
+  };
+
+  const handleAction = (
+    action: string,
+    projectId: string
+  ) => {
+    if (action === "comment") {
+      setSelectedProjectId(projectId);
+      setCommentOpen(true);
+    } else if (action === "give_vr") {
+      setSelectedProjectId(projectId);
+      setVrDialogOpen(true);
+    } else if (action === "give_special") {
+      setSelectedProjectId(projectId);
+      setSpecialDialogOpen(true);
+    } else if (action === "reset_vr") {
+      handleResetVR(projectId);
+    } else if (action === "reset_special") {
+      handleResetSpecial(projectId);
+    }
   };
 
   if (loading || !localEvent) {
@@ -305,11 +326,11 @@ export default function CommitteePage(props: Props) {
                         <div>
                           <p className="text-sm text-muted-foreground">{t("committeeSection.used")}</p>
                           <span className="text-2xl font-bold">
-                            {localEvent?.committeeVirtualUsed ?? 20000}
+                            {localEvent?.myVirtualUsed ?? 0}
                           </span>
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          {t("committeeSection.total")} {localEvent?.committeeVirtualTotal ?? 50000}
+                          {t("committeeSection.total")} {localEvent?.myVirtualTotal ?? 0}
                         </span>
                       </div>
                       <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
@@ -317,8 +338,8 @@ export default function CommitteePage(props: Props) {
                           className="h-full bg-amber-500 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
-                              ((localEvent?.committeeVirtualUsed ?? 20000) /
-                                (localEvent?.committeeVirtualTotal ?? 50000)) *
+                              ((localEvent?.myVirtualUsed ?? 0) /
+                                (localEvent?.myVirtualTotal ?? 1)) *
                               100
                             }%`,
                           }}
@@ -326,8 +347,8 @@ export default function CommitteePage(props: Props) {
                       </div>
                       <p className="text-xs text-amber-600 font-medium text-right">
                         {t("committeeSection.remaining")}{" "}
-                        {(localEvent?.committeeVirtualTotal ?? 50000) -
-                          (localEvent?.committeeVirtualUsed ?? 20000)}
+                        {(localEvent?.myVirtualTotal ?? 0) -
+                          (localEvent?.myVirtualUsed ?? 0)}
                       </p>
                     </CardContent>
                   </Card>
@@ -439,7 +460,7 @@ export default function CommitteePage(props: Props) {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <span className="text-2xl font-bold text-foreground">
-                          {localEvent?.committeeFeedbackCount ?? 8}{" "}
+                          {localEvent?.myFeedbackCount ?? 0}{" "}
                           <span className="text-sm font-normal text-muted-foreground">
                             / {localEvent?.presenterTeams ?? 10}
                           </span>
@@ -451,7 +472,7 @@ export default function CommitteePage(props: Props) {
                           className="h-full bg-rose-500 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
-                              ((localEvent?.committeeFeedbackCount ?? 8) /
+                              ((localEvent?.myFeedbackCount ?? 0) /
                                 (localEvent?.presenterTeams ?? 10)) *
                               100
                             }%`,
@@ -489,121 +510,14 @@ export default function CommitteePage(props: Props) {
                     />
                   </div>
                   <div className="space-y-6">
-                    {projects.map((p) => (
-                      <Card
-                        key={p.id}
-                        className="group border-none shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white/50 backdrop-blur-sm"
-                      >
-                        <div className="flex flex-col md:flex-row">
-                          {/* Project Image Section */}
-                          <div className="relative w-full md:w-64 h-48 md:h-auto overflow-hidden bg-slate-100">
-                            <img
-                              src={p.img || "/banner.png"} // Fallback image
-                              alt={p.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div className="absolute top-2 left-2">
-                              <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-slate-700 rounded shadow-sm">
-                                {p.title}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Content Section */}
-                          <div className="flex-1 p-5 flex flex-col justify-between">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="space-y-1">
-                                <CardTitle className="text-xl font-bold text-slate-800 leading-tight">
-                                  {p.title}
-                                </CardTitle>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-muted-foreground">
-                                    ประเภทรางวัลพิเศษ:
-                                  </span>
-                                  <span
-                                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                      projectRewards[p.id]?.specialGiven
-                                        ? "bg-amber-100 text-amber-700 border border-amber-200"
-                                        : "bg-slate-100 text-slate-400"
-                                    }`}
-                                  >
-                                    {projectRewards[p.id]?.specialGiven ?? "ยังไม่ได้รับ"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="text-right bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-[100px]">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                  Virtual Reward Given
-                                </div>
-                                <div className="text-3xl font-black text-blue-600">
-                                  {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Action Buttons Grid */}
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mt-6">
-                              {/* Primary Actions */}
-                              <Link href={`/event/${id}/Projects/${p.id}`} className="flex-1 sm:flex-none">
-                                <Button
-                                  variant="outline"
-                                  className="w-full sm:w-auto hover:bg-sky-50 hover:text-sky-600 border-slate-200"
-                                >
-                                  ดูข้อมูล
-                                </Button>
-                              </Link>
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedProjectId(p.id);
-                                  setCommentOpen(true);
-                                }}
-                                className="hover:bg-pink-50 hover:text-pink-600 border-slate-200"
-                              >
-                                แสดงความเห็น
-                              </Button>
-
-                              {/* Reward Actions */}
-                              <Button
-                                onClick={() => {
-                                  setSelectedProjectId(p.id);
-                                  setVrDialogOpen(true);
-                                }}
-                                className="bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
-                              >
-                                ให้ Virtual Reward
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setSelectedProjectId(p.id);
-                                  setSpecialDialogOpen(true);
-                                }}
-                                className="bg-amber-500 text-white hover:bg-amber-600 shadow-sm"
-                              >
-                                ให้รางวัลพิเศษ
-                              </Button>
-
-                              {/* Undo Actions - Styled more subtly */}
-                              <Button
-                                variant="ghost"
-                                onClick={() => handleResetVR(p.id)}
-                                className="text-slate-400 hover:text-red-500 hover:bg-red-50 text-xs"
-                              >
-                                ขอคืน Virtual Reward
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                onClick={() => handleResetSpecial(p.id)}
-                                className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 text-xs"
-                              >
-                                ขอคืนรางวัลพิเศษ
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                    <UnifiedProjectList
+                      projects={projects}
+                      role="COMMITTEE"
+                      eventId={id}
+                      searchQuery={searchQuery}
+                      projectRewards={projectRewards}
+                      onAction={handleAction}
+                    />
                   </div>
                 </div>
               </div>
@@ -777,11 +691,13 @@ export default function CommitteePage(props: Props) {
                     />
                   </div>
 
-                  <ProjectsList
-                    projects={projects} 
-                    searchQuery={searchQuery} 
-                    eventId={id} 
-                    basePath={`/event/${id}/Projects`}
+                  <UnifiedProjectList
+                    projects={projects}
+                    role="COMMITTEE"
+                    eventId={id}
+                    searchQuery={searchQuery}
+                    projectRewards={projectRewards}
+                    onAction={handleAction}
                   />
                 </div>
               </div>

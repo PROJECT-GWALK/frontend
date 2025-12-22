@@ -111,8 +111,8 @@ export default function EventDraft() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Presenter Details
-  const [maxPresenters, setMaxPresenters] = useState("");
-  const [maxGroups, setMaxGroups] = useState("");
+  const [maxPresenters, setMaxPresenters] = useState("3");
+  const [maxGroups, setMaxGroups] = useState("30");
   const [submissionStartDate, setSubmissionStartDate] = useState("");
   const [submissionStartTime, setSubmissionStartTime] = useState("");
   const [submissionEndDate, setSubmissionEndDate] = useState("");
@@ -672,8 +672,8 @@ export default function EventDraft() {
         setEventVisibility(data.publicView ? "public" : "private");
 
         // ================= PRESENTER =================
-        setMaxPresenters(data.maxTeamMembers?.toString() || "");
-        setMaxGroups(data.maxTeams?.toString() || "");
+        setMaxPresenters(data.maxTeamMembers?.toString() || "3");
+        setMaxGroups(data.maxTeams?.toString() || "30");
 
         // ================= SUBMISSION PERIOD =================
         setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);

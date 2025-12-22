@@ -54,6 +54,7 @@ type ParticipantUser = {
 type ParticipantTeam = {
   id: string;
   name?: string | null;
+  teamName?: string | null;
 } | null;
 type ParticipantRow = {
   id: string;
@@ -198,7 +199,8 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
         (p.user?.name?.toLowerCase().includes(query) ||
           p.user?.username?.toLowerCase().includes(query) ||
           p.user?.email?.toLowerCase().includes(query) ||
-          p.team?.name?.toLowerCase().includes(query))
+          p.team?.name?.toLowerCase().includes(query) ||
+          p.team?.teamName?.toLowerCase().includes(query))
     );
   };
 
@@ -392,7 +394,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                       หัวหน้าทีม
                                     </th>
                                   )}
-                                  {g !== "ORGANIZER" && (
+                                  {g !== "ORGANIZER" && g !== "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
                                       Virtual Reward
                                     </th>
@@ -479,14 +481,14 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                                 Organizer
                                               </SelectItem>
                                             )}
-                                            <SelectItem value="PRESENTER">
-                                              Presenter
-                                            </SelectItem>
                                             {hasCommittee && (
                                               <SelectItem value="COMMITTEE">
                                                 Committee
                                               </SelectItem>
                                             )}
+                                            <SelectItem value="PRESENTER">
+                                              Presenter
+                                            </SelectItem>
                                             <SelectItem value="GUEST">
                                               Guest
                                             </SelectItem>
@@ -500,7 +502,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                           variant="outline"
                                           className="font-normal"
                                         >
-                                          {p.team?.name || "-"}
+                                          {p.team?.name || p.team?.teamName || "-"}
                                         </Badge>
                                       </td>
                                     )}
@@ -536,7 +538,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                       </td>
                                     )}
 
-                                    {g !== "ORGANIZER" && (
+                                    {g !== "ORGANIZER" && g !== "PRESENTER" && (
                                       <td className="p-3">
                                         <Input
                                           type="number"

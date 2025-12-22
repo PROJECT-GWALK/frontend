@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,8 +36,10 @@ export default function EditProjectDialog({
   onSuccess,
   eventId,
 }: Props) {
+  const router = useRouter();
   const [form, setForm] = useState<PresenterProject>(project);
   const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [cropOpen, setCropOpen] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -107,13 +117,14 @@ export default function EditProjectDialog({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this project?")) return;
     setLoading(true);
     try {
       await deleteTeam(eventId, project.id);
       toast.success("Project deleted");
       onSuccess();
       onOpenChange(false);
+      setDeleteDialogOpen(false);
+      router.push(`/event/${eventId}`);
     } catch (e: any) {
       toast.error(e.message || "Failed to delete project");
     } finally {
@@ -259,16 +270,18 @@ export default function EditProjectDialog({
 
 
           <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-              disabled={loading}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Project
-            </Button>
-            <div className="flex gap-2">
+            {project.isLeader && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={loading}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Project
+              </Button>
+            )}
+            <div className={`flex gap-2 ${!project.isLeader ? "w-full justify-end" : ""}`}>
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                 Cancel
               </Button>
@@ -279,6 +292,26 @@ export default function EditProjectDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this project? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+              {loading ? "Deleting..." : "Delete Project"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

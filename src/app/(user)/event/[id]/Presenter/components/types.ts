@@ -7,4 +7,5 @@ export type PresenterProject = {
   files?: { name: string; url: string; fileTypeId?: string }[];
   members?: string[];
   isLeader?: boolean;
+  createdAt?: string;
 };

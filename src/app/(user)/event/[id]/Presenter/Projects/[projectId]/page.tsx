@@ -4,17 +4,19 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import * as QRCode from "qrcode";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  Edit3,
-  Share2,
   Users,
   FileText,
-  Plus,
   Search,
+  Plus,
+  Share2,
+  Edit3,
   Loader2,
   X,
   ChevronLeft,
+  LogOut,
 } from "lucide-react";
 import {
   getTeamById,
@@ -26,6 +28,7 @@ import {
   removeTeamMember,
   deleteTeamFile,
 } from "@/utils/apievent";
+import { getCurrentUser } from "@/utils/apiuser";
 import EditProjectDialog from "../../components/EditProjectDialog";
 import type { PresenterProject } from "../../components/types";
 import { type EventData, FileType } from "@/utils/types";
@@ -57,6 +60,7 @@ type Props = {
 };
 
 export default function ProjectDetailPage({ params }: Props) {
+  const router = useRouter();
   const paramsResolved = (React as any).use
     ? (React as any).use(params)
     : params;
@@ -66,6 +70,8 @@ export default function ProjectDetailPage({ params }: Props) {
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   // Files Dialog
   const [filesOpen, setFilesOpen] = useState(false);
@@ -86,14 +92,35 @@ export default function ProjectDetailPage({ params }: Props) {
 
   const fetchData = async () => {
     try {
-      const [teamRes, eventRes, myEventsRes] = await Promise.all([
+      const [teamRes, eventRes, myEventsRes, currentUserRes] = await Promise.all([
         getTeamById(id, projectId),
         getEvent(id),
         getMyEvents(),
+        getCurrentUser(),
       ]);
+
+      if (teamRes.message === "not_found") {
+        router.push(`/event/${id}`);
+        return;
+      }
 
       if (teamRes.message === "ok") {
         const t = teamRes.team;
+
+        // Check if current user is member of the team
+        if (currentUserRes.message === "ok") {
+          const currentUser = currentUserRes.user;
+          setCurrentUserId(currentUser.id);
+          const isMember = t.participants?.some(
+            (p: any) => p.user.id === currentUser.id
+          );
+
+          if (!isMember) {
+            toast.error("Access denied. You are not a member of this team.");
+            router.push(`/event/${id}`);
+            return;
+          }
+        }
 
         // Check if current user is leader based on getMyEvents
         const myEvent =
@@ -287,6 +314,19 @@ export default function ProjectDetailPage({ params }: Props) {
     toast.success("Copied to clipboard");
   };
 
+  const handleLeaveTeam = async () => {
+    if (!currentUserId) return;
+    try {
+      const res = await removeTeamMember(id, projectId, currentUserId);
+      if (res.message === "ok") {
+        toast.success("You have left the team");
+        router.push(`/event/${id}`);
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to leave team");
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-6 space-y-8">
@@ -390,27 +430,41 @@ export default function ProjectDetailPage({ params }: Props) {
               </div>
 
               <div className="flex gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditOpen(true)}
-                >
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  Edit Project
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFilesOpen(true)}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Manage Files
-                  {project.files && project.files.length > 0 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {project.files.length}
-                    </Badge>
-                  )}
-                </Button>
+                {!project.isLeader && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setLeaveDialogOpen(true)}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Leave Team
+                  </Button>
+                )}
+                {project.isLeader && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditOpen(true)}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit Project
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFilesOpen(true)}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Manage Files
+                      {project.files && project.files.length > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {project.files.length}
+                        </Badge>
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -458,13 +512,20 @@ export default function ProjectDetailPage({ params }: Props) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Team Members
+            Team Members{" "}
+            <span className="text-muted-foreground text-sm font-normal">
+              ({membersData.length} / {eventData?.maxTeamMembers || "-"})
+            </span>
           </CardTitle>
           {project.isLeader && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setInviteOpen(true)}
+              disabled={
+                !!eventData?.maxTeamMembers &&
+                membersData.length >= eventData.maxTeamMembers
+              }
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Member
@@ -1009,6 +1070,26 @@ export default function ProjectDetailPage({ params }: Props) {
               )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leave Team Confirmation Dialog */}
+      <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Leave Team</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to leave this team? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleLeaveTeam}>
+              Leave Team
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

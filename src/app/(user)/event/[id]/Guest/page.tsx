@@ -1,9 +1,10 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getTeams } from "@/utils/apievent";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building } from "lucide-react";
@@ -13,10 +14,11 @@ import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData } from "@/utils/types";
-import InformationSection from "../InformationSection";
+import InformationSection from "../components/InformationSection";
 import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
 import type { PresenterProject } from "../Presenter/components/types";
 import ProjectsList from "../Presenter/components/ProjectsList";
+import UnifiedProjectList from "../components/UnifiedProjectList";
 
 type Props = {
   id: string;
@@ -45,6 +47,46 @@ export default function GuestView({ id, event }: Props) {
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  const handleAction = (action: string, projectId: string) => {
+    if (action === "comment") {
+      setSelectedProjectId(projectId);
+      setCommentOpen(true);
+    }
+  };
+
+  const fetchTeamsData = async () => {
+    try {
+      const res = await getTeams(id);
+      if (res.message === "ok") {
+        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+          id: t.id,
+          title: t.teamName,
+          desc: t.description || "",
+          img: t.imageCover || "/banner.png",
+          videoLink: t.videoLink,
+          files:
+            t.files?.map((f: any) => ({
+              name: f.fileUrl.split("/").pop() || "File",
+              url: f.fileUrl,
+              fileTypeId: f.fileTypeId,
+            })) || [],
+          members:
+            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+        }));
+        setProjects(mappedProjects);
+      }
+    } catch (error) {
+      console.error("Failed to fetch teams:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamsData();
+  }, [id]);
 
   // UI state for project viewer/editor
   const [viewOpen, setViewOpen] = useState(false);
@@ -180,7 +222,7 @@ export default function GuestView({ id, event }: Props) {
                   </CardHeader>
                   <CardContent>
                     <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
+                      {localEvent?.presenterTeams ?? 0}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">{t("dashboard.teamCount")}</p>
                   </CardContent>
@@ -352,7 +394,48 @@ export default function GuestView({ id, event }: Props) {
                     />
                   </div>
 
-                  <ProjectsList projects={projects} searchQuery={searchQuery} eventId={event.id} />
+                  <UnifiedProjectList
+                    projects={projects}
+                    role="GUEST"
+                    eventId={id}
+                    searchQuery={searchQuery}
+                    onAction={handleAction}
+                  />
+
+                  <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
+                    <DialogContent>
+                      <DialogTitle>แสดงความคิดเห็น</DialogTitle>
+                      <div className="mt-2">
+                        <textarea
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          className="w-full rounded-md border p-2"
+                          rows={6}
+                          placeholder="เขียนความคิดเห็น..."
+                        />
+                        <div className="flex justify-end gap-2 mt-3">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setCommentOpen(false);
+                              setCommentText("");
+                            }}
+                          >
+                            ยกเลิก
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              toast.success("ส่งความคิดเห็นเรียบร้อย");
+                              setCommentOpen(false);
+                              setCommentText("");
+                            }}
+                          >
+                            ส่งความคิดเห็น
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </TabsContent>
