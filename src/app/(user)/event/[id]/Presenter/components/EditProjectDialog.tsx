@@ -20,6 +20,7 @@ import { uploadTeamFile, updateTeam, deleteTeam } from "@/utils/apievent";
 import type { EventFileType } from "@/utils/types";
 import { toast } from "sonner";
 import ImageCropDialog from "@/lib/image-crop-dialog";
+import Image from "next/image";
 
 type Props = {
   open: boolean;
@@ -109,8 +110,9 @@ export default function EditProjectDialog({
       toast.success("Project updated");
       onSuccess();
       onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message || "Failed to update project");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to update project";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -125,8 +127,9 @@ export default function EditProjectDialog({
       onOpenChange(false);
       setDeleteDialogOpen(false);
       router.push(`/event/${eventId}`);
-    } catch (e: any) {
-      toast.error(e.message || "Failed to delete project");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to delete project";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -208,9 +211,10 @@ export default function EditProjectDialog({
             />
             {bannerPreview ? (
               <div className="relative border rounded-lg overflow-hidden aspect-video bg-muted mt-2">
-                <img
+                <Image
                   src={bannerPreview}
                   alt="Project cover preview"
+                  fill
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-2">

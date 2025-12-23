@@ -11,6 +11,7 @@ import {
   FileText,
   Search,
   ChevronLeft,
+  Download,
 } from "lucide-react";
 import {
   getTeamById,
@@ -18,7 +19,7 @@ import {
   getMyEvents,
 } from "@/utils/apievent";
 import type { PresenterProject } from "../../Presenter/components/types";
-import { type EventData, FileType } from "@/utils/types";
+import { type EventData, FileType, type ProjectMember, type Team, type DraftEvent } from "@/utils/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,8 +29,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserAvatar } from "@/utils/function";
 
 import { useParams } from "next/navigation";
 
@@ -39,11 +40,10 @@ export default function ProjectDetailPage() {
   const projectId = params?.projectId as string;
   
   const [project, setProject] = useState<PresenterProject | null>(null);
-  const [membersData, setMembersData] = useState<any[]>([]);
+  const [membersData, setMembersData] = useState<ProjectMember[]>([]);
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [bannerOpen, setBannerOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [qrThumb, setQrThumb] = useState<string | null>(null);
@@ -57,12 +57,12 @@ export default function ProjectDetailPage() {
       ]);
 
       if (teamRes.message === "ok") {
-        const t = teamRes.team;
+        const t = teamRes.team as Team;
 
         // Check if current user is leader based on getMyEvents
         const myEvent =
           myEventsRes.message === "ok"
-            ? myEventsRes.events.find((e: any) => e.id === id)
+            ? (myEventsRes.events as DraftEvent[]).find((e) => e.id === id)
             : null;
         const isLeader = myEvent?.isLeader || false;
 
@@ -73,17 +73,17 @@ export default function ProjectDetailPage() {
           img: t.imageCover,
           videoLink: t.videoLink,
           files:
-            t.files?.map((f: any) => ({
+            t.files?.map((f) => ({
               name: f.fileUrl.split("/").pop() || "File",
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
           members:
-            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+            t.participants?.map((p) => p.user?.name || "Unknown") || [],
           isLeader: isLeader,
         });
         setMembersData(
-          t.participants?.map((p: any) => ({
+          t.participants?.map((p) => ({
             id: p.user.id,
             name: p.user.name,
             username: p.user.username,
@@ -115,6 +115,7 @@ export default function ProjectDetailPage() {
         setQrThumb(thumb);
       } catch (e) {
         // ignore
+        console.error("Failed to generate QR code", e);
       }
     };
     gen();
@@ -260,10 +261,7 @@ export default function ProjectDetailPage() {
                 key={m.id}
                 className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm relative group"
               >
-                <Avatar>
-                  <AvatarImage src={m.image} />
-                  <AvatarFallback>{m.name?.charAt(0) || "?"}</AvatarFallback>
-                </Avatar>
+                <UserAvatar user={m} />
                 <div className="overflow-hidden">
                   <div className="font-medium truncate">{m.name}</div>
                   <div className="text-xs text-muted-foreground truncate">
@@ -326,26 +324,74 @@ export default function ProjectDetailPage() {
 
                     <div className="border rounded-lg overflow-hidden bg-slate-50">
                       {isImage ? (
-                        <div
-                          className="relative w-full h-[400px] cursor-zoom-in group"
-                          onClick={() => setPreviewImage(file.url)}
-                        >
-                          <Image
-                            src={file.url}
-                            alt={file.name}
-                            fill
-                            className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
+                        <div className="flex flex-col">
+                          <div
+                            className="relative w-full h-[400px] cursor-zoom-in group"
+                            onClick={() => setPreviewImage(file.url)}
+                          >
+                            <Image
+                              src={file.url}
+                              alt={file.name}
+                              fill
+                              className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                              <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
+                            </div>
+                          </div>
+                          <div className="p-3 bg-white border-t flex justify-end">
+                            <Button variant="outline" size="sm" asChild>
+                              <a
+                                href={file.url}
+                                download
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="w-4 h-4" />
+                                Download Image
+                              </a>
+                            </Button>
                           </div>
                         </div>
                       ) : isPdf ? (
-                        <iframe
-                          src={`${file.url}#toolbar=0`}
-                          className="w-full h-[500px]"
-                          title={file.name}
-                        />
+                        <div className="flex flex-col">
+                          <object
+                            data={`${file.url}#toolbar=0`}
+                            type="application/pdf"
+                            className="w-full h-[500px]"
+                            title={file.name}
+                          >
+                            <div className="flex flex-col items-center justify-center h-full bg-slate-50 text-muted-foreground p-4 text-center">
+                              <p className="mb-2">
+                                Unable to display PDF directly.
+                              </p>
+                              <Button variant="outline" size="sm" asChild>
+                                <a
+                                  href={file.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Download PDF
+                                </a>
+                              </Button>
+                            </div>
+                          </object>
+                          <div className="p-3 bg-white border-t flex justify-end">
+                            <Button variant="outline" size="sm" asChild>
+                              <a
+                                href={file.url}
+                                download
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="w-4 h-4" />
+                                Download PDF
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
                       ) : isYoutube && youtubeId ? (
                         <div className="aspect-video w-full">
                           <iframe
@@ -413,9 +459,11 @@ export default function ProjectDetailPage() {
           </CardHeader>
           <CardContent className="flex gap-4">
             {qrThumb ? (
-              <img
+              <Image
                 src={qrThumb}
                 alt="QR invite"
+                height={32}
+                width={32}
                 className="w-32 h-32 rounded border"
               />
             ) : (

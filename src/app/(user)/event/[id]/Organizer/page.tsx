@@ -53,7 +53,7 @@ import {
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import { toast } from "sonner";
 import InformationSection from "../components/InformationSection";
-import type { EventData, EventEditSection, SpecialRewardEdit, EventFormState } from "@/utils/types";
+import type { EventData, EventEditSection, SpecialRewardEdit, EventFormState, Team } from "@/utils/types";
 import type { PresenterProject } from "../Presenter/components/types";
 import ParticipantsSection from "./ParticipantsSection";
 import UnifiedProjectList from "../components/UnifiedProjectList";
@@ -129,20 +129,21 @@ export default function OrganizerView({ id, event }: Props) {
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
-        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+        const teams = res.teams as Team[];
+        const mappedProjects: PresenterProject[] = teams.map((t) => ({
           id: t.id,
           title: t.teamName,
           desc: t.description || "",
           img: t.imageCover || "/banner.png",
           videoLink: t.videoLink,
           files:
-            t.files?.map((f: any) => ({
+            t.files?.map((f) => ({
               name: f.fileUrl.split("/").pop() || "File",
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
           members:
-            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+            t.participants?.map((p) => p.user?.name || "Unknown") || [],
           createdAt: t.createdAt,
         }));
         setProjects(mappedProjects);
@@ -512,10 +513,6 @@ export default function OrganizerView({ id, event }: Props) {
                   </div>
                 </CardContent>
               </Card>
-
-              <Button variant="default" className="mt-4">
-                จัดการผู้เข้าร่วม
-              </Button>
             </TabsContent>
 
             <TabsContent value="information">
@@ -525,11 +522,14 @@ export default function OrganizerView({ id, event }: Props) {
                 editable
                 onEdit={(section, initialForm) => {
                   setEditingSection(section);
-                  setForm(initialForm as EventFormState);
+                  const formState = initialForm as EventFormState;
+                  setForm(formState);
                   if (section === "guest") {
-                    setShowCommitteeInput(
-                      (initialForm as any).hasCommittee ?? (Number((initialForm as any).committeeReward ?? 0) > 0)
-                    );
+                    const showCommittee =
+                      typeof formState.hasCommittee === "boolean"
+                        ? formState.hasCommittee
+                        : Number(formState.committeeReward ?? 0) > 0;
+                    setShowCommitteeInput(showCommittee);
                   }
                 }}
                 linkLabel="Google Map Link of location"

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ChangeEvent } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -121,10 +122,13 @@ export default function SpecialRewardsSection({
                   {srPreviews[reward.id] ? (
                     <>
                       <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
-                        <img
+                        <Image
                           src={srPreviews[reward.id] as string}
                           alt="Reward image preview"
-                          className="absolute inset-0 h-full w-full object-cover"
+                          fill
+                          sizes="128px"
+                          className="object-cover"
+                          unoptimized
                         />
                         <input
                           type="file"

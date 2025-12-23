@@ -6,6 +6,8 @@ import th from "@/locales/th.json";
 
 type Language = "en" | "th";
 
+type TranslationValue = string | { [key: string]: TranslationValue };
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -14,9 +16,9 @@ interface LanguageContextType {
   dateFormat: string;
 }
 
-const translations: Record<Language, any> = {
-  en,
-  th,
+const translations: Record<Language, TranslationValue> = {
+  en: en as unknown as TranslationValue,
+  th: th as unknown as TranslationValue,
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -44,7 +46,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const t = (key: string): string => {
     const keys = key.split(".");
-    let value: any = translations[language];
+    let value: TranslationValue | undefined = translations[language];
 
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {

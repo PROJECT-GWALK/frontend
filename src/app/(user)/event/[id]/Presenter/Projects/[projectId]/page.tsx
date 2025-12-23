@@ -6,6 +6,7 @@ import Link from "next/link";
 import * as QRCode from "qrcode";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 import {
   Users,
   FileText,
@@ -31,7 +32,7 @@ import {
 import { getCurrentUser } from "@/utils/apiuser";
 import EditProjectDialog from "../../components/EditProjectDialog";
 import type { PresenterProject } from "../../components/types";
-import { type EventData, FileType } from "@/utils/types";
+import { type EventData, FileType, ProjectMember, Candidate, Team, DraftEvent } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,22 +52,20 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserAvatar } from "@/utils/function";
 
 type Props = {
-  params: { id: string; projectId: string };
+  params: Promise<{ id: string; projectId: string }>;
 };
 
 export default function ProjectDetailPage({ params }: Props) {
   const router = useRouter();
-  const paramsResolved = (React as any).use
-    ? (React as any).use(params)
-    : params;
-  const { projectId, id } = paramsResolved as { projectId: string; id: string };
+  const paramsResolved = React.use(params);
+  const { projectId, id } = paramsResolved;
   const [project, setProject] = useState<PresenterProject | null>(null);
-  const [membersData, setMembersData] = useState<any[]>([]);
+  const [membersData, setMembersData] = useState<ProjectMember[]>([]);
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -79,7 +78,7 @@ export default function ProjectDetailPage({ params }: Props) {
   // Invite Dialog
   const [inviteOpen, setInviteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [candidates, setCandidates] = useState<any[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [bannerOpen, setBannerOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -105,14 +104,14 @@ export default function ProjectDetailPage({ params }: Props) {
       }
 
       if (teamRes.message === "ok") {
-        const t = teamRes.team;
+        const t = teamRes.team as Team;
 
         // Check if current user is member of the team
         if (currentUserRes.message === "ok") {
           const currentUser = currentUserRes.user;
           setCurrentUserId(currentUser.id);
           const isMember = t.participants?.some(
-            (p: any) => p.user.id === currentUser.id
+            (p) => p.user.id === currentUser.id
           );
 
           if (!isMember) {
@@ -125,7 +124,7 @@ export default function ProjectDetailPage({ params }: Props) {
         // Check if current user is leader based on getMyEvents
         const myEvent =
           myEventsRes.message === "ok"
-            ? myEventsRes.events.find((e: any) => e.id === id)
+            ? (myEventsRes.events as DraftEvent[]).find((e) => e.id === id)
             : null;
         const isLeader = myEvent?.isLeader || false;
 
@@ -136,17 +135,17 @@ export default function ProjectDetailPage({ params }: Props) {
           img: t.imageCover,
           videoLink: t.videoLink,
           files:
-            t.files?.map((f: any) => ({
+            t.files?.map((f) => ({
               name: f.fileUrl.split("/").pop() || "File",
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
           members:
-            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+            t.participants?.map((p) => p.user?.name || "Unknown") || [],
           isLeader: isLeader,
         });
         setMembersData(
-          t.participants?.map((p: any) => ({
+          t.participants?.map((p) => ({
             id: p.user.id,
             name: p.user.name,
             username: p.user.username,
@@ -216,8 +215,9 @@ export default function ProjectDetailPage({ params }: Props) {
         setSearchQuery("");
         fetchData(); // Refresh list
       }
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to add member");
+    } catch (e: unknown) {
+      const msg = (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to add member";
+      toast.error(msg);
     }
   };
 
@@ -229,8 +229,9 @@ export default function ProjectDetailPage({ params }: Props) {
         toast.success("Member removed");
         fetchData();
       }
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to remove member");
+    } catch (e: unknown) {
+      const msg = (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to remove member";
+      toast.error(msg);
     }
   };
 
@@ -322,8 +323,9 @@ export default function ProjectDetailPage({ params }: Props) {
         toast.success("You have left the team");
         router.push(`/event/${id}`);
       }
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to leave team");
+    } catch (e) {
+      const msg = (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to leave team";
+      toast.error(msg);
     }
   };
 
@@ -403,7 +405,7 @@ export default function ProjectDetailPage({ params }: Props) {
       {/* Header Section */}
       <Card>
         <div className="relative h-48 w-full bg-slate-100 rounded-t-lg overflow-hidden">
-          {project.img ? (
+          {project.img && !project.img.startsWith("data:image/png;base64src") ? (
             <Image
               src={project.img}
               alt={project.title}
@@ -450,6 +452,8 @@ export default function ProjectDetailPage({ params }: Props) {
                       <Edit3 className="w-4 h-4 mr-2" />
                       Edit Project
                     </Button>
+                  </>
+                )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -463,8 +467,6 @@ export default function ProjectDetailPage({ params }: Props) {
                         </Badge>
                       )}
                     </Button>
-                  </>
-                )}
               </div>
             </div>
 
@@ -539,10 +541,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 key={m.id}
                 className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm relative group"
               >
-                <Avatar>
-                  <AvatarImage src={m.image} />
-                  <AvatarFallback>{m.name?.charAt(0) || "?"}</AvatarFallback>
-                </Avatar>
+                <UserAvatar user={m} />
                 <div className="overflow-hidden">
                   <div className="font-medium truncate">{m.name}</div>
                   <div className="text-xs text-muted-foreground truncate">
@@ -693,86 +692,18 @@ export default function ProjectDetailPage({ params }: Props) {
         </CardContent>
       </Card>
 
-      {/* Share Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Public Share Link</CardTitle>
-            <CardDescription>Share this project with everyone</CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-            {qrThumb ? (
-              <img
-                src={qrThumb}
-                alt="QR invite"
-                className="w-32 h-32 rounded border"
-              />
-            ) : (
-              <div className="w-32 h-32 bg-slate-100 rounded animate-pulse" />
-            )}
-            <div className="flex-1 space-y-2">
-              <div className="text-sm text-muted-foreground break-all">
-                {`${location.origin}/event/${id}/Projects/${projectId}`}
-              </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() =>
-                  copyToClipboard(
-                    `${location.origin}/event/${id}/Projects/${projectId}`
-                  )
-                }
-              >
-                Copy Link
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Committee / VR Link</CardTitle>
-            <CardDescription>
-              Share with committees or for VR viewing
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-            {qrThumbCommittee ? (
-              <img
-                src={qrThumbCommittee}
-                alt="QR committee"
-                className="w-32 h-32 rounded border"
-              />
-            ) : (
-              <div className="w-32 h-32 bg-slate-100 rounded animate-pulse" />
-            )}
-            <div className="flex-1 space-y-2">
-              <div className="text-sm text-muted-foreground break-all">
-                {`${location.origin}/event/${id}/Projects/${projectId}?role=committee`}
-              </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() =>
-                  copyToClipboard(
-                    `${location.origin}/event/${id}/Projects/${projectId}?role=committee`
-                  )
-                }
-              >
-                Copy Link
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Banner Dialog */}
       <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
         <DialogContent className="max-w-5xl p-0 overflow-hidden bg-transparent border-none shadow-none">
           <DialogTitle className="sr-only">Event Banner</DialogTitle>
           <div className="relative w-full aspect-video">
             <Image
-              src={eventData?.imageCover || "/banner.png"}
+              src={
+                eventData?.imageCover &&
+                !eventData.imageCover.startsWith("data:image/png;base64src")
+                  ? eventData.imageCover
+                  : "/banner.png"
+              }
               alt={eventData?.eventName || "Event banner"}
               fill
               className="object-contain rounded-lg"
@@ -1036,10 +967,7 @@ export default function ProjectDetailPage({ params }: Props) {
                       className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md group"
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={c.image} />
-                          <AvatarFallback>{c.name?.charAt(0)}</AvatarFallback>
-                        </Avatar>
+                        <UserAvatar user={c} className="w-8 h-8" />
                         <div>
                           <div className="text-sm font-medium">{c.name}</div>
                           <div className="text-xs text-muted-foreground">

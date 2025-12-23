@@ -8,6 +8,7 @@ export type User = {
   image: string | null;
   description: string | null;
   role: string;
+  banned?: boolean;
 };
 
 export const settingsSchema = z.object({
@@ -84,6 +85,49 @@ export type SpecialReward = {
   name: string;
   description: string;
   image?: string | null;
+};
+
+export type TeamFile = {
+  fileUrl: string;
+  fileTypeId?: string;
+};
+
+export type TeamParticipant = {
+  userId: string;
+  isLeader?: boolean;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+    image: string | null;
+  };
+};
+
+export type Team = {
+  id: string;
+  teamName: string;
+  description?: string;
+  imageCover?: string;
+  videoLink?: string;
+  files?: TeamFile[];
+  participants: TeamParticipant[];
+  createdAt?: string;
+};
+
+export type ProjectMember = {
+  id: string;
+  name: string;
+  username: string;
+  image: string | null;
+  isLeader?: boolean;
+};
+
+export type Candidate = {
+  id: string;
+  userId: string;
+  name: string;
+  username: string;
+  image: string | null;
 };
 
 export type DraftEvent = {
@@ -207,6 +251,7 @@ export type EventFormState = {
   locationName?: string;
   location?: string;
   guestReward?: number;
+  hasCommittee?: boolean;
   committeeReward?: number;
   unitReward?: string;
   startView?: string;

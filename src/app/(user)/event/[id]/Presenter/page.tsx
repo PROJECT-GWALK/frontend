@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import type { EventData } from "@/utils/types";
+import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import CreateProjectDialog from "./components/CreateProjectDialog";
 import EditProjectDialog from "./components/EditProjectDialog";
@@ -64,31 +64,32 @@ export default function PresenterView({ id, event }: Props) {
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
-        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+        const teams = res.teams as Team[];
+        const mappedProjects: PresenterProject[] = teams.map((t) => ({
           id: t.id,
           title: t.teamName,
           desc: t.description || "",
           img: t.imageCover || "/banner.png",
           videoLink: t.videoLink,
           files:
-            t.files?.map((f: any) => ({
+            t.files?.map((f) => ({
               name: f.fileUrl.split("/").pop() || "File",
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
           members:
-            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+            t.participants?.map((p) => p.user?.name || "Unknown") || [],
         }));
         setProjects(mappedProjects);
 
         // Update userProject if user is in one of these teams
         if (userId) {
-          const myTeam = res.teams.find((t: any) =>
-            t.participants.some((p: any) => p.userId === userId)
+          const myTeam = teams.find((t) =>
+            t.participants.some((p) => p.userId === userId)
           );
           if (myTeam) {
             const me = myTeam.participants.find(
-              (p: any) => p.userId === userId
+              (p) => p.userId === userId
             );
             setUserProject({
               id: myTeam.id,
@@ -97,14 +98,14 @@ export default function PresenterView({ id, event }: Props) {
               img: myTeam.imageCover || "/banner.png",
               videoLink: myTeam.videoLink,
               files:
-                myTeam.files?.map((f: any) => ({
+                myTeam.files?.map((f) => ({
                   name: f.fileUrl.split("/").pop() || "File",
                   url: f.fileUrl,
                   fileTypeId: f.fileTypeId,
                 })) || [],
               members:
                 myTeam.participants?.map(
-                  (p: any) => p.user?.name || "Unknown"
+                  (p) => p.user?.name || "Unknown"
                 ) || [],
               owner: me?.isLeader || false,
             });
@@ -466,7 +467,7 @@ export default function PresenterView({ id, event }: Props) {
                   {!userProject ? (
                     <Card className="p-6 rounded-xl">
                       <div className="text-sm text-muted-foreground">
-                        You don't have any project yet. Create or join a group
+                        You don&apos;t have any project yet. Create or join a group
                         to appear here.
                       </div>
                       <div className="flex gap-2">

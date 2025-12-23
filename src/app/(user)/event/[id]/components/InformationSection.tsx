@@ -61,6 +61,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Image from "next/image";
 
 type EditSection =
   | "description"
@@ -333,10 +334,10 @@ export default function InformationSection({
     const genQrs = async () => {
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
-      const roles: Array<"presenter" | "guest" | "committee"> = [
+      const roles: Array<"committee" | "presenter" | "guest"> = [
+        "committee",
         "presenter",
         "guest",
-        "committee",
       ];
       const thumbMap: {
         presenter?: string;
@@ -839,7 +840,7 @@ export default function InformationSection({
                         </div>
                         {file.description && (
                           <div className="text-xs text-muted-foreground italic border-l-2 border-(--role-presenter)/20 pl-2">
-                            "{file.description}"
+                            {file.description}
                           </div>
                         )}
                       </div>
@@ -1051,9 +1052,11 @@ export default function InformationSection({
                               }
                             }}
                           >
-                            <img
+                            <Image
                               src={qrThumb}
                               alt={`qr-${role}`}
+                              height={10}
+                              width={10}
                               className="h-10 w-10 rounded border bg-white p-0.5 shadow-sm hover:scale-105 transition-transform"
                             />
                             <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity">
@@ -1111,7 +1114,15 @@ export default function InformationSection({
           <DialogHeader>
             <DialogTitle>{qrTitle || "QR Code"}</DialogTitle>
           </DialogHeader>
-          {qrSrc && <img src={qrSrc} alt="qr" className="w-full h-auto" />}
+          {qrSrc && (
+            <Image
+              src={qrSrc}
+              alt="qr"
+              height={300}
+              width={300}
+              className="w-full h-auto"
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -1650,9 +1661,10 @@ export default function InformationSection({
                     <div className="w-24 sm:w-32">
                       {reward.image ? (
                         <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
-                          <img
+                          <Image
                             src={reward.image}
                             alt={reward.name}
+                            fill
                             className="absolute inset-0 h-full w-full object-cover"
                           />
                         </div>

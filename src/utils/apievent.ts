@@ -285,8 +285,8 @@ export const deleteTeamFile = async (eventId: string, teamId: string, fileTypeId
 
 // ====================== TEAMS ======================
 export const createTeam = async (eventId: string, teamName: string, description?: string, videoLink?: string, imageCover?: string | File) => {
-  let body: any;
-  let headers: any = {};
+  let body: FormData | Record<string, unknown>;
+  const headers: Record<string, string> = {};
 
   if (imageCover instanceof File) {
     const formData = new FormData();
@@ -317,8 +317,8 @@ export const updateTeam = async (
   teamId: string, 
   data: { teamName?: string; description?: string; imageCover?: string | File | null }
 ) => {
-  let body: any;
-  let headers: any = {};
+  let body: FormData | Record<string, unknown>;
+  const headers: Record<string, string> = {};
 
   if (data.imageCover instanceof File) {
     const formData = new FormData();

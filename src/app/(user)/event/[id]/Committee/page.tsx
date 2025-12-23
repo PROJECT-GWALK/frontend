@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import type { EventData } from "@/utils/types";
+import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
 import React from "react";
@@ -85,20 +85,21 @@ export default function CommitteePage(props: Props) {
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
-        const mappedProjects: PresenterProject[] = res.teams.map((t: any) => ({
+        const teams = res.teams as Team[];
+        const mappedProjects: PresenterProject[] = teams.map((t) => ({
           id: t.id,
           title: t.teamName,
           desc: t.description || "",
           img: t.imageCover || "/banner.png",
           videoLink: t.videoLink,
           files:
-            t.files?.map((f: any) => ({
+            t.files?.map((f) => ({
               name: f.fileUrl.split("/").pop() || "File",
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
           members:
-            t.participants?.map((p: any) => p.user?.name || "Unknown") || [],
+            t.participants?.map((p) => p.user?.name || "Unknown") || [],
         }));
         setProjects(mappedProjects);
 

@@ -27,6 +27,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 export type ProjectRewardsState = Record<
   string,
@@ -124,9 +125,10 @@ export default function UnifiedProjectList({
           <div className="flex flex-col sm:flex-row p-3 gap-4">
             {/* Project Image Section */}
             <div className="relative shrink-0 w-full sm:w-48 aspect-video overflow-hidden rounded-lg bg-muted border border-border/50 group-hover:border-primary/20 transition-colors">
-              <img
+              <Image
                 src={p.img || "/banner.png"} // Fallback image
                 alt={p.title}
+                fill
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute top-2 left-2 flex gap-1">

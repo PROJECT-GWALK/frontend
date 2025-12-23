@@ -501,9 +501,9 @@ export default function EventDraft() {
   const syncSpecialRewards = async () => {
     if (!id) return;
     if (!event) return;
-    const existingIds = new Set((event.specialRewards || []).map((r: any) => r.id));
+    const existingIds = new Set((event.specialRewards || []).map((r) => r.id));
     const removed = (event.specialRewards || []).filter(
-      (r: any) => !specialRewards.some((sr) => sr.id === r.id)
+      (r) => !specialRewards.some((sr) => sr.id === r.id)
     );
     for (const r of removed) {
       try {
@@ -524,7 +524,7 @@ export default function EventDraft() {
             fd.append("file", file);
             await updateSpecialReward(id, r.id, fd);
           } else {
-            const payload: Record<string, any> = { name: r.name };
+            const payload: { name: string; description?: string; image?: null } = { name: r.name };
             if (r.description) payload.description = r.description;
             if (isRemoved) payload.image = null;
             await updateSpecialReward(id, r.id, payload);
@@ -558,7 +558,7 @@ export default function EventDraft() {
               });
             }
           } else {
-            const payload: Record<string, any> = { name: r.name };
+            const payload: { name: string; description?: string; image?: string | null } = { name: r.name };
             if (r.description) payload.description = r.description;
             const res = await createSpecialReward(id, {
               name: r.name,
@@ -691,13 +691,13 @@ export default function EventDraft() {
         setHasCommittee(Boolean(data.hasCommittee));
         setCommitteeReward(data.virtualRewardCommittee?.toString() || "0");
         setGuestRewardAmount(data.virtualRewardGuest?.toString() || "0");
-        setUnitReward((data as any).unitReward || "Coin");
+        setUnitReward(data.unitReward || "Coin");
 
         // ================= SPECIAL REWARDS =================
         if (data.specialRewards?.length) {
           setSpecialRewards(data.specialRewards);
           const previews: Record<string, string | null> = {};
-          data.specialRewards.forEach((r: any) => {
+          data.specialRewards.forEach((r: SpecialReward) => {
             previews[r.id] = r.image || null;
           });
           setSrPreviews(previews);

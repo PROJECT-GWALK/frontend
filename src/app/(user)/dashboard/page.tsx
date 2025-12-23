@@ -40,6 +40,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatDateTime } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AxiosError } from "axios";
+import Image from "next/image";
 
 const mapEventNameMessage = (message: string) =>
   message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
@@ -152,7 +154,7 @@ export default function DashboardPage() {
     } catch (err) {
       let message = "Failed to create event";
       if (typeof err === "object" && err) {
-        const backendMessage = (err as any)?.response?.data?.message;
+        const backendMessage = (err as AxiosError<{ message: string }>).response?.data?.message;
         if (backendMessage) {
           message = backendMessage;
         } else if (err instanceof Error && err.message) {
@@ -182,7 +184,7 @@ export default function DashboardPage() {
     } catch (err) {
       let message = "Failed to delete event";
       if (typeof err === "object" && err) {
-        const backendMessage = (err as any)?.response?.data?.message;
+        const backendMessage = (err as AxiosError<{ message: string }>).response?.data?.message;
         if (backendMessage) {
           message = backendMessage;
         } else if (err instanceof Error && err.message) {
@@ -398,16 +400,18 @@ export default function DashboardPage() {
                             className="relative h-40 w-full sm:h-28 sm:w-40 rounded-lg overflow-hidden bg-muted block group"
                           >
                             {hasBanner ? (
-                              <img
+                              <Image
                                 src={event.imageCover as string}
                                 alt={event.eventName}
+                                fill
                                 className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
-                                <img
+                                <Image
                                   src="/banner.png"
                                   alt={event.eventName}
+                                  fill
                                   className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               </div>

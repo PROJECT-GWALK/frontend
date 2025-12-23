@@ -18,6 +18,7 @@ import type { MyEvent } from "@/utils/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 
 export default function EventsPage() {
   const { timeFormat } = useLanguage();
@@ -239,16 +240,18 @@ export default function EventsPage() {
               >
                 <div className="relative aspect-video w-full overflow-hidden">
                   {hasBanner ? (
-                    <img
+                    <Image
                       src={event.imageCover as string}
                       alt={event.eventName}
+                      fill
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="h-full w-full bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                      <img
+                      <Image
                         src="/banner.png"
                         alt={event.eventName}
+                        fill
                         className="h-full w-full object-cover opacity-80"
                       />
                     </div>
@@ -293,7 +296,7 @@ export default function EventsPage() {
                     {event.role ? (
                       <Link href={`/event/${event.id}`} className="block w-full">
                         <Button className="w-full group-hover:bg-primary/90 transition-colors" size="default">
-                          View Event
+                          Joined Event
                         </Button>
                       </Link>
                     ) : (

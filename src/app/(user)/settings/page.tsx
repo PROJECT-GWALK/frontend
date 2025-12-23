@@ -209,7 +209,7 @@ export default function SettingsPage() {
             <div className="flex flex-col items-center space-y-4">
               <UserAvatar
                 key={avatarSrc || "no-image"}
-                user={user ? { ...user, image: avatarSrc } : { image: avatarSrc } as any}
+                user={user ? { ...user, image: avatarSrc } : { image: avatarSrc } as Partial<User>}
                 className="h-24 w-24 select-none"
               />
               <div className="flex gap-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -124,10 +125,13 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: P
             />
             {bannerPreview ? (
               <div className="relative border rounded-lg overflow-hidden aspect-video bg-muted mt-2">
-                <img
+                <Image
                   src={bannerPreview}
                   alt="Project cover preview"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  className="object-cover"
+                  unoptimized
                 />
                 <div className="absolute top-2 right-2 flex gap-2">
                   <Button size="sm" variant="secondary" onClick={openFilePicker}>
@@ -187,12 +191,17 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: P
                   resetForm();
                   onOpenChange(false);
                   onSuccess();
-                } catch (e: any) {
+                } catch (e: unknown) {
                   console.error(e);
-                  if (e.response?.status === 400) {
-                    toast.error(e.response.data?.message || "Failed to create project: Bad Request");
+                  if (e && typeof e === 'object' && 'response' in e) {
+                     const err = e as { response: { status: number; data?: { message?: string } } };
+                    if (err.response.status === 400) {
+                      toast.error(err.response.data?.message || "Failed to create project: Bad Request");
+                    } else {
+                      toast.error((e as unknown as Error).message || "Failed to create project");
+                    }
                   } else {
-                    toast.error(e.message || "Failed to create project");
+                    toast.error((e as Error).message || "Failed to create project");
                   }
                 } finally {
                   setLoading(false);

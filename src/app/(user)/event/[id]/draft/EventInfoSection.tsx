@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { toYYYYMMDD, formatDate } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
+import Image from "next/image";
 
 type Props = {
   eventTitle: string;
@@ -193,9 +194,10 @@ export default function EventInfoSection(props: Props) {
             />
             {bannerPreview ? (
               <div className="relative border rounded-lg overflow-hidden aspect-2/1 bg-muted">
-                <img
+                <Image
                   src={bannerPreview}
                   alt="Event banner preview"
+                  fill
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-2">
