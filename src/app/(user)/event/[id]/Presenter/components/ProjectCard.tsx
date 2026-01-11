@@ -15,7 +15,7 @@ type Props = {
 export default function ProjectCard({ project, eventId, basePath }: Props) {
   const path = basePath 
     ? `${basePath}/${project.id}` 
-    : `/event/${eventId}/Presenter/Projects/${project.id}`;
+    : `/event/${eventId}/Projects/${project.id}`;
 
   return (
     <div className="group flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1">

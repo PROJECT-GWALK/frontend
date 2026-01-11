@@ -8,4 +8,5 @@ export type PresenterProject = {
   members?: string[];
   isLeader?: boolean;
   createdAt?: string;
+  totalVr?: number;
 };

@@ -207,7 +207,7 @@ export default function EventDetail() {
           ) : role === "GUEST" ? (
             <GuestView id={id} event={event!} />
           ) : (
-            <NotRoleView id={id} event={event!} />
+            <NotRoleView id={id} event={event!} isAuthenticated={status === "authenticated"} />
           )}
         </>
       )}

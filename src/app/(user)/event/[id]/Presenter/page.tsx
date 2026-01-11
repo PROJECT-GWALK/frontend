@@ -136,7 +136,7 @@ export default function PresenterView({ id, event }: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -224,15 +224,15 @@ export default function PresenterView({ id, event }: Props) {
             onValueChange={(v) => setTab(v as typeof tab)}
             className="mt-6"
           >
-            <TabsList>
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="information">Information</TabsTrigger>
-              <TabsTrigger value="project">Projects</TabsTrigger>
-              <TabsTrigger value="result">Result</TabsTrigger>
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
-              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* จำนวนผู้เข้าร่วมทั้งหมด */}
                 <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
@@ -485,7 +485,7 @@ export default function PresenterView({ id, event }: Props) {
                     <Card className="p-4 rounded-xl border">
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                         <Link
-                          href={`/event/${id}/Presenter/Projects/${userProject.id}`}
+                          href={`/event/${id}/Projects/${userProject.id}`}
                           className="relative w-full md:w-[180px] h-[120px] shrink-0 block overflow-hidden rounded-lg group border bg-muted"
                         >
                           <Image
@@ -522,7 +522,7 @@ export default function PresenterView({ id, event }: Props) {
 
                         <div className="shrink-0 flex items-center gap-2 mt-2 md:mt-0">
                           <Link
-                            href={`/event/${id}/Presenter/Projects/${userProject.id}`}
+                            href={`/event/${id}/Projects/${userProject.id}`}
                           >
                             <Button variant="outline">Edit</Button>
                           </Link>

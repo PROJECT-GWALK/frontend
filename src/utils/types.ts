@@ -112,6 +112,8 @@ export type Team = {
   files?: TeamFile[];
   participants: TeamParticipant[];
   createdAt?: string;
+  totalVr?: number;
+  myReward?: number;
 };
 
 export type ProjectMember = {

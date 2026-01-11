@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getTeams } from "@/utils/apievent";
+import { getTeams, giveVr, resetVr } from "@/utils/apievent";
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -10,6 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +24,6 @@ import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
 import type { PresenterProject } from "../Presenter/components/types";
-import ProjectsList from "../Presenter/components/ProjectsList";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 
 type Props = {
@@ -27,6 +33,7 @@ type Props = {
 
 export default function GuestView({ id, event }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -47,14 +54,80 @@ export default function GuestView({ id, event }: Props) {
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  // Guest-specific UI state for project interactions
+  const [projectRewards, setProjectRewards] = useState<
+    Record<string, { vrGiven: number; specialGiven: string | null }>
+  >({});
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (typeof error === "object" && error !== null && "response" in error) {
+      const response = (error as { response?: unknown }).response;
+      if (typeof response === "object" && response !== null && "data" in response) {
+        const data = (response as { data?: unknown }).data;
+        if (typeof data === "object" && data !== null && "message" in data) {
+          const message = (data as { message?: unknown }).message;
+          if (typeof message === "string" && message.trim()) return message;
+        }
+      }
+    }
+    if (typeof error === "object" && error !== null && "message" in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === "string" && message.trim()) return message;
+    }
+    return fallback;
+  };
+
+  const handleResetVR = async (projectId: string) => {
+    try {
+      const res = await resetVr(id, projectId);
+      const refundAmount = res.newBalance - (localEvent?.myVirtualTotal ?? 0);
+      setLocalEvent((prev) => (prev ? {
+        ...prev,
+        myVirtualTotal: res.newBalance,
+        myVirtualUsed: (prev.myVirtualUsed ?? 0) - refundAmount
+      } : prev));
+      setProjectRewards((prev) => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          vrGiven: 0,
+        },
+      }));
+      toast.success("Reset Virtual Reward");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to reset VR"));
+    }
+  };
+
+  const handleGiveVr = async (projectId: string, amount: number) => {
+    try {
+      const res = await giveVr(id, projectId, amount);
+      setLocalEvent((prev) => {
+        if (!prev) return prev;
+        const initialTotal = (prev.myVirtualTotal ?? 0) + (prev.myVirtualUsed ?? 0);
+        return {
+          ...prev,
+          myVirtualTotal: res.newBalance,
+          myVirtualUsed: initialTotal - res.newBalance,
+        };
+      });
+      setProjectRewards((prev) => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          vrGiven: amount,
+        },
+      }));
+      toast.success("ให้ Virtual Reward เรียบร้อย");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to give VR"));
+    }
+  };
 
   const handleAction = (action: string, projectId: string) => {
-    if (action === "comment") {
-      setSelectedProjectId(projectId);
-      setCommentOpen(true);
+    if (action === "reset_vr") {
+      handleResetVR(projectId);
     }
   };
 
@@ -77,8 +150,27 @@ export default function GuestView({ id, event }: Props) {
             })) || [],
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          totalVr: t.totalVr,
         }));
         setProjects(mappedProjects);
+
+        // Initialize rewards state for new projects
+        setProjectRewards((prev) => {
+          const newState = { ...prev };
+          teams.forEach((t) => {
+            // Update or initialize with fetched myReward
+            if (!newState[t.id]) {
+              newState[t.id] = { vrGiven: t.myReward || 0, specialGiven: null };
+            } else {
+              // If re-fetching, update the vrGiven to match server state
+              newState[t.id] = {
+                ...newState[t.id],
+                vrGiven: t.myReward || 0,
+              };
+            }
+          });
+          return newState;
+        });
       }
     } catch (error) {
       console.error("Failed to fetch teams:", error);
@@ -98,7 +190,7 @@ export default function GuestView({ id, event }: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -178,15 +270,15 @@ export default function GuestView({ id, event }: Props) {
           </Card>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
-            <TabsList>
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="information">Information</TabsTrigger>
-              <TabsTrigger value="project">Projects</TabsTrigger>
-              <TabsTrigger value="result">Result</TabsTrigger>
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
-              <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* จำนวนผู้เข้าร่วมทั้งหมด */}
                 <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
@@ -385,14 +477,31 @@ export default function GuestView({ id, event }: Props) {
               <div className="mt-6 space-y-6">
                 {/* Projects in the event */}
                 <div>
-                  <div className="flex items-center justify-between gap-4 mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <h2 className="text-lg font-semibold">Projects</h2>
-                    <Input
-                      placeholder="Search projects by name..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="max-w-sm"
-                    />
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Select
+                        value={filterStatus}
+                        onValueChange={(v) =>
+                          setFilterStatus(v as "all" | "scored" | "unscored")
+                        }
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Projects</SelectItem>
+                          <SelectItem value="scored">Evaluated</SelectItem>
+                          <SelectItem value="unscored">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        placeholder="Search projects..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="max-w-xs"
+                      />
+                    </div>
                   </div>
 
                   <UnifiedProjectList
@@ -400,43 +509,17 @@ export default function GuestView({ id, event }: Props) {
                     role="GUEST"
                     eventId={id}
                     searchQuery={searchQuery}
+                    filterStatus={filterStatus}
+                    projectRewards={projectRewards}
+                    userVrBalance={
+                      (localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)
+                    }
                     onAction={handleAction}
+                    onGiveVr={handleGiveVr}
+                    onPostComment={() => {
+                      toast.success("ส่งความคิดเห็นเรียบร้อย");
+                    }}
                   />
-
-                  <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
-                    <DialogContent>
-                      <DialogTitle>แสดงความคิดเห็น</DialogTitle>
-                      <div className="mt-2">
-                        <textarea
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          className="w-full rounded-md border p-2"
-                          rows={6}
-                          placeholder="เขียนความคิดเห็น..."
-                        />
-                        <div className="flex justify-end gap-2 mt-3">
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setCommentOpen(false);
-                              setCommentText("");
-                            }}
-                          >
-                            ยกเลิก
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              toast.success("ส่งความคิดเห็นเรียบร้อย");
-                              setCommentOpen(false);
-                              setCommentText("");
-                            }}
-                          >
-                            ส่งความคิดเห็น
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </div>
             </TabsContent>

@@ -158,17 +158,17 @@ export default function EventProjectDetailPage() {
       {/* Bottom Actions */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t">
         <div className="max-w-6xl mx-auto px-6 lg:px-8 py-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" variant="destructive">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button size="sm" variant="destructive" className="w-full">
               Edit Project Resource
             </Button>
-            <Button size="sm" variant="secondary">
+            <Button size="sm" variant="secondary" className="w-full">
               Edit Project Member
             </Button>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" className="w-full">
               Shared Link
             </Button>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" className="w-full">
               Shared QR
             </Button>
           </div>

@@ -23,15 +23,28 @@ export function middleware(request: NextRequest) {
     request.cookies.get("authjs.session-token")?.value ??
     request.cookies.get("__Secure-authjs.session-token")?.value;
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) {
-    if (!sessionToken) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  const isPublicPath = 
+    pathname === "/" ||
+    pathname === "/sign-in" || 
+    pathname === "/error" ||
+    pathname.startsWith("/api/auth") ||
+    /^\/event\/[^/]+$/.test(pathname) || // Allow /event/:id
+    /^\/event\/[^/]+\/NotRole$/.test(pathname); // Allow /event/:id/NotRole
+
+  if (!isPublicPath && !sessionToken) {
+    const url = new URL("/sign-in", request.url);
+    url.searchParams.set("redirectTo", pathname + request.nextUrl.search);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/backend/:path*"],
+  matcher: [
+    // Match backend routes specifically (to allow images/files through)
+    "/backend/:path*",
+    // Match everything else, excluding static files and images
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
+  ],
 };

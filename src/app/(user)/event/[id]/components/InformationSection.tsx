@@ -20,7 +20,7 @@ import {
   RefreshCcw,
   Link,
 } from "lucide-react";
-import { timeUntil, formatDateTime, UserAvatar } from "@/utils/function";
+import { timeUntil, formatDateTime, UserAvatar, linkify } from "@/utils/function";
 import { toast } from "sonner";
 import type { EventData, EventFileType } from "@/utils/types";
 import { FileType } from "@/utils/types";
@@ -82,9 +82,10 @@ type Props = {
 const getRewardFontSize = (val: number | undefined | null) => {
   const v = val ?? 0;
   const s = String(v);
-  if (s.length > 8) return "text-2xl sm:text-3xl lg:text-4xl";
-  if (s.length > 5) return "text-3xl sm:text-4xl lg:text-5xl";
-  return "text-4xl sm:text-5xl lg:text-6xl";
+  if (s.length > 12) return "text-xl sm:text-2xl lg:text-3xl"; // 1,000,000,000+
+  if (s.length > 10) return "text-2xl sm:text-3xl lg:text-4xl"; // 1,000,000 - 9,999,999
+  if (s.length > 7) return "text-3xl sm:text-4xl lg:text-5xl"; // 100,000 - 999,999
+  return "text-4xl sm:text-5xl lg:text-6xl"; // 0 - 99,999
 };
 
 export default function InformationSection({
@@ -95,6 +96,11 @@ export default function InformationSection({
   linkLabel = "Link",
 }: Props) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Date/Time Editing State
   const [editTimeOpen, setEditTimeOpen] = useState(false);
@@ -116,7 +122,7 @@ export default function InformationSection({
   const [maxTeamMembers, setMaxTeamMembers] = useState<number>(0);
   const [fileRequirements, setFileRequirements] = useState<EventFileType[]>([]);
   const [updatingPresenter, setUpdatingPresenter] = useState(false);
-  const { t, timeFormat } = useLanguage();
+  const { t, timeFormat, language } = useLanguage();
 
   const handleEdit = (
     section: EditSection,
@@ -303,6 +309,22 @@ export default function InformationSection({
     committee?: string;
   }>({});
 
+  // Event Link QR State
+  const [eventQrThumb, setEventQrThumb] = useState<string>("");
+  const [eventQrLarge, setEventQrLarge] = useState<string>("");
+
+  useEffect(() => {
+    if (mounted) {
+      const url = `${window.location.origin}/event/${id}`;
+      QRCode.toDataURL(url, { margin: 1, width: 64 })
+        .then(setEventQrThumb)
+        .catch(console.error);
+      QRCode.toDataURL(url, { margin: 1, width: 400 })
+        .then(setEventQrLarge)
+        .catch(console.error);
+    }
+  }, [mounted, id]);
+
   useEffect(() => {
     const loadTokens = async () => {
       try {
@@ -412,7 +434,7 @@ export default function InformationSection({
   const [organizerListOpen, setOrganizerListOpen] = useState(false);
 
   return (
-    <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-2 border-none shadow-md bg-linear-to-br from-background to-muted/20">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
@@ -436,12 +458,12 @@ export default function InformationSection({
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-            {event?.eventDescription || "No description"}
+            {linkify(event?.eventDescription || "No description")}
           </p>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="lg:col-span-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
         <Card className="h-full border-none shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col">
           <CardHeader>
             <div className="flex items-center justify-between w-full">
@@ -552,7 +574,7 @@ export default function InformationSection({
                           Starts In
                         </div>
                         <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                          {timeUntil(event.startView)}
+                          {timeUntil(event.startView, language)}
                         </div>
                       </div>
                     );
@@ -565,7 +587,7 @@ export default function InformationSection({
                         </div>
                         <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                           {event?.endView
-                            ? timeUntil(event.endView)
+                            ? timeUntil(event.endView, language)
                             : "Ongoing"}
                         </div>
                       </div>
@@ -685,17 +707,24 @@ export default function InformationSection({
 
           {event?.location ? (
             <div className="space-y-3">
-              <div>
-                <a
-                  href={event.location}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline bg-primary/10 px-4 py-2 rounded-full hover:bg-primary/20 transition-colors"
-                >
-                  <Link className="h-4 w-4" />
-                  Open in Link
-                </a>
-              </div>
+              {event.location.trim().startsWith("<iframe") ? (
+                <div
+                  className="w-full overflow-hidden rounded-xl h-[300px] [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:border-0 shadow-sm border"
+                  dangerouslySetInnerHTML={{ __html: event.location }}
+                />
+              ) : (
+                <div>
+                  <a
+                    href={event.location}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline bg-primary/10 px-4 py-2 rounded-full hover:bg-primary/20 transition-colors"
+                  >
+                    <Link className="h-4 w-4" />
+                    Open in Link
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <div className="h-48 rounded-xl bg-muted/30 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed">
@@ -744,16 +773,16 @@ export default function InformationSection({
                 <span className="w-1 h-4 rounded-full bg-(--role-presenter)"></span>
                 Submission Timeline
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border bg-linear-to-br from-background to-(--role-presenter)/5 flex items-start gap-3 hover:border-(--role-presenter)/30 hover:shadow-md transition-all duration-300">
-                  <div className="p-2 rounded-lg bg-white dark:bg-muted border shadow-sm text-(--role-presenter)">
-                    <CalendarIcon className="h-5 w-5" />
+              <div className="flex flex-col gap-3">
+                <div className="p-4 rounded-xl border bg-linear-to-br from-background to-(--role-presenter)/5 flex items-center gap-4 hover:border-(--role-presenter)/30 hover:shadow-md transition-all duration-300">
+                  <div className="p-3 rounded-lg bg-white dark:bg-muted border shadow-sm text-(--role-presenter)">
+                    <CalendarIcon className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1">
                       {t("information.submissionStart")}
                     </div>
-                    <div className="text-base font-bold text-foreground/90">
+                    <div className="text-lg font-bold text-foreground/90">
                       {event?.startJoinDate
                         ? formatDateTime(
                             new Date(event.startJoinDate),
@@ -763,15 +792,15 @@ export default function InformationSection({
                     </div>
                   </div>
                 </div>
-                <div className="p-4 rounded-xl border bg-linear-to-br from-background to-(--role-presenter)/5 flex items-start gap-3 hover:border-(--role-presenter)/30 hover:shadow-md transition-all duration-300">
-                  <div className="p-2 rounded-lg bg-white dark:bg-muted border shadow-sm text-(--role-presenter)">
-                    <CalendarIcon className="h-5 w-5" />
+                <div className="p-4 rounded-xl border bg-linear-to-br from-background to-(--role-presenter)/5 flex items-center gap-4 hover:border-(--role-presenter)/30 hover:shadow-md transition-all duration-300">
+                  <div className="p-3 rounded-lg bg-white dark:bg-muted border shadow-sm text-(--role-presenter)">
+                    <CalendarIcon className="h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                    <div className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1">
                       {t("information.submissionEnd")}
                     </div>
-                    <div className="text-base font-bold text-foreground/90">
+                    <div className="text-lg font-bold text-foreground/90">
                       {event?.endJoinDate
                         ? formatDateTime(
                             new Date(event.endJoinDate),
@@ -882,68 +911,67 @@ export default function InformationSection({
           </div>
         </CardHeader>
         <CardContent>
-          <div className={`grid grid-cols-1 ${event?.hasCommittee ? "sm:grid-cols-2" : "sm:grid-cols-1"} gap-6`}>
+          <div className="flex flex-col gap-4">
             {event?.hasCommittee && (
-            <div className="relative overflow-hidden flex flex-col justify-between p-6 rounded-3xl bg-linear-to-br from-(--role-committee) via-(--role-committee)/80 to-(--role-committee) text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-(--role-committee)/25 min-h-[180px] group/card">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
-                <Gift className="h-40 w-40 rotate-12 -mr-12 -mt-12" />
+            <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-committee) via-(--role-committee)/90 to-(--role-committee) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-[160px] group/card border border-white/10">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity duration-500">
+                <Gift className="h-32 w-32 rotate-12 -mr-8 -mt-8" />
               </div>
               <div className="relative z-10">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md border border-white/10">
-                  <Award className="w-3 h-3" />
-                  Committee Reward
-                </span>
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0 overflow-hidden">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider mb-4 backdrop-blur-md border border-white/10 shadow-sm w-fit max-w-full">
+                  <Award className="w-3 h-3 shrink-0" />
+                  <span className="truncate">Committee Reward</span>
+                </div>
+                <div className="flex flex-col gap-1">
                   <span 
-                    className={`${getRewardFontSize(event?.virtualRewardCommittee)} font-black tracking-tighter drop-shadow-md`}
+                    className={`${getRewardFontSize(event?.virtualRewardCommittee)} font-black tracking-tighter drop-shadow-md leading-none break-all`}
                     title={String(event?.virtualRewardCommittee ?? 0)}
                   >
                     {event?.virtualRewardCommittee ?? 0}
                   </span>
-                  <span className="text-xl font-bold opacity-90 capitalize shrink-0">
+                  <span className="text-lg font-medium opacity-90 capitalize break-words leading-tight" title={event?.unitReward ?? "coins"}>
                     {event?.unitReward ?? "coins"}
                   </span>
                 </div>
               </div>
-              <div className="mt-4 text-xs font-medium opacity-80 relative z-10 flex items-center gap-2">
-                <div className="w-8 h-1 rounded-full bg-white/30"></div>
-                Base points
+              <div className="mt-4 flex items-center gap-2 text-xs font-medium opacity-75 relative z-10">
+                <div className="h-1 w-6 rounded-full bg-white/40"></div>
+                <span>Base points per evaluation</span>
               </div>
             </div>
             )}
 
-            <div className="relative overflow-hidden flex flex-col justify-between p-6 rounded-3xl bg-linear-to-br from-(--role-guest) via-(--role-guest)/80 to-(--role-guest) text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-(--role-guest)/25 min-h-[180px] group/card">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
-                <Gift className="h-40 w-40 rotate-12 -mr-12 -mt-12" />
+            <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-guest) via-(--role-guest)/90 to-(--role-guest) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-[160px] group/card border border-white/10">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity duration-500">
+                <Gift className="h-32 w-32 rotate-12 -mr-8 -mt-8" />
               </div>
               <div className="relative z-10">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md border border-white/10">
-                  <Users className="w-3 h-3" />
-                  Guest Reward
-                </span>
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0 overflow-hidden">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider mb-4 backdrop-blur-md border border-white/10 shadow-sm w-fit max-w-full">
+                  <Users className="w-3 h-3 shrink-0" />
+                  <span className="truncate">Guest Reward</span>
+                </div>
+                <div className="flex flex-col gap-1">
                   <span 
-                    className={`${getRewardFontSize(event?.virtualRewardGuest)} font-black tracking-tighter drop-shadow-md`}
+                    className={`${getRewardFontSize(event?.virtualRewardGuest)} font-black tracking-tighter drop-shadow-md leading-none break-all`}
                     title={String(event?.virtualRewardGuest ?? 0)}
                   >
                     {event?.virtualRewardGuest ?? 0}
                   </span>
-                  <span className="text-xl font-bold opacity-90 capitalize shrink-0">
+                  <span className="text-lg font-medium opacity-90 capitalize break-words leading-tight" title={event?.unitReward ?? "coins"}>
                     {event?.unitReward ?? "coins"}
                   </span>
                 </div>
               </div>
-              <div className="mt-4 text-xs font-medium opacity-80 relative z-10 flex items-center gap-2">
-                <div className="w-8 h-1 rounded-full bg-white/30"></div>
-                Base points
+              <div className="mt-4 flex items-center gap-2 text-xs font-medium opacity-75 relative z-10">
+                <div className="h-1 w-6 rounded-full bg-white/40"></div>
+                <span>Base points per evaluation</span>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {editable && (
-        <Card className="lg:col-span-2 border-none shadow-md hover:shadow-lg transition-all duration-300 group">
+      <Card className="lg:col-span-2 border-none shadow-md hover:shadow-lg transition-all duration-300 group">
           <CardHeader>
             <div className="flex items-center justify-between w-full">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
@@ -959,9 +987,74 @@ export default function InformationSection({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {["committee", "presenter", "guest"]
-                .filter((r) => event?.hasCommittee || r !== "committee")
-                .map((role) => {
+              {/* Event Link (Always Visible) */}
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 rounded-xl border bg-card hover:bg-muted/30 transition-all duration-200 hover:border-primary/20">
+                <div className="flex items-center gap-4 w-full lg:w-auto">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm bg-primary">
+                    <Link className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="font-bold text-base">Event Link</div>
+                    <div className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-xs">
+                      {mounted
+                        ? `${window.location.origin}/event/${id}`
+                        : ""}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-3 lg:pt-0 mt-1 lg:mt-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 gap-2"
+                    onClick={() => {
+                      const url = `${window.location.origin}/event/${id}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Copied");
+                    }}
+                  >
+                    <ClipboardCopy className="h-3.5 w-3.5" />
+                    Copy Link
+                  </Button>
+                  <div className="h-8 w-px bg-border mx-1"></div>
+                  {eventQrThumb ? (
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="relative group/qr cursor-pointer"
+                        onClick={async () => {
+                          if (eventQrLarge) {
+                            setQrSrc(eventQrLarge);
+                            setQrTitle("QR Code for Event Link");
+                            setQrOpen(true);
+                            return;
+                          }
+                        }}
+                      >
+                        <Image
+                          src={eventQrThumb}
+                          alt="qr-event"
+                          height={10}
+                          width={10}
+                          className="h-10 w-10 rounded border bg-white p-0.5 shadow-sm hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity">
+                          <Users className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground animate-pulse">
+                      QR...
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Role Links (Only for Organizer) */}
+              {editable &&
+                ["committee", "presenter", "guest"]
+                  .filter((r) => event?.hasCommittee || r !== "committee")
+                  .map((role) => {
                 const r = role as "committee" | "presenter" | "guest";
                 const origin =
                   typeof window !== "undefined" ? window.location.origin : "";
@@ -1076,7 +1169,6 @@ export default function InformationSection({
             </div>
           </CardContent>
         </Card>
-      )}
 
       <Dialog open={organizerListOpen} onOpenChange={setOrganizerListOpen}>
         <DialogContent>

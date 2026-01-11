@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/utils/types";
 import { timeFormat, dateFormat } from "@/utils/settings";
+import React from "react";
 
 export function UserAvatar({
   user,
@@ -20,35 +21,49 @@ export function UserAvatar({
 
 export function linkify(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.split(urlRegex).map((part, index) =>
-    urlRegex.test(part) ? (
-      <a
-        key={index}
-        href={part}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline hover:opacity-80"
-      >
-        {part}
-      </a>
-    ) : (
-      part
-    )
-  );
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline hover:opacity-80"
+        >
+          {part}
+        </a>
+      );
+    }
+    // Handle newlines in non-URL text
+    return part.split("\n").map((line, lineIndex, array) => (
+      <React.Fragment key={`${index}-${lineIndex}`}>
+        {line}
+        {lineIndex < array.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  });
 }
 
-export function timeUntil(iso?: string) {
+export function timeUntil(iso?: string, lang: string = "th") {
   if (!iso) return "";
   const now = new Date();
   const target = new Date(iso);
   const diff = target.getTime() - now.getTime();
-  if (diff <= 0) return "เริ่มแล้ว";
+
+  const isThai = lang === "th";
+
+  if (diff <= 0) return isThai ? "เริ่มแล้ว" : "Started";
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const mins = Math.floor((diff / (1000 * 60)) % 60);
-  if (days > 0) return `${days} วัน ${hours} ชม.`;
-  if (hours > 0) return `${hours} ชม. ${mins} นาที`;
-  return `${mins} นาที`;
+
+  if (days > 0)
+    return isThai ? `${days} วัน ${hours} ชม.` : `${days} d ${hours} h`;
+  if (hours > 0)
+    return isThai ? `${hours} ชม. ${mins} นาที` : `${hours} h ${mins} m`;
+  return isThai ? `${mins} นาที` : `${mins} m`;
 }
 
 export function toLocalDatetimeValue(iso: string) {

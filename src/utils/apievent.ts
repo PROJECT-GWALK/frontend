@@ -97,6 +97,13 @@ export const setEventPublicView = async (id: string, publicView: boolean) => {
   return res.data; // { message, event }
 };
 
+export const getUserHistory = async () => {
+  const res = await axios.get("/backend/api/events/me/history", {
+    withCredentials: true,
+  });
+  return res.data; // { message, participated, organized }
+};
+
 // ====================== CHECK EVENT NAME ======================
 export const checkEventName = async (eventName: string) => {
   const res = await axios.get("/backend/api/events/check-name", {
@@ -273,6 +280,24 @@ export const deleteParticipant = async (eventId: string, pid: string) => {
     { withCredentials: true }
   );
   return res.data; // { message }
+};
+
+export const giveVr = async (eventId: string, projectId: string, amount: number) => {
+  const res = await axios.put(
+    `/backend/api/events/${eventId}/action/give-vr`,
+    { projectId, amount },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
+export const resetVr = async (eventId: string, projectId: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/action/reset-vr`,
+    { projectId },
+    { withCredentials: true }
+  );
+  return res.data;
 };
 
 export const deleteTeamFile = async (eventId: string, teamId: string, fileTypeId: string) => {

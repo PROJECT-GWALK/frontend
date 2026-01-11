@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCurrentUser } from "@/utils/apiuser";
+import { getUserHistory } from "@/utils/apievent";
 import { linkify } from "@/utils/function";
 import { User } from "@/utils/types";
 import Link from "next/link";
@@ -21,15 +22,33 @@ import { useEffect, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface ParticipatedEvent {
+  eventName: string;
+  teamName: string;
+  place: string;
+  specialReward: string;
+}
+
+interface OrganizedEvent {
+  eventName: string;
+  rating: string;
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [modeparticipated, setModeparticipated] = useState(true);
+  const [participatedEvents, setParticipatedEvents] = useState<ParticipatedEvent[]>([]);
+  const [organizedEvents, setOrganizedEvents] = useState<OrganizedEvent[]>([]);
 
   const fetchUser = async () => {
     try {
       const data = await getCurrentUser();
       setUser(data.user);
+
+      const history = await getUserHistory();
+      setParticipatedEvents(history.participated);
+      setOrganizedEvents(history.organized);
     } catch (error) {
       console.error("Error fetching user:", error);
     } finally {
@@ -141,14 +160,31 @@ export default function ProfilePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      Software Final Project
-                    </TableCell>
-                    <TableCell>Doctor Web App</TableCell>
-                    <TableCell className="text-center">1</TableCell>
-                    <TableCell className="text-right">AI ยอดเยี่ยม</TableCell>
-                  </TableRow>
+                  {participatedEvents.length > 0 ? (
+                    participatedEvents.map((event, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          {event.eventName}
+                        </TableCell>
+                        <TableCell>{event.teamName}</TableCell>
+                        <TableCell className="text-center">
+                          {event.place}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {event.specialReward}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center h-24 text-muted-foreground"
+                      >
+                        No participated events found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -163,12 +199,27 @@ export default function ProfilePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <Link href="#">Software Final Project Test</Link>
-                    </TableCell>
-                    <TableCell className="text-right">AI ยอดเยี่ยม</TableCell>
-                  </TableRow>
+                  {organizedEvents.length > 0 ? (
+                    organizedEvents.map((event, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          {event.eventName}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {event.rating}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        className="text-center h-24 text-muted-foreground"
+                      >
+                        No organized events found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

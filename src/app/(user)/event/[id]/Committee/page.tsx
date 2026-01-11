@@ -3,13 +3,20 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
-import { createTeam, getTeams, getEvent } from "@/utils/apievent";
+import { createTeam, getTeams, getEvent, giveVr, resetVr } from "@/utils/apievent";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, MessageSquare, BadgeCheck, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +24,6 @@ import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
 import React from "react";
-import ProjectsList from "../Presenter/components/ProjectsList";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
@@ -34,6 +40,7 @@ export default function CommitteePage(props: Props) {
   const id = props.id || idFromParams;
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData | null>(props.event || null);
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -100,15 +107,23 @@ export default function CommitteePage(props: Props) {
             })) || [],
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          totalVr: t.totalVr,
         }));
         setProjects(mappedProjects);
 
         // Initialize rewards state for new projects
         setProjectRewards((prev) => {
           const newState = { ...prev };
-          mappedProjects.forEach((p) => {
-            if (!newState[p.id]) {
-              newState[p.id] = { vrGiven: 0, specialGiven: null };
+          teams.forEach((t) => {
+            // Update or initialize with fetched myReward
+            if (!newState[t.id]) {
+              newState[t.id] = { vrGiven: t.myReward || 0, specialGiven: null };
+            } else {
+              // If re-fetching, update the vrGiven to match server state
+              newState[t.id] = {
+                ...newState[t.id],
+                vrGiven: t.myReward || 0,
+              };
             }
           });
           return newState;
@@ -123,13 +138,6 @@ export default function CommitteePage(props: Props) {
     fetchTeamsData();
   }, [id]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [viewProjectOpen, setViewProjectOpen] = useState(false);
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [vrDialogOpen, setVrDialogOpen] = useState(false);
-  const [vrAmount, setVrAmount] = useState<number>(0);
-  const [specialDialogOpen, setSpecialDialogOpen] = useState(false);
-  const [specialChoice, setSpecialChoice] = useState<string | null>(null);
 
   // UI state for project viewer/editor
   const [viewOpen, setViewOpen] = useState(false);
@@ -137,15 +145,44 @@ export default function CommitteePage(props: Props) {
   const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
   const { t } = useLanguage();
 
-  const handleResetVR = (projectId: string) => {
-    setProjectRewards((prev) => ({
-      ...prev,
-      [projectId]: {
-        ...prev[projectId],
-        vrGiven: 0,
-      },
-    }));
-    toast.success("Reset Virtual Reward");
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (typeof error === "object" && error !== null && "response" in error) {
+      const response = (error as { response?: unknown }).response;
+      if (typeof response === "object" && response !== null && "data" in response) {
+        const data = (response as { data?: unknown }).data;
+        if (typeof data === "object" && data !== null && "message" in data) {
+          const message = (data as { message?: unknown }).message;
+          if (typeof message === "string" && message.trim()) return message;
+        }
+      }
+    }
+    if (typeof error === "object" && error !== null && "message" in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === "string" && message.trim()) return message;
+    }
+    return fallback;
+  };
+
+  const handleResetVR = async (projectId: string) => {
+    try {
+      const res = await resetVr(id, projectId);
+      const refundAmount = res.newBalance - (localEvent?.myVirtualTotal ?? 0);
+      setLocalEvent((prev) => (prev ? {
+        ...prev,
+        myVirtualTotal: res.newBalance,
+        myVirtualUsed: (prev.myVirtualUsed ?? 0) - refundAmount
+      } : prev));
+      setProjectRewards((prev) => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          vrGiven: 0,
+        },
+      }));
+      toast.success("Reset Virtual Reward");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to reset VR"));
+    }
   };
 
   const handleResetSpecial = (projectId: string) => {
@@ -159,20 +196,47 @@ export default function CommitteePage(props: Props) {
     toast.success("Reset Special Reward");
   };
 
+  const handleGiveVr = async (projectId: string, amount: number) => {
+    try {
+      const res = await giveVr(id, projectId, amount);
+      setLocalEvent((prev) => {
+        if (!prev) return prev;
+        const initialTotal = (prev.myVirtualTotal ?? 0) + (prev.myVirtualUsed ?? 0);
+        return {
+          ...prev,
+          myVirtualTotal: res.newBalance,
+          myVirtualUsed: initialTotal - res.newBalance,
+        };
+      });
+      setProjectRewards((prev) => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          vrGiven: amount,
+        },
+      }));
+      toast.success("ให้ Virtual Reward เรียบร้อย");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to give VR"));
+    }
+  };
+
+  const handleGiveSpecial = (projectId: string, rewardName: string) => {
+    setProjectRewards((prev) => ({
+      ...prev,
+      [projectId]: {
+        ...prev[projectId],
+        specialGiven: rewardName,
+      },
+    }));
+    toast.success("ให้รางวัลพิเศษเรียบร้อย");
+  };
+
   const handleAction = (
     action: string,
     projectId: string
   ) => {
-    if (action === "comment") {
-      setSelectedProjectId(projectId);
-      setCommentOpen(true);
-    } else if (action === "give_vr") {
-      setSelectedProjectId(projectId);
-      setVrDialogOpen(true);
-    } else if (action === "give_special") {
-      setSelectedProjectId(projectId);
-      setSpecialDialogOpen(true);
-    } else if (action === "reset_vr") {
+    if (action === "reset_vr") {
       handleResetVR(projectId);
     } else if (action === "reset_special") {
       handleResetSpecial(projectId);
@@ -221,7 +285,7 @@ export default function CommitteePage(props: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -301,11 +365,11 @@ export default function CommitteePage(props: Props) {
           </Card>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
-            <TabsList>
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="information">Information</TabsTrigger>
-              <TabsTrigger value="project">Projects</TabsTrigger>
-              <TabsTrigger value="result">Result</TabsTrigger>
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -331,7 +395,7 @@ export default function CommitteePage(props: Props) {
                           </span>
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          {t("committeeSection.total")} {localEvent?.myVirtualTotal ?? 0}
+                          {t("committeeSection.total")} {(localEvent?.myVirtualTotal ?? 0) + (localEvent?.myVirtualUsed ?? 0)}
                         </span>
                       </div>
                       <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
@@ -340,7 +404,7 @@ export default function CommitteePage(props: Props) {
                           style={{
                             width: `${
                               ((localEvent?.myVirtualUsed ?? 0) /
-                                (localEvent?.myVirtualTotal ?? 1)) *
+                                ((localEvent?.myVirtualTotal ?? 0) + (localEvent?.myVirtualUsed ?? 0) || 1)) *
                               100
                             }%`,
                           }}
@@ -348,8 +412,7 @@ export default function CommitteePage(props: Props) {
                       </div>
                       <p className="text-xs text-amber-600 font-medium text-right">
                         {t("committeeSection.remaining")}{" "}
-                        {(localEvent?.myVirtualTotal ?? 0) -
-                          (localEvent?.myVirtualUsed ?? 0)}
+                        {localEvent?.myVirtualTotal ?? 0}
                       </p>
                     </CardContent>
                   </Card>
@@ -498,17 +561,33 @@ export default function CommitteePage(props: Props) {
                   </Card>
                 </div>
 
-                {/* Projects overview for committee with action buttons */}
+                {/* Projects overview for committee with action buttons
                 <div className="lg:col-span-3">
-                  <div className="flex items-center justify-between gap-4 mb-3 mt-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3 mt-4">
                     <h2 className="text-xl font-semibold">Projects</h2>
-                    {/* Search Input Unable to search */}
-                    <Input
-                      placeholder="Search projects by name..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="max-w-sm"
-                    />
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Select
+                        value={filterStatus}
+                        onValueChange={(v) =>
+                          setFilterStatus(v as "all" | "scored" | "unscored")
+                        }
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Projects</SelectItem>
+                          <SelectItem value="scored">Evaluated</SelectItem>
+                          <SelectItem value="unscored">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        placeholder="Search projects..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="max-w-xs"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-6">
                     <UnifiedProjectList
@@ -516,157 +595,20 @@ export default function CommitteePage(props: Props) {
                       role="COMMITTEE"
                       eventId={id}
                       searchQuery={searchQuery}
+                      filterStatus={filterStatus}
                       projectRewards={projectRewards}
+                      userVrBalance={localEvent?.myVirtualTotal ?? 0}
                       onAction={handleAction}
+                      onGiveVr={handleGiveVr}
+                      onGiveSpecial={handleGiveSpecial}
+                      unusedAwards={localEvent?.awardsUnused}
+                      onPostComment={() => {
+                        toast.success("ส่งความคิดเห็นเรียบร้อย");
+                      }}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
-
-              {/* Dialogs for project actions */}
-              <Dialog open={viewProjectOpen} onOpenChange={setViewProjectOpen}>
-                <DialogContent>
-                  <DialogTitle>ข้อมูลโครงการ</DialogTitle>
-                  <div className="mt-2">
-                    {projects.find((pr) => pr.id === selectedProjectId) ? (
-                      <div>
-                        <h4 className="text-lg font-semibold">
-                          {projects.find((pr) => pr.id === selectedProjectId)?.title}
-                        </h4>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {projects.find((pr) => pr.id === selectedProjectId)?.desc}
-                        </p>
-                      </div>
-                    ) : (
-                      <p>ไม่มีข้อมูล</p>
-                    )}
-                  </div>
-                  <DialogClose className="mt-4">ปิด</DialogClose>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
-                <DialogContent>
-                  <DialogTitle>แสดงความคิดเห็น</DialogTitle>
-                  <div className="mt-2">
-                    <textarea
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      className="w-full rounded-md border p-2"
-                      rows={6}
-                    />
-                    <div className="flex justify-end gap-2 mt-3">
-                      <Button
-                        onClick={() => {
-                          setCommentOpen(false);
-                          setCommentText("");
-                        }}
-                      >
-                        ยกเลิก
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          toast.success("ส่งความคิดเห็นเรียบร้อย");
-                          setCommentOpen(false);
-                          setCommentText("");
-                        }}
-                      >
-                        ส่งความคิดเห็น
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={vrDialogOpen} onOpenChange={setVrDialogOpen}>
-                <DialogContent>
-                  <DialogTitle>ให้ Virtual Reward</DialogTitle>
-                  <div className="mt-2">
-                    <Input
-                      type="number"
-                      value={vrAmount}
-                      onChange={(e) => setVrAmount(Number(e.target.value || 0))}
-                      className="w-full"
-                    />
-                    <div className="flex justify-end gap-2 mt-3">
-                      <Button
-                        onClick={() => {
-                          setVrDialogOpen(false);
-                          setVrAmount(0);
-                        }}
-                      >
-                        ยกเลิก
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          if (!selectedProjectId) return;
-                          setProjectRewards((prev) => ({
-                            ...prev,
-                            [selectedProjectId]: {
-                              ...prev[selectedProjectId],
-                              vrGiven: (prev[selectedProjectId]?.vrGiven ?? 0) + vrAmount,
-                            },
-                          }));
-                          toast.success("ให้ Virtual Reward เรียบร้อย");
-                          setVrDialogOpen(false);
-                          setVrAmount(0);
-                        }}
-                      >
-                        ยืนยัน
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={specialDialogOpen} onOpenChange={setSpecialDialogOpen}>
-                <DialogContent>
-                  <DialogTitle>ให้รางวัลพิเศษ</DialogTitle>
-                  <div className="mt-2 space-y-3">
-                    {(localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]).map((a) => (
-                      <div key={a} className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="special"
-                          checked={specialChoice === a}
-                          onChange={() => setSpecialChoice(a)}
-                        />
-                        <div className="text-sm">{a}</div>
-                      </div>
-                    ))}
-                    <div className="flex justify-end gap-2 mt-3">
-                      <Button
-                        onClick={() => {
-                          setSpecialDialogOpen(false);
-                          setSpecialChoice(null);
-                        }}
-                      >
-                        ยกเลิก
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          if (!selectedProjectId || !specialChoice) {
-                            toast.error("โปรดเลือกของรางวัล");
-                            return;
-                          }
-                          setProjectRewards((prev) => ({
-                            ...prev,
-                            [selectedProjectId]: {
-                              ...prev[selectedProjectId],
-                              specialGiven: specialChoice,
-                            },
-                          }));
-                          toast.success("ให้รางวัลพิเศษเรียบร้อย");
-                          setSpecialDialogOpen(false);
-                          setSpecialChoice(null);
-                        }}
-                      >
-                        ยืนยัน
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </TabsContent>
 
             <TabsContent value="information">
@@ -682,14 +624,31 @@ export default function CommitteePage(props: Props) {
               <div className="mt-6 space-y-6">
                 {/* Projects in the event */}
                 <div>
-                  <div className="flex items-center justify-between gap-4 mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <h2 className="text-lg font-semibold">Projects</h2>
-                    <Input
-                      placeholder="Search projects by name..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="max-w-sm"
-                    />
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Select
+                        value={filterStatus}
+                        onValueChange={(v) =>
+                          setFilterStatus(v as "all" | "scored" | "unscored")
+                        }
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Projects</SelectItem>
+                          <SelectItem value="scored">Evaluated</SelectItem>
+                          <SelectItem value="unscored">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        placeholder="Search projects..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="max-w-xs"
+                      />
+                    </div>
                   </div>
 
                   <UnifiedProjectList
@@ -697,8 +656,15 @@ export default function CommitteePage(props: Props) {
                     role="COMMITTEE"
                     eventId={id}
                     searchQuery={searchQuery}
+                    filterStatus={filterStatus}
                     projectRewards={projectRewards}
                     onAction={handleAction}
+                    onGiveVr={handleGiveVr}
+                    onGiveSpecial={handleGiveSpecial}
+                    unusedAwards={localEvent?.awardsUnused}
+                    onPostComment={() => {
+                      toast.success("ส่งความคิดเห็นเรียบร้อย");
+                    }}
                   />
                 </div>
               </div>

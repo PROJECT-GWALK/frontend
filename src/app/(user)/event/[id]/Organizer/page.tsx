@@ -29,16 +29,6 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { X } from "lucide-react";
 import {
   setEventPublicView,
@@ -94,34 +84,15 @@ export default function OrganizerView({ id, event }: Props) {
   
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
 
-  const handleAction = (action: string, projectId: string) => {
-    if (action === "comment") {
-      setSelectedProjectId(projectId);
-      setCommentOpen(true);
-    } else if (action === "delete_team") {
-      setTeamToDelete(projectId);
-      setDeleteDialogOpen(true);
-    }
-  };
-
-  const handleDeleteTeam = async () => {
-    if (!teamToDelete) return;
+  const handleDeleteTeam = async (projectId: string) => {
     try {
-      await deleteTeam(id, teamToDelete);
+      await deleteTeam(id, projectId);
       toast.success("ลบทีมเรียบร้อยแล้ว");
       fetchTeamsData();
     } catch (error) {
       console.error(error);
       toast.error("เกิดข้อผิดพลาดในการลบทีม");
-    } finally {
-      setDeleteDialogOpen(false);
-      setTeamToDelete(null);
     }
   };
 
@@ -145,6 +116,7 @@ export default function OrganizerView({ id, event }: Props) {
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
           createdAt: t.createdAt,
+          totalVr: t.totalVr,
         }));
         setProjects(mappedProjects);
       }
@@ -161,7 +133,7 @@ export default function OrganizerView({ id, event }: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -282,12 +254,12 @@ export default function OrganizerView({ id, event }: Props) {
           </div>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
-            <TabsList>
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="information">Information</TabsTrigger>
-              <TabsTrigger value="Participants">Participants</TabsTrigger>
-              <TabsTrigger value="project">Project</TabsTrigger>
-              <TabsTrigger value="result">Result</TabsTrigger>
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
+              <TabsTrigger value="Participants" className="flex-1 min-w-[100px]">Participants</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Project</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-6 mt-6">
@@ -552,60 +524,11 @@ export default function OrganizerView({ id, event }: Props) {
                   role="ORGANIZER"
                   eventId={id}
                   searchQuery={searchQuery}
-                  onAction={handleAction}
+                  onDeleteTeam={handleDeleteTeam}
+                  onPostComment={(_projectId, _text) => {
+                    toast.success("ส่งความคิดเห็นเรียบร้อย");
+                  }}
                 />
-                
-                <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
-                  <DialogContent>
-                    <DialogTitle>แสดงความคิดเห็น</DialogTitle>
-                    <div className="mt-2">
-                      <textarea
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        className="w-full rounded-md border p-2"
-                        rows={6}
-                        placeholder="เขียนความคิดเห็น..."
-                      />
-                      <div className="flex justify-end gap-2 mt-3">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setCommentOpen(false);
-                            setCommentText("");
-                          }}
-                        >
-                          ยกเลิก
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            toast.success("ส่งความคิดเห็นเรียบร้อย");
-                            setCommentOpen(false);
-                            setCommentText("");
-                          }}
-                        >
-                          ส่งความคิดเห็น
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>ยืนยันการลบทีม?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        การกระทำนี้ไม่สามารถย้อนกลับได้ ข้อมูลทีมและสมาชิกทั้งหมดจะถูกลบออกจากกิจกรรมนี้
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={() => setTeamToDelete(null)}>ยกเลิก</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteTeam} className="bg-red-600 hover:bg-red-700 text-white">
-                        ยืนยันการลบ
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
               </div>
             </TabsContent>
 
@@ -1195,25 +1118,7 @@ export default function OrganizerView({ id, event }: Props) {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>ยืนยันการลบทีม</AlertDialogTitle>
-              <AlertDialogDescription>
-                คุณแน่ใจหรือไม่ที่จะลบทีมนี้? การกระทำนี้ไม่สามารถย้อนกลับได้
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteTeam}
-                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              >
-                ลบทีม
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      
       </div>
     </div>
   );

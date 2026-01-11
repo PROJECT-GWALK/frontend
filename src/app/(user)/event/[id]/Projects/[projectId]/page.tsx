@@ -4,22 +4,37 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import * as QRCode from "qrcode";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
 import {
-  Share2,
   Users,
   FileText,
   Search,
+  Plus,
+  Share2,
+  Edit3,
+  Loader2,
+  X,
   ChevronLeft,
+  LogOut,
   Download,
 } from "lucide-react";
 import {
   getTeamById,
   getEvent,
+  uploadTeamFile,
+  searchCandidates,
+  addTeamMember,
   getMyEvents,
+  removeTeamMember,
+  deleteTeamFile,
 } from "@/utils/apievent";
+import { getCurrentUser } from "@/utils/apiuser";
+import EditProjectDialog from "../../Presenter/components/EditProjectDialog";
 import type { PresenterProject } from "../../Presenter/components/types";
-import { type EventData, FileType, type ProjectMember, type Team, type DraftEvent } from "@/utils/types";
+import { type EventData, FileType, type ProjectMember, type Candidate, type Team, type DraftEvent } from "@/utils/types";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,36 +43,81 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserAvatar } from "@/utils/function";
+import { linkify, UserAvatar } from "@/utils/function";
 
-import { useParams } from "next/navigation";
+type Props = {
+  params: Promise<{ id: string; projectId: string }>;
+};
 
-export default function ProjectDetailPage() {
-  const params = useParams();
-  const id = params?.id as string;
-  const projectId = params?.projectId as string;
-  
+export default function ProjectDetailPage({ params }: Props) {
+  const router = useRouter();
+  const paramsResolved = React.use(params);
+  const { projectId, id } = paramsResolved;
   const [project, setProject] = useState<PresenterProject | null>(null);
   const [membersData, setMembersData] = useState<ProjectMember[]>([]);
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
+  // Files Dialog
+  const [filesOpen, setFilesOpen] = useState(false);
+
+  // Invite Dialog
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [bannerOpen, setBannerOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // Upload loading state per fileTypeId
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+
   const [qrThumb, setQrThumb] = useState<string | null>(null);
+  const [qrThumbCommittee, setQrThumbCommittee] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const [teamRes, eventRes, myEventsRes] = await Promise.all([
+      const [teamRes, eventRes, myEventsRes, currentUserRes] = await Promise.all([
         getTeamById(id, projectId),
         getEvent(id),
         getMyEvents(),
+        getCurrentUser(),
       ]);
+
+      if (teamRes.message === "not_found") {
+        router.push(`/event/${id}`);
+        return;
+      }
 
       if (teamRes.message === "ok") {
         const t = teamRes.team as Team;
+        let isUserMember = false;
+
+        // Check if current user is member of the team
+        if (currentUserRes.message === "ok") {
+          const currentUser = currentUserRes.user;
+          setCurrentUserId(currentUser.id);
+          isUserMember = t.participants?.some(
+            (p) => p.user.id === currentUser.id
+          ) || false;
+          setIsMember(isUserMember);
+        }
 
         // Check if current user is leader based on getMyEvents
         const myEvent =
@@ -110,28 +170,167 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     const gen = async () => {
       const link = `${location.origin}/event/${id}/Projects/${projectId}`;
+      const committeeLink = `${location.origin}/event/${id}/Projects/${projectId}?role=committee`;
       try {
         const thumb = await QRCode.toDataURL(link, { width: 240 });
         setQrThumb(thumb);
+        const thumb2 = await QRCode.toDataURL(committeeLink, { width: 240 });
+        setQrThumbCommittee(thumb2);
       } catch (e) {
         // ignore
-        console.error("Failed to generate QR code", e);
       }
     };
     gen();
   }, [id, projectId]);
+
+  // Search Candidates
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length >= 2) {
+        setIsSearching(true);
+        try {
+          const res = await searchCandidates(id, searchQuery);
+          setCandidates(res.candidates || []);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setCandidates([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, id]);
+
+  const handleAddMember = async (userId: string) => {
+    try {
+      const res = await addTeamMember(id, projectId, userId);
+      if (res.message === "ok") {
+        toast.success("Member added");
+        setInviteOpen(false);
+        setSearchQuery("");
+        fetchData(); // Refresh list
+      }
+    } catch (e: unknown) {
+      const msg = (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to add member";
+      toast.error(msg);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!confirm("Are you sure you want to remove this member?")) return;
+    try {
+      const res = await removeTeamMember(id, projectId, userId);
+      if (res.message === "ok") {
+        toast.success("Member removed");
+        fetchData();
+      }
+    } catch (e: unknown) {
+      const msg = (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to remove member";
+      toast.error(msg);
+    }
+  };
+
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement> | null,
+    fileTypeId?: string,
+    urlValue?: string
+  ) => {
+    if (!project || !fileTypeId) return;
+
+    // Prevent duplicate uploads
+    if (uploading[fileTypeId]) return;
+
+    let fileOrUrl: File | string | undefined;
+    if (e) {
+      fileOrUrl = e.target.files?.[0];
+    } else if (urlValue) {
+      fileOrUrl = urlValue;
+    }
+
+    if (!fileOrUrl) return;
+
+    setUploading((prev) => ({ ...prev, [fileTypeId]: true }));
+    try {
+      const res = await uploadTeamFile(id, project.id, fileTypeId, fileOrUrl);
+      if (res.message === "ok") {
+        const newUrl = res.teamFile.fileUrl;
+        const name = fileOrUrl instanceof File ? fileOrUrl.name : "Link";
+
+        setProject((prev) => {
+          if (!prev) return null;
+          const newFiles = [...(prev.files || [])];
+          const existingIdx = newFiles.findIndex(
+            (x) => x.fileTypeId === fileTypeId
+          );
+          if (existingIdx >= 0) {
+            newFiles[existingIdx] = { name, url: newUrl, fileTypeId };
+          } else {
+            newFiles.push({ name, url: newUrl, fileTypeId });
+          }
+          return { ...prev, files: newFiles };
+        });
+        toast.success("File uploaded");
+      }
+    } catch (err) {
+      toast.error("Upload failed");
+    } finally {
+      setUploading((prev) => ({ ...prev, [fileTypeId]: false }));
+    }
+  };
+
+  const handleDeleteFile = async (fileTypeId: string) => {
+    if (!project || !confirm("Are you sure you want to delete this file?"))
+      return;
+    try {
+      const res = await deleteTeamFile(id, project.id, fileTypeId);
+      if (res.message === "ok") {
+        setProject((prev) => {
+          if (!prev) return null;
+          const newFiles = (prev.files || []).filter(
+            (f) => f.fileTypeId !== fileTypeId
+          );
+          return { ...prev, files: newFiles };
+        });
+
+        // Clear input if exists (for URL type)
+        const input = document.getElementById(
+          `url-input-${fileTypeId}`
+        ) as HTMLInputElement;
+        if (input) input.value = "";
+
+        toast.success("File deleted");
+      }
+    } catch (e) {
+      toast.error("Failed to delete file");
+    }
+  };
 
   const copyToClipboard = (t: string) => {
     navigator.clipboard.writeText(t);
     toast.success("Copied to clipboard");
   };
 
+  const handleLeaveTeam = async () => {
+    if (!currentUserId) return;
+    try {
+      const res = await removeTeamMember(id, projectId, currentUserId);
+      if (res.message === "ok") {
+        toast.success("You have left the team");
+        router.push(`/event/${id}`);
+      }
+    } catch (e) {
+      const msg = (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to leave team";
+      toast.error(msg);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-6 space-y-8">
-        <div>
-          <Skeleton className="h-10 w-48 mb-6" />
-        </div>
+        <Skeleton className="h-10 w-32" />
         <Card>
           <Skeleton className="h-48 w-full rounded-t-lg" />
           <CardContent className="pt-6">
@@ -142,10 +341,34 @@ export default function ProjectDetailPage() {
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-full" />
                 </div>
+                <div className="flex gap-4">
+                  <Skeleton className="h-9 w-32" />
+                  <Skeleton className="h-9 w-32" />
+                </div>
               </div>
               <Skeleton className="h-9 w-24" />
             </div>
           </CardContent>
+        </Card>
+        <Card>
+           <CardHeader>
+             <Skeleton className="h-6 w-48" />
+           </CardHeader>
+           <CardContent>
+             <div className="space-y-4">
+               {[1, 2, 3].map((i) => (
+                 <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-32 mb-1" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                 </div>
+               ))}
+             </div>
+           </CardContent>
         </Card>
       </div>
     );
@@ -179,8 +402,8 @@ export default function ProjectDetailPage() {
 
       {/* Header Section */}
       <Card>
-        <div className="relative h-48 w-full bg-slate-100 rounded-t-lg overflow-hidden">
-          {project.img ? (
+        <div className="relative w-full aspect-video md:h-64 bg-slate-100 rounded-t-lg overflow-hidden">
+          {project.img && !project.img.startsWith("data:image/png;base64src") ? (
             <Image
               src={project.img}
               alt={project.title}
@@ -202,8 +425,48 @@ export default function ProjectDetailPage() {
               <div>
                 <h1 className="text-3xl font-bold">{project.title}</h1>
                 <p className="text-muted-foreground mt-2 leading-relaxed">
-                  {project.desc || "No description provided."}
+                  {linkify(project.desc || "No description provided.")}
                 </p>
+              </div>
+
+              <div className="flex gap-4">
+                {isMember && !project.isLeader && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setLeaveDialogOpen(true)}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Leave Team
+                  </Button>
+                )}
+                {project.isLeader && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditOpen(true)}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit Project
+                    </Button>
+                  </>
+                )}
+                {isMember && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFilesOpen(true)}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Manage Files
+                      {project.files && project.files.length > 0 && (
+                        <Badge variant="secondary" className="ml-2">
+                          {project.files.length}
+                        </Badge>
+                      )}
+                    </Button>
+                )}
               </div>
             </div>
 
@@ -251,8 +514,25 @@ export default function ProjectDetailPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Team Members
+            Team Members{" "}
+            <span className="text-muted-foreground text-sm font-normal">
+              ({membersData.length} / {eventData?.maxTeamMembers || "-"})
+            </span>
           </CardTitle>
+          {project.isLeader && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInviteOpen(true)}
+              disabled={
+                !!eventData?.maxTeamMembers &&
+                membersData.length >= eventData.maxTeamMembers
+              }
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Member
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -273,11 +553,21 @@ export default function ProjectDetailPage() {
                     </Badge>
                   )}
                 </div>
+                {project.isLeader && !m.isLeader && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                    onClick={() => handleRemoveMember(m.id)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             ))}
             {membersData.length === 0 && (
               <div className="col-span-full text-center py-8 text-muted-foreground">
-                No members yet.
+                No members yet. Invite someone to join your team!
               </div>
             )}
           </div>
@@ -303,6 +593,7 @@ export default function ProjectDetailPage() {
                 const isImage =
                   file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
                 const isUrlType = ft?.allowedFileTypes?.includes(FileType.url);
+                const isUploading = ft?.id ? uploading[ft.id] : false;
 
                 // YouTube check
                 const youtubeMatch = file.url.match(
@@ -324,22 +615,20 @@ export default function ProjectDetailPage() {
 
                     <div className="border rounded-lg overflow-hidden bg-slate-50">
                       {isImage ? (
-                        <div className="flex flex-col">
-                          <div
-                            className="relative w-full h-[400px] cursor-zoom-in group"
-                            onClick={() => setPreviewImage(file.url)}
-                          >
-                            <Image
-                              src={file.url}
-                              alt={file.name}
-                              fill
-                              className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                              <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
-                            </div>
+                        <div
+                          className="relative w-full h-[400px] cursor-zoom-in group"
+                          onClick={() => setPreviewImage(file.url)}
+                        >
+                          <Image
+                            src={file.url}
+                            alt={file.name}
+                            fill
+                            className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
                           </div>
-                          <div className="p-3 bg-white border-t flex justify-end">
+                          <div className="absolute bottom-0 right-0 p-3 flex justify-end">
                             <Button variant="outline" size="sm" asChild>
                               <a
                                 href={file.url}
@@ -347,6 +636,7 @@ export default function ProjectDetailPage() {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <Download className="w-4 h-4" />
                                 Download Image
@@ -356,41 +646,25 @@ export default function ProjectDetailPage() {
                         </div>
                       ) : isPdf ? (
                         <div className="flex flex-col">
-                          <object
-                            data={`${file.url}#toolbar=0`}
-                            type="application/pdf"
+                            <iframe
+                            src={`${file.url}#toolbar=0`}
                             className="w-full h-[500px]"
                             title={file.name}
-                          >
-                            <div className="flex flex-col items-center justify-center h-full bg-slate-50 text-muted-foreground p-4 text-center">
-                              <p className="mb-2">
-                                Unable to display PDF directly.
-                              </p>
-                              <Button variant="outline" size="sm" asChild>
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  Download PDF
-                                </a>
-                              </Button>
+                            />
+                            <div className="p-3 bg-white border-t flex justify-end">
+                                <Button variant="outline" size="sm" asChild>
+                                    <a
+                                    href={file.url}
+                                    download
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2"
+                                    >
+                                    <Download className="w-4 h-4" />
+                                    Download PDF
+                                    </a>
+                                </Button>
                             </div>
-                          </object>
-                          <div className="p-3 bg-white border-t flex justify-end">
-                            <Button variant="outline" size="sm" asChild>
-                              <a
-                                href={file.url}
-                                download
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2"
-                              >
-                                <Download className="w-4 h-4" />
-                                Download PDF
-                              </a>
-                            </Button>
-                          </div>
                         </div>
                       ) : isYoutube && youtubeId ? (
                         <div className="aspect-video w-full">
@@ -450,68 +724,342 @@ export default function ProjectDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Share Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Public Share Link</CardTitle>
-            <CardDescription>Share this project with everyone</CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-            {qrThumb ? (
-              <Image
-                src={qrThumb}
-                alt="QR invite"
-                height={32}
-                width={32}
-                className="w-32 h-32 rounded border"
-              />
-            ) : (
-              <div className="w-32 h-32 bg-slate-100 rounded animate-pulse" />
-            )}
-            <div className="flex-1 space-y-2">
-              <div className="text-sm text-muted-foreground break-all">
-                {`${location.origin}/event/${id}/Projects/${projectId}`}
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  copyToClipboard(
-                    `${location.origin}/event/${id}/Projects/${projectId}`
-                  )
-                }
-              >
-                <Share2 className="w-3 h-3 mr-2" />
-                Copy Link
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-       {/* Image Preview Dialog */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-w-4xl w-full h-full max-h-[90vh]">
+      {/* Banner Dialog */}
+      <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <DialogTitle className="sr-only">Event Banner</DialogTitle>
+          <div className="relative w-full aspect-video">
             <Image
-              src={previewImage}
-              alt="Preview"
+              src={
+                eventData?.imageCover &&
+                !eventData.imageCover.startsWith("data:image/png;base64src")
+                  ? eventData.imageCover
+                  : "/banner.png"
+              }
+              alt={eventData?.eventName || "Event banner"}
               fill
-              className="object-contain"
+              className="object-contain rounded-lg"
             />
-            <button
-              className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70"
-              onClick={() => setPreviewImage(null)}
-            >
-              <Search className="w-6 h-6" />
-            </button>
+            <DialogClose className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2">
+              <X className="w-5 h-5" />
+            </DialogClose>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog
+        open={!!previewImage}
+        onOpenChange={(open) => !open && setPreviewImage(null)}
+      >
+        <DialogContent className="max-w-[90vw] h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+          <DialogTitle className="sr-only">Image Preview</DialogTitle>
+          <div className="relative w-full h-full">
+            {previewImage && (
+              <Image
+                src={previewImage}
+                alt="Preview"
+                fill
+                className="object-contain"
+                priority
+              />
+            )}
+            <DialogClose className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 z-50">
+              <X className="w-6 h-6" />
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Files Dialog */}
+      <Dialog open={filesOpen} onOpenChange={setFilesOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Project Files</DialogTitle>
+            <DialogDescription>
+              Upload required documents and files for your project.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {(eventData?.fileTypes || []).map((ft) => {
+              const uploaded = project.files?.find(
+                (f) => f.fileTypeId === ft.id
+              );
+              const isUrlType = ft.allowedFileTypes.includes(FileType.url);
+              const isUploading = ft.id ? uploading[ft.id] : false;
+
+              return (
+                <div
+                  key={ft.id}
+                  className="grid grid-cols-1 md:grid-cols-12 gap-4 border rounded-lg p-4 bg-slate-50/50"
+                >
+                  {/* Info Section */}
+                  <div className="md:col-span-5 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold">{ft.name}</span>
+                      {ft.isRequired && (
+                        <Badge variant="destructive" className="text-[10px]">
+                          Required
+                        </Badge>
+                      )}
+                      {uploaded && (
+                        <Badge className="bg-green-600 hover:bg-green-700 text-[10px]">
+                          Uploaded
+                        </Badge>
+                      )}
+                    </div>
+                    {ft.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {ft.description}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground font-mono bg-slate-100 w-fit px-1 rounded">
+                      Allowed: {ft.allowedFileTypes.join(", ")}
+                    </p>
+                  </div>
+
+                  {/* Actions Section */}
+                  <div className="md:col-span-7 flex flex-col justify-center gap-3">
+                    {isUrlType ? (
+                      <div className="flex flex-col gap-2 w-full">
+                        <div className="flex gap-2 w-full items-center">
+                          <Input
+                            id={`url-input-${ft.id}`}
+                            placeholder="https://..."
+                            defaultValue={uploaded?.url || ""}
+                            disabled={isUploading}
+                            className="text-sm bg-white"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleFileUpload(
+                                  null,
+                                  ft.id,
+                                  e.currentTarget.value
+                                );
+                              }
+                            }}
+                            onBlur={(e) => {
+                              if (
+                                e.target.value &&
+                                e.target.value !== uploaded?.url
+                              ) {
+                                handleFileUpload(null, ft.id, e.target.value);
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            disabled={isUploading}
+                            onClick={() => {
+                              const input = document.getElementById(
+                                `url-input-${ft.id}`
+                              ) as HTMLInputElement;
+                              if (input) {
+                                handleFileUpload(null, ft.id, input.value);
+                              }
+                            }}
+                          >
+                            {isUploading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              "Save"
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Secondary Actions Row */}
+                        <div className="flex justify-end gap-2">
+                          {uploaded && (
+                            <>
+                              <Button size="sm" variant="outline" asChild>
+                                <a
+                                  href={uploaded.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2"
+                                >
+                                  <Share2 className="w-3 h-3" /> Open Link
+                                </a>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteFile(ft.id!)}
+                              >
+                                <X className="w-3 h-3 mr-1" /> Delete
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-end gap-2 w-full">
+                        <Input
+                          type="file"
+                          id={`file-${ft.id}`}
+                          className="hidden"
+                          accept={ft.allowedFileTypes
+                            .map((t) => "." + t)
+                            .join(",")}
+                          onChange={(e) => handleFileUpload(e, ft.id)}
+                          disabled={isUploading}
+                        />
+                        <div className="flex gap-2 w-full justify-end">
+                          <Button
+                            variant={uploaded ? "outline" : "default"}
+                            size="sm"
+                            disabled={isUploading}
+                            onClick={() =>
+                              document.getElementById(`file-${ft.id}`)?.click()
+                            }
+                          >
+                            {isUploading ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <Plus className="w-4 h-4 mr-2" />
+                            )}
+                            {uploaded ? "Replace File" : "Upload File"}
+                          </Button>
+                        </div>
+
+                        {uploaded && (
+                          <div className="flex gap-2 justify-end w-full">
+                            <Button size="sm" variant="secondary" asChild>
+                              <a
+                                href={uploaded.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-2"
+                              >
+                                <FileText className="w-3 h-3" /> Download
+                              </a>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => ft.id && handleDeleteFile(ft.id)}
+                            >
+                              <X className="w-3 h-3 mr-1" /> Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {(!eventData?.fileTypes || eventData.fileTypes.length === 0) && (
+              <div className="text-center py-8 text-muted-foreground">
+                No specific file requirements for this event.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setFilesOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Member Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>
+              Search for a presenter by name or username to add them to your
+              team.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or username..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="h-[200px] border rounded-md p-2 overflow-y-auto">
+              {isSearching ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Searching...
+                </div>
+              ) : candidates.length > 0 ? (
+                <div className="space-y-2">
+                  {candidates.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <UserAvatar user={c} className="w-8 h-8" />
+                        <div>
+                          <div className="text-sm font-medium">{c.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            @{c.username}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="opacity-0 group-hover:opacity-100"
+                        onClick={() => handleAddMember(c.userId)}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : searchQuery.length >= 2 ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  No candidates found.
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  Type at least 2 characters to search.
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leave Team Confirmation Dialog */}
+      <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Leave Team</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to leave this team? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleLeaveTeam}>
+              Leave Team
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <EditProjectDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        project={project}
+        onSuccess={fetchData}
+        eventId={id}
+      />
     </div>
   );
 }

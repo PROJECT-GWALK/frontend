@@ -132,7 +132,7 @@ export default function InviteConfirmPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Banner Section */}
-      <div className="relative w-full aspect-[21/9] md:h-[400px] overflow-hidden">
+      <div className="relative w-full aspect-video md:aspect-[21/9] md:h-[400px] overflow-hidden">
         <Image 
           src={event?.imageCover || "/banner.png"} 
           alt={event?.eventName || "Event banner"} 
@@ -143,7 +143,7 @@ export default function InviteConfirmPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent pointer-events-none" />
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-12 md:-mt-20 relative z-10">
         <Card className="border-none shadow-xl bg-gradient-to-br from-background/95 to-muted/20 backdrop-blur-sm overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-primary to-primary/60" />
           <CardHeader className="p-6 md:p-8 space-y-6">
@@ -153,7 +153,7 @@ export default function InviteConfirmPage() {
                   <Badge variant="secondary" className="mb-2">
                     Invitation
                   </Badge>
-                  <CardTitle className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight">
+                  <CardTitle className="text-3xl md:text-4xl font-bold">
                     {event?.eventName || "Loading..."}
                   </CardTitle>
                 </div>
