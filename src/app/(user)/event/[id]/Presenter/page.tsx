@@ -25,6 +25,7 @@ import { createTeam, getTeams } from "@/utils/apievent";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import UnifiedProjectList from "../components/UnifiedProjectList";
+import ResultSection from "../components/ResultSection";
 
 type Props = {
   id: string;
@@ -563,18 +564,7 @@ export default function PresenterView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="result">
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>ผลการจัดอันดับ</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground">
-                      ยังไม่มีผลการจัดอันดับ
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <ResultSection eventId={id} role="PRESENTER" />
             </TabsContent>
           </Tabs>
         </div>

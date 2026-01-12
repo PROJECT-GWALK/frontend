@@ -27,6 +27,7 @@ import React from "react";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
+import ResultSection from "../components/ResultSection";
 
 type Props = {
   params?: Promise<{ id: string }>;
@@ -671,16 +672,7 @@ export default function CommitteePage(props: Props) {
             </TabsContent>
 
             <TabsContent value="result">
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>ผลการจัดอันดับ</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground">ยังไม่มีผลการจัดอันดับ</div>
-                  </CardContent>
-                </Card>
-              </div>
+              <ResultSection eventId={id} role="COMMITTEE" />
             </TabsContent>
           </Tabs>
         </div>

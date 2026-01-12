@@ -50,6 +50,7 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Checkbox } from "@/components/ui/checkbox";
+import ResultSection from "../components/ResultSection";
 
 type Props = {
   id: string;
@@ -548,16 +549,7 @@ export default function OrganizerView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="result">
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>ผลการจัดอันดับ</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground">ยังไม่มีผลการจัดอันดับ</div>
-                  </CardContent>
-                </Card>
-              </div>
+              <ResultSection eventId={id} role="ORGANIZER" />
             </TabsContent>
           </Tabs>
         </div>

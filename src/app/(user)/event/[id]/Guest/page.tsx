@@ -25,6 +25,7 @@ import InformationSection from "../components/InformationSection";
 import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
 import type { PresenterProject } from "../Presenter/components/types";
 import UnifiedProjectList from "../components/UnifiedProjectList";
+import ResultSection from "../components/ResultSection";
 
 type Props = {
   id: string;

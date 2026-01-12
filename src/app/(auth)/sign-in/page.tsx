@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter, CardSignIn } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Navbar } from "@/components/user/navbar";
 import { auth, signIn } from "@/lib/auth";
 import { signInRedirect } from "@/utils/settings";
@@ -33,7 +33,7 @@ export default async function SignIn({ searchParams }: { searchParams?: { redire
                 </div>
               </div>
               <div className="w-full max-w-sm mx-auto mt-5 md:mt-0">
-                <CardSignIn>
+                <Card>
                   <CardContent className="items-center justify-center">
                     <div className="text-2xl font-medium text-center">
                       Please log in to continue
@@ -54,7 +54,7 @@ export default async function SignIn({ searchParams }: { searchParams?: { redire
                       </Button>
                     </form>
                   </CardFooter>
-                </CardSignIn>
+                </Card>
               </div>
             </div>
           </div>

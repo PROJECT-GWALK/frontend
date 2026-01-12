@@ -282,6 +282,13 @@ export const deleteParticipant = async (eventId: string, pid: string) => {
   return res.data; // { message }
 };
 
+export const getEventRankings = async (eventId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/rankings`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, rankings, specialRewards }
+};
+
 export const giveVr = async (eventId: string, projectId: string, amount: number) => {
   const res = await axios.put(
     `/backend/api/events/${eventId}/action/give-vr`,
