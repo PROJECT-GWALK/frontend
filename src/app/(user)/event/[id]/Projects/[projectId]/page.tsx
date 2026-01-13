@@ -33,7 +33,7 @@ import {
 import { getCurrentUser } from "@/utils/apiuser";
 import EditProjectDialog from "../../Presenter/components/EditProjectDialog";
 import type { PresenterProject } from "../../Presenter/components/types";
-import { type EventData, FileType, type ProjectMember, type Candidate, type Team, type DraftEvent } from "@/utils/types";
+import { type EventData, FileType, type ProjectMember, type Candidate, type Team, type DraftEvent, type MyEvent } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -122,7 +122,7 @@ export default function ProjectDetailPage({ params }: Props) {
         // Check if current user is leader based on getMyEvents
         const myEvent =
           myEventsRes.message === "ok"
-            ? (myEventsRes.events as DraftEvent[]).find((e) => e.id === id)
+            ? (myEventsRes.events as MyEvent[]).find((e) => e.id === id)
             : null;
         const isLeader = myEvent?.isLeader || false;
 

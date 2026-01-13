@@ -47,7 +47,7 @@ export type EventDetail = {
   id: string;
   eventName: string;
   eventDescription?: string;
-  bannerUrl?: string;
+  imageCover?: string | null;
   startDate?: string;
   startTime?: string;
   endDate?: string;
@@ -136,15 +136,21 @@ export type Candidate = {
 export type DraftEvent = {
   id: string;
   eventName: string;
-  createdAt: string;
-  status?: "DRAFT" | "PUBLISHED";
   imageCover?: string | null;
+  status: "PUBLISHED" | "DRAFT";
+  publicView: boolean;
   startView?: string;
   endView?: string;
   startJoinDate?: string;
   endJoinDate?: string;
-  role?: string | null;
-  isLeader?: boolean;
+  maxTeams?: number;
+  maxTeamMembers?: number;
+  virtualRewardGuest?: number;
+  virtualRewardCommittee?: number;
+  hasCommittee?: boolean;
+  unitReward?: string;
+  locationName?: string;
+  location?: string;
 };
 
 export type MyEvent = {

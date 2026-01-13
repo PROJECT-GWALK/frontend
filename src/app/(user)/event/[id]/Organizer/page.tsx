@@ -83,8 +83,30 @@ export default function OrganizerView({ id, event }: Props) {
   const [removedRewardIds, setRemovedRewardIds] = useState<string[]>([]);
   const [rewardErrors, setRewardErrors] = useState<Record<string, string>>({});
   
+  // Banner editing state
+  const [bannerCropOpen, setBannerCropOpen] = useState(false);
+  const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null);
+  const [bannerPendingMeta, setBannerPendingMeta] = useState<{name: string, type: string} | null>(null);
+  const [bannerPendingFile, setBannerPendingFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [removeBanner, setRemoveBanner] = useState(false);
+
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerPendingMeta({ name: file.name, type: file.type });
+    const reader = new FileReader();
+    reader.onload = () => {
+      setBannerCropSrc(reader.result as string);
+      setBannerCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ""; // reset
+  };
 
   const handleDeleteTeam = async (projectId: string) => {
     try {
@@ -497,6 +519,11 @@ export default function OrganizerView({ id, event }: Props) {
                   setEditingSection(section);
                   const formState = initialForm as EventFormState;
                   setForm(formState);
+                  if (section === "description") {
+                    setBannerPreview(localEvent.imageCover || null);
+                    setBannerPendingFile(null);
+                    setRemoveBanner(false);
+                  }
                   if (section === "guest") {
                     const showCommittee =
                       typeof formState.hasCommittee === "boolean"
@@ -613,6 +640,83 @@ export default function OrganizerView({ id, event }: Props) {
 
               {editingSection === "description" && (
                 <div className="grid grid-cols-1 gap-2">
+                  <div className="space-y-2 mb-4">
+                     <Label>Event Banner</Label>
+                     <ImageCropDialog
+                       open={bannerCropOpen}
+                       src={bannerCropSrc}
+                       fileName={bannerPendingMeta?.name}
+                       fileType={bannerPendingMeta?.type}
+                       aspect={2}
+                       title="Crop Banner (800x400)"
+                       outputWidth={800}
+                       outputHeight={400}
+                       onOpenChange={(o) => {
+                         if (!o) {
+                           setBannerCropOpen(false);
+                           setBannerCropSrc(null);
+                           setBannerPendingMeta(null);
+                         }
+                       }}
+                       onCancel={() => {
+                         setBannerCropOpen(false);
+                         setBannerCropSrc(null);
+                         setBannerPendingMeta(null);
+                       }}
+                       onConfirm={(file, previewUrl) => {
+                         setBannerCropOpen(false);
+                         setBannerPreview(previewUrl);
+                         setBannerPendingFile(file);
+                         setRemoveBanner(false);
+                       }}
+                     />
+                     
+                     {bannerPreview ? (
+                        <div className="relative border rounded-lg overflow-hidden aspect-2/1 bg-muted shadow-sm group">
+                          <Image
+                            src={bannerPreview}
+                            alt="Event banner"
+                            fill
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => bannerInputRef.current?.click()}
+                            >
+                              Change
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                setBannerPreview(null);
+                                setBannerPendingFile(null);
+                                setRemoveBanner(true);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                     ) : (
+                        <div
+                          className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-2/1 flex flex-col items-center justify-center bg-muted/30"
+                          onClick={() => bannerInputRef.current?.click()}
+                        >
+                          <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">Click to upload banner</p>
+                        </div>
+                     )}
+                     <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        ref={bannerInputRef}
+                        onChange={handleBannerFileChange}
+                     />
+                  </div>
                   <Label>Description</Label>
                   <Textarea
                     value={form.eventDescription || ""}
@@ -997,6 +1101,26 @@ export default function OrganizerView({ id, event }: Props) {
                         payload.startView = form.startView;
                         payload.endView = form.endView;
                       } else if (editingSection === "description") {
+                        if (bannerPendingFile || removeBanner) {
+                          const fd = new FormData();
+                          fd.append("eventDescription", form.eventDescription || "");
+                          if (bannerPendingFile) {
+                            fd.append("file", bannerPendingFile);
+                          }
+                          await updateEvent(id, fd, { removeImage: removeBanner });
+
+                          const fresh = await getEvent(id);
+                          if (fresh.message === "ok") {
+                            setLocalEvent(
+                              (prev) =>
+                                ({ ...(prev || {}), ...(fresh.event || {}) } as EventData)
+                            );
+                          }
+                          toast.success("Updated");
+                          setEditingSection(null);
+                          setSaving(false);
+                          return;
+                        }
                         payload.eventDescription = form.eventDescription;
                       } else if (editingSection === "guest") {
                         payload.virtualRewardGuest = Number(form.guestReward ?? 0);

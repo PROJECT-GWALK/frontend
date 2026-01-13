@@ -419,7 +419,7 @@ export default function CommitteePage(props: Props) {
                           </span>
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          {t("committeeSection.total")} {(localEvent?.myVirtualTotal ?? 0) + (localEvent?.myVirtualUsed ?? 0)}
+                          {t("committeeSection.total")} {localEvent?.myVirtualTotal ?? 0}
                         </span>
                       </div>
                       <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
@@ -428,7 +428,7 @@ export default function CommitteePage(props: Props) {
                           style={{
                             width: `${
                               ((localEvent?.myVirtualUsed ?? 0) /
-                                ((localEvent?.myVirtualTotal ?? 0) + (localEvent?.myVirtualUsed ?? 0) || 1)) *
+                                (localEvent?.myVirtualTotal || 1)) *
                               100
                             }%`,
                           }}
@@ -436,7 +436,7 @@ export default function CommitteePage(props: Props) {
                       </div>
                       <p className="text-xs text-amber-600 font-medium text-right">
                         {t("committeeSection.remaining")}{" "}
-                        {localEvent?.myVirtualTotal ?? 0}
+                        {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)}
                       </p>
                     </CardContent>
                   </Card>

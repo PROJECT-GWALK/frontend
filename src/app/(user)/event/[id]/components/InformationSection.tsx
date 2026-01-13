@@ -19,6 +19,7 @@ import {
   Edit,
   RefreshCcw,
   Link,
+  Upload,
 } from "lucide-react";
 import { timeUntil, formatDateTime, UserAvatar, linkify } from "@/utils/function";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import {
 import { deleteSpecialReward, getEvent } from "@/utils/apievent";
 import { toPng } from "html-to-image";
 import * as QRCode from "qrcode";
+import ImageCropDialog from "@/lib/image-crop-dialog";
 import {
   Dialog,
   DialogContent,
@@ -97,6 +99,15 @@ export default function InformationSection({
 }: Props) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+
+  // Banner Editing State
+  const [bannerPreview, setBannerPreview] = useState<string | null>(
+    event.imageCover || null
+  );
+
+  useEffect(() => {
+    setBannerPreview(event.imageCover || null);
+  }, [event.imageCover]);
 
   useEffect(() => {
     setMounted(true);
@@ -278,6 +289,20 @@ export default function InformationSection({
   useEffect(() => {
     setRewards(event.specialRewards ?? []);
   }, [event.specialRewards]);
+
+  useEffect(() => {
+    const fetchLatestRewards = async () => {
+      try {
+        const res = await getEvent(id);
+        if (res.event && res.event.specialRewards) {
+          setRewards(res.event.specialRewards);
+        }
+      } catch (e) {
+        console.error("Failed to fetch latest rewards:", e);
+      }
+    };
+    fetchLatestRewards();
+  }, [id]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const handleDeleteReward = async (rid: string) => {
     if (!editable) return;
@@ -1777,7 +1802,7 @@ export default function InformationSection({
                   })
                 }
               >
-                Edit
+                <Edit className="mr-2 h-4 w-4" />
               </Button>
             )}
           </div>

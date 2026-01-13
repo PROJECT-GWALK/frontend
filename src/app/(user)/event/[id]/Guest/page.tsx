@@ -82,11 +82,9 @@ export default function GuestView({ id, event }: Props) {
   const handleResetVR = async (projectId: string) => {
     try {
       const res = await resetVr(id, projectId);
-      const refundAmount = res.newBalance - (localEvent?.myVirtualTotal ?? 0);
       setLocalEvent((prev) => (prev ? {
         ...prev,
-        myVirtualTotal: res.newBalance,
-        myVirtualUsed: (prev.myVirtualUsed ?? 0) - refundAmount
+        myVirtualUsed: (prev.myVirtualTotal ?? 0) - res.newBalance
       } : prev));
       setProjectRewards((prev) => ({
         ...prev,
@@ -106,11 +104,9 @@ export default function GuestView({ id, event }: Props) {
       const res = await giveVr(id, projectId, amount);
       setLocalEvent((prev) => {
         if (!prev) return prev;
-        const initialTotal = (prev.myVirtualTotal ?? 0) + (prev.myVirtualUsed ?? 0);
         return {
           ...prev,
-          myVirtualTotal: res.newBalance,
-          myVirtualUsed: initialTotal - res.newBalance,
+          myVirtualUsed: (prev.myVirtualTotal ?? 0) - res.newBalance,
         };
       });
       setProjectRewards((prev) => ({
@@ -261,7 +257,7 @@ export default function GuestView({ id, event }: Props) {
                 {/* RIGHT SIDE: Actions */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   {/* Role Label */}
-                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-[var(--role-guest)] text-white font-medium shadow-md select-none">
+                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-guest) text-white font-medium shadow-md select-none">
                     <Building className="h-4 w-4" />
                     <span>Guest</span>
                   </div>
