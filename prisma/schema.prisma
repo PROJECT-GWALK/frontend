@@ -100,13 +100,11 @@ model Event {
   locationName           String?
   imageCover             String?
   hasCommittee           Boolean     @default(false)
-  showDashboard          Boolean     @default(false)
   publicJoin             Boolean     @default(true)
   passwordJoin           String?
   startJoinDate          DateTime?   @db.Timestamptz(3)
   endJoinDate            DateTime?   @db.Timestamptz(3)
   publicView             Boolean     @default(true)
-  passwordView           String?
   startView              DateTime?   @db.Timestamptz(3)
   endView                DateTime?   @db.Timestamptz(3)
   maxTeamMembers         Int?
@@ -127,19 +125,20 @@ model Event {
   ratings        EventRating[]
   rankings       TeamRanking[]
   specialRewards SpecialReward[]
+  linkInvite     LinkInvite?
 }
 
 //////////////////////////////////////////////////////////
 // PARTICIPANTS
 //////////////////////////////////////////////////////////
 model EventParticipant {
-  id            String     @id @default(uuid()) @db.Uuid
-  eventId       String     @db.Uuid
-  userId        String     @db.Uuid
+  id            String      @id @default(uuid()) @db.Uuid
+  eventId       String      @db.Uuid
+  userId        String      @db.Uuid
   eventGroup    EventGroup?
-  teamId        String?    @db.Uuid
-  virtualReward Int        @default(0)
-  isLeader      Boolean    @default(false)
+  teamId        String?     @db.Uuid
+  virtualReward Int         @default(0)
+  isLeader      Boolean     @default(false)
 
   event     Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -156,6 +155,8 @@ model Team {
   eventId     String   @db.Uuid
   teamName    String
   description String?
+  videoLink   String?
+  imageCover  String?
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
 
   event        Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -172,13 +173,13 @@ model Team {
 // FILE MANAGEMENT
 //////////////////////////////////////////////////////////
 model EventFileType {
-  id              String   @id @default(uuid()) @db.Uuid
-  eventId         String   @db.Uuid
-  name            String
-  description     String?
-  allowedFileType FileType?
-  isRequired      Boolean  @default(false)
-  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  id               String     @id @default(uuid()) @db.Uuid
+  eventId          String     @db.Uuid
+  name             String
+  description      String?
+  allowedFileTypes FileType[]
+  isRequired       Boolean    @default(false)
+  createdAt        DateTime   @default(now()) @db.Timestamptz(3)
 
   event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
   teamFiles TeamFile[]
@@ -329,4 +330,18 @@ model UserDailyActive {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date]) // กัน user เดียวกันถูกนับซ้ำในวันเดียว
+}
+
+//////////////////////////////////////////////////////////
+// Link invite
+//////////////////////////////////////////////////////////
+model LinkInvite {
+  id             String   @id @default(uuid()) @db.Uuid
+  eventId        String   @unique @db.Uuid
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  committeeToken String   @default(uuid())
+  presenterToken String   @default(uuid())
+  guestToken     String   @default(uuid())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }

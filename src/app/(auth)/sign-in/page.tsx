@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter, CardSignIn } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Navbar } from "@/components/user/navbar";
 import { auth, signIn } from "@/lib/auth";
 import { signInRedirect } from "@/utils/settings";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-
-export default async function SignIn() {
+export default async function SignIn({ searchParams }: { searchParams?: { redirectTo?: string } }) {
   const session = await auth();
+  const fromParam = searchParams?.redirectTo;
 
   if (session) {
-    redirect(signInRedirect);
+    redirect(fromParam || signInRedirect);
   }
 
   return (
@@ -33,7 +33,7 @@ export default async function SignIn() {
                 </div>
               </div>
               <div className="w-full max-w-sm mx-auto mt-5 md:mt-0">
-                <CardSignIn>
+                <Card>
                   <CardContent className="items-center justify-center">
                     <div className="text-2xl font-medium text-center">
                       Please log in to continue
@@ -44,7 +44,7 @@ export default async function SignIn() {
                     <form
                       action={async () => {
                         "use server";
-                        await signIn("google", { redirectTo: signInRedirect });
+                        await signIn("google", { redirectTo: fromParam || signInRedirect });
                       }}
                       className="w-full"
                     >
@@ -54,7 +54,7 @@ export default async function SignIn() {
                       </Button>
                     </form>
                   </CardFooter>
-                </CardSignIn>
+                </Card>
               </div>
             </div>
           </div>

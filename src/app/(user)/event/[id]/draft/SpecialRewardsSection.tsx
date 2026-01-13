@@ -1,6 +1,7 @@
 "use client";
 
 import { type ChangeEvent } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -55,11 +56,15 @@ export default function SpecialRewardsSection({
   onRewardCropConfirm,
 }: Props) {
   return (
-    <Card id="rewards" className="scroll-mt-6">
+    <Card id="rewards" className="scroll-mt-6 lg:col-span-2 border-none shadow-md">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Award className="h-5 w-5 text-primary" />
-          Special Rewards / รางวัลพิเศษ
+        <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+          <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+            <Award className="h-5 w-5" />
+          </div>
+          <span className="">
+            Special Rewards / รางวัลพิเศษ
+          </span>
         </CardTitle>
         <Button onClick={handleAddSpecialReward} size="sm" variant="outline">
           <Plus className="h-4 w-4 mr-1" />
@@ -117,10 +122,13 @@ export default function SpecialRewardsSection({
                   {srPreviews[reward.id] ? (
                     <>
                       <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
-                        <img
+                        <Image
                           src={srPreviews[reward.id] as string}
                           alt="Reward image preview"
-                          className="absolute inset-0 h-full w-full object-cover"
+                          fill
+                          sizes="128px"
+                          className="object-cover"
+                          unoptimized
                         />
                         <input
                           type="file"

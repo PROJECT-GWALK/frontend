@@ -12,7 +12,7 @@ const LandingPage = () => {
   return (
     <div className="relative min-h-screen bg-background">
       {/* Overlay gradient for hero background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-primary/10 via-transparent to-transparent"></div>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-primary/10 via-transparent to-transparent"></div>
 
       <Navbar />
       {/* Hero Section */}
@@ -78,7 +78,7 @@ const LandingPage = () => {
             {/* Right Content - Image Area */}
             <div className="relative">
               <div className="overflow-hidden border-border/60">
-                <div className="aspect-[4/3] bg-card/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                <div className="aspect-4/3 bg-card/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                   <div className="text-center">
                     <Image
                       src="/gwalk-icon.svg"

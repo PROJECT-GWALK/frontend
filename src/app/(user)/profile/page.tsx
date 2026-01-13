@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/utils/function";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -14,21 +14,45 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getCurrentUser } from "@/utils/apiuser";
+import { getUserHistory } from "@/utils/apievent";
 import { linkify } from "@/utils/function";
 import { User } from "@/utils/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface ParticipatedEvent {
+  eventName: string;
+  teamName: string;
+  place: string;
+  specialReward: string;
+}
+
+interface OrganizedEvent {
+  eventName: string;
+  rating: string;
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [modeparticipated, setModeparticipated] = useState(true);
+  const [participatedEvents, setParticipatedEvents] = useState<ParticipatedEvent[]>([]);
+  const [organizedEvents, setOrganizedEvents] = useState<OrganizedEvent[]>([]);
 
   const fetchUser = async () => {
     try {
       const data = await getCurrentUser();
       setUser(data.user);
+
+      const history = await getUserHistory();
+      setParticipatedEvents(history.participated);
+      setOrganizedEvents(history.organized);
     } catch (error) {
       console.error("Error fetching user:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,18 +60,53 @@ export default function ProfilePage() {
     fetchUser();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center">
+        <Card className="w-full max-w-4xl">
+          <CardContent className="pt-6">
+            <div className="flex space-x-4 flex-wrap text-center md:text-start">
+              <div className="flex items-center justify-center w-full md:w-fit">
+                <Skeleton className="h-32 w-32 rounded-full" />
+              </div>
+              <div className="flex flex-col justify-center w-full md:w-fit space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-5 w-32" />
+                <div className="mt-3 space-y-2">
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-56" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-10 mb-4">
+              <div className="flex space-x-2">
+                <Skeleton className="h-10 w-28" />
+              </div>
+              <div className="flex space-x-2">
+                <Skeleton className="h-10 w-28" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center">
       <Card className="w-full max-w-4xl">
         <CardContent>
           <div className="flex space-x-4 flex-wrap text-center md:text-start">
             <div className="flex items-center justify-center w-full md:w-fit">
-              <Avatar className="h-32 w-32 select-none">
-                <AvatarImage src={user?.image || ""} />
-                <AvatarFallback>
-                  {user?.name?.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar user={user} className="h-32 w-32 select-none" />
             </div>
             <div className="flex flex-col justify-center w-full md:w-fit">
               <span className="text-2xl font-bold">{user?.name}</span>
@@ -101,14 +160,31 @@ export default function ProfilePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      Software Final Project
-                    </TableCell>
-                    <TableCell>Doctor Web App</TableCell>
-                    <TableCell className="text-center">1</TableCell>
-                    <TableCell className="text-right">AI ยอดเยี่ยม</TableCell>
-                  </TableRow>
+                  {participatedEvents.length > 0 ? (
+                    participatedEvents.map((event, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          {event.eventName}
+                        </TableCell>
+                        <TableCell>{event.teamName}</TableCell>
+                        <TableCell className="text-center">
+                          {event.place}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {event.specialReward}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center h-24 text-muted-foreground"
+                      >
+                        No participated events found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -123,12 +199,27 @@ export default function ProfilePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <Link href="#">Software Final Project Test</Link>
-                    </TableCell>
-                    <TableCell className="text-right">AI ยอดเยี่ยม</TableCell>
-                  </TableRow>
+                  {organizedEvents.length > 0 ? (
+                    organizedEvents.map((event, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
+                          {event.eventName}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {event.rating}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={2}
+                        className="text-center h-24 text-muted-foreground"
+                      >
+                        No organized events found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

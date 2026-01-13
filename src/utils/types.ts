@@ -8,6 +8,7 @@ export type User = {
   image: string | null;
   description: string | null;
   role: string;
+  banned?: boolean;
 };
 
 export const settingsSchema = z.object({
@@ -46,7 +47,7 @@ export type EventDetail = {
   id: string;
   eventName: string;
   eventDescription?: string;
-  bannerUrl?: string;
+  imageCover?: string | null;
   startDate?: string;
   startTime?: string;
   endDate?: string;
@@ -68,6 +69,7 @@ export type EventDetail = {
   submissionEndTime?: string;
   fileRequirement?: string;
   linkRequirement?: string;
+  fileTypes?: EventFileType[];
 
   hasCommittee?: boolean;
   committeeCount?: number;
@@ -85,12 +87,70 @@ export type SpecialReward = {
   image?: string | null;
 };
 
+export type TeamFile = {
+  fileUrl: string;
+  fileTypeId?: string;
+};
+
+export type TeamParticipant = {
+  userId: string;
+  isLeader?: boolean;
+  user: {
+    id: string;
+    name: string;
+    username: string;
+    image: string | null;
+  };
+};
+
+export type Team = {
+  id: string;
+  teamName: string;
+  description?: string;
+  imageCover?: string;
+  videoLink?: string;
+  files?: TeamFile[];
+  participants: TeamParticipant[];
+  createdAt?: string;
+  totalVr?: number;
+  myReward?: number;
+  mySpecialReward?: string | null;
+};
+
+export type ProjectMember = {
+  id: string;
+  name: string;
+  username: string;
+  image: string | null;
+  isLeader?: boolean;
+};
+
+export type Candidate = {
+  id: string;
+  userId: string;
+  name: string;
+  username: string;
+  image: string | null;
+};
+
 export type DraftEvent = {
   id: string;
   eventName: string;
-  createdAt: string;
-  status?: "DRAFT" | "PUBLISHED";
   imageCover?: string | null;
+  status: "PUBLISHED" | "DRAFT";
+  publicView: boolean;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+  maxTeams?: number;
+  maxTeamMembers?: number;
+  virtualRewardGuest?: number;
+  virtualRewardCommittee?: number;
+  hasCommittee?: boolean;
+  unitReward?: string;
+  locationName?: string;
+  location?: string;
 };
 
 export type MyEvent = {
@@ -101,4 +161,121 @@ export type MyEvent = {
   role: string | null;
   isLeader: boolean;
   imageCover?: string | null;
+  publicView?: boolean;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+};
+
+export type EventData = {
+  id: string;
+  eventName: string;
+  eventDescription?: string;
+  imageCover?: string | null;
+  status?: "DRAFT" | "PUBLISHED";
+  publicView?: boolean;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+  maxTeams?: number;
+  maxTeamMembers?: number;
+  virtualRewardGuest?: number;
+  virtualRewardCommittee?: number;
+  hasCommittee?: boolean;
+  unitReward?: string;
+  locationName?: string;
+  location?: string;
+  totalParticipants?: number;
+  presentersCount?: number;
+  guestsCount?: number;
+  committeeCount?: number;
+  participantsVirtualTotal?: number;
+  participantsVirtualUsed?: number;
+  participantsCommentCount?: number;
+  committeeVirtualTotal?: number;
+  committeeVirtualUsed?: number;
+  committeeFeedbackCount?: number;
+  opinionsGot?: number;
+  opinionsPresenter?: number;
+  opinionsGuest?: number;
+  opinionsCommittee?: number;
+  vrTotal?: number;
+  vrUsed?: number;
+  awardsUnused?: SpecialReward[];
+  specialRewards?: SpecialReward[];
+  presenterTeams?: number;
+  specialPrizeUsed?: number;
+  specialPrizeCount?: number;
+  fileTypes?: EventFileType[];
+  participants?: EventParticipant[];
+  myVirtualTotal?: number;
+  myVirtualUsed?: number;
+  myFeedbackCount?: number;
+};
+
+export type EventParticipant = {
+  id: string;
+  userId: string;
+  eventId: string;
+  eventGroup: string;
+  isLeader: boolean;
+  user?: User;
+};
+
+export enum FileType {
+  jpg = "jpg",
+  png = "png",
+  pdf = "pdf",
+  url = "url",
+}
+
+export type EventFileType = {
+  id?: string;
+  name: string;
+  description?: string | null;
+  allowedFileTypes: FileType[];
+  isRequired: boolean;
+};
+
+export type EventEditSection =
+  | "description"
+  | "time"
+  | "location"
+  | "presenter"
+  | "guest"
+  | "rewards"
+  | "committee";
+
+export type SpecialRewardEdit = SpecialReward & {
+  pendingFile?: File;
+  preview?: string | null;
+  removeImage?: boolean;
+  _dirty?: boolean;
+};
+
+export type EventFormState = {
+  eventDescription?: string;
+  locationName?: string;
+  location?: string;
+  guestReward?: number;
+  hasCommittee?: boolean;
+  committeeReward?: number;
+  unitReward?: string;
+  startView?: string;
+  endView?: string;
+  startJoinDate?: string;
+  endJoinDate?: string;
+  maxTeams?: number;
+  maxTeamMembers?: number;
+};
+
+export type EventGroup = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST";
+
+export type ParticipantUpdatePayload = {
+  eventGroup?: EventGroup;
+  isLeader?: boolean;
+  virtualReward?: number;
+  teamId?: string | null;
 };

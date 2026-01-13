@@ -4,50 +4,19 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Calendar as CalendarIcon,
-  Clock,
-  MapPin,
-  Link as LinkIcon,
-  Upload,
   Users,
-  Gift,
-  Plus,
-  Trash2,
   ArrowLeft,
   Info,
   UserCheck,
   Award,
-  Check,
-  X,
+  Save,
 } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
 
+import { validateEventTime, toDate, getDateTimeString } from "@/utils/function";
 import {
   getEvent,
   publishEvent,
@@ -58,7 +27,8 @@ import {
   updateSpecialReward,
   deleteSpecialReward,
 } from "@/utils/apievent";
-import { EventDetail } from "@/utils/types";
+
+import { EventDetail, EventFileType } from "@/utils/types";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
@@ -89,7 +59,10 @@ type EventUpdatePayload = {
   maxTeams: number | null;
   virtualRewardGuest: number;
   virtualRewardCommittee: number;
+  hasCommittee: boolean;
   specialRewards: SpecialReward[];
+  unitReward?: string | null;
+  fileTypes?: EventFileType[];
 };
 
 const BANNER_MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -121,19 +94,9 @@ export default function EventDraft() {
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [selectedStart, setSelectedStart] = useState<Date | undefined>(
-    undefined
-  );
+  const [selectedStart, setSelectedStart] = useState<Date | undefined>(undefined);
   const [selectedEnd, setSelectedEnd] = useState<Date | undefined>(undefined);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const toDateStr = (d: Date) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const formatThaiBE = (d?: Date) =>
-    d
-      ? d.toLocaleDateString("th-TH", { day: "numeric", month: "long" }) +
-        " " +
-        String(d.getFullYear() + 543)
-      : "เลือกวันที่";
+
   const [locationPlace, setLocationPlace] = useState("");
   const [locationLink, setLocationLink] = useState("");
   const calendarStartMonth = new Date(new Date().getFullYear() - 5, 0);
@@ -148,37 +111,24 @@ export default function EventDraft() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Presenter Details
-  const [maxPresenters, setMaxPresenters] = useState("");
-  const [maxGroups, setMaxGroups] = useState("");
+  const [maxPresenters, setMaxPresenters] = useState("3");
+  const [maxGroups, setMaxGroups] = useState("30");
   const [submissionStartDate, setSubmissionStartDate] = useState("");
   const [submissionStartTime, setSubmissionStartTime] = useState("");
   const [submissionEndDate, setSubmissionEndDate] = useState("");
   const [submissionEndTime, setSubmissionEndTime] = useState("");
-  const [selectedSubStart, setSelectedSubStart] = useState<Date | undefined>(
-    undefined
-  );
-  const [selectedSubEnd, setSelectedSubEnd] = useState<Date | undefined>(
-    undefined
-  );
+  const [selectedSubStart, setSelectedSubStart] = useState<Date | undefined>(undefined);
+  const [selectedSubEnd, setSelectedSubEnd] = useState<Date | undefined>(undefined);
+  const [fileRequirements, setFileRequirements] = useState<EventFileType[]>([]);
 
   // Committee & Guest
   const [hasCommittee, setHasCommittee] = useState(false);
   const [committeeReward, setCommitteeReward] = useState("");
   const [guestRewardAmount, setGuestRewardAmount] = useState("");
+  const [unitReward, setUnitReward] = useState<string>("Coin");
 
   // Special Rewards
-  const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([
-    {
-      id: "1",
-      name: "Best Presentation",
-      description: "Awarded to the most engaging presentation",
-    },
-    {
-      id: "2",
-      name: "Innovation Award",
-      description: "For the most innovative idea presented",
-    },
-  ]);
+  const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
 
   const handleAddSpecialReward = () => {
     const newReward: SpecialReward = {
@@ -193,20 +143,12 @@ export default function EventDraft() {
     setSpecialRewards(specialRewards.filter((r) => r.id !== id));
   };
 
-  const handleRewardChange = (
-    id: string,
-    field: "name" | "description",
-    value: string
-  ) => {
-    setSpecialRewards(
-      specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r))
-    );
+  const handleRewardChange = (id: string, field: "name" | "description", value: string) => {
+    setSpecialRewards(specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
   const rewardFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>(
-    {}
-  );
+  const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>({});
   const [srFiles, setSrFiles] = useState<Record<string, File | null>>({});
   const [srRemoved, setSrRemoved] = useState<Record<string, boolean>>({});
   const [srCropOpen, setSrCropOpen] = useState(false);
@@ -222,10 +164,7 @@ export default function EventDraft() {
     rewardFileRefs.current[id]?.click();
   };
 
-  const handleRewardFileChange = (
-    id: string,
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleRewardFileChange = (id: string, e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!BANNER_TYPES.includes(f.type)) {
@@ -238,8 +177,7 @@ export default function EventDraft() {
       e.target.value = "";
       return;
     }
-    if (srPreviews[id]?.startsWith("blob:"))
-      URL.revokeObjectURL(srPreviews[id] as string);
+    if (srPreviews[id]?.startsWith("blob:")) URL.revokeObjectURL(srPreviews[id] as string);
     const url = URL.createObjectURL(f);
     setSrCropSrc(url);
     setSrPendingMeta({ id, name: f.name, type: f.type || "image/png" });
@@ -249,8 +187,7 @@ export default function EventDraft() {
 
   const handleRewardCropCancel = () => {
     setSrCropOpen(false);
-    if (srCropSrc && srCropSrc.startsWith("blob:"))
-      URL.revokeObjectURL(srCropSrc);
+    if (srCropSrc && srCropSrc.startsWith("blob:")) URL.revokeObjectURL(srCropSrc);
     setSrCropSrc(null);
     setSrPendingMeta(null);
   };
@@ -272,65 +209,37 @@ export default function EventDraft() {
     setSrRemoved((p) => ({ ...p, [id]: true }));
   };
 
-  const toISO = (date: string, time: string) =>
-    date && time ? `${date}T${time}` : null;
-  const toDate = (date?: string, time?: string) =>
-    date && time ? new Date(`${date}T${time}`) : null;
   const buildPayload = (opts?: { isoDates?: boolean }): EventUpdatePayload => {
     const iso = Boolean(opts?.isoDates);
-    const svDate = iso ? toDate(startDate, startTime) : null;
-    const evDate = iso ? toDate(endDate, endTime) : null;
-    const sjDate = iso
-      ? toDate(submissionStartDate, submissionStartTime)
-      : null;
-    const ejDate = iso ? toDate(submissionEndDate, submissionEndTime) : null;
-    const sv = iso
-      ? svDate
-        ? svDate.toISOString()
-        : null
-      : toISO(startDate, startTime);
-    const ev = iso
-      ? evDate
-        ? evDate.toISOString()
-        : null
-      : toISO(endDate, endTime);
-    const sj = iso
-      ? sjDate
-        ? sjDate.toISOString()
-        : null
-      : toISO(submissionStartDate, submissionStartTime);
-    const ej = iso
-      ? ejDate
-        ? ejDate.toISOString()
-        : null
-      : toISO(submissionEndDate, submissionEndTime);
     return {
       eventName: eventTitle,
       eventDescription,
       location: locationLink,
       locationName: locationPlace,
       publicView: eventVisibility === "public",
-      startView: sv,
-      endView: ev,
-      startJoinDate: sj,
-      endJoinDate: ej,
+      startView: getDateTimeString(startDate, startTime, iso),
+      endView: getDateTimeString(endDate, endTime, iso),
+      startJoinDate: getDateTimeString(submissionStartDate, submissionStartTime, iso),
+      endJoinDate: getDateTimeString(submissionEndDate, submissionEndTime, iso),
       maxTeamMembers: maxPresenters ? parseInt(maxPresenters) : null,
       maxTeams: maxGroups ? parseInt(maxGroups) : null,
       virtualRewardGuest: guestRewardAmount ? parseInt(guestRewardAmount) : 0,
-      virtualRewardCommittee:
-        hasCommittee && committeeReward ? parseInt(committeeReward) : 0,
+      virtualRewardCommittee: hasCommittee
+        ? committeeReward
+          ? parseInt(committeeReward)
+          : 1000
+        : 0,
+      hasCommittee,
       specialRewards,
+      unitReward: unitReward || null,
+      fileTypes: fileRequirements,
     };
   };
   const buildFormData = (payload: EventUpdatePayload, file: File) => {
     const formData = new FormData();
     Object.entries(payload).forEach(([k, v]) => {
       if (v === null || v === undefined) return;
-      if (
-        typeof v === "string" ||
-        typeof v === "number" ||
-        typeof v === "boolean"
-      ) {
+      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
         formData.append(k, String(v));
       } else {
         // For arrays/objects like specialRewards, send as JSON string
@@ -355,9 +264,7 @@ export default function EventDraft() {
       setNameChecked(null);
       const backendMessage =
         typeof e === "object" && e && "response" in e
-          ? ((e as AxiosError<{ message: string }>)?.response?.data?.message as
-              | string
-              | undefined)
+          ? ((e as AxiosError<{ message: string }>)?.response?.data?.message as string | undefined)
           : null;
       if (backendMessage === "Event name already exists") {
         toast.error("ไม่สามารถใช้ชื่อนี้ได้");
@@ -392,43 +299,49 @@ export default function EventDraft() {
     const errors: Record<string, string> = {};
 
     if (!eventTitle.trim()) {
-      errors.eventTitle = "กรุณากรอก Event Title";
+      errors.eventTitle = "กรุณากรอกชื่ออีเว้นต์";
+      toast.error("กรุณากรอกชื่ออีเว้นต์");
+      setActiveSection("event-info");
     }
     if (!(startDate && startTime)) {
-      errors.startDateTime = "กรุณากรอก Start View วันที่และเวลา";
+      errors.startDateTime = "กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์";
+      toast.error("กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์");
+      setActiveSection("event-info");
     }
     if (!(endDate && endTime)) {
-      errors.endDateTime = "กรุณากรอก End View วันที่และเวลา";
+      errors.endDateTime = "กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์";
+      toast.error("กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์");
+      setActiveSection("event-info");
     }
-    const sv = toDate(startDate, startTime); // Event Start
-    const ev = toDate(endDate, endTime); // Event End
-    if (sv && ev && sv > ev) {
-      errors.endDateTime = "Start View ต้องอยู่ก่อน End View";
-    }
-    const hasJoinInput = Boolean(
-      submissionStartDate ||
-        submissionStartTime ||
-        submissionEndDate ||
-        submissionEndTime
+
+    const timeErrors = validateEventTime(
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      submissionStartDate,
+      submissionStartTime,
+      submissionEndDate,
+      submissionEndTime
     );
-    const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
-    const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
+    Object.assign(errors, timeErrors);
+
+    if (timeErrors.endDateTime) {
+      toast.error(timeErrors.endDateTime);
+      setActiveSection("event-info");
+    }
+
+    const hasJoinInput = Boolean(
+      submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime
+    );
+    // const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
+    // const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
       if (!(submissionStartDate && submissionStartTime)) {
-        errors.submissionStart = "กรุณากรอก Submission Start วันที่และเวลา";
+        errors.submissionStart = "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน";
       }
       if (!(submissionEndDate && submissionEndTime)) {
-        errors.submissionEnd = "กรุณากรอก Submission End วันที่และเวลา";
-      }
-      if (sj && ej && sj > ej) {
-        errors.submissionEnd = "Submission Start ต้องอยู่ก่อน Submission End";
-      }
-      // Submission Period ต้องอยู่ก่อน Event
-      if (sj && sv && sj > sv) {
-        errors.submissionStart = "Submission Start ต้องอยู่ก่อน Event Start";
-      }
-      if (ej && sv && ej > sv) {
-        errors.submissionEnd = "Submission End ต้องอยู่ก่อน Event Start";
+        errors.submissionEnd = "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน";
       }
     }
     return errors;
@@ -489,9 +402,7 @@ export default function EventDraft() {
       const res = await checkEventName(eventTitle.trim());
       const ok = Boolean(res?.available);
       setNameChecked(ok);
-      toast[ok ? "success" : "error"](
-        ok ? "ชื่อ Event ใช้ได้" : "ชื่อ Event ถูกใช้แล้ว"
-      );
+      toast[ok ? "success" : "error"](ok ? "ชื่อ Event ใช้ได้" : "ชื่อ Event ถูกใช้แล้ว");
     } catch (e) {
       console.error(e);
       setNameChecked(null);
@@ -515,6 +426,25 @@ export default function EventDraft() {
 
     const okRewards = validateSpecialRewardsDraft();
     if (!okRewards) return;
+    
+    // Validate start/end 
+    const timeErrors = validateEventTime(
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      submissionStartDate,
+      submissionStartTime,
+      submissionEndDate,
+      submissionEndTime
+    );
+
+    if (timeErrors.endDateTime) {
+      toast.error(timeErrors.endDateTime);
+      setActiveSection("event-info");
+      return;
+    }
+
     toast.info("กำลังบันทึก Draft...");
 
     try {
@@ -531,8 +461,7 @@ export default function EventDraft() {
       toast.success("บันทึก Draft สำเร็จ");
     } catch (err) {
       console.error(err);
-      const message =
-        err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
+      const message = err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
       toast.error(mapEventNameMessage(message));
     }
   };
@@ -564,8 +493,7 @@ export default function EventDraft() {
       window.location.reload();
     } catch (err) {
       console.error(err);
-      const message =
-        err instanceof Error ? err.message : "Error publishing event";
+      const message = err instanceof Error ? err.message : "Error publishing event";
       toast.error(mapEventNameMessage(message));
     }
   };
@@ -573,11 +501,9 @@ export default function EventDraft() {
   const syncSpecialRewards = async () => {
     if (!id) return;
     if (!event) return;
-    const existingIds = new Set(
-      (event.specialRewards || []).map((r: any) => r.id)
-    );
+    const existingIds = new Set((event.specialRewards || []).map((r) => r.id));
     const removed = (event.specialRewards || []).filter(
-      (r: any) => !specialRewards.some((sr) => sr.id === r.id)
+      (r) => !specialRewards.some((sr) => sr.id === r.id)
     );
     for (const r of removed) {
       try {
@@ -598,7 +524,7 @@ export default function EventDraft() {
             fd.append("file", file);
             await updateSpecialReward(id, r.id, fd);
           } else {
-            const payload: Record<string, any> = { name: r.name };
+            const payload: { name: string; description?: string; image?: null } = { name: r.name };
             if (r.description) payload.description = r.description;
             if (isRemoved) payload.image = null;
             await updateSpecialReward(id, r.id, payload);
@@ -632,7 +558,7 @@ export default function EventDraft() {
               });
             }
           } else {
-            const payload: Record<string, any> = { name: r.name };
+            const payload: { name: string; description?: string; image?: string | null } = { name: r.name };
             if (r.description) payload.description = r.description;
             const res = await createSpecialReward(id, {
               name: r.name,
@@ -719,6 +645,10 @@ export default function EventDraft() {
         const res = await getEvent(id);
         const data = res.event;
 
+        if (data.fileTypes) {
+          setFileRequirements(data.fileTypes);
+        }
+
         setEvent(data);
 
         // ================= EVENT INFO =================
@@ -734,51 +664,40 @@ export default function EventDraft() {
         // Dates
         setSelectedStart(data.startView ? new Date(data.startView) : undefined);
         setStartDate(data.startView ? data.startView.split("T")[0] : "");
-        setStartTime(
-          data.startView ? data.startView.split("T")[1]?.slice(0, 5) : ""
-        );
+        setStartTime(data.startView ? data.startView.split("T")[1]?.slice(0, 5) : "00:01");
         setSelectedEnd(data.endView ? new Date(data.endView) : undefined);
         setEndDate(data.endView ? data.endView.split("T")[0] : "");
-        setEndTime(data.endView ? data.endView.split("T")[1]?.slice(0, 5) : "");
+        setEndTime(data.endView ? data.endView.split("T")[1]?.slice(0, 5) : "23:59");
         // Visibility
         setEventVisibility(data.publicView ? "public" : "private");
 
         // ================= PRESENTER =================
-        setMaxPresenters(data.maxTeamMembers?.toString() || "");
-        setMaxGroups(data.maxTeams?.toString() || "");
+        setMaxPresenters(data.maxTeamMembers?.toString() || "3");
+        setMaxGroups(data.maxTeams?.toString() || "30");
 
         // ================= SUBMISSION PERIOD =================
-        setSelectedSubStart(
-          data.startJoinDate ? new Date(data.startJoinDate) : undefined
-        );
-        setSubmissionStartDate(
-          data.startJoinDate ? data.startJoinDate.split("T")[0] : ""
-        );
+        setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
+        setSubmissionStartDate(data.startJoinDate ? data.startJoinDate.split("T")[0] : "");
         setSubmissionStartTime(
-          data.startJoinDate
-            ? data.startJoinDate.split("T")[1]?.slice(0, 5)
-            : ""
+          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01"
         );
-        setSelectedSubEnd(
-          data.endJoinDate ? new Date(data.endJoinDate) : undefined
-        );
-        setSubmissionEndDate(
-          data.endJoinDate ? data.endJoinDate.split("T")[0] : ""
-        );
+        setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
+        setSubmissionEndDate(data.endJoinDate ? data.endJoinDate.split("T")[0] : "");
         setSubmissionEndTime(
-          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : ""
+          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59"
         );
 
         // ================= COMMITTEE & GUEST =================
         setHasCommittee(Boolean(data.hasCommittee));
         setCommitteeReward(data.virtualRewardCommittee?.toString() || "0");
         setGuestRewardAmount(data.virtualRewardGuest?.toString() || "0");
+        setUnitReward(data.unitReward || "Coin");
 
         // ================= SPECIAL REWARDS =================
         if (data.specialRewards?.length) {
           setSpecialRewards(data.specialRewards);
           const previews: Record<string, string | null> = {};
-          data.specialRewards.forEach((r: any) => {
+          data.specialRewards.forEach((r: SpecialReward) => {
             previews[r.id] = r.image || null;
           });
           setSrPreviews(previews);
@@ -810,11 +729,104 @@ export default function EventDraft() {
         />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
-          {!loading && event && (
-            <div className="max-w-4xl mx-auto space-y-6">
+        <main className="flex-1 lg:ml-80 p-6 lg:p-8 w-full">
+          {loading ? (
+            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Header Skeleton */}
+              <div className="lg:col-span-2 flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-10 rounded-md" />
+                  <div>
+                    <Skeleton className="h-8 w-48 mb-2" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                </div>
+                <div className="space-x-2 hidden lg:flex">
+                  <Skeleton className="h-10 w-32" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              </div>
+
+              {/* Event Info Skeleton */}
+              <Card className="shadow-sm border-border/60">
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                  <Skeleton className="h-48 w-full rounded-lg" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Other sections skeleton */}
+              <div className="space-y-4">
+                <Card className="shadow-sm border-border/60">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-40" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm border-border/60">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-40" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-6 w-32" />
+                      <Skeleton className="h-6 w-12" />
+                    </div>
+                    <Skeleton className="h-px w-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : event ? (
+            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Header */}
-              <div className="flex items-center justify-between">
+              <div className="lg:col-span-2 flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
                   <Link href="/dashboard">
                     <Button variant="ghost" size="icon">
@@ -838,10 +850,7 @@ export default function EventDraft() {
                   >
                     Delete / ลบ
                   </Button>
-                  <Button
-                    onClick={handlePublish}
-                    className="px-6 hidden lg:inline-block"
-                  >
+                  <Button onClick={handlePublish} className="px-6 hidden lg:inline-block">
                     Publish / เผยแพร่
                   </Button>
                 </div>
@@ -877,13 +886,14 @@ export default function EventDraft() {
                 setStartTime={setStartTime}
                 selectedEnd={selectedEnd}
                 setSelectedEnd={setSelectedEnd}
+                selectedSubEnd={selectedSubEnd}
+                selectedSubStart={selectedSubStart}
                 endDate={endDate}
                 setEndDate={setEndDate}
                 endTime={endTime}
                 setEndTime={setEndTime}
                 calendarStartMonth={calendarStartMonth}
                 calendarEndMonth={calendarEndMonth}
-                formatThaiBE={formatThaiBE}
                 eventVisibility={eventVisibility}
                 setEventVisibility={setEventVisibility}
                 fieldErrors={fieldErrors}
@@ -914,8 +924,9 @@ export default function EventDraft() {
                 fieldErrors={fieldErrors}
                 calendarStartMonth={calendarStartMonth}
                 calendarEndMonth={calendarEndMonth}
-                formatThaiBE={formatThaiBE}
                 selectedStart={selectedStart}
+                fileRequirements={fileRequirements}
+                setFileRequirements={setFileRequirements}
               />
 
               {/* Committee & Guest Section */}
@@ -926,6 +937,8 @@ export default function EventDraft() {
                 setCommitteeReward={setCommitteeReward}
                 guestRewardAmount={guestRewardAmount}
                 setGuestRewardAmount={setGuestRewardAmount}
+                unitReward={unitReward}
+                setUnitReward={setUnitReward}
               />
 
               {/* Special Rewards Section */}
@@ -971,27 +984,26 @@ export default function EventDraft() {
               />
 
               {/* Save Button (Mobile) */}
-              <div className="lg:hidden grid grid-cols-3 gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={handleSaveDraft}
-                  className="w-full"
-                >
+              <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
+                <Button variant="secondary" onClick={handleSaveDraft} className="w-full h-11 text-base shadow-sm">
+                  <Save className="mr-2 h-4 w-4" />
                   Save as Draft / บันทึกดราฟต์
                 </Button>
-                <Button onClick={handlePublish} className="w-full">
-                  Publish / เผยแพร่
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                  className="w-full"
-                >
-                  Delete / ลบ
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button onClick={handlePublish} className="w-full h-11 text-base shadow-sm">
+                    Publish / เผยแพร่
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="w-full h-11 text-base shadow-sm"
+                  >
+                    Delete / ลบ
+                  </Button>
+                </div>
               </div>
             </div>
-          )}
+          ) : null}
         </main>
       </div>
     </div>

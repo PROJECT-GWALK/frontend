@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -238,7 +237,7 @@ export default function UserManagementPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {(u as any).banned ? (
+                          {u.banned ? (
                             <span className="px-2 py-1 text-xs font-medium rounded-2xl bg-destructive text-white">
                               Banned
                             </span>
@@ -256,7 +255,7 @@ export default function UserManagementPage() {
                             ) : (
                               <>
                                 {/* Change Role */}
-                                {!(u as any).banned && (
+                                {!u.banned && (
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <Button size="sm" variant="secondary" className="gap-2 hover:brightness-90">
@@ -303,7 +302,7 @@ export default function UserManagementPage() {
                                 )}
                                 
                                 {/* Ban / Unban */}
-                                {(u as any).banned ? (
+                                {u.banned ? (
                                   <Button
                                     size="sm"
                                     variant="secondary"
