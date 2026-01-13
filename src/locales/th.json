@@ -1,0 +1,162 @@
+{
+  "navbar": {
+    "dashboard": "แดชบอร์ด",
+    "events": "อีเวนต์",
+    "users": "ผู้ใช้",
+    "logout": "ออกจากระบบ"
+  },
+  "eventDraft": {
+    "editEvent": "แก้ไขอีเวนต์",
+    "updateEventDetails": "อัปเดตรายละเอียดอีเวนต์",
+    "delete": "ลบ",
+    "publish": "เผยแพร่",
+    "saveAsDraft": "บันทึกเป็นแบบร่าง",
+    "fillDetails": "กรอกรายละเอียดด้านล่าง",
+    "progress": "ความคืบหน้า"
+  },
+  "eventInfo": {
+    "eventInformation": "ข้อมูลอีเวนต์",
+    "eventTitle": "หัวข้ออีเวนต์",
+    "checkName": "ตรวจสอบ",
+    "eventDescription": "รายละเอียดอีเวนต์",
+    "eventBanner": "แบนเนอร์อีเวนต์",
+    "clickToUpload": "คลิกเพื่ออัปโหลดหรือลากและวาง",
+    "supportedFormats": "PNG, JPG หรือ GIF (ครอบเป็น 800x400px)",
+    "change": "เปลี่ยน",
+    "remove": "ลบ",
+    "eventTimePeriod": "ช่วงเวลาอีเวนต์",
+    "startDate": "วันที่เริ่ม",
+    "startTime": "เวลาเริ่ม",
+    "endDate": "วันที่สิ้นสุด",
+    "endTime": "เวลาสิ้นสุด",
+    "locationVenue": "สถานที่จัดงาน",
+    "locationLink": "ลิงก์ตำแหน่ง (Google Maps)",
+    "eventVisibility": "การมองเห็นอีเวนต์",
+    "public": "สาธารณะ",
+    "private": "ส่วนตัว"
+  },
+  "presenterSection": {
+    "presenterDetails": "รายละเอียดผู้นำเสนอ",
+    "maxPresenters": "จำนวนผู้นำเสนอสูงสุด",
+    "maxTeams": "จำนวนทีมสูงสุด",
+    "submissionPeriod": "ช่วงการส่งผลงาน",
+    "startDateSubmission": "วันที่เริ่มส่ง",
+    "startTimeSubmission": "เวลาเริ่มส่ง",
+    "endDateSubmission": "วันที่สิ้นสุดส่ง",
+    "endTimeSubmission": "เวลาสิ้นสุดส่ง"
+  },
+  "committeeSection": {
+  "used": "ใช้ไปแล้ว",
+  "total": "ทั้งหมด",
+  "remaining": "คงเหลือ",
+  "totalParticipants": "จำนวนผู้เข้าร่วมทั้งหมด",
+  "ties": "เสมอ",
+  "participants": "ผู้เข้าร่วม",
+  "judges": "กรรมการ",
+  "specialAwards": "รางวัลพิเศษ",
+  "usedOverTotal": "ใช้ไป / ทั้งหมด",
+  "feedbackGiven": "ให้ความคิดเห็นแล้ว",
+  "myVirtualRewards": "Virtual Reward ของฉัน",
+  "waitForVote": "รอการโหวต",
+  "waitForFeedback": "รอการให้ความคิดเห็น"
+}
+
+,
+  "rewardsSection": {
+    "specialRewards": "รางวัลพิเศษ",
+    "rewardName": "ชื่อรางวัล",
+    "rewardDescription": "รายละเอียดรางวัล",
+    "rewardImage": "รูปภาพรางวัล",
+    "addReward": "เพิ่มรางวัล",
+    "remove": "ลบ"
+  },
+  "validation": {
+    "eventTitleRequired": "กรุณากรอก Event Title",
+    "startDateTimeRequired": "กรุณากรอก Start View วันที่และเวลา",
+    "endDateTimeRequired": "กรุณากรอก End View วันที่และเวลา",
+    "startBeforeEnd": "Start View ต้องอยู่ก่อน End View",
+    "submissionStartRequired": "กรุณากรอก Submission Start วันที่และเวลา",
+    "submissionEndRequired": "กรุณากรอก Submission End วันที่และเวลา",
+    "submissionBeforeEvent": "Submission Start ต้องอยู่ก่อน Event Start",
+    "rewardNameRequired": "กรุณากรอกชื่อรางวัล",
+    "nameTaken": "ชื่อ Event ถูกใช้แล้ว",
+    "nameAvailable": "ชื่อ Event ใช้ได้",
+    "checkName": "ตรวจสอบชื่อ"
+  },
+  "messages": {
+    "savingDraft": "กำลังบันทึก Draft...",
+    "draftSaved": "บันทึก Draft สำเร็จ",
+    "draftFailed": "บันทึก Draft ไม่สำเร็จ",
+    "publishing": "กำลังเผยแพร่ Event...",
+    "publishSuccess": "เผยแพร่ Event สำเร็จ",
+    "publishFailed": "เผยแพร่ Event ไม่สำเร็จ",
+    "errorLoading": "โหลด Event ไม่สำเร็จ"
+  },
+  "dashboard": {
+    "presenterCount": "ผู้นำเสนอ",
+    "guestCount": "ผู้เข้าร่วม",
+    "committeeCount": "กรรมการ",
+    "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+    "teamCount": "จำนวนทีม",
+    "allComments": "ความคิดเห็นทั้งหมด",
+    "commentGiven": "ให้คอมเมนต์",
+    "feedbackGiven": "ให้ฟีดแบ็ก",
+    "used": "ใช้ไป",
+    "reward": "Virtual Rewards",
+    "usedAlready": "ใช้ไปแล้ว",
+    "remaining": "คงเหลือ",
+    "total": "ทั้งหมด",
+    "usedOverTotal": "ใช้ไป / ทั้งหมด",
+    "specialAwards": "รางวัลพิเศษ",
+    "remainingAwards": "รางวัลที่ยังไม่ได้แจก"
+  },
+   "information": {
+    "eventDetails": "รายละเอียดอีเวนต์",
+    "eventDuration": "ระยะเวลาอีเวนต์",
+    "eventLocation": "สถานที่จัดงาน",
+    "submissionStart": "วันที่เริ่มส่งผลงาน",
+    "submissionEnd": "วันที่สิ้นสุดส่งผลงาน",
+    "maxTeams":"จำนวนทีมสูงสุด",
+    "memberPerGroup": "สมาชิกต่อทีม",
+    "rewardPoints": "รางวัลและคะแนน",
+    "startin": "เริ่มใน",
+    "link": "ลิงก์",
+    "start": "เริ่ม",
+    "end": "สิ้นสุด"
+  },
+  "userDashboard": {
+    "eventdashboard": "Event Dashboard",
+    "recruting": "กำลังรับสมัคร",
+    "startingSoon": "เร็วๆ นี้จะเริ่ม",
+    "draft": "ร่าง",
+    "liveNow": "กำลังดำเนินอยู่",
+    "ended": "สิ้นสุดแล้ว"
+  },
+  "organizerDashboard": {
+  "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+  "totalPeopleInEvent": "คนรวมทั้งหมดในงาน",
+  "team": "ทีม",
+  "presenters": "ผู้นำเสนอ",
+  "outOfTotalTeams": "จากทั้งหมด",
+  "people": "คน",
+  "guests": "ผู้เข้าร่วม",
+  "comments": "คอมเมนต์",
+  "committee": "กรรมการ",
+  "feedback": "ฟีดแบ็ก",
+  "virtualRewards": "Virtual Rewards",
+  "usedPercent": "ใช้ไปแล้ว",
+  "remaining": "คงเหลือ",
+  "specialAwards": "รางวัลพิเศษ",
+  "awarded": "แจกแล้ว",
+  "total": "ทั้งหมด",
+  "notYetAwarded": "ยังไม่ได้แจก",
+  "awardDistributionProgress": "แจกครบทุกครั้งแล้ว",
+  "totalFeedbackReceived": "ความคิดเห็นทั้งหมดที่ได้รับ",
+  "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม"
+  
+}
+
+    
+  
+  
+}

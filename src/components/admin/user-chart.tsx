@@ -21,6 +21,7 @@ import {
 import { userDailyActive } from "@/utils/apiadmin";
 import { UserActiveChartData } from "@/utils/types";
 import { ChartBar } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const chartConfig = {
   active: {
@@ -29,9 +30,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const generateMonths = () =>
+const generateMonths = (locale: string) =>
   Array.from({ length: 12 }, (_, i) => ({
-    label: new Date(2000, i).toLocaleString("en-US", { month: "long" }),
+    label: new Date(2000, i).toLocaleString(locale, { month: "long" }),
     value: i + 1,
   }));
 
@@ -44,6 +45,7 @@ const generateDays = (year: number, month: number) => {
 };
 
 export default function AdminUserChart() {
+  const { timeFormat } = useLanguage();
   const now = new Date();
   const currentYear = now.getFullYear() + 543;
 
@@ -73,9 +75,9 @@ export default function AdminUserChart() {
 
       const rawChart: { label: string; count: number }[] = res.data.chart;
       let filled: { date: string; active: number; fullLabel: string }[] = [];
+      const christianYear = (year ?? currentYear) - 543;
 
       if (month) {
-        const christianYear = (year ?? currentYear) - 543;
         const days = generateDays(christianYear, month);
 
         filled = days.map((d) => {
@@ -83,26 +85,18 @@ export default function AdminUserChart() {
           return {
             date: d.label,
             active: found ? found.count : 0,
-            fullLabel: `${d.label}/${month.toString().padStart(2, "0")}/${(
-              year ?? currentYear
-            )
-              .toString()
-              .slice(-2)}`,
+            fullLabel: new Date(christianYear, month - 1, parseInt(d.label)).toLocaleDateString(timeFormat),
           };
         });
       } else {
-        const months = generateMonths();
+        const months = generateMonths(timeFormat);
 
         filled = months.map((m) => {
           const found = rawChart.find((c) => c.label === m.label);
           return {
             date: m.label,
             active: found ? found.count : 0,
-            fullLabel: `${m.value.toString().padStart(2, "0")}/${(
-              year ?? currentYear
-            )
-              .toString()
-              .slice(-2)}`,
+            fullLabel: new Date(christianYear, m.value - 1).toLocaleDateString(timeFormat, { month: 'long', year: 'numeric' }),
           };
         });
       }
@@ -112,7 +106,7 @@ export default function AdminUserChart() {
     fetchData();
   }, [year, month, currentYear]);
 
-  const monthOptions = generateMonths();
+  const monthOptions = generateMonths(timeFormat);
 
   return (
       <Card className="w-full">

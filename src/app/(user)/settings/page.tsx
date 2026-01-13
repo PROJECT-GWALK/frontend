@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/utils/function";
 import { toast } from "sonner";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { settingsSchema, User } from "@/utils/types";
 import { getCurrentUser, updateCurrentUser } from "@/utils/apiuser";
 import ImageCropDialog from "@/lib/image-crop-dialog";
@@ -21,6 +22,7 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -53,8 +55,47 @@ export default function SettingsPage() {
         });
         setPreview(current.user.image ?? null);
       }
+      setFetching(false);
     })();
   }, []);
+
+  if (fetching) {
+    return (
+      <div className="flex justify-center">
+        <Card className="w-full max-w-4xl">
+          <CardHeader>
+            <Skeleton className="h-8 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col items-center space-y-4">
+              <Skeleton className="h-24 w-24 rounded-full" />
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -87,9 +128,6 @@ export default function SettingsPage() {
   };
 
   const avatarSrc: string | undefined = preview || user?.image || undefined;
-  const initialsBase =
-    (user?.name && user.name.trim()) || user?.username || user?.email || "NA";
-  const avatarFallbackText = initialsBase.slice(0, 2).toUpperCase();
 
   const handleRemoveImage = () => {
     if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
@@ -169,12 +207,11 @@ export default function SettingsPage() {
             {/* เดิมมี <DialogContent> ... <Cropper .../> ... </DialogContent> และ </Dialog> ที่ทำให้ ERROR */}
             {/* ส่วน Avatar และฟอร์มยังคงเดิม */}
             <div className="flex flex-col items-center space-y-4">
-              <Avatar key={avatarSrc || "no-image"} className="h-24 w-24 select-none">
-                {avatarSrc ? <AvatarImage src={avatarSrc} /> : null}
-                <AvatarFallback delayMs={0}>
-                  {avatarFallbackText}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                key={avatarSrc || "no-image"}
+                user={user ? { ...user, image: avatarSrc } : { image: avatarSrc } as Partial<User>}
+                className="h-24 w-24 select-none"
+              />
               <div className="flex gap-2">
                 <Input
                   id="imageUpload"

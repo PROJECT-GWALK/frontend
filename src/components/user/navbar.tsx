@@ -9,6 +9,8 @@ import Image from "next/image";
 import { appBrand, menuItems, navbarItems } from "@/utils/settings";
 import { signOut, useSession } from "next-auth/react";
 import { getCurrentUser } from "@/utils/apiuser";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+// import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { UserAvatar } from "@/utils/function";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -30,6 +33,7 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setTheme, theme } = useTheme();
+  const { t } = useLanguage();
 
   const { status } = useSession();
 
@@ -54,7 +58,7 @@ export function Navbar() {
   }, [status]);
 
   return (
-    <nav className="border-b">
+    <nav className="sticky top-0 z-50 border-b bg-background">
       <div className="container mx-auto px-8 py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -62,12 +66,7 @@ export function Navbar() {
             <Link href="/" className="text-lg font-bold">
               <div className="flex items-center space-x-4">
                 {appBrand.logo && (
-                  <Image
-                    src={appBrand.logo}
-                    alt={appBrand.name}
-                    width={32}
-                    height={32}
-                  />
+                  <Image src={appBrand.logo} alt={appBrand.name} width={32} height={32} />
                 )}
                 {appBrand.name && <div>{appBrand.name}</div>}
               </div>
@@ -80,7 +79,7 @@ export function Navbar() {
                     <NavigationMenuItem key={link.url}>
                       <NavigationMenuLink asChild>
                         <Link href={link.url} className="font-medium">
-                          {link.title}
+                          {t(link.title)}
                         </Link>
                       </NavigationMenuLink>
                     </NavigationMenuItem>
@@ -93,27 +92,17 @@ export function Navbar() {
           {/* Desktop User Menu */}
           <div className="hidden sm:block">
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <LanguageSwitcher />
                 <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    className="select-none hover:border-2"
-                  >
-                    <Avatar>
-                      <AvatarImage src={user.image || ""} />
-                      <AvatarFallback>
-                        {user.name?.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                  <DropdownMenuTrigger asChild className="select-none hover:border-2">
+                    <button className="rounded-full outline-none">
+                      <UserAvatar user={user} />
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.image || ""} />
-                        <AvatarFallback>
-                          {user.name?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar user={user} className="h-8 w-8" />
                       <div className="flex flex-col">
                         <span className="font-semibold">@{user.username}</span>
                         <span className="text-sm text-muted-foreground">{user.name}</span>
@@ -123,8 +112,7 @@ export function Navbar() {
                     {menuItems
                       .filter((item) => {
                         if (item.role === "user") return true;
-                        if (item.role === "admin" && user.role === "ADMIN")
-                          return true;
+                        if (item.role === "admin" && user.role === "ADMIN") return true;
                         return false;
                       })
                       .map((item) => (
@@ -136,9 +124,7 @@ export function Navbar() {
                         </Link>
                       ))}
                     <DropdownMenuItem
-                      onClick={() =>
-                        setTheme(theme === "dark" ? "light" : "dark")
-                      }
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                       className="flex items-center gap-1"
                     >
                       <span className="relative flex h-[1.2rem] w-[1.2rem]">
@@ -156,7 +142,7 @@ export function Navbar() {
                       }}
                     >
                       <LogOut />
-                      Logout
+                      {t("navbar.logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -172,24 +158,12 @@ export function Navbar() {
           <div className="sm:hidden flex items-center space-x-4">
             {user ? (
               <>
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={user.image || ""} />
-                  <AvatarFallback>
-                    {user.name?.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar user={user} className="w-8 h-8" />
 
-                <DropdownMenu
-                  open={isMobileMenuOpen}
-                  onOpenChange={setIsMobileMenuOpen}
-                >
+                <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label="Open menu">
-                      {isMobileMenuOpen ? (
-                        <X className="h-6 w-6" />
-                      ) : (
-                        <Menu className="h-6 w-6" />
-                      )}
+                      {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -198,16 +172,11 @@ export function Navbar() {
                     side="bottom"
                     align="start"
                     sideOffset={12}
-                    className="w-[100vw]"
+                    className="w-screen"
                   >
                     {user && (
                       <DropdownMenuLabel className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.image || ""} />
-                          <AvatarFallback>
-                            {user.name?.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar user={user} className="h-8 w-8" />
                         <div className="flex flex-col">
                           <span className="font-semibold">@{user.username}</span>
                           <span className="text-sm text-muted-foreground">{user.name}</span>
@@ -219,7 +188,7 @@ export function Navbar() {
                     {navbarItems.map((link) => (
                       <Link key={link.url} href={link.url}>
                         <DropdownMenuItem key={link.url}>
-                          {link.title}
+                          {t(link.title)}
                         </DropdownMenuItem>
                       </Link>
                     ))}
@@ -231,8 +200,7 @@ export function Navbar() {
                       {menuItems
                         .filter((item) => {
                           if (item.role === "user") return true;
-                          if (item.role === "admin" && user.role === "ADMIN")
-                            return true;
+                          if (item.role === "admin" && user.role === "ADMIN") return true;
                           return false;
                         })
                         .map((item) => (
@@ -244,9 +212,7 @@ export function Navbar() {
                           </Link>
                         ))}
                       <DropdownMenuItem
-                        onClick={() =>
-                          setTheme(theme === "dark" ? "light" : "dark")
-                        }
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                         className="flex items-center gap-1"
                       >
                         <span className="relative flex h-[1.2rem] w-[1.2rem]">

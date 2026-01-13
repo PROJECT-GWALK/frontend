@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Adapter } from "next-auth/adapters";
 import { prisma } from "./prisma";
 import Google from "next-auth/providers/google";
 import { randomUUID } from "crypto";
@@ -17,7 +18,7 @@ function getThailandDateOnly() {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as Adapter,
   pages: {
     signIn: "/sign-in",
     error: "/error",
@@ -56,21 +57,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           try {
             const dateOnly = getThailandDateOnly();
 
-            await prisma.userDailyActive.upsert({
-              where: {
-                userId_date: {
-                  userId: user.id,
-                  date: dateOnly,
-                },
-              },
-              update: {},
-              create: {
+            await prisma.userDailyActive.create({
+              data: {
                 userId: user.id,
                 date: dateOnly,
               },
             });
-          } catch (err) {
-            console.error("Failed to log daily active user:", err);
+          } catch (err: unknown) {
+            if (typeof err === "object" && err !== null && "code" in err && (err as { code: string }).code !== 'P2002') {
+              console.error("Failed to log daily active user:", err);
+            }
           }
         }
       }

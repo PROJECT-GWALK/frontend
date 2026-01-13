@@ -49,17 +49,22 @@ export const menuItemsAdmin = [
 
 export const navbarItems = [
   {
-    title: "Dashboard",
     url: "/dashboard",
+    title: "Dashboard",
   },
   {
-    title: "Events",
-    url: "/events",
+    url: "/event",
+    title: "Event",
   },
   {
-    title: "Users",
     url: "/users",
+    title: "Users",
   },
 ];
 
 export const signInRedirect = "/dashboard";
+
+const isThai = typeof window !== "undefined" && localStorage.getItem("language") === "th";
+
+export const timeFormat = isThai ? "th-TH" : "en-US";
+export const dateFormat = isThai ? "th-TH" : "en-US";
