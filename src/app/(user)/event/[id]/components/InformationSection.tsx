@@ -1049,6 +1049,64 @@ export default function InformationSection({
                   )}
                 </div>
               </div>
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 rounded-xl border bg-card hover:bg-muted/30 transition-all duration-200 hover:border-primary/20">
+  <div className="flex items-center gap-4 w-full lg:w-auto">
+    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm bg-purple-500">
+      <Award className="h-5 w-5" />
+    </div>
+    <div className="flex flex-col">
+      <div className="font-bold text-base">Scores Page</div>
+      <div className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-xs">
+        {mounted ? `${window.location.origin}/event/{id}/Projects/{projectId}/Scores` : ""}// แก้
+      </div>
+    </div>
+  </div>
+  <div className="flex items-center gap-2 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-3 lg:pt-0 mt-1 lg:mt-0">
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-9 gap-2"
+      onClick={() => {
+        const url = `${window.location.origin}/event/${id}/Scores`; //แก้
+        navigator.clipboard.writeText(url);
+        toast.success("Copied Scores link");
+      }}
+    >
+      <ClipboardCopy className="h-3.5 w-3.5" />
+      Copy Link
+    </Button>
+
+    <div className="h-8 w-px bg-border mx-1"></div>
+
+    {eventQrThumb ? (
+      <div
+        className="relative group/qr cursor-pointer"
+        onClick={async () => {
+          const scoresUrl = `${window.location.origin}/event/${id}/Scores`;
+          const qr = await QRCode.toDataURL(scoresUrl, { width: 400 });
+          setQrSrc(qr);
+          setQrTitle("QR Code for Scores Page");
+          setQrOpen(true);
+        }}
+      >
+        <Image
+          src={eventQrThumb}
+          alt="qr-scores"
+          height={10}
+          width={10}
+          className="h-10 w-10 rounded border bg-white p-0.5 shadow-sm hover:scale-105 transition-transform"
+        />
+        <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity">
+          <Award className="h-4 w-4 text-white" />
+        </div>
+      </div>
+    ) : (
+      <span className="text-xs text-muted-foreground animate-pulse">
+        QR...
+      </span>
+    )}
+  </div>
+</div>
 
               {/* Role Links (Only for Organizer) */}
               {editable &&
@@ -1073,6 +1131,7 @@ export default function InformationSection({
                   <div
                     key={role}
                     className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 rounded-xl border bg-card hover:bg-muted/30 transition-all duration-200 hover:border-primary/20"
+                    
                   >
                     <div className="flex items-center gap-4 w-full lg:w-auto">
                       <div

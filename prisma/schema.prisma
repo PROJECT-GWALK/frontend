@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -132,13 +132,13 @@ model Event {
 // PARTICIPANTS
 //////////////////////////////////////////////////////////
 model EventParticipant {
-  id            String     @id @default(uuid()) @db.Uuid
-  eventId       String     @db.Uuid
-  userId        String     @db.Uuid
+  id            String      @id @default(uuid()) @db.Uuid
+  eventId       String      @db.Uuid
+  userId        String      @db.Uuid
   eventGroup    EventGroup?
-  teamId        String?    @db.Uuid
-  virtualReward Int        @default(0)
-  isLeader      Boolean    @default(false)
+  teamId        String?     @db.Uuid
+  virtualReward Int         @default(0)
+  isLeader      Boolean     @default(false)
 
   event     Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -173,13 +173,13 @@ model Team {
 // FILE MANAGEMENT
 //////////////////////////////////////////////////////////
 model EventFileType {
-  id              String   @id @default(uuid()) @db.Uuid
-  eventId         String   @db.Uuid
-  name            String
-  description     String?
+  id               String     @id @default(uuid()) @db.Uuid
+  eventId          String     @db.Uuid
+  name             String
+  description      String?
   allowedFileTypes FileType[]
-  isRequired      Boolean  @default(false)
-  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  isRequired       Boolean    @default(false)
+  createdAt        DateTime   @default(now()) @db.Timestamptz(3)
 
   event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
   teamFiles TeamFile[]
