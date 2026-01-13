@@ -3,7 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
-import { createTeam, getTeams, getEvent, giveVr, resetVr } from "@/utils/apievent";
+import { createTeam, getTeams, getEvent, giveVr, resetVr, giveSpecial, resetSpecial } from "@/utils/apievent";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import {
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import type { EventData, Team } from "@/utils/types";
+import type { EventData, Team, SpecialReward } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
 import React from "react";
@@ -44,27 +44,32 @@ export default function CommitteePage(props: Props) {
   const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData | null>(props.event || null);
+  const [awardsUnused, setAwardsUnused] = useState<SpecialReward[]>([]);
   const [bannerOpen, setBannerOpen] = useState(false);
   const [loading, setLoading] = useState(!props.event);
+
+  const fetchData = async () => {
+    try {
+      const res = await getEvent(id);
+      if (res.message === "ok") {
+        setLocalEvent(res.event);
+        if (res.awardsUnused) {
+            setAwardsUnused(res.awardsUnused);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch event:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (props.event) {
       setLocalEvent(props.event);
       setLoading(false);
     } else if (id) {
-      const fetchEvent = async () => {
-        try {
-          const res = await getEvent(id);
-          if (res.message === "ok") {
-            setLocalEvent(res.event);
-          }
-        } catch (error) {
-          console.error("Failed to fetch event:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchEvent();
+      fetchData();
     }
   }, [id, props.event]);
 
@@ -186,15 +191,21 @@ export default function CommitteePage(props: Props) {
     }
   };
 
-  const handleResetSpecial = (projectId: string) => {
-    setProjectRewards((prev) => ({
-      ...prev,
-      [projectId]: {
-        ...prev[projectId],
-        specialGiven: null,
-      },
-    }));
-    toast.success("Reset Special Reward");
+  const handleResetSpecial = async (projectId: string) => {
+    try {
+      await resetSpecial(id, projectId);
+      fetchData();
+      setProjectRewards((prev) => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          specialGiven: null,
+        },
+      }));
+      toast.success("คืนรางวัลพิเศษเรียบร้อย");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to reset special reward"));
+    }
   };
 
   const handleGiveVr = async (projectId: string, amount: number) => {
@@ -222,15 +233,24 @@ export default function CommitteePage(props: Props) {
     }
   };
 
-  const handleGiveSpecial = (projectId: string, rewardName: string) => {
-    setProjectRewards((prev) => ({
-      ...prev,
-      [projectId]: {
-        ...prev[projectId],
-        specialGiven: rewardName,
-      },
-    }));
-    toast.success("ให้รางวัลพิเศษเรียบร้อย");
+  const handleGiveSpecial = async (projectId: string, rewardId: string) => {
+    try {
+      await giveSpecial(id, projectId, rewardId);
+      fetchData();
+      
+      const rewardName = localEvent?.specialRewards?.find(r => r.id === rewardId)?.name || "Unknown";
+
+      setProjectRewards((prev) => ({
+        ...prev,
+        [projectId]: {
+          ...prev[projectId],
+          specialGiven: rewardName,
+        },
+      }));
+      toast.success("ให้รางวัลพิเศษเรียบร้อย");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to give special reward"));
+    }
   };
 
   const handleAction = (
@@ -602,7 +622,7 @@ export default function CommitteePage(props: Props) {
                       onAction={handleAction}
                       onGiveVr={handleGiveVr}
                       onGiveSpecial={handleGiveSpecial}
-                      unusedAwards={localEvent?.awardsUnused}
+                      unusedAwards={awardsUnused}
                       onPostComment={() => {
                         toast.success("ส่งความคิดเห็นเรียบร้อย");
                       }}
@@ -662,7 +682,7 @@ export default function CommitteePage(props: Props) {
                     onAction={handleAction}
                     onGiveVr={handleGiveVr}
                     onGiveSpecial={handleGiveSpecial}
-                    unusedAwards={localEvent?.awardsUnused}
+                    unusedAwards={awardsUnused}
                     onPostComment={() => {
                       toast.success("ส่งความคิดเห็นเรียบร้อย");
                     }}

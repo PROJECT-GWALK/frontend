@@ -453,10 +453,12 @@ export default function GuestView({ id, event }: Props) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {(localEvent?.awardsUnused ?? ["รางวัล AI ยอดเยี่ยม"]).map((a, i) => (
+                      {(localEvent?.awardsUnused ?? []).map((a, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                          <span className="text-sm font-medium">{a}</span>
+                          <span className="text-sm font-medium">
+                            {typeof a === "string" ? a : a.name}
+                          </span>
                         </div>
                       ))}
                     </div>

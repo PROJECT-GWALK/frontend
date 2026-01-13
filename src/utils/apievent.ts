@@ -307,6 +307,24 @@ export const resetVr = async (eventId: string, projectId: string) => {
   return res.data;
 };
 
+export const giveSpecial = async (eventId: string, projectId: string, rewardId: string) => {
+  const res = await axios.put(
+    `/backend/api/events/${eventId}/action/give-special`,
+    { projectId, rewardId },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
+export const resetSpecial = async (eventId: string, projectId: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/action/reset-special`,
+    { projectId },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
 export const deleteTeamFile = async (eventId: string, teamId: string, fileTypeId: string) => {
   const res = await axios.delete(
     `/backend/api/events/${eventId}/teams/${teamId}/files/${fileTypeId}`,

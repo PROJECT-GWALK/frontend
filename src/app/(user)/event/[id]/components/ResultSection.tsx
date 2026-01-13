@@ -92,8 +92,33 @@ export default function ResultSection({ eventId, role }: Props) {
     return 60;
   };
 
+  const isUserScrollingRef = useRef(false);
+
+  // Detect scroll to pause auto-updates
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 50 || (containerRef.current?.scrollTop || 0) > 50;
+      isUserScrollingRef.current = scrolled;
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    const container = containerRef.current;
+    if (container) container.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (container) container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const fetchData = useCallback(async (mode: "initial" | "manual" | "auto" = "manual") => {
-    if (mode === "auto") setRefreshing(true);
+    if (mode === "auto") {
+      // Skip update if user is scrolling to prevent jumping, unless fullscreen (fixed view)
+      if (isUserScrollingRef.current && !document.fullscreenElement) {
+         return; 
+      }
+      setRefreshing(true);
+    }
     else setLoading(true);
     setErrorMessage(null);
     try {
@@ -125,13 +150,13 @@ export default function ResultSection({ eventId, role }: Props) {
   useEffect(() => {
     fetchData("initial");
     let interval: NodeJS.Timeout;
-    if (role === "ORGANIZER") {
+    if (role === "ORGANIZER" && isFullscreen) {
       interval = setInterval(() => fetchData("auto"), 5000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [fetchData, role]);
+  }, [fetchData, role, isFullscreen]);
 
   const toggleFullscreen = () => {
     const el = containerRef.current;
@@ -204,7 +229,7 @@ export default function ResultSection({ eventId, role }: Props) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {role !== "ORGANIZER" && (
+            {!isFullscreen && (
               <Button
                 variant="outline"
                 size="sm"
@@ -235,7 +260,7 @@ export default function ResultSection({ eventId, role }: Props) {
           <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="text-sm text-destructive">{errorMessage}</div>
-              {role !== "ORGANIZER" && (
+              {!isFullscreen && (
                 <Button variant="outline" size="sm" onClick={() => fetchData("manual")} disabled={loading}>
                   ลองใหม่
                 </Button>

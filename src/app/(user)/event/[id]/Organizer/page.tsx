@@ -419,7 +419,7 @@ export default function OrganizerView({ id, event }: Props) {
                             key={i}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 border border-pink-200"
                           >
-                            {a}
+                            {typeof a === "string" ? a : a.name}
                           </span>
                         ))
                       ) : (

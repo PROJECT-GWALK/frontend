@@ -16,6 +16,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import type { PresenterProject } from "../Presenter/components/types";
+import type { SpecialReward } from "@/utils/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,8 +75,8 @@ type Props = {
   onDeleteTeam?: (projectId: string) => Promise<void> | void;
   onPostComment?: (projectId: string, text: string) => Promise<void> | void;
   onGiveVr?: (projectId: string, amount: number) => Promise<void> | void;
-  onGiveSpecial?: (projectId: string, rewardName: string) => Promise<void> | void;
-  unusedAwards?: string[];
+  onGiveSpecial?: (projectId: string, rewardId: string) => Promise<void> | void;
+  unusedAwards?: SpecialReward[];
 };
 import { Input } from "@/components/ui/input";
 
@@ -108,6 +109,13 @@ export default function UnifiedProjectList({
 
   const [specialDialogOpen, setSpecialDialogOpen] = React.useState(false);
   const [specialChoice, setSpecialChoice] = React.useState<string | null>(null);
+
+  // Reset dialog state when closed
+  React.useEffect(() => {
+    if (!specialDialogOpen) {
+      setSpecialChoice(null);
+    }
+  }, [specialDialogOpen]);
 
   const handleActionInternal = (action: ActionType, projectId: string) => {
     if (action === "comment" && onPostComment) {
@@ -526,17 +534,17 @@ export default function UnifiedProjectList({
               {unusedAwards.length > 0 ? (
                 unusedAwards.map((a) => (
                   <label
-                    key={a}
+                    key={a.id}
                     className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:bg-accent cursor-pointer transition-colors"
                   >
                     <input
                       type="radio"
                       name="special"
-                      checked={specialChoice === a}
-                      onChange={() => setSpecialChoice(a)}
+                      checked={specialChoice === a.id}
+                      onChange={() => setSpecialChoice(a.id)}
                       className="h-5 w-5 accent-primary"
                     />
-                    <div className="text-base font-medium">{a}</div>
+                    <div className="text-base font-medium">{a.name}</div>
                   </label>
                 ))
               ) : (
