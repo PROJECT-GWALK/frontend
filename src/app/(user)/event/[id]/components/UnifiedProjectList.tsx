@@ -298,7 +298,7 @@ export default function UnifiedProjectList({
                       : "secondary"
                   }
                   size="sm"
-                  className="h-9 px-4 font-semibold w-full sm:w-auto min-w-[96px]"
+                  className="h-9 px-4 font-semibold w-full sm:w-auto min-w-24"
                 >
                   <Eye className="w-4 h-4 mr-2" /> View
                 </Button>

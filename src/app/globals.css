@@ -67,10 +67,10 @@
   --brand-on: #ffffff;          /* สีตัวอักษรบนพื้นหลังแบรนด์ */
 
   /* Role Colors (light) */
-  --role-organizer: #be185d;
-  --role-presenter: #4d7c0f;
-  --role-guest: #c2410c;
-  --role-committee: #7e22ce
+  --role-organizer: #cb467d;
+  --role-presenter: #82a357;
+  --role-guest: #d47a55;
+  --role-committee: #a564dd
 }
 
 .dark {

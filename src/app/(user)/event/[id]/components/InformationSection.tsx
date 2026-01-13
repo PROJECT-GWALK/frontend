@@ -913,7 +913,7 @@ export default function InformationSection({
         <CardContent>
           <div className="flex flex-col gap-4">
             {event?.hasCommittee && (
-            <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-committee) via-(--role-committee)/90 to-(--role-committee) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-[160px] group/card border border-white/10">
+            <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-committee) via-(--role-committee)/90 to-(--role-committee) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-40 group/card border border-white/10">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity duration-500">
                 <Gift className="h-32 w-32 rotate-12 -mr-8 -mt-8" />
               </div>
@@ -929,7 +929,7 @@ export default function InformationSection({
                   >
                     {event?.virtualRewardCommittee ?? 0}
                   </span>
-                  <span className="text-lg font-medium opacity-90 capitalize break-words leading-tight" title={event?.unitReward ?? "coins"}>
+                  <span className="text-lg font-medium opacity-90 capitalize wrap-break-word leading-tight" title={event?.unitReward ?? "coins"}>
                     {event?.unitReward ?? "coins"}
                   </span>
                 </div>
@@ -941,7 +941,7 @@ export default function InformationSection({
             </div>
             )}
 
-            <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-guest) via-(--role-guest)/90 to-(--role-guest) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-[160px] group/card border border-white/10">
+            <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-guest) via-(--role-guest)/90 to-(--role-guest) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-40 group/card border border-white/10">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity duration-500">
                 <Gift className="h-32 w-32 rotate-12 -mr-8 -mt-8" />
               </div>
@@ -957,7 +957,7 @@ export default function InformationSection({
                   >
                     {event?.virtualRewardGuest ?? 0}
                   </span>
-                  <span className="text-lg font-medium opacity-90 capitalize break-words leading-tight" title={event?.unitReward ?? "coins"}>
+                  <span className="text-lg font-medium opacity-90 capitalize wrap-break-word leading-tight" title={event?.unitReward ?? "coins"}>
                     {event?.unitReward ?? "coins"}
                   </span>
                 </div>

@@ -211,7 +211,7 @@ export default function PresenterView({ id, event }: Props) {
                 {/* RIGHT SIDE: Actions */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   {/* Presenter Label */}
-                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-[var(--role-presenter)] text-white font-medium shadow-md select-none">
+                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-presenter) text-white font-medium shadow-md select-none">
                     <Building className="h-4 w-4" />
                     <span>Presenter</span>
                   </div>
