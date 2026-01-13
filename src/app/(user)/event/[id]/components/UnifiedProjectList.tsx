@@ -548,7 +548,9 @@ export default function UnifiedProjectList({
                   </label>
                 ))
               ) : (
-                <div className="text-muted-foreground text-sm text-center py-4 bg-muted/30 rounded-lg">ไม่มีรางวัลที่เหลืออยู่</div>
+                <div className="text-muted-foreground text-sm text-center py-4 bg-muted/30 rounded-lg">
+                  ไม่มีรางวัลที่เหลืออยู่ (ท่านอาจใช้สิทธิ์โหวตไปแล้ว หรือยังไม่มีการตั้งค่ารางวัล)
+                </div>
               )}
             </div>
             <DrawerFooter className="pt-2 pb-8">

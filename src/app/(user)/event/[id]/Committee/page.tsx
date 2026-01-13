@@ -53,8 +53,8 @@ export default function CommitteePage(props: Props) {
       const res = await getEvent(id);
       if (res.message === "ok") {
         setLocalEvent(res.event);
-        if (res.awardsUnused) {
-            setAwardsUnused(res.awardsUnused);
+        if (res.event.awardsUnused) {
+            setAwardsUnused(res.event.awardsUnused);
         }
       }
     } catch (error) {
