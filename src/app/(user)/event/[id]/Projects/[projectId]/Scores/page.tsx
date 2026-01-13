@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Gift, MessageSquare, Trophy } from 'lucide-react';
 
 export default function RewardTabs() {
@@ -14,13 +15,13 @@ export default function RewardTabs() {
   const [specialReward, setSpecialReward] = useState('');
 
   const specialRewards = [
-    'รางวัลคนเหงาแห่งปี',
-    
+    "รางวัลคนเหงา"
   ];
 
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-4xl mx-auto">
+        
         
         <Tabs defaultValue="virtual" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -37,6 +38,18 @@ export default function RewardTabs() {
               Special Reward
             </TabsTrigger>
           </TabsList>
+
+          <div className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in rounded-xl mb-6">
+            <img 
+              src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&q=80" 
+              alt="Team Cover" 
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+            <div className="absolute bottom-4 left-4 text-white">
+              <h3 className="text-2xl font-bold">ชื่อทีม</h3>
+            </div>
+          </div>
 
           <TabsContent value="virtual">
             <Card>
@@ -65,6 +78,8 @@ export default function RewardTabs() {
                     className="text-lg"
                   />
                 </div>
+                
+                <Button className="w-full">บันทึก Virtual Reward</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -91,6 +106,8 @@ export default function RewardTabs() {
                     {comment.length} ตัวอักษร
                   </p>
                 </div>
+                
+                <Button className="w-full">ส่งคอมเม้น</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -128,6 +145,8 @@ export default function RewardTabs() {
                     </p>
                   </div>
                 )}
+                
+                <Button className="w-full">บันทึกรางวัลพิเศษ</Button>
               </CardContent>
             </Card>
           </TabsContent>
