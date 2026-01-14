@@ -94,6 +94,7 @@ export default function OrganizerView({ id, event }: Props) {
 
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,6 +121,7 @@ export default function OrganizerView({ id, event }: Props) {
   };
 
   const fetchTeamsData = async () => {
+    setProjectsLoading(true);
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
@@ -145,6 +147,8 @@ export default function OrganizerView({ id, event }: Props) {
       }
     } catch (error) {
       console.error("Failed to fetch teams:", error);
+    } finally {
+      setProjectsLoading(false);
     }
   };
 
@@ -156,7 +160,7 @@ export default function OrganizerView({ id, event }: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -278,11 +282,11 @@ export default function OrganizerView({ id, event }: Props) {
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
-              <TabsTrigger value="Participants" className="flex-1 min-w-[100px]">Participants</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Project</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
+              <TabsTrigger value="Participants" className="flex-1 min-w-25">Participants</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">Project</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-6 mt-6">
@@ -552,10 +556,12 @@ export default function OrganizerView({ id, event }: Props) {
                   role="ORGANIZER"
                   eventId={id}
                   searchQuery={searchQuery}
+                  loading={projectsLoading}
                   onDeleteTeam={handleDeleteTeam}
                   onPostComment={(_projectId, _text) => {
                     toast.success("ส่งความคิดเห็นเรียบร้อย");
                   }}
+                  onRefresh={fetchTeamsData}
                 />
               </div>
             </TabsContent>

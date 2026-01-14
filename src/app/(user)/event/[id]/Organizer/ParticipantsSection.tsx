@@ -569,14 +569,16 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                                     : it
                                                 )
                                               );
-                                              const t = vrTimersRef.current[p.id];
-                                              if (t) clearTimeout(t);
-                                              vrTimersRef.current[p.id] =
-                                                setTimeout(() => {
-                                                  applyUpdate(p.id, {
-                                                    virtualReward: val,
-                                                  });
-                                                }, 500);
+                                            }}
+                                            onBlur={() => {
+                                               applyUpdate(p.id, {
+                                                  virtualReward: p.virtualReward || 0,
+                                               });
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.currentTarget.blur();
+                                                }
                                             }}
                                             className="w-24"
                                           />

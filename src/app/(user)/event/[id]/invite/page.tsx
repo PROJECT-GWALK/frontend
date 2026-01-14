@@ -71,7 +71,7 @@ export default function InviteConfirmPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background pb-12">
-        <div className="relative w-full aspect-21/9 md:h-[400px]">
+        <div className="relative w-full aspect-21/9 md:h-100">
           <Skeleton className="w-full h-full" />
         </div>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
@@ -132,7 +132,7 @@ export default function InviteConfirmPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Banner Section */}
-      <div className="relative w-full aspect-video md:aspect-21/9 md:h-[400px] overflow-hidden">
+      <div className="relative w-full aspect-video md:aspect-21/9 md:h-100 overflow-hidden">
         <Image 
           src={event?.imageCover || "/banner.png"} 
           alt={event?.eventName || "Event banner"} 
@@ -215,7 +215,7 @@ export default function InviteConfirmPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => router.replace(`/event/${id}`)}
-                    className="sm:min-w-[140px] gap-2"
+                    className="sm:min-w-35 gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     ยกเลิก
@@ -223,7 +223,7 @@ export default function InviteConfirmPage() {
                   <Button 
                     onClick={doJoin} 
                     disabled={joining}
-                    className="sm:min-w-[140px] bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    className="sm:min-w-35 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                   >
                     {joining ? (
                       <>

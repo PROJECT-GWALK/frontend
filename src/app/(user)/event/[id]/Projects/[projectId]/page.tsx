@@ -19,6 +19,10 @@ import {
   ChevronLeft,
   LogOut,
   Download,
+  Award,
+  ClipboardCopy,
+  ArrowLeft,
+  Gift,
 } from "lucide-react";
 import {
   getTeamById,
@@ -55,7 +59,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { linkify, UserAvatar } from "@/utils/function";
+import { linkify, UserAvatar, generateQrCode } from "@/utils/function";
+import SelectTeam from "../../components/selectTeam";
 
 type Props = {
   params: Promise<{ id: string; projectId: string }>;
@@ -91,6 +96,9 @@ export default function ProjectDetailPage({ params }: Props) {
   const [qrThumb, setQrThumb] = useState<string | null>(null);
   const [qrThumbCommittee, setQrThumbCommittee] = useState<string | null>(null);
 
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareQrSrc, setShareQrSrc] = useState<string | null>(null);
+
   const fetchData = async () => {
     try {
       const [teamRes, eventRes, myEventsRes, currentUserRes] = await Promise.all([
@@ -119,12 +127,24 @@ export default function ProjectDetailPage({ params }: Props) {
           setIsMember(isUserMember);
         }
 
-        // Check if current user is leader based on getMyEvents
+        // Check if current user is leader based on getMyEvents (for Organizer check)
         const myEvent =
           myEventsRes.message === "ok"
             ? (myEventsRes.events as MyEvent[]).find((e) => e.id === id)
             : null;
-        const isLeader = myEvent?.isLeader || false;
+        
+        // Check if user is leader of THIS team
+        let isTeamLeader = false;
+        if (currentUserRes.message === "ok") {
+            const currentUser = currentUserRes.user;
+            const userInTeam = t.participants?.find(p => p.user.id === currentUser.id);
+            if (userInTeam && userInTeam.isLeader) {
+                isTeamLeader = true;
+            }
+        }
+
+        // Final permission: Only Team Leader can edit
+        const canEdit = isTeamLeader;
 
         setProject({
           id: t.id,
@@ -140,7 +160,7 @@ export default function ProjectDetailPage({ params }: Props) {
             })) || [],
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
-          isLeader: isLeader,
+          isLeader: canEdit,
         });
         setMembersData(
           t.participants?.map((p) => ({
@@ -329,7 +349,7 @@ export default function ProjectDetailPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto p-6 space-y-8">
+      <div className="max-w-5xl mx-auto p-6 space-y-8 bg-background">
         <Skeleton className="h-10 w-32" />
         <Card>
           <Skeleton className="h-48 w-full rounded-t-lg" />
@@ -376,8 +396,8 @@ export default function ProjectDetailPage({ params }: Props) {
 
   if (!project) {
     return (
-      <div className="p-6">
-        <Link href={`../`} className="text-sm text-blue-600 underline">
+      <div className="p-6 bg-background min-h-screen">
+        <Link href={`../`} className="text-sm text-primary underline">
           Back to Projects
         </Link>
         <div className="mt-4 text-muted-foreground">Project not found.</div>
@@ -386,343 +406,384 @@ export default function ProjectDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
-      <div>
-        <Button
-          variant="ghost"
-          className="gap-2 pl-0 text-muted-foreground hover:text-foreground"
-          asChild
-        >
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-8 animate-in fade-in duration-500 bg-background text-foreground">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <Link href={`/event/${id}`}>
-            <ChevronLeft className="w-4 h-4" />
-            Back to Event Dashboard
+            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
           </Link>
-        </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Project Details</h1>
+            <p className="text-sm text-muted-foreground">View details and works for {project.title}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <SelectTeam className="w-full md:w-[250px]" />
+        </div>
       </div>
 
-      {/* Header Section */}
-      <Card>
-        <div className="relative w-full aspect-video md:h-64 bg-slate-100 rounded-t-lg overflow-hidden">
+      {/* Hero Section */}
+      <div className="relative group rounded-xl overflow-hidden shadow-sm border bg-card">
+        <div 
+            className="relative w-full aspect-[21/9] md:h-[400px] bg-muted cursor-pointer"
+            onClick={() => setBannerOpen(true)}
+        >
           {project.img && !project.img.startsWith("data:image/png;base64src") ? (
             <Image
               src={project.img}
               alt={project.title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
             />
           ) : (
             <Image
               src="/banner.png"
               alt={project.title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
             />
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          
+          <div className="absolute bottom-0 left-0 p-6 md:p-10 text-white w-full max-w-4xl">
+            <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-lg leading-tight">
+                {project.title}
+            </h1>
+            <p className="text-white/80 line-clamp-3 text-lg md:text-xl font-light drop-shadow-md leading-relaxed">
+              {linkify(project.desc || "No description provided.")}
+            </p>
+          </div>
         </div>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-6 items-start justify-between">
-            <div className="space-y-4 flex-1">
-              <div>
-                <h1 className="text-3xl font-bold">{project.title}</h1>
-                <p className="text-muted-foreground mt-2 leading-relaxed">
-                  {linkify(project.desc || "No description provided.")}
-                </p>
-              </div>
 
-              <div className="flex gap-4">
+        {/* Action Bar */}
+        <div className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between bg-card border-t">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Badge variant="outline" className="px-3 py-1 text-sm font-normal border-border">
+                    {eventData?.eventName || "Event Project"}
+                </Badge>
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-end w-full sm:w-auto">
+                <Button
+                    size="sm"
+                    className="h-9 px-3 font-medium bg-indigo-600 text-white hover:bg-indigo-700 border-0 shadow-sm"
+                    onClick={() => router.push(`/event/${id}/Projects/${projectId}/Scores`)}
+                  >
+                    <Gift className="w-4 h-4 mr-2" />
+                    Evaluate
+                  </Button>
+
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    className="shadow-sm"
+                    onClick={async () => {
+                        const url = `${window.location.origin}/event/${id}/Projects/${projectId}`;
+                        const qr = await generateQrCode(url);
+                        setShareQrSrc(qr);
+                        setShareOpen(true);
+                    }}
+                >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                </Button>
+
                 {isMember && !project.isLeader && (
-                  <Button
+                    <Button
                     variant="destructive"
                     size="sm"
+                    className="shadow-sm"
                     onClick={() => setLeaveDialogOpen(true)}
-                  >
+                    >
                     <LogOut className="w-4 h-4 mr-2" />
                     Leave Team
-                  </Button>
-                )}
-                {project.isLeader && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditOpen(true)}
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit Project
                     </Button>
-                  </>
                 )}
+
+                {project.isLeader && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="shadow-sm border-primary/20 hover:border-primary/50 hover:bg-primary/5"
+                        onClick={() => setEditOpen(true)}
+                    >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit Project
+                    </Button>
+                )}
+
                 {isMember && (
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setFilesOpen(true)}
+                        variant="outline"
+                        size="sm"
+                        className="shadow-sm"
+                        onClick={() => setFilesOpen(true)}
                     >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Manage Files
-                      {project.files && project.files.length > 0 && (
-                        <Badge variant="secondary" className="ml-2">
-                          {project.files.length}
+                        <FileText className="w-4 h-4 mr-2" />
+                        Manage Files
+                        {project.files && project.files.length > 0 && (
+                        <Badge variant="secondary" className="ml-2 h-5 min-w-[1.25rem] px-1">
+                            {project.files.length}
                         </Badge>
-                      )}
+                        )}
                     </Button>
                 )}
-              </div>
             </div>
+        </div>
+      </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  copyToClipboard(
-                    `${location.origin}/event/${id}/Projects/${projectId}`
-                  )
-                }
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Video Section */}
-      {project.videoLink && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Project Video</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video rounded-lg overflow-hidden bg-black">
-              <iframe
-                src={project.videoLink}
-                title={project.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Members Section */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Team Members{" "}
-            <span className="text-muted-foreground text-sm font-normal">
-              ({membersData.length} / {eventData?.maxTeamMembers || "-"})
-            </span>
-          </CardTitle>
-          {project.isLeader && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInviteOpen(true)}
-              disabled={
-                !!eventData?.maxTeamMembers &&
-                membersData.length >= eventData.maxTeamMembers
-              }
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Member
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {membersData.map((m) => (
-              <div
-                key={m.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm relative group"
-              >
-                <UserAvatar user={m} />
-                <div className="overflow-hidden">
-                  <div className="font-medium truncate">{m.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    @{m.username || "user"}
-                  </div>
-                  {m.isLeader && (
-                    <Badge variant="secondary" className="mt-1 text-[10px] h-5">
-                      Leader
-                    </Badge>
-                  )}
-                </div>
-                {project.isLeader && !m.isLeader && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                    onClick={() => handleRemoveMember(m.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-            {membersData.length === 0 && (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                No members yet. Invite someone to join your team!
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Project Works Display */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Project Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-6">
-            {project.files && project.files.length > 0 ? (
-              project.files.map((file, idx) => {
-                const ft = eventData?.fileTypes?.find(
-                  (t) => t.id === file.fileTypeId
-                );
-                const isPdf = file.url.toLowerCase().endsWith(".pdf");
-                const isImage =
-                  file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
-                const isUrlType = ft?.allowedFileTypes?.includes(FileType.url);
-                const isUploading = ft?.id ? uploading[ft.id] : false;
-
-                // YouTube check
-                const youtubeMatch = file.url.match(
-                  /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-                );
-                const isYoutube = !!youtubeMatch;
-                const youtubeId = youtubeMatch ? youtubeMatch[1] : null;
-
-                return (
-                  <div key={idx} className="space-y-2">
-                    <div className="font-semibold text-lg">
-                      {ft?.name || file.name}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Left Column: Video & Works */}
+        <div className="lg:col-span-2 space-y-8">
+            {/* Video Section */}
+            {project.videoLink && (
+                <Card className="border-none shadow-md overflow-hidden">
+                <CardHeader className="border-b bg-muted/50 px-6 py-4">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                    Project Video
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="aspect-video w-full bg-black">
+                    <iframe
+                        src={project.videoLink}
+                        title={project.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                    />
                     </div>
-                    {ft?.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {ft.description}
-                      </p>
+                </CardContent>
+                </Card>
+            )}
+
+            {/* Project Works Display */}
+            <Card className="border-none shadow-md overflow-hidden bg-card">
+                <CardHeader className="border-b bg-muted/50 px-6 py-4">
+                    <CardTitle className="text-xl flex items-center gap-2 text-foreground">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Project Works
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                <div className="grid grid-cols-1 gap-8">
+                    {project.files && project.files.length > 0 ? (
+                    project.files.map((file, idx) => {
+                        const ft = eventData?.fileTypes?.find(
+                        (t) => t.id === file.fileTypeId
+                        );
+                        const isPdf = file.url.toLowerCase().endsWith(".pdf");
+                        const isImage =
+                        file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+                        const isUrlType = ft?.allowedFileTypes?.includes(FileType.url);
+                        const isUploading = ft?.id ? uploading[ft.id] : false;
+
+                        // YouTube check
+                        const youtubeMatch = file.url.match(
+                        /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+                        );
+                        const isYoutube = !!youtubeMatch;
+                        const youtubeId = youtubeMatch ? youtubeMatch[1] : null;
+
+                        return (
+                        <div key={idx} className="space-y-3">
+                            <div className="flex items-baseline justify-between border-b pb-2 border-border">
+                                <h3 className="font-semibold text-lg text-foreground">
+                                {ft?.name || file.name}
+                                </h3>
+                                {ft?.description && (
+                                <span className="text-sm text-muted-foreground ml-4 text-right">
+                                    {ft.description}
+                                </span>
+                                )}
+                            </div>
+
+                            <div className="rounded-xl overflow-hidden border bg-muted/30 shadow-sm">
+                            {isImage ? (
+                                <div
+                                className="relative w-full h-100 cursor-zoom-in group bg-muted"
+                                onClick={() => setPreviewImage(file.url)}
+                                >
+                                <Image
+                                    src={file.url}
+                                    alt={file.name}
+                                    fill
+                                    className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                    <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
+                                </div>
+                                <div className="absolute bottom-0 right-0 p-3 flex justify-end pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button variant="secondary" size="sm" asChild className="shadow-lg">
+                                    <a
+                                        href={file.url}
+                                        download
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Download Image
+                                    </a>
+                                    </Button>
+                                </div>
+                                </div>
+                            ) : isPdf ? (
+                                <div className="flex flex-col">
+                                    <iframe
+                                    src={`${file.url}#toolbar=0`}
+                                    className="w-full h-[600px]"
+                                    title={file.name}
+                                    />
+                                    <div className="p-3 bg-card border-t flex justify-end">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <a
+                                            href={file.url}
+                                            download
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex items-center gap-2"
+                                            >
+                                            <Download className="w-4 h-4" />
+                                            Download PDF
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : isYoutube && youtubeId ? (
+                                <div className="aspect-video w-full">
+                                <iframe
+                                    src={`https://www.youtube.com/embed/${youtubeId}`}
+                                    title={file.name}
+                                    className="w-full h-full"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                                </div>
+                            ) : (
+                                <div className="flex flex-col">
+                                {/* Preview attempt for other links if it is a URL type */}
+                                {isUrlType && (
+                                    <div className="w-full h-100 bg-card border-b relative">
+                                    <iframe
+                                        src={file.url}
+                                        className="w-full h-full"
+                                        title={file.name}
+                                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                    />
+                                    </div>
+                                )}
+                                <div className="p-4 flex items-center justify-between bg-muted/50">
+                                    <div className="truncate flex-1 mr-4 text-primary underline">
+                                    <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {file.url}
+                                    </a>
+                                    </div>
+                                    <Button variant="outline" size="sm" asChild>
+                                    <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Open Link
+                                    </a>
+                                    </Button>
+                                </div>
+                                </div>
+                            )}
+                            </div>
+                        </div>
+                        );
+                    })
+                    ) : (
+                    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground bg-muted/50 rounded-xl border border-dashed">
+                        <FileText className="w-12 h-12 mb-3 opacity-20" />
+                        <p>No works uploaded yet.</p>
+                    </div>
+                    )}
+                </div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Right Column: Members */}
+        <div className="space-y-8">
+            <Card className="border-none shadow-md bg-card">
+                <CardHeader className="border-b bg-muted/50 px-6 py-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+                    <Users className="w-5 h-5 text-primary" />
+                    Team Members
+                </CardTitle>
+                <Badge variant="secondary" className="font-normal">
+                    {membersData.length} / {eventData?.maxTeamMembers || "-"}
+                </Badge>
+                </CardHeader>
+                <CardContent className="p-6">
+                <div className="space-y-4">
+                    {membersData.map((m) => (
+                    <div
+                        key={m.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors shadow-sm relative group"
+                    >
+                        <UserAvatar user={m} className="w-10 h-10 border-2 border-background shadow-sm" />
+                        <div className="overflow-hidden flex-1">
+                        <div className="font-medium truncate text-foreground">{m.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                            @{m.username || "user"}
+                        </div>
+                        {m.isLeader && (
+                            <Badge variant="secondary" className="mt-1 text-[10px] h-5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800/50">
+                            Leader
+                            </Badge>
+                        )}
+                        </div>
+                        {project.isLeader && !m.isLeader && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            onClick={() => handleRemoveMember(m.id)}
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                        )}
+                    </div>
+                    ))}
+                    {membersData.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                        No members yet.
+                    </div>
                     )}
 
-                    <div className="border rounded-lg overflow-hidden bg-slate-50">
-                      {isImage ? (
-                        <div
-                          className="relative w-full h-[400px] cursor-zoom-in group"
-                          onClick={() => setPreviewImage(file.url)}
+                    {project.isLeader && (
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2 border-dashed border-2 hover:border-primary hover:text-primary"
+                        onClick={() => setInviteOpen(true)}
+                        disabled={
+                            !!eventData?.maxTeamMembers &&
+                            membersData.length >= eventData.maxTeamMembers
+                        }
                         >
-                          <Image
-                            src={file.url}
-                            alt={file.name}
-                            fill
-                            className="object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
-                          </div>
-                          <div className="absolute bottom-0 right-0 p-3 flex justify-end">
-                            <Button variant="outline" size="sm" asChild>
-                              <a
-                                href={file.url}
-                                download
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Download className="w-4 h-4" />
-                                Download Image
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      ) : isPdf ? (
-                        <div className="flex flex-col">
-                            <iframe
-                            src={`${file.url}#toolbar=0`}
-                            className="w-full h-[500px]"
-                            title={file.name}
-                            />
-                            <div className="p-3 bg-white border-t flex justify-end">
-                                <Button variant="outline" size="sm" asChild>
-                                    <a
-                                    href={file.url}
-                                    download
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center gap-2"
-                                    >
-                                    <Download className="w-4 h-4" />
-                                    Download PDF
-                                    </a>
-                                </Button>
-                            </div>
-                        </div>
-                      ) : isYoutube && youtubeId ? (
-                        <div className="aspect-video w-full">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${youtubeId}`}
-                            title={file.name}
-                            className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex flex-col">
-                          {/* Preview attempt for other links if it is a URL type */}
-                          {isUrlType && (
-                            <div className="w-full h-[400px] bg-white border-b relative">
-                              <iframe
-                                src={file.url}
-                                className="w-full h-full"
-                                title={file.name}
-                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                              />
-                            </div>
-                          )}
-                          <div className="p-4 flex items-center justify-between bg-slate-50">
-                            <div className="truncate flex-1 mr-4 text-blue-600 underline">
-                              <a
-                                href={file.url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {file.url}
-                              </a>
-                            </div>
-                            <Button variant="outline" size="sm" asChild>
-                              <a
-                                href={file.url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                Open Link
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No works uploaded yet.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Member
+                        </Button>
+                    )}
+                </div>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
 
       {/* Banner Dialog */}
       <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
@@ -773,15 +834,15 @@ export default function ProjectDetailPage({ params }: Props) {
 
       {/* Files Dialog */}
       <Dialog open={filesOpen} onOpenChange={setFilesOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Project Files</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-xl">Manage Project Files</DialogTitle>
             <DialogDescription>
-              Upload required documents and files for your project.
+              Upload and manage required documents for your project.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4">
             {(eventData?.fileTypes || []).map((ft) => {
               const uploaded = project.files?.find(
                 (f) => f.fileTypeId === ft.id
@@ -792,35 +853,35 @@ export default function ProjectDetailPage({ params }: Props) {
               return (
                 <div
                   key={ft.id}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-4 border rounded-lg p-4 bg-slate-50/50"
+                  className="flex flex-col md:flex-row gap-4 p-4 border rounded-xl bg-card hover:bg-muted/50 transition-colors items-start"
                 >
                   {/* Info Section */}
-                  <div className="md:col-span-5 space-y-2">
+                  <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold">{ft.name}</span>
+                      <span className="font-semibold text-sm md:text-base">{ft.name}</span>
                       {ft.isRequired && (
-                        <Badge variant="destructive" className="text-[10px]">
+                        <Badge variant="destructive" className="text-[10px] px-1.5 h-5">
                           Required
                         </Badge>
                       )}
                       {uploaded && (
-                        <Badge className="bg-green-600 hover:bg-green-700 text-[10px]">
+                        <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800/50 border-green-200 dark:border-green-800 text-[10px] px-1.5 h-5">
                           Uploaded
                         </Badge>
                       )}
                     </div>
                     {ft.description && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground leading-snug">
                         {ft.description}
                       </p>
                     )}
-                    <p className="text-xs text-muted-foreground font-mono bg-slate-100 w-fit px-1 rounded">
-                      Allowed: {ft.allowedFileTypes.join(", ")}
+                    <p className="text-xs text-muted-foreground font-mono bg-muted w-fit px-1.5 py-0.5 rounded border">
+                      {ft.allowedFileTypes.join(", ")}
                     </p>
                   </div>
 
                   {/* Actions Section */}
-                  <div className="md:col-span-7 flex flex-col justify-center gap-3">
+                  <div className="w-full md:w-[280px] flex flex-col justify-center gap-3 shrink-0">
                     {isUrlType ? (
                       <div className="flex flex-col gap-2 w-full">
                         <div className="flex gap-2 w-full items-center">
@@ -829,7 +890,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             placeholder="https://..."
                             defaultValue={uploaded?.url || ""}
                             disabled={isUploading}
-                            className="text-sm bg-white"
+                            className="h-9 text-sm bg-background"
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 handleFileUpload(
@@ -851,6 +912,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           <Button
                             size="sm"
                             disabled={isUploading}
+                            className="h-9"
                             onClick={() => {
                               const input = document.getElementById(
                                 `url-input-${ft.id}`
@@ -861,7 +923,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             }}
                           >
                             {isUploading ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <Loader2 className="w-3 h-3 animate-spin" />
                             ) : (
                               "Save"
                             )}
@@ -872,22 +934,23 @@ export default function ProjectDetailPage({ params }: Props) {
                         <div className="flex justify-end gap-2">
                           {uploaded && (
                             <>
-                              <Button size="sm" variant="outline" asChild>
+                              <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
                                 <a
                                   href={uploaded.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex items-center gap-2"
+                                  className="flex items-center gap-1.5"
                                 >
-                                  <Share2 className="w-3 h-3" /> Open Link
+                                  <Share2 className="w-3 h-3" /> Open
                                 </a>
                               </Button>
                               <Button
                                 size="sm"
-                                variant="destructive"
+                                variant="ghost"
+                                className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => handleDeleteFile(ft.id!)}
                               >
-                                <X className="w-3 h-3 mr-1" /> Delete
+                                <X className="w-3 h-3 mr-1" /> Remove
                               </Button>
                             </>
                           )}
@@ -909,6 +972,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           <Button
                             variant={uploaded ? "outline" : "default"}
                             size="sm"
+                            className="w-full h-9"
                             disabled={isUploading}
                             onClick={() =>
                               document.getElementById(`file-${ft.id}`)?.click()
@@ -925,22 +989,23 @@ export default function ProjectDetailPage({ params }: Props) {
 
                         {uploaded && (
                           <div className="flex gap-2 justify-end w-full">
-                            <Button size="sm" variant="secondary" asChild>
+                            <Button size="sm" variant="secondary" className="h-7 text-xs" asChild>
                               <a
                                 href={uploaded.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-1.5"
                               >
-                                <FileText className="w-3 h-3" /> Download
+                                <Download className="w-3 h-3" /> Download
                               </a>
                             </Button>
                             <Button
                               size="sm"
-                              variant="destructive"
+                              variant="ghost"
+                              className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => ft.id && handleDeleteFile(ft.id)}
                             >
-                              <X className="w-3 h-3 mr-1" /> Delete
+                              <X className="w-3 h-3 mr-1" /> Remove
                             </Button>
                           </div>
                         )}
@@ -952,83 +1017,93 @@ export default function ProjectDetailPage({ params }: Props) {
             })}
 
             {(!eventData?.fileTypes || eventData.fileTypes.length === 0) && (
-              <div className="text-center py-8 text-muted-foreground">
-                No specific file requirements for this event.
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border-2 border-dashed rounded-xl bg-muted/50">
+                <FileText className="w-10 h-10 mb-2 opacity-20" />
+                <p>No specific file requirements for this event.</p>
               </div>
             )}
           </div>
-          <DialogFooter>
+          <div className="p-4 border-t bg-muted/50 flex justify-end">
             <Button onClick={() => setFilesOpen(false)}>Close</Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Invite Member Dialog */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-2 border-b bg-muted/50">
             <DialogTitle>Add Team Member</DialogTitle>
             <DialogDescription>
-              Search for a presenter by name or username to add them to your
-              team.
+              Search for a presenter by name or username.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="p-4 space-y-4">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or username..."
-                className="pl-9"
+                placeholder="Search users..."
+                className="pl-9 bg-muted/50 border-border focus-visible:ring-1"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
               />
             </div>
 
-            <div className="h-[200px] border rounded-md p-2 overflow-y-auto">
+            <div className="h-[300px] overflow-y-auto rounded-lg border bg-muted/30 p-2">
               {isSearching ? (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Searching...
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
+                  <span className="text-xs">Searching...</span>
                 </div>
               ) : candidates.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {candidates.map((c) => (
                     <div
-                      key={c.id}
-                      className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md group"
+                      key={c.userId}
+                      className="flex items-center justify-between p-2 hover:bg-card hover:shadow-sm rounded-lg transition-all group border border-transparent hover:border-border"
                     >
-                      <div className="flex items-center gap-3">
-                        <UserAvatar user={c} className="w-8 h-8" />
-                        <div>
-                          <div className="text-sm font-medium">{c.name}</div>
-                          <div className="text-xs text-muted-foreground">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <UserAvatar user={c} className="w-9 h-9 border bg-card" />
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate text-foreground">
+                            {c.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
                             @{c.username}
                           </div>
                         </div>
                       </div>
                       <Button
                         size="sm"
-                        variant="ghost"
-                        className="opacity-0 group-hover:opacity-100"
+                        variant="secondary"
+                        className="h-8 px-3 shadow-sm opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0"
                         onClick={() => handleAddMember(c.userId)}
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-3.5 h-3.5 mr-1.5" />
                         Add
                       </Button>
                     </div>
                   ))}
                 </div>
               ) : searchQuery.length >= 2 ? (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                  No candidates found.
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
+                  <Users className="w-8 h-8" />
+                  <span className="text-sm">No users found.</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                  Type at least 2 characters to search.
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
+                  <Search className="w-8 h-8" />
+                  <span className="text-sm">Type to search...</span>
                 </div>
               )}
             </div>
+          </div>
+          <div className="p-3 bg-muted border-t flex justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
+              Cancel
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1060,6 +1135,44 @@ export default function ProjectDetailPage({ params }: Props) {
         onSuccess={fetchData}
         eventId={id}
       />
+
+      {/* Share Dialog */}
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Project</DialogTitle>
+            <DialogDescription>
+              Scan the QR code or copy the link to share this project.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-6 py-4">
+            {shareQrSrc ? (
+              <div className="relative group/qr">
+                 <Image 
+                    src={shareQrSrc} 
+                    alt="Project QR" 
+                    width={240} 
+                    height={240} 
+                    className="rounded-lg border shadow-sm" 
+                 />
+              </div>
+            ) : (
+              <Skeleton className="w-[240px] h-[240px] rounded-lg" />
+            )}
+            
+            <div className="flex w-full gap-2">
+              <Input 
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/event/${id}/Projects/${projectId}`} 
+                readOnly 
+                className="bg-muted text-sm font-mono"
+              />
+              <Button size="icon" variant="outline" onClick={() => copyToClipboard(`${window.location.origin}/event/${id}/Projects/${projectId}`)}>
+                <ClipboardCopy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

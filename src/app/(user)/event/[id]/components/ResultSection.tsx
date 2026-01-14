@@ -29,7 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { getEventRankings, getTeamById, getEvent } from "@/utils/apievent";
-import { generateMockRankings } from "./mockData";
+// import { generateMockRankings } from "./mockData";
 import {
   Bar,
   BarChart,
@@ -194,8 +194,9 @@ export default function ResultSection({ eventId, role }: Props) {
         const res = await getEventRankings(eventId);
 
         // Merge API data with Mock data
-        const mockData = generateMockRankings(50);
-        let combinedRankings = [...res.rankings, ...mockData];
+        let combinedRankings = [...res.rankings];
+        // const mockData = generateMockRankings(50);
+        // let combinedRankings = [...res.rankings, ...mockData];
 
         // Sort by totalReward descending and re-assign rank
         combinedRankings.sort((a, b) => b.totalReward - a.totalReward);

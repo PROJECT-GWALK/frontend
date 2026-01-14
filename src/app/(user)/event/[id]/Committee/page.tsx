@@ -91,6 +91,7 @@ export default function CommitteePage(props: Props) {
   const [userProject, setUserProject] = useState<LocalProject | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Committee-specific UI state for project interactions
   const [projectRewards, setProjectRewards] = useState<
@@ -98,6 +99,7 @@ export default function CommitteePage(props: Props) {
   >({});
 
   const fetchTeamsData = async () => {
+    setProjectsLoading(true);
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
@@ -116,6 +118,7 @@ export default function CommitteePage(props: Props) {
             })) || [],
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          createdAt: t.createdAt,
           totalVr: t.totalVr,
         }));
         setProjects(mappedProjects);
@@ -140,6 +143,8 @@ export default function CommitteePage(props: Props) {
       }
     } catch (error) {
       console.error("Failed to fetch teams:", error);
+    } finally {
+      setProjectsLoading(false);
     }
   };
 
@@ -619,9 +624,10 @@ export default function CommitteePage(props: Props) {
                     <UnifiedProjectList
                       projects={projects}
                       role="COMMITTEE"
-                      eventId={id}
-                      searchQuery={searchQuery}
-                      filterStatus={filterStatus}
+                  eventId={id}
+                  searchQuery={searchQuery}
+                  loading={projectsLoading}
+                  filterStatus={filterStatus}
                       projectRewards={projectRewards}
                       userVrBalance={localEvent?.myVirtualTotal ?? 0}
                       onAction={handleAction}
@@ -684,6 +690,7 @@ export default function CommitteePage(props: Props) {
                     searchQuery={searchQuery}
                     filterStatus={filterStatus}
                     projectRewards={projectRewards}
+                    loading={projectsLoading}
                     onAction={handleAction}
                     onGiveVr={handleGiveVr}
                     onGiveSpecial={handleGiveSpecial}
@@ -691,6 +698,7 @@ export default function CommitteePage(props: Props) {
                     onPostComment={() => {
                       toast.success("ส่งความคิดเห็นเรียบร้อย");
                     }}
+                    onRefresh={fetchTeamsData}
                   />
                 </div>
               </div>

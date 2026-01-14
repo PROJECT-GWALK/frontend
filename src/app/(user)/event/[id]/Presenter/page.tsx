@@ -137,7 +137,7 @@ export default function PresenterView({ id, event }: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -226,10 +226,10 @@ export default function PresenterView({ id, event }: Props) {
             className="mt-6"
           >
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">Projects</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -489,7 +489,7 @@ export default function PresenterView({ id, event }: Props) {
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                         <Link
                           href={`/event/${id}/Projects/${userProject.id}`}
-                          className="relative w-full md:w-[180px] h-[120px] shrink-0 block overflow-hidden rounded-lg group border bg-muted"
+                          className="relative w-full md:w-45 h-30 shrink-0 block overflow-hidden rounded-lg group border bg-muted"
                         >
                           <Image
                             src={userProject.img || "/banner.png"}
@@ -526,6 +526,7 @@ export default function PresenterView({ id, event }: Props) {
                         <div className="shrink-0 flex items-center gap-2 mt-2 md:mt-0">
                           <Link
                             href={`/event/${id}/Projects/${userProject.id}`}
+                            target="_blank"
                           >
                             <Button variant="outline">Edit</Button>
                           </Link>
@@ -560,6 +561,7 @@ export default function PresenterView({ id, event }: Props) {
                     eventId={event.id}
                     role="PRESENTER"
                     loading={projectsLoading}
+                    onRefresh={fetchTeamsData}
                   />
                 </div>
               </div>

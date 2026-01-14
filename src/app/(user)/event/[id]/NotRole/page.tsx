@@ -20,7 +20,7 @@ export default function NotRoleView({ id, event, isAuthenticated }: Props) {
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full">
-        <div className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden">
+        <div className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden">
           <Image
             src={event?.imageCover || "/banner.png"}
             alt={event?.eventName || "Event banner"}
@@ -49,7 +49,7 @@ export default function NotRoleView({ id, event, isAuthenticated }: Props) {
 
           <Tabs value="information" className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
             </TabsList>
             <TabsContent value="information">
               <InformationSection id={id} event={event} editable={false} />

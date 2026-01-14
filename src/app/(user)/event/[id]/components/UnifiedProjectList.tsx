@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   Users,
   LayoutGrid,
+  RefreshCw,
 } from "lucide-react";
 import type { PresenterProject } from "../Presenter/components/types";
 import type { SpecialReward } from "@/utils/types";
@@ -77,6 +78,7 @@ type Props = {
   onGiveVr?: (projectId: string, amount: number) => Promise<void> | void;
   onGiveSpecial?: (projectId: string, rewardId: string) => Promise<void> | void;
   unusedAwards?: SpecialReward[];
+  onRefresh?: () => void;
 };
 import { Input } from "@/components/ui/input";
 
@@ -96,6 +98,7 @@ export default function UnifiedProjectList({
   onGiveVr,
   onGiveSpecial,
   unusedAwards = [],
+  onRefresh,
 }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [teamToDelete, setTeamToDelete] = React.useState<string | null>(null);
@@ -185,19 +188,36 @@ export default function UnifiedProjectList({
     }
   );
 
-  if (filtered.length === 0) {
+  // Sort by createdAt (Ascending: Oldest to Newest)
+  const sorted = [...filtered].sort((a, b) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateA - dateB;
+  });
+
+  if (sorted.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 bg-muted/20 rounded-2xl border-2 border-dashed border-muted-foreground/20">
-        <div className="p-4 rounded-full bg-muted/50 ring-8 ring-muted/20">
-          <LayoutGrid className="w-8 h-8 text-muted-foreground/50" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-base font-semibold text-foreground">
-            ไม่พบผลงานที่ค้นหา
-          </p>
-          <p className="text-sm text-muted-foreground">
-            ลองค้นหาด้วยคำค้นอื่น หรือยังไม่มีทีมที่สร้างขึ้น
-          </p>
+      <div className="flex flex-col space-y-4">
+        {onRefresh && (
+            <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={onRefresh}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh
+                </Button>
+            </div>
+        )}
+        <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 bg-muted/20 rounded-2xl border-2 border-dashed border-muted-foreground/20">
+            <div className="p-4 rounded-full bg-muted/50 ring-8 ring-muted/20">
+            <LayoutGrid className="w-8 h-8 text-muted-foreground/50" />
+            </div>
+            <div className="space-y-1">
+            <p className="text-base font-semibold text-foreground">
+                ไม่พบผลงานที่ค้นหา
+            </p>
+            <p className="text-sm text-muted-foreground">
+                ลองค้นหาด้วยคำค้นอื่น หรือยังไม่มีทีมที่สร้างขึ้น
+            </p>
+            </div>
         </div>
       </div>
     );
@@ -207,8 +227,17 @@ export default function UnifiedProjectList({
 
   return (
     <>
+      <div className="flex flex-col gap-4">
+        {onRefresh && (
+            <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={onRefresh}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh
+                </Button>
+            </div>
+        )}
       <div className="grid gap-4">
-      {filtered.map((p, index) => (
+      {sorted.map((p, index) => (
         <Card
           key={p.id}
           className="group relative overflow-hidden border border-border/60 bg-card/40 hover:bg-card hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 rounded-xl flex flex-col"
@@ -294,6 +323,7 @@ export default function UnifiedProjectList({
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <Link
                 href={`/event/${eventId}/Projects/${p.id}`}
+                target="_blank"
                 className="w-full sm:w-auto sm:mr-auto"
               >
                 <Button
@@ -318,10 +348,10 @@ export default function UnifiedProjectList({
                   >
                     <Button
                       size="sm"
-                      className="h-9 px-3 font-medium bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 border-0 shadow-sm"
+                      className="h-9 px-3 font-medium bg-indigo-600 text-white hover:bg-indigo-700 border-0 shadow-sm"
                     >
                       <Gift className="w-4 h-4 mr-2" />
-                      Give Score
+                      Evaluate
                     </Button>
                   </Link>
                 )}
@@ -379,6 +409,7 @@ export default function UnifiedProjectList({
           </div>
         </Card>
       ))}
+      </div>
       </div>
 
       <Drawer open={commentOpen} onOpenChange={setCommentOpen}>

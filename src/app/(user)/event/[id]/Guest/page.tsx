@@ -149,6 +149,7 @@ export default function GuestView({ id, event }: Props) {
             })) || [],
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          createdAt: t.createdAt,
           totalVr: t.totalVr,
         }));
         setProjects(mappedProjects);
@@ -563,6 +564,7 @@ export default function GuestView({ id, event }: Props) {
                     onPostComment={() => {
                       toast.success("ส่งความคิดเห็นเรียบร้อย");
                     }}
+                    onRefresh={fetchTeamsData}
                   />
                 </div>
               </div>

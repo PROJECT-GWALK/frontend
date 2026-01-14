@@ -2,6 +2,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/utils/types";
 import { timeFormat, dateFormat } from "@/utils/settings";
 import React from "react";
+import * as QRCode from "qrcode";
+
+export async function generateQrCode(url: string, width: number = 400): Promise<string | null> {
+  try {
+    return await QRCode.toDataURL(url, { width });
+  } catch (err) {
+    console.error("QR Code generation failed:", err);
+    return null;
+  }
+}
 
 export function UserAvatar({
   user,
