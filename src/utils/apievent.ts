@@ -307,10 +307,19 @@ export const resetVr = async (eventId: string, projectId: string) => {
   return res.data;
 };
 
-export const giveSpecial = async (eventId: string, projectId: string, rewardId: string) => {
+export const giveSpecial = async (eventId: string, projectId: string, rewardIds: string[]) => {
   const res = await axios.put(
     `/backend/api/events/${eventId}/action/give-special`,
-    { projectId, rewardId },
+    { projectId, rewardIds },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
+export const giveComment = async (eventId: string, projectId: string, content: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/action/give-comment`,
+    { projectId, content },
     { withCredentials: true }
   );
   return res.data;

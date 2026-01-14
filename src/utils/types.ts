@@ -114,7 +114,8 @@ export type Team = {
   createdAt?: string;
   totalVr?: number;
   myReward?: number;
-  mySpecialReward?: string | null;
+  mySpecialRewards?: string[];
+  myComment?: string;
 };
 
 export type ProjectMember = {
@@ -198,6 +199,7 @@ export type EventData = {
   committeeVirtualUsed?: number;
   committeeFeedbackCount?: number;
   opinionsGot?: number;
+  myRole?: string | null;
   opinionsPresenter?: number;
   opinionsGuest?: number;
   opinionsCommittee?: number;

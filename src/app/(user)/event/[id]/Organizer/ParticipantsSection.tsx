@@ -61,6 +61,7 @@ type ParticipantRow = {
   eventGroup: EventGroup;
   isLeader: boolean;
   virtualReward?: number | null;
+  virtualUsed?: number;
   user?: ParticipantUser | null;
   team?: ParticipantTeam;
 };
@@ -540,41 +541,46 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
 
                                     {g !== "ORGANIZER" && g !== "PRESENTER" && (
                                       <td className="p-3">
-                                        <Input
-                                          type="number"
-                                          min={0}
-                                          step={1}
-                                          value={
-                                            typeof p.virtualReward === "number"
-                                              ? p.virtualReward
-                                              : 0
-                                          }
-                                          onChange={(e) => {
-                                            const raw = Number(e.target.value);
-                                            const val = Number.isFinite(raw)
-                                              ? Math.max(0, raw)
-                                              : 0;
-                                            setParticipants((all) =>
-                                              all.map((it) =>
-                                                it.id === p.id
-                                                  ? {
-                                                      ...it,
-                                                      virtualReward: val,
-                                                    }
-                                                  : it
-                                              )
-                                            );
-                                            const t = vrTimersRef.current[p.id];
-                                            if (t) clearTimeout(t);
-                                            vrTimersRef.current[p.id] =
-                                              setTimeout(() => {
-                                                applyUpdate(p.id, {
-                                                  virtualReward: val,
-                                                });
-                                              }, 500);
-                                          }}
-                                          className="w-24"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                                            {p.virtualUsed || 0} /
+                                          </span>
+                                          <Input
+                                            type="number"
+                                            min={0}
+                                            step={1}
+                                            value={
+                                              typeof p.virtualReward === "number"
+                                                ? p.virtualReward
+                                                : 0
+                                            }
+                                            onChange={(e) => {
+                                              const raw = Number(e.target.value);
+                                              const val = Number.isFinite(raw)
+                                                ? Math.max(0, raw)
+                                                : 0;
+                                              setParticipants((all) =>
+                                                all.map((it) =>
+                                                  it.id === p.id
+                                                    ? {
+                                                        ...it,
+                                                        virtualReward: val,
+                                                      }
+                                                    : it
+                                                )
+                                              );
+                                              const t = vrTimersRef.current[p.id];
+                                              if (t) clearTimeout(t);
+                                              vrTimersRef.current[p.id] =
+                                                setTimeout(() => {
+                                                  applyUpdate(p.id, {
+                                                    virtualReward: val,
+                                                  });
+                                                }, 500);
+                                            }}
+                                            className="w-24"
+                                          />
+                                        </div>
                                       </td>
                                     )}
                                     <td className="p-3 text-right">

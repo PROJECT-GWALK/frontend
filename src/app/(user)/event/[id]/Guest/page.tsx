@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building } from "lucide-react";
+import { Users, Building, BadgeCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -84,7 +84,8 @@ export default function GuestView({ id, event }: Props) {
       const res = await resetVr(id, projectId);
       setLocalEvent((prev) => (prev ? {
         ...prev,
-        myVirtualUsed: (prev.myVirtualTotal ?? 0) - res.newBalance
+        myVirtualTotal: res.totalLimit,
+        myVirtualUsed: res.totalUsed
       } : prev));
       setProjectRewards((prev) => ({
         ...prev,
@@ -106,7 +107,8 @@ export default function GuestView({ id, event }: Props) {
         if (!prev) return prev;
         return {
           ...prev,
-          myVirtualUsed: (prev.myVirtualTotal ?? 0) - res.newBalance,
+          myVirtualTotal: res.totalLimit,
+          myVirtualUsed: res.totalUsed,
         };
       });
       setProjectRewards((prev) => ({
@@ -276,6 +278,49 @@ export default function GuestView({ id, event }: Props) {
 
             <TabsContent value="dashboard">
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* My Virtual Rewards */}
+                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        <BadgeCheck className="h-5 w-5" />
+                      </div>
+                      {t("committeeSection.myVirtualRewards") || "My Virtual Rewards"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t("committeeSection.used") || "Used"}</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-bold">
+                            {localEvent?.myVirtualUsed ?? 0}
+                          </span>
+                          <span className="text-lg text-muted-foreground">
+                            / {localEvent?.myVirtualTotal ?? 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                        style={{
+                          width: `${
+                            ((localEvent?.myVirtualUsed ?? 0) /
+                              (localEvent?.myVirtualTotal || 1)) *
+                            100
+                          }%`,
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-amber-600 font-medium text-right">
+                      {t("committeeSection.remaining") || "Remaining"}{" "}
+                      {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)}
+                    </p>
+                  </CardContent>
+                </Card>
+
                 {/* จำนวนผู้เข้าร่วมทั้งหมด */}
                 <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>

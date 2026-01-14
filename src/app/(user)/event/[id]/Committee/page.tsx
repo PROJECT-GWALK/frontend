@@ -175,12 +175,13 @@ export default function CommitteePage(props: Props) {
   const handleResetVR = async (projectId: string) => {
     try {
       const res = await resetVr(id, projectId);
-      const refundAmount = res.newBalance - (localEvent?.myVirtualTotal ?? 0);
+      // Update local event state with new totals from backend
       setLocalEvent((prev) => (prev ? {
         ...prev,
-        myVirtualTotal: res.newBalance,
-        myVirtualUsed: (prev.myVirtualUsed ?? 0) - refundAmount
+        myVirtualTotal: res.totalLimit,
+        myVirtualUsed: res.totalUsed
       } : prev));
+      
       setProjectRewards((prev) => ({
         ...prev,
         [projectId]: {
@@ -216,11 +217,10 @@ export default function CommitteePage(props: Props) {
       const res = await giveVr(id, projectId, amount);
       setLocalEvent((prev) => {
         if (!prev) return prev;
-        const initialTotal = (prev.myVirtualTotal ?? 0) + (prev.myVirtualUsed ?? 0);
         return {
           ...prev,
-          myVirtualTotal: res.newBalance,
-          myVirtualUsed: initialTotal - res.newBalance,
+          myVirtualTotal: res.totalLimit,
+          myVirtualUsed: res.totalUsed,
         };
       });
       setProjectRewards((prev) => ({
@@ -238,7 +238,7 @@ export default function CommitteePage(props: Props) {
 
   const handleGiveSpecial = async (projectId: string, rewardId: string) => {
     try {
-      await giveSpecial(id, projectId, rewardId);
+      await giveSpecial(id, projectId, [rewardId]);
       fetchData();
       
       const rewardName = localEvent?.specialRewards?.find(r => r.id === rewardId)?.name || "Unknown";
@@ -414,13 +414,15 @@ export default function CommitteePage(props: Props) {
                       <div className="flex justify-between items-end">
                         <div>
                           <p className="text-sm text-muted-foreground">{t("committeeSection.used")}</p>
-                          <span className="text-2xl font-bold">
-                            {localEvent?.myVirtualUsed ?? 0}
-                          </span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold">
+                              {localEvent?.myVirtualUsed ?? 0}
+                            </span>
+                            <span className="text-lg text-muted-foreground">
+                              / {localEvent?.myVirtualTotal ?? 0}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("committeeSection.total")} {localEvent?.myVirtualTotal ?? 0}
-                        </span>
                       </div>
                       <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
                         <div

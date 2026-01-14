@@ -208,7 +208,7 @@ export default function UnifiedProjectList({
   return (
     <>
       <div className="grid gap-4">
-      {filtered.map((p) => (
+      {filtered.map((p, index) => (
         <Card
           key={p.id}
           className="group relative overflow-hidden border border-border/60 bg-card/40 hover:bg-card hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 rounded-xl flex flex-col"
@@ -224,11 +224,16 @@ export default function UnifiedProjectList({
               />
               <div className="absolute top-2 left-2 flex gap-1">
                 <Badge
+                  className="bg-primary/90 text-primary-foreground backdrop-blur-md text-[10px] font-bold shadow-sm border-none px-2 h-6 flex items-center"
+                >
+                  #{index + 1}
+                </Badge>
+                {/* <Badge
                   variant="secondary"
                   className="bg-background/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider shadow-sm border-none px-2 h-6 flex items-center"
                 >
                   Team
-                </Badge>
+                </Badge> */}
               </div>
             </div>
 
@@ -305,43 +310,20 @@ export default function UnifiedProjectList({
               </Link>
 
               <div className="flex flex-wrap items-center justify-end gap-2">
-                {role !== "ORGANIZER" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleActionInternal("comment", p.id)}
-                    className="h-9 px-3"
-                    title="แสดงความเห็น"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    คอมเมนต์
-                  </Button>
-                )}
-
                 {(role === "COMMITTEE" || role === "GUEST") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleActionInternal("give_vr", p.id)}
-                    className="h-9 px-3 font-medium text-primary hover:text-primary hover:bg-primary/10 border-primary/20"
-                    title="ให้ VR"
+                  <Link
+                    href={`/event/${eventId}/Projects/${p.id}/Scores`}
+                    target="_blank"
+                    className="w-full sm:w-auto"
                   >
-                    <Gift className="w-4 h-4 mr-2" />
-                    VR
-                  </Button>
-                )}
-
-                {role === "COMMITTEE" && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleActionInternal("give_special", p.id)}
-                    className="h-9 px-3 font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                    title="ให้รางวัลพิเศษ"
-                  >
-                    <Award className="w-4 h-4 mr-2" />
-                    Special
-                  </Button>
+                    <Button
+                      size="sm"
+                      className="h-9 px-3 font-medium bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 border-0 shadow-sm"
+                    >
+                      <Gift className="w-4 h-4 mr-2" />
+                      Give Score
+                    </Button>
+                  </Link>
                 )}
 
                 {(role === "ORGANIZER" || role === "COMMITTEE" || role === "GUEST") && (
