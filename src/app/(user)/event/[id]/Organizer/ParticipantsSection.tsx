@@ -69,6 +69,7 @@ type ParticipantRow = {
 type Props = {
   id: string;
   hasCommittee?: boolean;
+  unitReward?: string;
   onRefreshCounts?: (list: ParticipantRow[]) => void;
 };
 
@@ -101,7 +102,7 @@ const groupConfig = {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts }: Props) {
+export default function ParticipantsSection({ id, hasCommittee, unitReward, onRefreshCounts }: Props) {
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -397,7 +398,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                   )}
                                   {g !== "ORGANIZER" && g !== "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
-                                      Virtual Reward
+                                      Virtual Reward ({unitReward})
                                     </th>
                                   )}
                                   <th className="text-right p-3 font-semibold text-sm">
@@ -582,6 +583,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                             }}
                                             className="w-24"
                                           />
+                                          <span className="text-sm text-muted-foreground">{unitReward}</span>
                                         </div>
                                       </td>
                                     )}

@@ -152,8 +152,12 @@
   "notYetAwarded": "ยังไม่ได้แจก",
   "awardDistributionProgress": "แจกครบทุกครั้งแล้ว",
   "totalFeedbackReceived": "ความคิดเห็นทั้งหมดที่ได้รับ",
-  "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม"
-  
+  "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม",
+  "used": "ใช้ไปแล้ว",
+  "remainingAwards": "รางวัลที่เหลือ",
+  "votingProgress": "ความคืบหน้าการโหวต",
+  "totalVotes": "คะแนนโหวตทั้งหมด",
+  "availableAwards": "รางวัลทั้งหมด"
 }
 
     

@@ -72,6 +72,7 @@ export type EventDetail = {
   fileTypes?: EventFileType[];
 
   hasCommittee?: boolean;
+  unitReward?: string;
   committeeCount?: number;
   committeeReward?: number;
   hasGuestRewards?: boolean;
@@ -85,6 +86,8 @@ export type SpecialReward = {
   name: string;
   description: string;
   image?: string | null;
+  voteCount?: number;
+  teamCount?: number;
 };
 
 export type TeamFile = {
@@ -137,6 +140,7 @@ export type Candidate = {
 export type DraftEvent = {
   id: string;
   eventName: string;
+  createdAt: string;
   imageCover?: string | null;
   status: "PUBLISHED" | "DRAFT";
   publicView: boolean;
@@ -167,6 +171,7 @@ export type MyEvent = {
   endView?: string;
   startJoinDate?: string;
   endJoinDate?: string;
+  userRating?: number | null;
 };
 
 export type EventData = {
@@ -190,6 +195,7 @@ export type EventData = {
   location?: string;
   totalParticipants?: number;
   presentersCount?: number;
+  presenterTeams?: number;
   guestsCount?: number;
   committeeCount?: number;
   participantsVirtualTotal?: number;
@@ -207,7 +213,6 @@ export type EventData = {
   vrUsed?: number;
   awardsUnused?: SpecialReward[];
   specialRewards?: SpecialReward[];
-  presenterTeams?: number;
   specialPrizeUsed?: number;
   specialPrizeCount?: number;
   fileTypes?: EventFileType[];

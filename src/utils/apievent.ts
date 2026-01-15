@@ -282,6 +282,30 @@ export const deleteParticipant = async (eventId: string, pid: string) => {
   return res.data; // { message }
 };
 
+export const submitRating = async (eventId: string, rating: number, comment?: string) => {
+  const res = await axios.put(
+    `/backend/api/events/${eventId}/action/rate`,
+    { rating, comment },
+    { withCredentials: true }
+  );
+  return res.data;
+};
+
+export const getUserRating = async (eventId: string) => {
+  const res = await axios.get(
+    `/backend/api/events/${eventId}/action/rate`,
+    { withCredentials: true }
+  );
+  return res.data; // { rating, comment }
+};
+
+export const getPresenterStats = async (eventId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/presenter/stats`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, stats }
+};
+
 export const getEventRankings = async (eventId: string) => {
   const res = await axios.get(`/backend/api/events/${eventId}/rankings`, {
     withCredentials: true,
@@ -323,6 +347,14 @@ export const giveComment = async (eventId: string, projectId: string, content: s
     { withCredentials: true }
   );
   return res.data;
+};
+
+export const getComments = async (eventId: string, projectId: string) => {
+  const res = await axios.get(
+    `/backend/api/events/${eventId}/teams/${projectId}/comments`,
+    { withCredentials: true }
+  );
+  return res.data; // { message, comments: [...] }
 };
 
 export const resetSpecial = async (eventId: string, projectId: string) => {

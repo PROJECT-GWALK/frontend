@@ -180,11 +180,36 @@ export default function InviteConfirmPage() {
                 <div className="shrink-0">
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 text-center min-w-40">
                     <p className="text-sm text-muted-foreground mb-1">บทบาทของคุณ</p>
-                    <p className="text-xl font-bold text-primary capitalize">{inviteRole}</p>
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xl font-bold text-white px-3 py-1"
+                      style={{
+                        backgroundColor: `var(--role-${inviteRole.toLowerCase()})`
+                      }}
+                    >
+                      {inviteRole}
+                    </Badge>
                   </div>
                 </div>
               )}
             </div>
+
+            {event?.myRole && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
+                    <p className="text-yellow-800 dark:text-yellow-200">
+                        คุณเป็นสมาชิกของอีเวนต์นี้อยู่แล้วในฐานะ 
+                        <Badge 
+                            variant="secondary" 
+                            className="ml-2 text-white"
+                            style={{
+                                backgroundColor: `var(--role-${event.myRole.toLowerCase()})`
+                            }}
+                        >
+                            {event.myRole}
+                        </Badge>
+                    </p>
+                </div>
+            )}
           </CardHeader>
 
           <CardContent className="p-6 md:p-8 pt-0 space-y-8">

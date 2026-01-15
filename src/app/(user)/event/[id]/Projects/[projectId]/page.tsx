@@ -36,6 +36,7 @@ import {
 } from "@/utils/apievent";
 import { getCurrentUser } from "@/utils/apiuser";
 import EditProjectDialog from "../../Presenter/components/EditProjectDialog";
+import CommentSection from "../../Presenter/components/Comment";
 import type { PresenterProject } from "../../Presenter/components/types";
 import { type EventData, FileType, type ProjectMember, type Candidate, type Team, type DraftEvent, type MyEvent } from "@/utils/types";
 import { Input } from "@/components/ui/input";
@@ -416,7 +417,20 @@ export default function ProjectDetailPage({ params }: Props) {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Project Details</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Project Details</h1>
+              {eventData?.myRole && (
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs text-white"
+                  style={{
+                    backgroundColor: `var(--role-${eventData.myRole.toLowerCase()})`
+                  }}
+                >
+                  {eventData.myRole}
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">View details and works for {project.title}</p>
           </div>
         </div>
@@ -470,7 +484,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 <Button
                     size="sm"
                     className="h-9 px-3 font-medium bg-indigo-600 text-white hover:bg-indigo-700 border-0 shadow-sm"
-                    onClick={() => router.push(`/event/${id}/Projects/${projectId}/Scores`)}
+                    onClick={() => window.open(`/event/${id}/Projects/${projectId}/Scores`, "_blank")}
                   >
                     <Gift className="w-4 h-4 mr-2" />
                     Evaluate
@@ -782,22 +796,23 @@ export default function ProjectDetailPage({ params }: Props) {
                 </div>
                 </CardContent>
             </Card>
+            <CommentSection eventId={id} projectId={projectId} myRole={eventData?.myRole} />
         </div>
       </div>
 
       {/* Banner Dialog */}
       <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
         <DialogContent className="max-w-5xl p-0 overflow-hidden bg-transparent border-none shadow-none">
-          <DialogTitle className="sr-only">Event Banner</DialogTitle>
+          <DialogTitle className="sr-only">Project Banner</DialogTitle>
           <div className="relative w-full aspect-video">
             <Image
               src={
-                eventData?.imageCover &&
-                !eventData.imageCover.startsWith("data:image/png;base64src")
-                  ? eventData.imageCover
+                project?.img &&
+                !project.img.startsWith("data:image/png;base64src")
+                  ? project.img
                   : "/banner.png"
               }
-              alt={eventData?.eventName || "Event banner"}
+              alt={project?.title || "Project banner"}
               fill
               className="object-contain rounded-lg"
             />

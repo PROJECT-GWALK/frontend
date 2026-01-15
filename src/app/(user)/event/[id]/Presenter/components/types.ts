@@ -9,4 +9,5 @@ export type PresenterProject = {
   isLeader?: boolean;
   createdAt?: string;
   totalVr?: number;
+  myComment?: string;
 };

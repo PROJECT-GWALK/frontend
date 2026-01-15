@@ -18,6 +18,7 @@ import {
   Trophy,
   Coins,
   MessageSquare,
+  CheckCircle2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,6 +152,12 @@ export default function OrganizerView({ id, event }: Props) {
       setProjectsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (event) {
+      setLocalEvent(event);
+    }
+  }, [event]);
 
   useEffect(() => {
     fetchTeamsData();
@@ -314,13 +321,13 @@ export default function OrganizerView({ id, event }: Props) {
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {t("dashboard.presenterCount")}
+                      {t("dashboard.teamCount")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0}
-                      <span className="text-sm font-normal text-muted-foreground ml-2">{t("organizerDashboard.people")}</span>
+                      {localEvent?.presenterTeams ?? 0}
+                      <span className="text-sm font-normal text-muted-foreground ml-2">{t("organizerDashboard.team")}</span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {t("organizerDashboard.outOfTotalTeams")} {localEvent?.maxTeams ?? 0} {t("organizerDashboard.team")}
@@ -338,7 +345,7 @@ export default function OrganizerView({ id, event }: Props) {
                     <div className="text-2xl font-bold">{localEvent?.guestsCount ?? 0}</div>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
-                      {t("organizerDashboard.comments")}: {localEvent?.participantsCommentCount ?? 90}
+                      {t("organizerDashboard.comments")}: {localEvent?.participantsCommentCount ?? 0}
                     </div>
                   </CardContent>
                 </Card>
@@ -353,14 +360,14 @@ export default function OrganizerView({ id, event }: Props) {
                     <div className="text-2xl font-bold">{localEvent?.committeeCount ?? 0}</div>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
-                      {t("organizerDashboard.feedback")}: {localEvent?.committeeFeedbackCount ?? 10}
+                      {t("organizerDashboard.feedback")}: {localEvent?.opinionsCommittee ?? 0}
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* SECTION 2: REWARDS & GAMIFICATION */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Virtual Rewards - Progress Bar Visualization */}
                 <Card className="lg:col-span-1 border-t-4 border-t-amber-500 shadow-sm">
                   <CardHeader>
@@ -371,20 +378,22 @@ export default function OrganizerView({ id, event }: Props) {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-end">
                       <span className="text-3xl font-bold text-amber-600">
-                        {localEvent?.vrUsed?.toLocaleString(timeFormat) ?? "20,000"}
+                        {localEvent?.vrUsed?.toLocaleString(timeFormat) ?? "0"}
                       </span>
                       <span className="text-sm text-muted-foreground mb-1">
-                        / {localEvent?.vrTotal?.toLocaleString(timeFormat) ?? "50,000"} coins
+                        / {localEvent?.vrTotal?.toLocaleString(timeFormat) ?? "0"} {localEvent?.unitReward ?? "coins"}
                       </span>
                     </div>
 
                     {/* Custom Progress Bar */}
                     <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-amber-500 rounded-full"
+                        className="h-full bg-amber-500 rounded-full transition-all duration-500"
                         style={{
                           width: `${
-                            ((localEvent?.vrUsed ?? 20000) / (localEvent?.vrTotal ?? 50000)) * 100
+                            localEvent?.vrTotal && localEvent.vrTotal > 0 
+                            ? ((localEvent?.vrUsed ?? 0) / localEvent.vrTotal) * 100 
+                            : 0
                           }%`,
                         }}
                       />
@@ -392,73 +401,104 @@ export default function OrganizerView({ id, event }: Props) {
 
                     <div className="text-xs text-muted-foreground pt-1 flex justify-between">
                       <span>
-                        {t("organizerDashboard.remaining")}{" "}
-                        {localEvent?.vrUsed && localEvent?.vrTotal
+                        {t("organizerDashboard.used")}{" "}
+                        {localEvent?.vrUsed && localEvent?.vrTotal && localEvent.vrTotal > 0
                           ? Math.round((localEvent.vrUsed / localEvent.vrTotal) * 100)
-                          : 40}
+                          : 0}
                         %
                       </span>
                       <span>
-                        {t("organizerDashboard.remaining")} {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
+                        {t("organizerDashboard.remaining")} {(localEvent?.vrTotal ?? 0) - (localEvent?.vrUsed ?? 0)} {localEvent?.unitReward ?? "coins"}
                       </span>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Special Prizes - Simple Stats */}
-                <Card className="lg:col-span-1 shadow-sm">
+                {/* Special Prizes - Voting Status */}
+                <Card className="lg:col-span-1 border-t-4 border-t-purple-500 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-purple-600" />{t("organizerDashboard.specialAwards")}
+                    <CardTitle className="flex items-center gap-2 text-purple-700">
+                      <Trophy className="h-5 w-5" /> {t("organizerDashboard.votingProgress")}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-purple-50 p-3 rounded-lg text-center">
-                        <div className="text-2xl font-bold text-purple-700">
-                          {localEvent?.specialPrizeUsed ?? 4}
-                        </div>
-                        <div className="text-xs text-purple-900/60">{t("organizerDashboard.awarded")}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg text-center border">
-                        <div className="text-2xl font-bold text-gray-700">
-                          {localEvent?.specialPrizeCount ?? 5}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{t("organizerDashboard.total")}</div>
+                  <CardContent className="space-y-4">
+                    {/* Stats Row */}
+                    <div className="flex justify-between items-end">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-purple-700">
+                           {localEvent?.specialPrizeUsed ?? 0}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          / {(localEvent?.committeeCount ?? 0) * (localEvent?.specialPrizeCount ?? 0)} {t("organizerDashboard.totalVotes")}
+                        </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    {/* Progress Bar */}
+                     <div className="h-2 w-full bg-purple-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            ((localEvent?.committeeCount ?? 0) * (localEvent?.specialPrizeCount ?? 0)) > 0 
+                            ? ((localEvent?.specialPrizeUsed ?? 0) / ((localEvent?.committeeCount ?? 0) * (localEvent?.specialPrizeCount ?? 0))) * 100 
+                            : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
 
-                {/* Unused Awards - Badge List */}
-                <Card className="lg:col-span-1 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Gift className="h-5 w-5 text-pink-600" /> ยังไม่ได้แจก
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {localEvent?.awardsUnused && localEvent.awardsUnused.length > 0 ? (
-                        localEvent.awardsUnused.map((a, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 border border-pink-200"
-                          >
-                            {typeof a === "string" ? a : a.name}
-                          </span>
-                        ))
-                      ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                          <AlertCircle className="h-4 w-4" />{t("organizerDashboard.awardDistributionProgress")}
-                        </div>
-                      )}
-                      {/* Fallback for demo if data is null */}
-                      {!localEvent?.awardsUnused && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                          รางวัล AI ยอดเยี่ยม
-                        </span>
-                      )}
+                    {/* Available Awards List */}
+                    <div className="pt-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                        <Gift className="h-3 w-3" /> {t("organizerDashboard.availableAwards")}
+                      </p>
+                      <div className="space-y-3">
+                        {localEvent?.specialRewards && localEvent.specialRewards.length > 0 ? (
+                          localEvent.specialRewards.map((reward, i) => (
+                            <div key={reward.id || i} className="flex items-start gap-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
+                              {/* Badge Image */}
+                              <div className="relative w-10 h-10 shrink-0 rounded-md overflow-hidden bg-white border shadow-sm">
+                                {reward.image ? (
+                                  <Image src={reward.image} alt={reward.name} fill className="object-cover" />
+                                ) : (
+                                  <div className="flex items-center justify-center w-full h-full text-purple-300">
+                                    <Trophy className="w-5 h-5" />
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-1">
+                                  <span className="text-sm font-semibold text-purple-900 truncate block pr-2">{reward.name}</span>
+                                  <span className="text-xs font-medium text-purple-600 shrink-0 bg-white px-2 py-0.5 rounded-full border border-purple-100 shadow-sm">
+                                    {reward.voteCount ?? 0} votes
+                                  </span>
+                                </div>
+                                
+                                {/* Mini Progress Bar */}
+                                <div className="h-1.5 w-full bg-purple-200 rounded-full overflow-hidden mb-1.5">
+                                  <div 
+                                    className="h-full bg-purple-500 rounded-full transition-all duration-500" 
+                                    style={{ width: `${localEvent?.committeeCount && localEvent.committeeCount > 0 ? Math.min(100, ((reward.voteCount ?? 0) / localEvent.committeeCount) * 100) : 0}%` }}
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                  <span>
+                                     Committees: {reward.voteCount ?? 0}/{localEvent?.committeeCount ?? 0}
+                                  </span>
+                                  <span>
+                                     Candidates: {reward.teamCount ?? 0} teams
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                           <span className="text-xs text-muted-foreground italic">No special awards configured</span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -482,7 +522,7 @@ export default function OrganizerView({ id, event }: Props) {
                   <div className="flex gap-8 text-center">
                     <div>
                       <div className="text-3xl font-bold text-slate-800">
-                        {localEvent?.opinionsGot ?? 33}
+                        {localEvent?.opinionsGot ?? 0}
                       </div>
                       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         {t("organizerDashboard.total")}
@@ -492,19 +532,19 @@ export default function OrganizerView({ id, event }: Props) {
                     <div className="grid grid-cols-3 gap-6 text-left">
                       <div>
                         <div className="text-xl font-bold text-slate-700">
-                          {localEvent?.opinionsPresenter ?? 10}
+                          {localEvent?.opinionsPresenter ?? 0}
                         </div>
                         <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.presenters")}</div>
                       </div>
                       <div>
                         <div className="text-xl font-bold text-slate-700">
-                          {localEvent?.opinionsGuest ?? 20}
+                          {localEvent?.opinionsGuest ?? 0}
                         </div>
                         <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.guests")}</div>
                       </div>
                       <div>
                         <div className="text-xl font-bold text-slate-700">
-                          {localEvent?.opinionsCommittee ?? 3}
+                          {localEvent?.opinionsCommittee ?? 0}
                         </div>
                         <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.committee")}</div>
                       </div>
@@ -562,6 +602,7 @@ export default function OrganizerView({ id, event }: Props) {
                     toast.success("ส่งความคิดเห็นเรียบร้อย");
                   }}
                   onRefresh={fetchTeamsData}
+                  unitReward={localEvent?.unitReward ?? "coins"}
                 />
               </div>
             </TabsContent>
@@ -570,6 +611,7 @@ export default function OrganizerView({ id, event }: Props) {
               <ParticipantsSection
                 id={id}
                 hasCommittee={localEvent?.hasCommittee}
+                unitReward={localEvent?.unitReward}
                 onRefreshCounts={(list) => {
                   setLocalEvent((prev) => ({
                     ...prev,

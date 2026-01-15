@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, CalendarPlus, MoreHorizontal, ChevronRight, Calendar, Users, Eye } from "lucide-react";
+import { Search, CalendarPlus, MoreHorizontal, ChevronRight, Calendar, Users, Eye, Star } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -199,14 +199,14 @@ export default function DashboardPage() {
 
   // รวม drafts และ myEvents เข้าด้วยกัน
   const allEvents = [
-    ...drafts.map(d => ({ ...d, isDraft: true })),
-    ...myEvents.map(e => ({ ...e, isDraft: false }))
+    ...drafts.map(d => ({ ...d, isDraft: true as const })),
+    ...myEvents.map(e => ({ ...e, isDraft: false as const }))
   ];
 
   // กรองตาม filter และ search
   const filteredEvents = allEvents.filter((event) => {
     const matchText = event.eventName.toLowerCase().includes(search.toLowerCase());
-    const matchRole = roleFilter === "ALL" || event.role === roleFilter;
+    const matchRole = roleFilter === "ALL" || (!event.isDraft && event.role === roleFilter);
     const eventStatus = getEventStatus(event);
     
     if (filter === "all") return matchText && (event.isDraft || matchRole);
@@ -371,7 +371,7 @@ export default function DashboardPage() {
                     const hasBanner = Boolean(event.imageCover);
                     const eventStatus = getEventStatus(event);
                     const badge = getStatusBadge(eventStatus);
-                    const roleColor = getRoleColorVar(event.role ?? undefined);
+                    const roleColor = !event.isDraft ? getRoleColorVar(event.role ?? undefined) : undefined;
                     
                     return (
                       <Card
@@ -486,7 +486,23 @@ export default function DashboardPage() {
                           </Link>
 
                           {/* Actions */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0 relative z-10 w-full sm:w-auto">
+                            {!event.isDraft && eventStatus === "finished" && event.role !== "ORGANIZER" && (
+                              <Link href={`/event/${event.id}/FeedbackEvent`}>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className={`w-full sm:w-auto ${
+                                    event.userRating 
+                                      ? "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/30" 
+                                      : "border-primary/20 hover:border-primary/50 text-primary hover:bg-primary/5"
+                                  }`}
+                                >
+                                  <Star className={`mr-1 h-3 w-3 ${event.userRating ? "fill-yellow-500 text-yellow-500" : "text-primary"}`} />
+                                  {event.userRating ? `Rated (${event.userRating})` : "Rate"}
+                                </Button>
+                              </Link>
+                            )}
                             <Link href={`/event/${event.id}`}>
                               <Button size="sm" variant={event.isDraft ? "default" : "outline"}>
                                 {event.isDraft ? "Edit" : "Open"}

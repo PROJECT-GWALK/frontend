@@ -7,10 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Gift, MessageSquare, Trophy, ArrowLeft, Loader2, Share2, ClipboardCopy } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import * as QRCode from "qrcode";
 import { getEvent, getTeamById, giveVr, giveSpecial, giveComment } from '@/utils/apievent';
 import { EventData, Team } from '@/utils/types';
 import { toast } from 'sonner';
@@ -236,7 +236,20 @@ export default function ScorePage() {
                  </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Evaluate</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">Evaluate</h1>
+                  {myRole && (
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs text-white"
+                      style={{
+                        backgroundColor: `var(--role-${myRole.toLowerCase()})`
+                      }}
+                    >
+                      {myRole}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">Manage rewards and feedback for {team.teamName}</p>
               </div>
            </div>
@@ -317,7 +330,7 @@ export default function ScorePage() {
                     </div>
                     <div className="text-right hidden md:block">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Remaining Points</p>
-                        <p className="text-2xl font-bold text-foreground">{myVirtualTotal - myVirtualUsed}</p>
+                        <p className="text-2xl font-bold text-foreground">{myVirtualTotal - myVirtualUsed} {event?.unitReward ?? "coins"}</p>
                     </div>
                 </div>
               </CardHeader>
@@ -329,7 +342,7 @@ export default function ScorePage() {
                         <p className="text-sm font-medium text-muted-foreground">Budget Usage</p>
                         <div className="flex items-baseline gap-1 md:hidden">
                             <span className="text-sm text-muted-foreground">Remaining:</span>
-                            <span className="font-bold text-foreground">{myVirtualTotal - myVirtualUsed}</span>
+                            <span className="font-bold text-foreground">{myVirtualTotal - myVirtualUsed} {event?.unitReward ?? "coins"}</span>
                         </div>
                     </div>
                     
@@ -342,13 +355,13 @@ export default function ScorePage() {
                     <div className="flex justify-between text-xs text-muted-foreground font-medium">
                         <span>0 Used</span>
                         <span>{Math.round((myVirtualUsed / (myVirtualTotal || 1)) * 100)}% Budget Used</span>
-                        <span>{myVirtualTotal} Total</span>
+                        <span>{myVirtualTotal} {event?.unitReward ?? "coins"} Total</span>
                     </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div className="flex flex-col space-y-2">
-                    <Label htmlFor="virtual-amount" className="text-base font-semibold text-foreground">Points Amount</Label>
+                    <Label htmlFor="virtual-amount" className="text-base font-semibold text-foreground">Points Amount ({event?.unitReward ?? "coins"})</Label>
                     <p className="text-sm text-muted-foreground">Enter the amount of points you want to award this team.</p>
                   </div>
                   

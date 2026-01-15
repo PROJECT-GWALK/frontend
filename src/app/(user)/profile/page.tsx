@@ -32,6 +32,7 @@ interface ParticipatedEvent {
   teamName: string;
   place: string;
   specialReward: string;
+  userRating?: number;
 }
 
 interface OrganizedEvent {
@@ -199,7 +200,7 @@ export default function ProfilePage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="h-32 text-center">
+                        <TableCell colSpan={5} className="h-32 text-center">
                           <div className="flex flex-col items-center justify-center text-muted-foreground">
                             <Calendar className="w-8 h-8 mb-2 opacity-20" />
                             <p>No participated events found</p>

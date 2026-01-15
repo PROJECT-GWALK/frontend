@@ -92,12 +92,7 @@ type ChartEntry = {
   totalReward: number;
 };
 
-const chartConfig = {
-  totalReward: {
-    label: "VR Points",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig;
+
 
 export default function ResultSection({ eventId, role }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -110,6 +105,16 @@ export default function ResultSection({ eventId, role }: Props) {
   const [topN, setTopN] = useState("5");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [eventInfo, setEventInfo] = useState<EventDetail | null>(null);
+
+  const chartConfig = useMemo(
+    () => ({
+      totalReward: {
+        label: `${eventInfo?.unitReward ?? "coins"}`,
+        color: "hsl(var(--chart-1))",
+      },
+    }),
+    [eventInfo?.unitReward]
+  ) satisfies ChartConfig;
 
   // Team Selection State
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
@@ -480,7 +485,7 @@ export default function ResultSection({ eventId, role }: Props) {
                 </div>
               </div>
               <CardDescription>
-                Visualizing the top performing teams based on VR points.
+                Visualizing the top performing teams based on VR points ({eventInfo?.unitReward ?? "Points"}).
               </CardDescription>
             </CardHeader>
             <CardContent className="lg:flex-1 lg:min-h-0">

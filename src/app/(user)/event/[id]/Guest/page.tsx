@@ -151,6 +151,7 @@ export default function GuestView({ id, event }: Props) {
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
           createdAt: t.createdAt,
           totalVr: t.totalVr,
+          myComment: t.myComment,
         }));
         setProjects(mappedProjects);
 
@@ -298,7 +299,7 @@ export default function GuestView({ id, event }: Props) {
                             {localEvent?.myVirtualUsed ?? 0}
                           </span>
                           <span className="text-lg text-muted-foreground">
-                            / {localEvent?.myVirtualTotal ?? 0}
+                            / {localEvent?.myVirtualTotal ?? 0} {localEvent?.unitReward ?? "coins"}
                           </span>
                         </div>
                       </div>
@@ -317,7 +318,7 @@ export default function GuestView({ id, event }: Props) {
                     </div>
                     <p className="text-xs text-amber-600 font-medium text-right">
                       {t("committeeSection.remaining") || "Remaining"}{" "}
-                      {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)}
+                      {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)} {localEvent?.unitReward ?? "coins"}
                     </p>
                   </CardContent>
                 </Card>
@@ -441,7 +442,7 @@ export default function GuestView({ id, event }: Props) {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">{t("dashboard.usedAlready")}</span>
-                      <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000}</span>
+                      <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000} {localEvent?.unitReward ?? "coins"}</span>
                     </div>
                     <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
                       <div
@@ -565,6 +566,7 @@ export default function GuestView({ id, event }: Props) {
                       toast.success("ส่งความคิดเห็นเรียบร้อย");
                     }}
                     onRefresh={fetchTeamsData}
+                    unitReward={localEvent?.unitReward ?? "coins"}
                   />
                 </div>
               </div>
