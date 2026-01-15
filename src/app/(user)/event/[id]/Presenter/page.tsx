@@ -152,6 +152,13 @@ export default function PresenterView({ id, event }: Props) {
     fetchMyStats();
   }, [id, userId]);
 
+  // Redirect from dashboard if not in a team
+  useEffect(() => {
+    if (!projectsLoading && !userProject && tab === "dashboard") {
+      setTab("project");
+    }
+  }, [projectsLoading, userProject, tab]);
+
   const [createOpen, setCreateOpen] = useState(false);
 
   // UI state for project viewer/editor
@@ -252,7 +259,11 @@ export default function PresenterView({ id, event }: Props) {
             className="mt-6"
           >
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-25">Dashboard</TabsTrigger>
+              {userProject && (
+                <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+                  Dashboard
+                </TabsTrigger>
+              )}
               <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
               <TabsTrigger value="project" className="flex-1 min-w-25">Projects</TabsTrigger>
               <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
