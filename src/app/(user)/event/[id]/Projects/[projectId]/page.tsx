@@ -480,14 +480,14 @@ export default function ProjectDetailPage({ params }: Props) {
           </div>
 
           <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-end w-full sm:w-auto">
-            {/* <Button
+            <Button
               size="sm"
               className="h-9 px-3 font-medium bg-indigo-600 text-white hover:bg-indigo-700 border-0 shadow-sm"
               onClick={() => window.open(`/event/${id}/Projects/${projectId}/Scores`, "_blank")}
             >
               <Gift className="w-4 h-4 mr-2" />
               Evaluate
-            </Button> */}
+            </Button>
 
             <Button
               variant="secondary"
