@@ -52,6 +52,7 @@ import { toLocalDatetimeValue, toISOStringFromLocal } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import ResultSection from "../components/ResultSection";
+import FeedbackList from "./components/FeedbackList";
 
 type Props = {
   id: string;
@@ -532,12 +533,6 @@ export default function OrganizerView({ id, event }: Props) {
                     <div className="grid grid-cols-3 gap-6 text-left">
                       <div>
                         <div className="text-xl font-bold text-slate-700">
-                          {localEvent?.opinionsPresenter ?? 0}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.presenters")}</div>
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold text-slate-700">
                           {localEvent?.opinionsGuest ?? 0}
                         </div>
                         <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.guests")}</div>
@@ -627,6 +622,11 @@ export default function OrganizerView({ id, event }: Props) {
               <ResultSection eventId={id} role="ORGANIZER" />
             </TabsContent>
           </Tabs>
+
+          {/* Feedback Section - Only visible when event is finished */}
+          {localEvent?.endView && new Date() > new Date(localEvent.endView) && (
+            <FeedbackList eventId={id} />
+          )}
         </div>
         {/* Edit Dialog */}
         <Dialog

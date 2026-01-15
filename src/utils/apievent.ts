@@ -299,6 +299,14 @@ export const getUserRating = async (eventId: string) => {
   return res.data; // { rating, comment }
 };
 
+export const getAllRatings = async (eventId: string) => {
+  const res = await axios.get(
+    `/backend/api/events/${eventId}/action/ratings`,
+    { withCredentials: true }
+  );
+  return res.data; // { ratings: [{ id, rating, comment, user: { name, image } }] }
+};
+
 export const getPresenterStats = async (eventId: string) => {
   const res = await axios.get(`/backend/api/events/${eventId}/presenter/stats`, {
     withCredentials: true,
