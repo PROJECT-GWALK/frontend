@@ -12,7 +12,14 @@
     "publish": "เผยแพร่",
     "saveAsDraft": "บันทึกเป็นแบบร่าง",
     "fillDetails": "กรอกรายละเอียดด้านล่าง",
-    "progress": "ความคืบหน้า"
+    "progress": "ความคืบหน้า",
+    "placeholderEventTitle": "กรอกหัวข้ออีเวนต์",
+    "placeholderEventDescription": "บอกผู้เข้าร่วมเกี่ยวกับอีเวนต์ของคุณ",
+    "locationVisibility": "สถานที่และการมองเห็น",
+    "placeholderLocationVenue": "เช่น ศูนย์ประชุม, ห้อง A",
+    "placeholderLocationLink": "https://maps.google.com/...",
+    "placeholderVisibility": "เลือกการมองเห็น",
+    "cropTitle": "ครอบภาพขนาด 800x400"
   },
   "eventInfo": {
     "eventInformation": "ข้อมูลอีเวนต์",
@@ -31,9 +38,17 @@
     "endTime": "เวลาสิ้นสุด",
     "locationVenue": "สถานที่จัดงาน",
     "locationLink": "ลิงก์ตำแหน่ง (Google Maps)",
+    "locationLinkHelp": "คุณสามารถใส่ลิงก์ได้ดังนี้:\n\n1. ลิงก์แชร์สถานที่ (Share Link)\nตัวอย่าง: https://maps.app.goo.gl/...\n\n2. ลิงก์เว็บไซต์ออนไลน์อื่นๆ\nตัวอย่าง: https://www.example.com\n\n3. ลิงก์สำหรับฝังแผนที่ (Embed Link)\nตัวอย่าง: <iframe src=\"...\"></iframe>",
     "eventVisibility": "การมองเห็นอีเวนต์",
     "public": "สาธารณะ",
     "private": "ส่วนตัว"
+  },
+  "eventTime": {
+    "timeConfiguration": "ตั้งค่าเวลา",
+    "submissionPeriod": "ช่วงเวลาส่งผลงาน",
+    "submissionStartDate": "วันที่เริ่มส่ง",
+    "submissionEndDate": "วันที่สิ้นสุดส่ง",
+    "selectDate": "เลือกวันที่"
   },
   "presenterSection": {
     "presenterDetails": "รายละเอียดผู้นำเสนอ",
@@ -45,43 +60,97 @@
     "endDateSubmission": "วันที่สิ้นสุดส่ง",
     "endTimeSubmission": "เวลาสิ้นสุดส่ง"
   },
+  "configuration": {
+    "title": "การตั้งค่า",
+    "presenterConfig": "ตั้งค่าผู้นำเสนอ",
+    "membersPerGroup": "จำนวนสมาชิกต่อกลุ่ม",
+    "maxGroups": "จำนวนกลุ่มสูงสุด",
+    "committeeConfig": "ตั้งค่าคณะกรรมการ",
+    "hasCommittee": "มีคณะกรรมการในงาน",
+    "virtualRewardPerPerson": "รางวัลเสมือนต่อคน",
+    "guestRewards": "รางวัลผู้เข้าร่วม",
+    "amountPerGuest": "จำนวนต่อผู้เข้าร่วม",
+    "rewardUnit": "หน่วยของรางวัล",
+    "fileRequirements": "ข้อกำหนดไฟล์งาน",
+    "reqTitle": "หัวข้อสิ่งที่ต้องส่ง",
+    "reqDescription": "คำอธิบายเพิ่มเติม (ไม่บังคับ)",
+    "allowedTypes": "ประเภทไฟล์ที่รองรับ",
+    "required": "จำเป็นต้องส่ง",
+    "addFileReq": "เพิ่มข้อกำหนดไฟล์",
+    "placeholderMaxPresenters": "เช่น 3",
+    "placeholderMaxGroups": "เช่น 30",
+    "placeholderCommitteeReward": "เช่น 1000",
+    "placeholderGuestReward": "เช่น 50",
+    "placeholderUnitReward": "เช่น THB, Coin, Points",
+    "placeholderReqName": "เช่น ไฟล์สไลด์นำเสนอ",
+    "placeholderReqDesc": "เช่น ไฟล์ PDF เท่านั้น"
+  },
   "committeeSection": {
-  "used": "ใช้ไปแล้ว",
-  "total": "ทั้งหมด",
-  "remaining": "คงเหลือ",
-  "totalParticipants": "จำนวนผู้เข้าร่วมทั้งหมด",
-  "ties": "เสมอ",
-  "participants": "ผู้เข้าร่วม",
-  "judges": "กรรมการ",
-  "specialAwards": "รางวัลพิเศษ",
-  "usedOverTotal": "ใช้ไป / ทั้งหมด",
-  "feedbackGiven": "ให้ความคิดเห็นแล้ว",
-  "myVirtualRewards": "Virtual Reward ของฉัน",
-  "waitForVote": "รอการโหวต",
-  "waitForFeedback": "รอการให้ความคิดเห็น"
-}
-
-,
+    "used": "ใช้ไปแล้ว",
+    "total": "ทั้งหมด",
+    "remaining": "คงเหลือ",
+    "totalParticipants": "จำนวนผู้เข้าร่วมทั้งหมด",
+    "ties": "เสมอ",
+    "participants": "ผู้เข้าร่วม",
+    "judges": "กรรมการ",
+    "specialAwards": "รางวัลพิเศษ",
+    "usedOverTotal": "ใช้ไป / ทั้งหมด",
+    "feedbackGiven": "ให้ความคิดเห็นแล้ว",
+    "myVirtualRewards": "Virtual Reward ของฉัน",
+    "waitForVote": "รอการโหวต",
+    "waitForFeedback": "รอการให้ความคิดเห็น"
+  },
   "rewardsSection": {
     "specialRewards": "รางวัลพิเศษ",
     "rewardName": "ชื่อรางวัล",
     "rewardDescription": "รายละเอียดรางวัล",
     "rewardImage": "รูปภาพรางวัล",
     "addReward": "เพิ่มรางวัล",
-    "remove": "ลบ"
+    "remove": "ลบ",
+    "noRewards": "ยังไม่มีรางวัลพิเศษ",
+    "clickToAdd": "คลิก \"เพิ่มรางวัล\" เพื่อสร้าง",
+    "rewardNum": "รางวัลที่",
+    "cropTitle": "ครอบภาพสี่เหลี่ยมจัตุรัส",
+    "placeholderRewardName": "เช่น รางวัลการนำเสนอยอดเยี่ยม",
+    "placeholderRewardDesc": "อธิบายรายละเอียดของรางวัลนี้..."
+  },
+  "dialog": {
+    "deleteConfirmTitle": "ยืนยันการลบ",
+    "deleteConfirmDesc": "ยืนยันลบ Event ฉบับร่างนี้หรือไม่?",
+    "cancel": "ยกเลิก",
+    "delete": "ลบ",
+    "deleteSuccessTitle": "ลบสำเร็จ",
+    "deleteSuccessDesc": "ลบ Event ฉบับร่างเรียบร้อยแล้ว",
+    "goToDashboard": "กลับสู่แดชบอร์ด",
+    "close": "ปิด"
+  },
+  "sidebar": {
+    "editEvent": "แก้ไขอีเวนต์",
+    "completeDetails": "กรอกรายละเอียดด้านล่าง",
+    "completion": "ความคืบหน้า",
+    "progressSoFar": "ความคืบหน้าปัจจุบัน",
+    "saveDraft": "บันทึกแบบร่าง",
+    "saving": "กำลังบันทึก...",
+    "eventInfo": "ข้อมูลอีเวนต์",
+    "timeConfig": "ตั้งค่าเวลา",
+    "config": "การตั้งค่า",
+    "rewards": "รางวัลพิเศษ"
   },
   "validation": {
     "eventTitleRequired": "กรุณากรอก Event Title",
     "startDateTimeRequired": "กรุณากรอก Start View วันที่และเวลา",
     "endDateTimeRequired": "กรุณากรอก End View วันที่และเวลา",
     "startBeforeEnd": "Start View ต้องอยู่ก่อน End View",
-    "submissionStartRequired": "กรุณากรอก Submission Start วันที่และเวลา",
-    "submissionEndRequired": "กรุณากรอก Submission End วันที่และเวลา",
+    "submissionStartRequired": "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน",
+    "submissionEndRequired": "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน",
     "submissionBeforeEvent": "Submission Start ต้องอยู่ก่อน Event Start",
     "rewardNameRequired": "กรุณากรอกชื่อรางวัล",
     "nameTaken": "ชื่อ Event ถูกใช้แล้ว",
     "nameAvailable": "ชื่อ Event ใช้ได้",
-    "checkName": "ตรวจสอบชื่อ"
+    "checkName": "ตรวจสอบชื่อ",
+    "fileTypeNotSupported": "รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP",
+    "fileSizeExceeded": "ไฟล์ต้องไม่เกิน 5MB",
+    "checkNameFailed": "ตรวจสอบชื่อไม่สำเร็จ"
   },
   "messages": {
     "savingDraft": "กำลังบันทึก Draft...",
@@ -110,13 +179,13 @@
     "specialAwards": "รางวัลพิเศษ",
     "remainingAwards": "รางวัลที่ยังไม่ได้แจก"
   },
-   "information": {
+  "information": {
     "eventDetails": "รายละเอียดอีเวนต์",
     "eventDuration": "ระยะเวลาอีเวนต์",
     "eventLocation": "สถานที่จัดงาน",
     "submissionStart": "วันที่เริ่มส่งผลงาน",
     "submissionEnd": "วันที่สิ้นสุดส่งผลงาน",
-    "maxTeams":"จำนวนทีมสูงสุด",
+    "maxTeams": "จำนวนทีมสูงสุด",
     "memberPerGroup": "สมาชิกต่อทีม",
     "rewardPoints": "รางวัลและคะแนน",
     "startin": "เริ่มใน",
@@ -133,34 +202,30 @@
     "ended": "สิ้นสุดแล้ว"
   },
   "organizerDashboard": {
-  "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
-  "totalPeopleInEvent": "คนรวมทั้งหมดในงาน",
-  "team": "ทีม",
-  "presenters": "ผู้นำเสนอ",
-  "outOfTotalTeams": "จากทั้งหมด",
-  "people": "คน",
-  "guests": "ผู้เข้าร่วม",
-  "comments": "คอมเมนต์",
-  "committee": "กรรมการ",
-  "feedback": "ฟีดแบ็ก",
-  "virtualRewards": "Virtual Rewards",
-  "usedPercent": "ใช้ไปแล้ว",
-  "remaining": "คงเหลือ",
-  "specialAwards": "รางวัลพิเศษ",
-  "awarded": "แจกแล้ว",
-  "total": "ทั้งหมด",
-  "notYetAwarded": "ยังไม่ได้แจก",
-  "awardDistributionProgress": "แจกครบทุกครั้งแล้ว",
-  "totalFeedbackReceived": "ความคิดเห็นทั้งหมดที่ได้รับ",
-  "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม",
-  "used": "ใช้ไปแล้ว",
-  "remainingAwards": "รางวัลที่เหลือ",
-  "votingProgress": "ความคืบหน้าการโหวต",
-  "totalVotes": "คะแนนโหวตทั้งหมด",
-  "availableAwards": "รางวัลทั้งหมด"
-}
-
-    
-  
-  
+    "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+    "totalPeopleInEvent": "คนรวมทั้งหมดในงาน",
+    "team": "ทีม",
+    "presenters": "ผู้นำเสนอ",
+    "outOfTotalTeams": "จากทั้งหมด",
+    "people": "คน",
+    "guests": "ผู้เข้าร่วม",
+    "comments": "คอมเมนต์",
+    "committee": "กรรมการ",
+    "feedback": "ฟีดแบ็ก",
+    "virtualRewards": "Virtual Rewards",
+    "usedPercent": "ใช้ไปแล้ว",
+    "remaining": "คงเหลือ",
+    "specialAwards": "รางวัลพิเศษ",
+    "awarded": "แจกแล้ว",
+    "total": "ทั้งหมด",
+    "notYetAwarded": "ยังไม่ได้แจก",
+    "awardDistributionProgress": "แจกครบทุกครั้งแล้ว",
+    "totalFeedbackReceived": "ความคิดเห็นทั้งหมดที่ได้รับ",
+    "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม",
+    "used": "ใช้ไปแล้ว",
+    "remainingAwards": "รางวัลที่เหลือ",
+    "votingProgress": "ความคืบหน้าการโหวต",
+    "totalVotes": "คะแนนโหวตทั้งหมด",
+    "availableAwards": "รางวัลทั้งหมด"
+  }
 }

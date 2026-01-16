@@ -12,7 +12,14 @@
     "publish": "Publish",
     "saveAsDraft": "Save as Draft",
     "fillDetails": "Fill in the details below",
-    "progress": "Progress"
+    "progress": "Progress",
+    "placeholderEventTitle": "Enter event title",
+    "placeholderEventDescription": "Tell attendees about your event...",
+    "locationVisibility": "Location & Visibility",
+    "placeholderLocationVenue": "e.g. Convention Center, Hall A",
+    "placeholderLocationLink": "https://maps.google.com/...",
+    "placeholderVisibility": "Select visibility",
+    "cropTitle": "Crop to 800x400"
   },
   "eventInfo": {
     "eventInformation": "Event Information",
@@ -31,9 +38,17 @@
     "endTime": "End Time",
     "locationVenue": "Location / Venue",
     "locationLink": "Location Link (Google Maps)",
+    "locationLinkHelp": "You can provide:\n\n1. Share Link from Google Maps\nExample: https://maps.app.goo.gl/...\n\n2. Other online website links\nExample: https://www.example.com\n\n3. Embed Link to display a map preview\nExample: <iframe src=\"...\"></iframe>",
     "eventVisibility": "Event Visibility",
     "public": "Public",
     "private": "Private"
+  },
+  "eventTime": {
+    "timeConfiguration": "Time Configuration",
+    "submissionPeriod": "Submission Period",
+    "submissionStartDate": "Start Date",
+    "submissionEndDate": "End Date",
+    "selectDate": "Select date"
   },
   "presenterSection": {
     "presenterDetails": "Presenter Details",
@@ -44,6 +59,31 @@
     "startTimeSubmission": "Start Time",
     "endDateSubmission": "End Date",
     "endTimeSubmission": "End Time"
+  },
+  "configuration": {
+    "title": "Configuration",
+    "presenterConfig": "Presenter Configuration",
+    "membersPerGroup": "Members per Group",
+    "maxGroups": "Maximum Groups",
+    "committeeConfig": "Committee Configuration",
+    "hasCommittee": "Event has committee members",
+    "virtualRewardPerPerson": "Virtual Rewards per Person",
+    "guestRewards": "Guest Rewards",
+    "amountPerGuest": "Amount per Guest",
+    "rewardUnit": "Reward Unit",
+    "fileRequirements": "File Requirements",
+    "reqTitle": "Title",
+    "reqDescription": "Description (Optional)",
+    "allowedTypes": "Allowed Types",
+    "required": "Required",
+    "addFileReq": "Add File Requirement",
+    "placeholderMaxPresenters": "e.g. 3",
+    "placeholderMaxGroups": "e.g. 30",
+    "placeholderCommitteeReward": "e.g. 1000",
+    "placeholderGuestReward": "e.g. 50",
+    "placeholderUnitReward": "e.g. THB, Coin, Points",
+    "placeholderReqName": "e.g. Presentation Slides",
+    "placeholderReqDesc": "e.g. PDF format only"
   },
   "committeeSection": {
     "used": "Used",
@@ -66,7 +106,35 @@
     "rewardDescription": "Reward Description",
     "rewardImage": "Reward Image",
     "addReward": "Add Reward",
-    "remove": "Remove"
+    "remove": "Remove",
+    "noRewards": "No special rewards added yet",
+    "clickToAdd": "Click \"Add Reward\" to create one",
+    "rewardNum": "Reward",
+    "cropTitle": "Crop to square",
+    "placeholderRewardName": "e.g. Best Presentation",
+    "placeholderRewardDesc": "Describe what this reward is for..."
+  },
+  "dialog": {
+    "deleteConfirmTitle": "Confirm Deletion",
+    "deleteConfirmDesc": "Are you sure you want to delete this event draft?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteSuccessTitle": "Deleted successfully",
+    "deleteSuccessDesc": "Event draft has been deleted.",
+    "goToDashboard": "Go to Dashboard",
+    "close": "Close"
+  },
+  "sidebar": {
+    "editEvent": "Edit Event",
+    "completeDetails": "Complete details below",
+    "completion": "Completion",
+    "progressSoFar": "Progress so far",
+    "saveDraft": "Save Draft",
+    "saving": "Saving...",
+    "eventInfo": "Event Information",
+    "timeConfig": "Time Configuration",
+    "config": "Configuration",
+    "rewards": "Special Rewards"
   },
   "validation": {
     "eventTitleRequired": "Please enter event title",
@@ -79,7 +147,10 @@
     "rewardNameRequired": "Please enter reward name",
     "nameTaken": "Event name already in use",
     "nameAvailable": "Event name available",
-    "checkName": "Check name"
+    "checkName": "Check name",
+    "fileTypeNotSupported": "Only JPG, PNG, GIF or WEBP are supported",
+    "fileSizeExceeded": "File size must not exceed 5MB",
+    "checkNameFailed": "Failed to check event name"
   },
   "messages": {
     "savingDraft": "Saving draft...",
@@ -90,7 +161,6 @@
     "publishFailed": "Failed to publish event",
     "errorLoading": "Failed to load event"
   },
-
   "dashboard": {
     "presenterCount": "Presenters",
     "guestCount": "Guests",

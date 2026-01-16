@@ -214,3 +214,10 @@ export function getMapEmbedUrl(locationUrl: string | undefined, locationName: st
   
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&output=embed`;
 }
+
+export function autoResizeTextarea(textarea: HTMLTextAreaElement | null) {
+  if (textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+}

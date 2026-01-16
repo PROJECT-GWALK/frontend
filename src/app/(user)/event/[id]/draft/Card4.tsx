@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent } from "react";
+import { type ChangeEvent, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, Gift, Plus, Trash2, Award } from "lucide-react";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import type { SpecialReward } from "@/utils/types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { autoResizeTextarea } from "@/utils/function";
 
 type Props = {
   specialRewards: SpecialReward[];
@@ -38,37 +40,72 @@ type Props = {
   onRewardCropConfirm: (file: File, previewUrl: string) => void;
 };
 
-export default function SpecialRewardsSection({
-  specialRewards,
-  srPreviews,
-  openRewardFilePicker,
-  rewardFileRefs,
-  handleRewardFileChange,
-  handleRemoveRewardImage,
-  handleAddSpecialReward,
-  handleRemoveReward,
-  handleRewardChange,
-  rewardErrors,
-  srCropOpen,
-  srCropSrc,
-  srPendingMeta,
-  onRewardCropCancel,
-  onRewardCropConfirm,
-}: Props) {
+export default function Card4(props: Props) {
+  const {
+    specialRewards,
+    srPreviews,
+    openRewardFilePicker,
+    rewardFileRefs,
+    handleRewardFileChange,
+    handleRemoveRewardImage,
+    handleAddSpecialReward,
+    handleRemoveReward,
+    handleRewardChange,
+    rewardErrors,
+    srCropOpen,
+    srCropSrc,
+    srPendingMeta,
+    onRewardCropCancel,
+    onRewardCropConfirm,
+  } = props;
+
+  const [dragState, setDragState] = useState<Record<string, boolean>>({});
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragState(prev => ({ ...prev, [id]: true }));
+  };
+
+  const handleDragLeave = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragState(prev => ({ ...prev, [id]: false }));
+  };
+
+  const handleDrop = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragState(prev => ({ ...prev, [id]: false }));
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const event = {
+        target: {
+          files: [file]
+        }
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      
+      handleRewardFileChange(id, event);
+    }
+  };
+
+  const { t } = useLanguage();
+
   return (
-    <Card id="rewards" className="scroll-mt-6 lg:col-span-2 border-none shadow-md">
+    <Card id="card4" className="scroll-mt-6 lg:col-span-2 border-none shadow-md">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-3 text-lg font-semibold">
           <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
             <Award className="h-5 w-5" />
           </div>
           <span className="">
-            Special Rewards / รางวัลพิเศษ
+            {t("rewardsSection.specialRewards")}
           </span>
         </CardTitle>
         <Button onClick={handleAddSpecialReward} size="sm" variant="outline">
           <Plus className="h-4 w-4 mr-1" />
-          Add Reward / เพิ่มรางวัล
+          {t("rewardsSection.addReward")}
         </Button>
       </CardHeader>
 
@@ -92,9 +129,9 @@ export default function SpecialRewardsSection({
         {specialRewards.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Gift className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>No special rewards added yet / ยังไม่มีรางวัลพิเศษ</p>
+            <p>{t("rewardsSection.noRewards")}</p>
             <p className="text-sm">
-              Click &quot;Add Reward&quot; to create one / คลิก &quot;เพิ่มรางวัล&quot; เพื่อสร้าง
+              {t("rewardsSection.clickToAdd")}
             </p>
           </div>
         ) : (
@@ -105,7 +142,7 @@ export default function SpecialRewardsSection({
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Reward #{index + 1}
+                  {t("rewardsSection.rewardNum")} #{index + 1}
                 </span>
                 <Button
                   variant="ghost"
@@ -145,7 +182,7 @@ export default function SpecialRewardsSection({
                           size="icon"
                           variant="secondary"
                           aria-label="Change image"
-                          title="Change"
+                          title={t("eventInfo.change")}
                           onClick={() => openRewardFilePicker(reward.id)}
                         >
                           <Upload className="h-4 w-4" />
@@ -154,7 +191,7 @@ export default function SpecialRewardsSection({
                           size="icon"
                           variant="destructive"
                           aria-label="Remove image"
-                          title="Remove"
+                          title={t("eventInfo.remove")}
                           onClick={() => handleRemoveRewardImage(reward.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -164,14 +201,21 @@ export default function SpecialRewardsSection({
                   ) : (
                     <>
                       <div
-                        className="relative w-full cursor-pointer"
+                        className={`relative w-full cursor-pointer rounded-lg ${
+                          dragState[reward.id] ? "ring-2 ring-primary bg-primary/10" : ""
+                        }`}
                         onClick={() => openRewardFilePicker(reward.id)}
+                        onDragOver={(e) => handleDragOver(e, reward.id)}
+                        onDragLeave={(e) => handleDragLeave(e, reward.id)}
+                        onDrop={(e) => handleDrop(e, reward.id)}
                       >
-                        <div className="border-2 border-dashed border-border rounded-lg hover:border-primary/50 transition-colors aspect-square overflow-hidden">
+                        <div className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
+                          dragState[reward.id] ? "border-primary" : "border-border hover:border-primary/50"
+                        }`}>
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
                             <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
                             <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
-                              Click to upload or drag and drop
+                              {t("eventInfo.clickToUpload")}
                             </p>
                             <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">
                               PNG, JPG, GIF
@@ -193,7 +237,7 @@ export default function SpecialRewardsSection({
                           size="icon"
                           variant="secondary"
                           aria-label="Upload image"
-                          title="Upload"
+                          title={t("eventInfo.clickToUpload")}
                           onClick={() => openRewardFilePicker(reward.id)}
                         >
                           <Upload className="h-4 w-4" />
@@ -204,9 +248,9 @@ export default function SpecialRewardsSection({
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="space-y-2">
-                    <Label>Reward Name / ชื่อรางวัล</Label>
+                    <Label>{t("rewardsSection.rewardName")}</Label>
                     <Input
-                      placeholder="e.g. Best Presentation"
+                      placeholder={t("rewardsSection.placeholderRewardName")}
                       value={reward.name}
                       onChange={(e) =>
                         handleRewardChange(reward.id, "name", e.target.value)
@@ -217,13 +261,16 @@ export default function SpecialRewardsSection({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Description / รายละเอียด</Label>
+                    <Label>{t("rewardsSection.rewardDescription")}</Label>
                     <Textarea
-                      placeholder="Describe what this reward is for..."
+                      ref={(el) => autoResizeTextarea(el)}
+                      placeholder={t("rewardsSection.placeholderRewardDesc")}
                       value={reward.description ?? ""}
-                      onChange={(e) =>
-                        handleRewardChange(reward.id, "description", e.target.value)
-                      }
+                      onChange={(e) => {
+                        autoResizeTextarea(e.target);
+                        handleRewardChange(reward.id, "description", e.target.value);
+                      }}
+                      className="resize-none"
                     />
                   </div>
                 </div>

@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   open: boolean;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function DeleteSuccessDialog({ open, onOpenChange, onGoDashboard }: Props) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm flex flex-col items-center">
@@ -18,17 +20,17 @@ export default function DeleteSuccessDialog({ open, onOpenChange, onGoDashboard 
           <Check className="h-6 w-6 text-green-600" />
         </div>
         <DialogHeader className="text-center gap-0">
-          <DialogTitle className="text-center">Deleted successfully</DialogTitle>
+          <DialogTitle className="text-center">{t('dialog.deleteSuccessTitle')}</DialogTitle>
           <DialogDescription className="mt-2 text-center mx-auto sm:max-w-[90%]">
-            Event draft has been deleted.
+            {t('dialog.deleteSuccessDesc')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col sm:flex-row sm:gap-3 w-full gap-2">
           <DialogClose asChild>
-            <Button variant="default" className="w-full sm:w-1/2" onClick={onGoDashboard}>Go to Dashboard</Button>
+            <Button variant="default" className="w-full sm:w-1/2" onClick={onGoDashboard}>{t('dialog.goToDashboard')}</Button>
           </DialogClose>
           <DialogClose asChild>
-            <Button variant="outline" className="w-full sm:w-1/2">Close</Button>
+            <Button variant="outline" className="w-full sm:w-1/2">{t('dialog.close')}</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

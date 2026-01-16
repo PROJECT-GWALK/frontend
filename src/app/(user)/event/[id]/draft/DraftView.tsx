@@ -12,6 +12,7 @@ import {
   UserCheck,
   Award,
   Save,
+  Loader2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
@@ -33,10 +34,11 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import DeleteSuccessDialog from "./DeleteSuccessDialog";
-import SpecialRewardsSection from "./SpecialRewardsSection";
-import EventInfoSection from "./EventInfoSection";
-import PresenterSection from "./PresenterSection";
-import CommitteeSection from "./CommitteeSection";
+import Card1 from "./Card1";
+import Card2 from "./Card2";
+import Card3 from "./Card3";
+import Card4 from "./Card4";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type SpecialReward = {
   id: string;
@@ -65,17 +67,15 @@ type EventUpdatePayload = {
   fileTypes?: EventFileType[];
 };
 
-const BANNER_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const BANNER_MAX_SIZE = 10 * 1024 * 1024; // 5MB
 const BANNER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-const mapEventNameMessage = (message: string) =>
-  message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
-
 export default function EventDraft() {
+  const { t } = useLanguage();
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState("event-info");
+  const [activeSection, setActiveSection] = useState("card1");
 
   // Event Information
   const [eventTitle, setEventTitle] = useState("");
@@ -109,6 +109,8 @@ export default function EventDraft() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Presenter Details
   const [maxPresenters, setMaxPresenters] = useState("3");
@@ -168,12 +170,12 @@ export default function EventDraft() {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!BANNER_TYPES.includes(f.type)) {
-      toast.error("รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP");
+      toast.error(t("validation.fileTypeNotSupported"));
       e.target.value = "";
       return;
     }
     if (f.size > BANNER_MAX_SIZE) {
-      toast.error("ไฟล์ต้องไม่เกิน 5MB");
+      toast.error(t("validation.fileSizeExceeded"));
       e.target.value = "";
       return;
     }
@@ -269,7 +271,7 @@ export default function EventDraft() {
       if (backendMessage === "Event name already exists") {
         toast.error("ไม่สามารถใช้ชื่อนี้ได้");
       } else {
-        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+        toast.error(t("validation.checkNameFailed"));
       }
       return false;
     } finally {
@@ -281,16 +283,16 @@ export default function EventDraft() {
     if (specialRewards.length) {
       for (const r of specialRewards) {
         if (!r.name || !r.name.trim()) {
-          errors[r.id] = "กรุณากรอกชื่อรางวัล";
+          errors[r.id] = t('validation.rewardNameRequired');
         }
       }
     }
     setRewardErrors(errors);
     if (Object.keys(errors).length) {
-      setActiveSection("rewards");
-      const el = document.getElementById("rewards");
+      setActiveSection("card4");
+      const el = document.getElementById("card4");
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      toast.error("กรุณากรอกชื่อรางวัลให้ครบ");
+      toast.error(t('validation.rewardNameRequired'));
       return false;
     }
     return true;
@@ -299,19 +301,19 @@ export default function EventDraft() {
     const errors: Record<string, string> = {};
 
     if (!eventTitle.trim()) {
-      errors.eventTitle = "กรุณากรอกชื่ออีเว้นต์";
-      toast.error("กรุณากรอกชื่ออีเว้นต์");
-      setActiveSection("event-info");
+      errors.eventTitle = t('validation.eventTitleRequired');
+      toast.error(t('validation.eventTitleRequired'));
+      setActiveSection("card1");
     }
     if (!(startDate && startTime)) {
-      errors.startDateTime = "กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์";
-      toast.error("กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์");
-      setActiveSection("event-info");
+      errors.startDateTime = t('validation.startDateTimeRequired');
+      toast.error(t('validation.startDateTimeRequired'));
+      setActiveSection("card2");
     }
     if (!(endDate && endTime)) {
-      errors.endDateTime = "กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์";
-      toast.error("กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์");
-      setActiveSection("event-info");
+      errors.endDateTime = t('validation.endDateTimeRequired');
+      toast.error(t('validation.endDateTimeRequired'));
+      setActiveSection("card2");
     }
 
     const timeErrors = validateEventTime(
@@ -328,7 +330,7 @@ export default function EventDraft() {
 
     if (timeErrors.endDateTime) {
       toast.error(timeErrors.endDateTime);
-      setActiveSection("event-info");
+      setActiveSection("card2");
     }
 
     const hasJoinInput = Boolean(
@@ -338,10 +340,10 @@ export default function EventDraft() {
     // const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
       if (!(submissionStartDate && submissionStartTime)) {
-        errors.submissionStart = "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน";
+        errors.submissionStart = t('validation.submissionStartRequired');
       }
       if (!(submissionEndDate && submissionEndTime)) {
-        errors.submissionEnd = "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน";
+        errors.submissionEnd = t('validation.submissionEndRequired');
       }
     }
     return errors;
@@ -355,13 +357,13 @@ export default function EventDraft() {
     if (!f) return;
 
     if (!BANNER_TYPES.includes(f.type)) {
-      toast.error("รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP");
+      toast.error(t("validation.fileTypeNotSupported"));
       e.target.value = "";
       return;
     }
 
     if (f.size > BANNER_MAX_SIZE) {
-      toast.error("ไฟล์ต้องไม่เกิน 5MB");
+      toast.error(t("validation.fileSizeExceeded"));
       e.target.value = "";
       return;
     }
@@ -402,7 +404,7 @@ export default function EventDraft() {
       const res = await checkEventName(eventTitle.trim());
       const ok = Boolean(res?.available);
       setNameChecked(ok);
-      toast[ok ? "success" : "error"](ok ? "ชื่อ Event ใช้ได้" : "ชื่อ Event ถูกใช้แล้ว");
+      toast[ok ? "success" : "error"](ok ? t('validation.nameAvailable') : t('validation.nameTaken'));
     } catch (e) {
       console.error(e);
       setNameChecked(null);
@@ -412,9 +414,9 @@ export default function EventDraft() {
             (e as AxiosError).response?.data?.message
           : null;
       if (backendMessage === "Event name already exists") {
-        toast.error("ไม่สามารถใช้ชื่อนี้ได้");
+        toast.error(t('validation.nameTaken'));
       } else {
-        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+        toast.error(t('messages.errorLoading'));
       }
     } finally {
       setCheckingName(false);
@@ -441,11 +443,12 @@ export default function EventDraft() {
 
     if (timeErrors.endDateTime) {
       toast.error(timeErrors.endDateTime);
-      setActiveSection("event-info");
+      setActiveSection("card2");
       return;
     }
 
-    toast.info("กำลังบันทึก Draft...");
+    setIsSaving(true);
+    toast.info(t('messages.savingDraft'));
 
     try {
       const ok = await ensureNameAvailable();
@@ -458,11 +461,17 @@ export default function EventDraft() {
       } else {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
-      toast.success("บันทึก Draft สำเร็จ");
+      toast.success(t('messages.draftSaved'));
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
-      toast.error(mapEventNameMessage(message));
+      const message = err instanceof Error ? err.message : t('messages.draftFailed');
+      if (message === "Event name already exists") {
+        toast.error(t('validation.nameTaken'));
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -479,6 +488,7 @@ export default function EventDraft() {
     }
     setFieldErrors({});
 
+    setIsPublishing(true);
     try {
       const payload = buildPayload({ isoDates: false });
       await syncSpecialRewards();
@@ -489,12 +499,17 @@ export default function EventDraft() {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
       await publishEvent(id);
-      toast.success("เผยแพร่ Event สำเร็จ");
+      toast.success(t('messages.publishSuccess'));
       window.location.reload();
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "Error publishing event";
-      toast.error(mapEventNameMessage(message));
+      const message = err instanceof Error ? err.message : t('messages.publishFailed');
+      if (message === "Event name already exists") {
+        toast.error(t('validation.nameTaken'));
+      } else {
+        toast.error(message);
+      }
+      setIsPublishing(false);
     }
   };
 
@@ -588,21 +603,21 @@ export default function EventDraft() {
 
   const sections = [
     {
-      id: "event-info",
-      label: "Event Information / ข้อมูลอีเวนต์",
+      id: "card1",
+      label: t("eventInfo.eventInformation"),
       icon: Info,
     },
     {
-      id: "presenter",
-      label: "Presenter Details / รายละเอียดผู้นำเสนอ",
-      icon: Users,
+      id: "card2",
+      label: t("eventTime.timeConfiguration"),
+      icon: CalendarIcon,
     },
     {
-      id: "committee",
-      label: "Committee & Guest / คณะกรรมการและผู้เข้าร่วม",
-      icon: UserCheck,
+      id: "card3",
+      label: t("configuration.title"),
+      icon: Users,
     },
-    { id: "rewards", label: "Special Rewards / รางวัลพิเศษ", icon: Award },
+    { id: "card4", label: t("rewardsSection.specialRewards"), icon: Award },
   ];
 
   const completionPercent = (() => {
@@ -726,6 +741,7 @@ export default function EventDraft() {
           eventId={id}
           onSaveDraft={handleSaveDraft}
           completionPercent={completionPercent}
+          isSaving={isSaving}
         />
 
         {/* Main Content */}
@@ -835,10 +851,10 @@ export default function EventDraft() {
                   </Link>
                   <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                      Edit Event / แก้ไขอีเวนต์
+                      {t("eventDraft.editEvent")}
                     </h1>
                     <p className="text-muted-foreground">
-                      Update your event details / อัปเดตรายละเอียดอีเวนต์
+                      {t("eventDraft.updateEventDetails")}
                     </p>
                   </div>
                 </div>
@@ -846,18 +862,30 @@ export default function EventDraft() {
                   <Button
                     variant="destructive"
                     onClick={() => setDeleteConfirmOpen(true)}
-                    className="px-6 hidden lg:inline-block"
+                    className="px-6 hidden lg:inline-flex"
+                    disabled={isPublishing || isSaving}
                   >
-                    Delete / ลบ
+                    {t("eventDraft.delete")}
                   </Button>
-                  <Button onClick={handlePublish} className="px-6 hidden lg:inline-block">
-                    Publish / เผยแพร่
+                  <Button 
+                    onClick={handlePublish} 
+                    className="px-6 hidden lg:inline-flex"
+                    disabled={isPublishing || isSaving}
+                  >
+                    {isPublishing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("eventDraft.publishing")}
+                      </>
+                    ) : (
+                      t("eventDraft.publish")
+                    )}
                   </Button>
                 </div>
               </div>
 
               {/* Event Information Section */}
-              <EventInfoSection
+              <Card1
                 eventTitle={eventTitle}
                 setEventTitle={(v) => {
                   setEventTitle(v);
@@ -878,59 +906,50 @@ export default function EventDraft() {
                 fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
                 onBannerFileChange={handleBannerFileChange}
                 onRemoveBanner={handleRemoveBanner}
+                locationPlace={locationPlace}
+                setLocationPlace={setLocationPlace}
+                locationLink={locationLink}
+                setLocationLink={setLocationLink}
+                eventVisibility={eventVisibility}
+                setEventVisibility={setEventVisibility}
+                fieldErrors={fieldErrors}
+              />
+
+              {/* Time Configuration Section */}
+              <Card2
                 selectedStart={selectedStart}
                 setSelectedStart={setSelectedStart}
-                startDate={startDate}
                 setStartDate={setStartDate}
                 startTime={startTime}
                 setStartTime={setStartTime}
                 selectedEnd={selectedEnd}
                 setSelectedEnd={setSelectedEnd}
-                selectedSubEnd={selectedSubEnd}
-                selectedSubStart={selectedSubStart}
-                endDate={endDate}
                 setEndDate={setEndDate}
                 endTime={endTime}
                 setEndTime={setEndTime}
                 calendarStartMonth={calendarStartMonth}
                 calendarEndMonth={calendarEndMonth}
-                eventVisibility={eventVisibility}
-                setEventVisibility={setEventVisibility}
                 fieldErrors={fieldErrors}
-                locationPlace={locationPlace}
-                setLocationPlace={setLocationPlace}
-                locationLink={locationLink}
-                setLocationLink={setLocationLink}
-              />
-
-              {/* Presenter Details Section */}
-              <PresenterSection
-                maxPresenters={maxPresenters}
-                setMaxPresenters={setMaxPresenters}
-                maxGroups={maxGroups}
-                setMaxGroups={setMaxGroups}
                 selectedSubStart={selectedSubStart}
                 setSelectedSubStart={setSelectedSubStart}
-                submissionStartDate={submissionStartDate}
                 setSubmissionStartDate={setSubmissionStartDate}
                 submissionStartTime={submissionStartTime}
                 setSubmissionStartTime={setSubmissionStartTime}
                 selectedSubEnd={selectedSubEnd}
                 setSelectedSubEnd={setSelectedSubEnd}
-                submissionEndDate={submissionEndDate}
                 setSubmissionEndDate={setSubmissionEndDate}
                 submissionEndTime={submissionEndTime}
                 setSubmissionEndTime={setSubmissionEndTime}
-                fieldErrors={fieldErrors}
-                calendarStartMonth={calendarStartMonth}
-                calendarEndMonth={calendarEndMonth}
-                selectedStart={selectedStart}
-                fileRequirements={fileRequirements}
-                setFileRequirements={setFileRequirements}
               />
 
-              {/* Committee & Guest Section */}
-              <CommitteeSection
+              {/* Configuration Section */}
+              <Card3
+                maxPresenters={maxPresenters}
+                setMaxPresenters={setMaxPresenters}
+                maxGroups={maxGroups}
+                setMaxGroups={setMaxGroups}
+                fileRequirements={fileRequirements}
+                setFileRequirements={setFileRequirements}
                 hasCommittee={hasCommittee}
                 setHasCommittee={setHasCommittee}
                 committeeReward={committeeReward}
@@ -942,7 +961,7 @@ export default function EventDraft() {
               />
 
               {/* Special Rewards Section */}
-              <SpecialRewardsSection
+              <Card4
                 specialRewards={specialRewards}
                 srPreviews={srPreviews}
                 openRewardFilePicker={openRewardFilePicker}
@@ -985,20 +1004,46 @@ export default function EventDraft() {
 
               {/* Save Button (Mobile) */}
               <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
-                <Button variant="secondary" onClick={handleSaveDraft} className="w-full h-11 text-base shadow-sm">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save as Draft / บันทึกดราฟต์
+                <Button 
+                  variant="secondary" 
+                  onClick={handleSaveDraft} 
+                  className="w-full h-11 text-base shadow-sm"
+                  disabled={isSaving || isPublishing}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('sidebar.saving')}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      {t('eventDraft.saveAsDraft')}
+                    </>
+                  )}
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={handlePublish} className="w-full h-11 text-base shadow-sm">
-                    Publish / เผยแพร่
+                  <Button 
+                    onClick={handlePublish} 
+                    className="w-full h-11 text-base shadow-sm"
+                    disabled={isSaving || isPublishing}
+                  >
+                    {isPublishing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t('eventDraft.publishing')}
+                      </>
+                    ) : (
+                      t('eventDraft.publish')
+                    )}
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={() => setDeleteConfirmOpen(true)}
                     className="w-full h-11 text-base shadow-sm"
+                    disabled={isSaving || isPublishing}
                   >
-                    Delete / ลบ
+                    {t('eventDraft.delete')}
                   </Button>
                 </div>
               </div>
