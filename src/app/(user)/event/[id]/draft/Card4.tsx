@@ -261,16 +261,22 @@ export default function Card4(props: Props) {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("rewardsSection.rewardDescription")}</Label>
+                    <div className="flex justify-between items-center">
+                      <Label>{t("rewardsSection.rewardDescription")}</Label>
+                      <span className="text-xs text-muted-foreground">
+                        {(reward.description || "").length}/60
+                      </span>
+                    </div>
                     <Textarea
                       ref={(el) => autoResizeTextarea(el)}
                       placeholder={t("rewardsSection.placeholderRewardDesc")}
                       value={reward.description ?? ""}
+                      maxLength={60}
                       onChange={(e) => {
                         autoResizeTextarea(e.target);
                         handleRewardChange(reward.id, "description", e.target.value);
                       }}
-                      className="resize-none"
+                      className="resize-none overflow-hidden"
                     />
                   </div>
                 </div>

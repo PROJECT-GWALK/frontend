@@ -492,7 +492,7 @@ export default function ResultSection({ eventId, role }: Props) {
               {loading && rankings.length === 0 ? (
                 <div
                   className={`w-full ${
-                    isFullscreen ? "lg:h-full min-h-[300px]" : "min-h-[300px]"
+                    isFullscreen ? "lg:h-full min-h-75" : "min-h-75"
                   } flex flex-col justify-center gap-3`}
                 >
                   <Skeleton className="h-6 w-2/3" />
@@ -503,7 +503,7 @@ export default function ResultSection({ eventId, role }: Props) {
               ) : rankings.length === 0 ? (
                 <div
                   className={`w-full ${
-                    isFullscreen ? "lg:h-full min-h-[300px]" : "min-h-[300px]"
+                    isFullscreen ? "lg:h-full min-h-75" : "min-h-75"
                   } flex items-center justify-center`}
                 >
                   <div className="text-center space-y-2">
@@ -519,7 +519,7 @@ export default function ResultSection({ eventId, role }: Props) {
                 <ChartContainer
                   config={chartConfig}
                   className={`w-full ${
-                    isFullscreen ? "lg:h-full min-h-[500px]" : "min-h-[300px]"
+                    isFullscreen ? "lg:h-full min-h-125" : "min-h-75"
                   }`}
                 >
                   <BarChart
@@ -839,7 +839,7 @@ export default function ResultSection({ eventId, role }: Props) {
                                               user={p.user}
                                               className="h-4 w-4 shrink-0 border text-[9px]"
                                             />
-                                            <div className="text-[11px] font-medium max-w-[120px] truncate">
+                                            <div className="text-[11px] font-medium max-w-30 truncate">
                                               {displayName}
                                             </div>
                                             {p.isLeader && (

@@ -279,6 +279,7 @@ export default function Card3(props: Props) {
                                 newReqs[index].allowedFileTypes.push(type);
                               }
                             } else {
+                              if (newReqs[index].allowedFileTypes.length <= 1) return;
                               newReqs[index].allowedFileTypes = newReqs[
                                 index
                               ].allowedFileTypes.filter((t) => t !== type);
