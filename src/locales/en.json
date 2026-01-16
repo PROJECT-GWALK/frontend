@@ -10,6 +10,7 @@
     "updateEventDetails": "Update your event details",
     "delete": "Delete",
     "publish": "Publish",
+    "publishing": "Publishing...",
     "saveAsDraft": "Save as Draft",
     "fillDetails": "Fill in the details below",
     "progress": "Progress",
@@ -267,5 +268,24 @@
     "refresh": "Refresh",
     "eventPage": "Event Page",
     "noLoginRequired": "No login required"
+  },
+  "auth": {
+    "signInTitle": "Welcome Back",
+    "signInDesc": "Please sign in to continue to your account",
+    "heroTitle": "Gallery Walk",
+    "heroSubtitle": "Create & Explore Interactive Event",
+    "continueWithGoogle": "Continue with Google",
+    "errorTitle": "Authentication Error",
+    "errorMessage": "There was a problem signing you in.",
+    "authFailed": "Authentication failed. Please try again.",
+    "tryAgain": "Try Again",
+    "backHome": "Back to Home",
+    "or": "or",
+    "support": "If the problem persists, please contact support."
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "Sorry, we couldn't find the page you're looking for.",
+    "backHome": "Back to Home"
   }
 }

@@ -67,7 +67,7 @@ type EventUpdatePayload = {
   fileTypes?: EventFileType[];
 };
 
-const BANNER_MAX_SIZE = 10 * 1024 * 1024; // 5MB
+const BANNER_MAX_SIZE = 20 * 1024 * 1024; // 20MB
 const BANNER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export default function EventDraft() {
