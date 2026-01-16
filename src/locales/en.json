@@ -41,10 +41,11 @@
     "locationLinkHelp": "You can provide:\n\n1. Share Link from Google Maps\nExample: https://maps.app.goo.gl/...\n\n2. Other online website links\nExample: https://www.example.com\n\n3. Embed Link to display a map preview\nExample: <iframe src=\"...\"></iframe>",
     "eventVisibility": "Event Visibility",
     "public": "Public",
-    "private": "Private"
+    "private": "Private",
+    "noDescription": "No description provided."
   },
   "eventTime": {
-    "timeConfiguration": "Time Configuration",
+    "timeConfiguration": "Event Schedule",
     "submissionPeriod": "Submission Period",
     "submissionStartDate": "Start Date",
     "submissionEndDate": "End Date",
@@ -61,8 +62,8 @@
     "endTimeSubmission": "End Time"
   },
   "configuration": {
-    "title": "Configuration",
-    "presenterConfig": "Presenter Configuration",
+    "title": "Participation Guidelines",
+    "presenterConfig": "Team & Member Limits",
     "membersPerGroup": "Members per Group",
     "maxGroups": "Maximum Groups",
     "committeeConfig": "Committee Configuration",
@@ -227,5 +228,44 @@
     "votingProgress": "Voting Progress",
     "totalVotes": "Total Votes",
     "availableAwards": "All Awards"
+  },
+  "eventStatus": {
+    "startsIn": "Starts In",
+    "endsIn": "Ends In",
+    "ongoing": "Ongoing",
+    "status": "Status",
+    "eventEnded": "Event Ended"
+  },
+  "fileRequirements": {
+    "title": "File Requirements",
+    "required": "REQUIRED"
+  },
+  "rewardsCard": {
+    "committeeReward": "Committee Reward",
+    "guestReward": "Guest Reward",
+    "basePoints": "Base points per evaluation"
+  },
+  "organizers": {
+    "title": "Organizers",
+    "role": "Event Organizer",
+    "moreOrganizers": "more organizers",
+    "noOrganizersTitle": "No organizers listed",
+    "noOrganizersDesc": "This event currently has no assigned organizers visible here.",
+    "viewAll": "View All Organizers",
+    "allOrganizers": "All Organizers",
+    "unknown": "Unknown"
+  },
+  "invite": {
+    "title": "Invite Links",
+    "inviteSuffix": "Invite",
+    "regenerateToken": "Regenerate Token",
+    "loading": "Loading...",
+    "downloadQr": "Download QR",
+    "refreshConfirmTitle": "Refresh Invite Link?",
+    "refreshConfirmDesc": "This will invalidate the old invite link. Users using the old link will no longer be able to join. Are you sure?",
+    "cancel": "Cancel",
+    "refresh": "Refresh",
+    "eventPage": "Event Page",
+    "noLoginRequired": "No login required"
   }
 }

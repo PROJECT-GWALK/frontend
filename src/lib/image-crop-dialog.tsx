@@ -4,7 +4,7 @@ import React, { useCallback, useState } from "react";
 import Cropper, { Area, MediaSize } from "react-easy-crop";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { ZoomIn, ZoomOut, RotateCw, RotateCcw, RefreshCcw, Check, X } from "lucide-react";
 
 type ImageCropDialogProps = {
   open: boolean;
@@ -21,6 +21,18 @@ type ImageCropDialogProps = {
   outputHeight?: number;
 };
 
+function getRadianAngle(degreeValue: number) {
+  return (degreeValue * Math.PI) / 180;
+}
+
+function rotateSize(width: number, height: number, rotation: number) {
+  const rotRad = getRadianAngle(rotation);
+  return {
+    width: Math.abs(Math.cos(rotRad) * width) + Math.abs(Math.sin(rotRad) * height),
+    height: Math.abs(Math.sin(rotRad) * width) + Math.abs(Math.cos(rotRad) * height),
+  };
+}
+
 export default function ImageCropDialog({
   open,
   src,
@@ -30,13 +42,14 @@ export default function ImageCropDialog({
   fileName,
   fileType,
   aspect = 1,
-  title = "Crop to square",
+  title = "Adjust Image",
   quality = 0.92,
   outputWidth,
   outputHeight,
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [minZoom, setMinZoom] = useState(1);
   const [maxZoom, setMaxZoom] = useState(8);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -55,6 +68,7 @@ export default function ImageCropDialog({
     setMinZoom(1);
     setMaxZoom(8);
     setZoom(1);
+    setRotation(0);
   }, []);
 
   const createImage = (url: string) =>
@@ -66,38 +80,71 @@ export default function ImageCropDialog({
       img.src = url;
     });
 
-  const getCroppedBlob = async (imageSrc: string, cropPixels: Area, mime: string, outW?: number, outH?: number) => {
+  const getCroppedBlob = async (
+    imageSrc: string,
+    pixelCrop: Area,
+    rotation = 0,
+    mime: string,
+    outW?: number,
+    outH?: number
+  ) => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas not supported");
 
-    const srcW = Math.round(cropPixels.width);
-    const srcH = Math.round(cropPixels.height);
-    const targetW = outW ?? srcW;
-    const targetH = outH ?? srcH;
-    canvas.width = targetW;
-    canvas.height = targetH;
+    if (!ctx) return null;
 
-    ctx.drawImage(
-      image,
-      Math.round(cropPixels.x),
-      Math.round(cropPixels.y),
-      Math.round(cropPixels.width),
-      Math.round(cropPixels.height),
-      0,
-      0,
-      targetW,
-      targetH
-    );
+    const rotRad = getRadianAngle(rotation);
+
+    const { width: bBoxWidth, height: bBoxHeight } = rotateSize(image.width, image.height, rotation);
+
+    canvas.width = bBoxWidth;
+    canvas.height = bBoxHeight;
+
+    ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
+    ctx.rotate(rotRad);
+    ctx.translate(-image.width / 2, -image.height / 2);
+
+    ctx.drawImage(image, 0, 0);
+
+    const data = ctx.getImageData(pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height);
+
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = pixelCrop.width;
+    cropCanvas.height = pixelCrop.height;
+    const cropCtx = cropCanvas.getContext("2d");
+    if (!cropCtx) return null;
+
+    cropCtx.putImageData(data, 0, 0);
+
+    if (outW && outH) {
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = outW;
+      finalCanvas.height = outH;
+      const finalCtx = finalCanvas.getContext("2d");
+      if (!finalCtx) return null;
+
+      finalCtx.drawImage(cropCanvas, 0, 0, outW, outH);
+
+      return new Promise<Blob>((resolve, reject) => {
+        finalCanvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error("Canvas is empty"));
+            resolve(blob);
+          },
+          mime,
+          quality
+        );
+      });
+    }
 
     return new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
+      cropCanvas.toBlob(
         (blob) => {
           if (!blob) return reject(new Error("Canvas is empty"));
           resolve(blob);
         },
-        mime || "image/png",
+        mime,
         quality
       );
     });
@@ -105,67 +152,114 @@ export default function ImageCropDialog({
 
   const handleConfirm = async () => {
     if (!src || !croppedAreaPixels) return;
-    const mime = fileType || "image/png";
-    const blob = await getCroppedBlob(src, croppedAreaPixels, mime, outputWidth, outputHeight);
-    const name = (fileName && `cropped-${fileName}`) || "banner-cropped.png";
-    const newFile = new File([blob], name, { type: blob.type });
-    const url = URL.createObjectURL(newFile);
-    onConfirm(newFile, url);
+    try {
+      const mime = fileType || "image/png";
+      const blob = await getCroppedBlob(src, croppedAreaPixels, rotation, mime, outputWidth, outputHeight);
+      if (!blob) return;
+      
+      const name = (fileName && `cropped-${fileName}`) || "image-cropped.png";
+      const newFile = new File([blob], name, { type: blob.type });
+      const url = URL.createObjectURL(newFile);
+      onConfirm(newFile, url);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReset = () => {
+    setZoom(1);
+    setRotation(0);
+    setCrop({ x: 0, y: 0 });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden bg-card">
+        <DialogHeader className="p-4 border-b">
+          <DialogTitle className="text-lg font-medium">{title}</DialogTitle>
         </DialogHeader>
 
-        <div className="relative w-full h-[420px] sm:h-[480px] bg-muted rounded-md overflow-hidden">
+        <div className="relative w-full h-[50vh] min-h-[400px] bg-[#141414]">
           {src && (
             <Cropper
               image={src}
               crop={crop}
               zoom={zoom}
+              rotation={rotation}
               minZoom={minZoom}
               maxZoom={maxZoom}
               aspect={aspect}
               onCropChange={setCrop}
               onZoomChange={setZoom}
+              onRotationChange={setRotation}
               onCropComplete={onCropComplete}
               onMediaLoaded={handleMediaLoaded}
-              restrictPosition
+              restrictPosition={false}
               showGrid
               cropShape="rect"
               zoomWithScroll
+              objectFit="contain"
             />
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Label htmlFor="zoom">Zoom</Label>
-          <input
-            id="zoom"
-            type="range"
-            min={minZoom}
-            max={maxZoom}
-            step={0.1}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-full"
-          />
-        </div>
+        <div className="p-4 space-y-4 bg-background">
+          {/* Controls */}
+          <div className="space-y-4">
+            {/* Zoom Control */}
+            <div className="flex items-center gap-4">
+              <ZoomOut className="w-4 h-4 text-muted-foreground" />
+              <input
+                type="range"
+                min={minZoom}
+                max={maxZoom}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="flex-1 h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+              />
+              <ZoomIn className="w-4 h-4 text-muted-foreground" />
+            </div>
 
-        <DialogFooter>
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="button" variant="outline" onClick={() => setZoom(1)}>
-            Reset
-          </Button>
-          <Button type="button" onClick={handleConfirm}>
-            Done
-          </Button>
-        </DialogFooter>
+            {/* Rotation Control */}
+            <div className="flex items-center gap-4">
+              <RotateCcw className="w-4 h-4 text-muted-foreground" />
+              <input
+                type="range"
+                min={-180}
+                max={180}
+                step={1}
+                value={rotation}
+                onChange={(e) => setRotation(Number(e.target.value))}
+                className="flex-1 h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+              />
+              <RotateCw className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleReset}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCcw className="w-4 h-4 mr-2" />
+              Reset
+            </Button>
+            
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleConfirm}>
+                <Check className="w-4 h-4 mr-2" />
+                Apply
+              </Button>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

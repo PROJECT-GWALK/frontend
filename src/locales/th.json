@@ -41,10 +41,11 @@
     "locationLinkHelp": "คุณสามารถใส่ลิงก์ได้ดังนี้:\n\n1. ลิงก์แชร์สถานที่ (Share Link)\nตัวอย่าง: https://maps.app.goo.gl/...\n\n2. ลิงก์เว็บไซต์ออนไลน์อื่นๆ\nตัวอย่าง: https://www.example.com\n\n3. ลิงก์สำหรับฝังแผนที่ (Embed Link)\nตัวอย่าง: <iframe src=\"...\"></iframe>",
     "eventVisibility": "การมองเห็นอีเวนต์",
     "public": "สาธารณะ",
-    "private": "ส่วนตัว"
+    "private": "ส่วนตัว",
+    "noDescription": "ไม่มีรายละเอียด"
   },
   "eventTime": {
-    "timeConfiguration": "ตั้งค่าเวลา",
+    "timeConfiguration": "กำหนดการ",
     "submissionPeriod": "ช่วงเวลาส่งผลงาน",
     "submissionStartDate": "วันที่เริ่มส่ง",
     "submissionEndDate": "วันที่สิ้นสุดส่ง",
@@ -61,8 +62,8 @@
     "endTimeSubmission": "เวลาสิ้นสุดส่ง"
   },
   "configuration": {
-    "title": "การตั้งค่า",
-    "presenterConfig": "ตั้งค่าผู้นำเสนอ",
+    "title": "เงื่อนไขการเข้าร่วม",
+    "presenterConfig": "ข้อกำหนดทีมและสมาชิก",
     "membersPerGroup": "จำนวนสมาชิกต่อกลุ่ม",
     "maxGroups": "จำนวนกลุ่มสูงสุด",
     "committeeConfig": "ตั้งค่าคณะกรรมการ",
@@ -227,5 +228,44 @@
     "votingProgress": "ความคืบหน้าการโหวต",
     "totalVotes": "คะแนนโหวตทั้งหมด",
     "availableAwards": "รางวัลทั้งหมด"
+  },
+  "eventStatus": {
+    "startsIn": "เริ่มใน",
+    "endsIn": "สิ้นสุดใน",
+    "ongoing": "กำลังดำเนินการ",
+    "status": "สถานะ",
+    "eventEnded": "จบกิจกรรมแล้ว"
+  },
+  "fileRequirements": {
+    "title": "ข้อกำหนดไฟล์",
+    "required": "จำเป็น"
+  },
+  "rewardsCard": {
+    "committeeReward": "รางวัลกรรมการ",
+    "guestReward": "รางวัลผู้เข้าร่วม",
+    "basePoints": "คะแนนพื้นฐานต่อการประเมิน"
+  },
+  "organizers": {
+    "title": "ผู้จัดงาน",
+    "role": "ผู้จัดงาน",
+    "moreOrganizers": "ผู้จัดงานเพิ่มเติม",
+    "noOrganizersTitle": "ไม่มีรายชื่อผู้จัดงาน",
+    "noOrganizersDesc": "กิจกรรมนี้ยังไม่มีผู้จัดงานที่ได้รับมอบหมายให้แสดงที่นี่",
+    "viewAll": "ดูผู้จัดงานทั้งหมด",
+    "allOrganizers": "ผู้จัดงานทั้งหมด",
+    "unknown": "ไม่ระบุ"
+  },
+  "invite": {
+    "title": "ลิงก์คำเชิญ",
+    "inviteSuffix": "คำเชิญ",
+    "regenerateToken": "สร้างโทเค็นใหม่",
+    "loading": "กำลังโหลด...",
+    "downloadQr": "ดาวน์โหลด QR",
+    "refreshConfirmTitle": "รีเฟรชลิงก์คำเชิญ?",
+    "refreshConfirmDesc": "การกระทำนี้จะทำให้ลิงก์คำเชิญเก่าใช้งานไม่ได้ ผู้ใช้ที่ใช้ลิงก์เก่าจะไม่สามารถเข้าร่วมได้ คุณแน่ใจหรือไม่?",
+    "cancel": "ยกเลิก",
+    "refresh": "รีเฟรช",
+    "eventPage": "หน้าอีเวนต์",
+    "noLoginRequired": "ไม่ต้องเข้าสู่ระบบ"
   }
 }

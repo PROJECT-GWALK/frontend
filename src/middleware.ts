@@ -18,6 +18,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(targetUrl);
   }
 
+  // Allow static files (images, etc) to bypass auth
+  if (/\.(?:svg|png|jpg|jpeg|gif|webp)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   // Auth logic for protected routes
   const sessionToken =
     request.cookies.get("authjs.session-token")?.value ??
