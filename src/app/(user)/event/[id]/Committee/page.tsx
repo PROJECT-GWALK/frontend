@@ -319,12 +319,12 @@ export default function CommitteePage(props: Props) {
       <div className="min-h-screen bg-background">
         <div className="w-full">
           {/* Banner Skeleton */}
-          <div className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden">
+          <div className="relative w-full aspect-2/1 md:h-100 overflow-hidden">
             <Skeleton className="w-full h-full" />
           </div>
           <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
             {/* Header Card Skeleton */}
-            <div className="border rounded-xl shadow-md mb-6 p-6 h-[100px] bg-card">
+            <div className="border rounded-xl shadow-md mb-6 p-6 h-25 bg-card">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 h-full">
                  <Skeleton className="h-8 w-1/3" />
                  <Skeleton className="h-10 w-32" />
@@ -356,7 +356,7 @@ export default function CommitteePage(props: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
@@ -402,7 +402,7 @@ export default function CommitteePage(props: Props) {
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
           <Card 
-            className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
+            className="border-0 dark:border dark:border-white/10 shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-committee)" }}
           >
             <div 
@@ -437,10 +437,10 @@ export default function CommitteePage(props: Props) {
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">Dashboard</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">Projects</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -448,10 +448,10 @@ export default function CommitteePage(props: Props) {
                 {/* Personal Virtual Rewards summary */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* 1. My Virtual Rewards */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                           <BadgeCheck className="h-5 w-5" />
                         </div>
                         {t("committeeSection.myVirtualRewards")}
@@ -473,7 +473,7 @@ export default function CommitteePage(props: Props) {
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground">Given to</p>
                           <div className="flex items-baseline gap-1 justify-end">
-                            <span className="text-xl font-bold text-amber-600">
+                            <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
                               {teamsGivenVrCount}
                             </span>
                             <span className="text-sm text-muted-foreground">
@@ -482,9 +482,9 @@ export default function CommitteePage(props: Props) {
                           </div>
                         </div>
                       </div>
-                      <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                          className="h-full bg-linear-to-r from-amber-500 to-yellow-400 dark:from-amber-600 dark:to-amber-400 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
                               localEvent?.myVirtualTotal && localEvent.myVirtualTotal > 0
@@ -494,7 +494,7 @@ export default function CommitteePage(props: Props) {
                           }}
                         />
                       </div>
-                      <p className="text-xs text-amber-600 font-medium text-right">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-right">
                         {t("committeeSection.remaining")}{" "}
                         {((localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)).toLocaleString()} {localEvent?.unitReward ?? "coins"}
                       </p>
@@ -502,10 +502,10 @@ export default function CommitteePage(props: Props) {
                   </Card>
 
                   {/* 2. จำนวนผู้เข้าร่วมทั้งหมด */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                        <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
                           <Users className="h-5 w-5" />
                         </div>
                         {t("committeeSection.totalParticipants")}
@@ -518,13 +518,13 @@ export default function CommitteePage(props: Props) {
                           (localEvent?.committeeCount ?? 0)}
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs mt-2 text-muted-foreground">
-                        <span className="px-2 py-1 bg-slate-100 rounded">
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                           {t("dashboard.presenterCount")}: {localEvent?.presentersCount ?? 0}
                         </span>
-                        <span className="px-2 py-1 bg-slate-100 rounded">
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                           {t("dashboard.guestCount")}: {localEvent?.guestsCount ?? 0}
                         </span>
-                        <span className="px-2 py-1 bg-slate-100 rounded">
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                           {t("dashboard.committeeCount")}: {localEvent?.committeeCount ?? 0}
                         </span>
                       </div>
@@ -532,10 +532,10 @@ export default function CommitteePage(props: Props) {
                   </Card>
 
                   {/* 4. รางวัลพิเศษ (Updated with List of Voted Teams) */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 md:col-span-2 lg:col-span-1">
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300 md:col-span-2 lg:col-span-1">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">
                           <Award className="h-5 w-5" />
                         </div>
                         {t("committeeSection.specialAwards")}
@@ -553,7 +553,7 @@ export default function CommitteePage(props: Props) {
                       </div>
                       
                       {/* Voted Awards List */}
-                      <div className="grid gap-3 sm:grid-cols-2 mt-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                      <div className="grid gap-3 sm:grid-cols-2 mt-4 max-h-100 overflow-y-auto custom-scrollbar pr-2">
                          {localEvent?.specialRewards?.map((reward) => {
                            const teams = givenSpecialRewardsStats[reward.id];
                            const isGiven = teams && teams.length > 0;
@@ -563,7 +563,7 @@ export default function CommitteePage(props: Props) {
                                key={reward.id} 
                                className={`border rounded-lg p-3 space-y-3 transition-all ${
                                  isGiven 
-                                   ? "bg-indigo-50/50 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-800" 
+                                   ? "bg-indigo-50/50 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-500/30" 
                                    : "bg-background border-dashed border-muted opacity-60 grayscale hover:opacity-100 hover:grayscale-0 hover:border-solid hover:shadow-sm"
                                }`}
                              >
@@ -632,7 +632,7 @@ export default function CommitteePage(props: Props) {
                             {awardsUnused.map((award, i) => (
                               <div
                                 key={award.id || i}
-                                className="text-[10px] px-2 py-1 bg-slate-50 text-slate-400 rounded border border-slate-100"
+                                className="text-[10px] px-2 py-1 bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 rounded border border-slate-100 dark:border-slate-800"
                               >
                                 {award.name}
                               </div>
@@ -644,10 +644,10 @@ export default function CommitteePage(props: Props) {
                   </Card>
 
                   {/* 5. Feedback (New Card) */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+                        <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
                           <MessageSquare className="h-5 w-5" />
                         </div>
                         Comment Progress
@@ -655,26 +655,33 @@ export default function CommitteePage(props: Props) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
-                        <span className="text-2xl font-bold text-foreground">
-                          {localEvent?.opinionsCommittee ?? 0}{" "}
-                          <span className="text-sm font-normal text-muted-foreground">
-                            / {localEvent?.presenterTeams ?? 0}
-                          </span>
-                        </span>
-                        <span className="text-sm text-muted-foreground">{t("committeeSection.feedbackGiven")}</span>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t("committeeSection.feedbackGiven")}</p>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+                              {localEvent?.opinionsCommittee ?? 0}
+                            </span>
+                            <span className="text-lg text-muted-foreground">
+                              / {localEvent?.presenterTeams ?? 0} Teams
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-2 w-full bg-rose-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-rose-100 dark:bg-rose-900/30 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-rose-500 rounded-full transition-all duration-1000"
+                          className="h-full bg-linear-to-r from-rose-500 to-pink-400 dark:from-rose-600 dark:to-rose-400 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
                               localEvent?.presenterTeams && localEvent.presenterTeams > 0
-                                ? ((localEvent.myFeedbackCount ?? 0) / localEvent.presenterTeams) * 100
+                                ? ((localEvent.opinionsCommittee ?? 0) / localEvent.presenterTeams) * 100
                                 : 0
                             }%`,
                           }}
                         />
                       </div>
+                      <p className="text-xs text-rose-600 dark:text-rose-400 font-medium text-right">
+                        {t("committeeSection.remaining")} {(localEvent?.presenterTeams ?? 0) - (localEvent?.opinionsCommittee ?? 0)} Teams
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
@@ -703,7 +710,7 @@ export default function CommitteePage(props: Props) {
                           setFilterStatus(v as "all" | "scored" | "unscored")
                         }
                       >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="w-35">
                           <SelectValue placeholder="Filter" />
                         </SelectTrigger>
                         <SelectContent>

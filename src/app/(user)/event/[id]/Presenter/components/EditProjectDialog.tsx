@@ -28,6 +28,7 @@ type Props = {
   project: PresenterProject;
   onSuccess: () => void;
   eventId: string;
+  isSubmissionActive?: boolean;
 };
 
 export default function EditProjectDialog({
@@ -36,6 +37,7 @@ export default function EditProjectDialog({
   project,
   onSuccess,
   eventId,
+  isSubmissionActive = true,
 }: Props) {
   const router = useRouter();
   const [form, setForm] = useState<PresenterProject>(project);
@@ -181,6 +183,7 @@ export default function EditProjectDialog({
             <Input
               value={form.title || ""}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
+              disabled={!isSubmissionActive}
             />
           </div>
 
@@ -189,6 +192,7 @@ export default function EditProjectDialog({
             <Textarea
               value={form.desc || ""}
               onChange={(e) => setForm({ ...form, desc: e.target.value })}
+              disabled={!isSubmissionActive}
             />
           </div>
 
@@ -218,10 +222,10 @@ export default function EditProjectDialog({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={openFilePicker}>
+                  <Button size="sm" variant="secondary" onClick={openFilePicker} disabled={!isSubmissionActive}>
                     Change
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={onRemoveBanner}>
+                  <Button size="sm" variant="destructive" onClick={onRemoveBanner} disabled={!isSubmissionActive}>
                     Remove
                   </Button>
                 </div>
@@ -231,12 +235,15 @@ export default function EditProjectDialog({
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={onBannerFileChange}
+                  disabled={!isSubmissionActive}
                 />
               </div>
             ) : (
               <div
-                className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-video flex flex-col items-center justify-center mt-2"
-                onClick={openFilePicker}
+                className={`border-2 border-dashed border-border rounded-lg p-8 text-center transition-colors aspect-video flex flex-col items-center justify-center mt-2 ${
+                  isSubmissionActive ? "hover:border-primary/50 cursor-pointer" : "opacity-50 cursor-not-allowed"
+                }`}
+                onClick={isSubmissionActive ? openFilePicker : undefined}
               >
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Click to upload</p>
@@ -246,6 +253,7 @@ export default function EditProjectDialog({
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={onBannerFileChange}
+                  disabled={!isSubmissionActive}
                 />
               </div>
             )}
@@ -279,7 +287,7 @@ export default function EditProjectDialog({
                 variant="destructive"
                 size="sm"
                 onClick={() => setDeleteDialogOpen(true)}
-                disabled={loading}
+                disabled={loading || !isSubmissionActive}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Project
@@ -289,7 +297,7 @@ export default function EditProjectDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={loading}>
+              <Button onClick={handleSave} disabled={loading || !isSubmissionActive}>
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
             </div>

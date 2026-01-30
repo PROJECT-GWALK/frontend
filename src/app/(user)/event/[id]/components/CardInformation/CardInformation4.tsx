@@ -18,11 +18,11 @@ export default function CardInformation4({ event, editable, onEdit }: Props) {
   const specialRewards = event?.specialRewards ?? [];
 
   return (
-    <Card className="lg:col-span-2 border-none shadow-md hover:shadow-lg transition-all duration-300 group">
+    <Card className="lg:col-span-2 border-none dark:border dark:border-white/10 shadow-md hover:shadow-lg transition-all duration-300 group">
       <CardHeader>
         <div className="flex items-center justify-between w-full">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
               <Award className="h-5 w-5" />
             </div>
             {t("rewardsSection.specialRewards") || "Special Rewards"}
@@ -45,7 +45,7 @@ export default function CardInformation4({ event, editable, onEdit }: Props) {
             {specialRewards.map((reward) => (
               <div
                 key={reward.id}
-                className="flex items-start gap-4 p-4 rounded-2xl border bg-card hover:bg-amber-50/50 dark:hover:bg-amber-900/10 hover:border-amber-200 dark:hover:border-amber-800 transition-all duration-300 group/reward"
+                className="flex items-start gap-4 p-4 rounded-2xl border bg-card dark:bg-card/50 dark:border-white/5 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 hover:border-amber-200 dark:hover:border-amber-500/30 transition-all duration-300 group/reward"
               >
                 <div className="relative h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-muted border">
                   {reward.image ? (

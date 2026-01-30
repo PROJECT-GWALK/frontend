@@ -24,7 +24,7 @@ export default function ErrorPage() {
         <h2 className="text-2xl font-semibold text-foreground mb-4">
            {t("auth.authFailed")}
         </h2>
-        <p className="text-muted-foreground max-w-[500px] mb-8 text-lg">
+        <p className="text-muted-foreground max-w-125 mb-8 text-lg">
           {t("auth.errorMessage")}
         </p>
         <div className="flex flex-col sm:flex-row gap-4">

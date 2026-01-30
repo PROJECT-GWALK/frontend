@@ -26,11 +26,11 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
   const { t } = useLanguage();
 
   return (
-    <Card className="lg:col-span-2 border-none shadow-md hover:shadow-lg transition-all duration-300 group">
+    <Card className="lg:col-span-2 border-none dark:border dark:border-white/10 shadow-md hover:shadow-lg transition-all duration-300 group">
       <CardHeader>
         <div className="flex items-center justify-between w-full">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-(--role-presenter) transition-colors">
-            <div className="p-2.5 rounded-xl bg-(--role-presenter)/10 text-(--role-presenter)">
+            <div className="p-2.5 rounded-xl bg-(--role-presenter)/10 text-(--role-presenter) dark:bg-(--role-presenter)/20">
               <Users className="h-5 w-5" />
             </div>
             {t("configuration.title") || "Participation Guidelines"}
@@ -82,7 +82,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
               {t("configuration.presenterConfig") || "Team & Member Limits"}
             </h4>
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-(--role-presenter)/5 border border-(--role-presenter)/10 hover:bg-(--role-presenter)/10 transition-colors">
+              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-(--role-presenter)/5 dark:bg-(--role-presenter)/10 border border-(--role-presenter)/10 dark:border-(--role-presenter)/20 hover:bg-(--role-presenter)/10 transition-colors">
                 <div className="text-3xl font-black text-(--role-presenter)">
                   {event?.maxTeams ?? "-"}
                 </div>
@@ -90,7 +90,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                   {t("information.maxTeams")}
                 </div>
               </div>
-              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-(--role-presenter)/5 border border-(--role-presenter)/10 hover:bg-(--role-presenter)/10 transition-colors">
+              <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-(--role-presenter)/5 dark:bg-(--role-presenter)/10 border border-(--role-presenter)/10 dark:border-(--role-presenter)/20 hover:bg-(--role-presenter)/10 transition-colors">
                 <div className="text-3xl font-black text-(--role-presenter)">
                   {event?.maxTeamMembers ?? "-"}
                 </div>

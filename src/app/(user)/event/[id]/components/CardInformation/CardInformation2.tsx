@@ -24,11 +24,11 @@ export default function CardInformation2({
   const locale = language === "th" ? "th-TH" : "en-US";
 
   return (
-    <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 group">
+    <Card className="border-none dark:border dark:border-white/10 shadow-md hover:shadow-lg transition-all duration-300 group">
       <CardHeader>
         <div className="flex items-center justify-between w-full">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
-            <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+            <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
               <Clock className="h-5 w-5" />
             </div>
             {t("eventTime.timeConfiguration") || t("information.eventDuration")}
@@ -48,7 +48,7 @@ export default function CardInformation2({
       <CardContent>
         <div className="flex flex-col gap-4">
           {/* Status Display */}
-          <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20">
+          <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-500/20">
             {(() => {
               const now = new Date();
               const sv = event?.startView ? new Date(event.startView) : undefined;

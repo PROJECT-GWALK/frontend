@@ -474,7 +474,7 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
                                           }}
                                           disabled={g === "ORGANIZER" && !isOrganizerLeader}
                                         >
-                                          <SelectTrigger className="w-[130px]">
+                                          <SelectTrigger className="w-32.5">
                                             <SelectValue placeholder="เลือกบทบาท" />
                                           </SelectTrigger>
                                           <SelectContent>
@@ -527,7 +527,7 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
                                           return (
                                             <div className="flex items-center gap-2">
                                               <Crown className="h-4 w-4 text-yellow-500 shrink-0" />
-                                              <span className="text-sm truncate max-w-[150px]">
+                                              <span className="text-sm truncate max-w-37.5">
                                                 {u?.name ||
                                                   u?.username ||
                                                   u?.email ||

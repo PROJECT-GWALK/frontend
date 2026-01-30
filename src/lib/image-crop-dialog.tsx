@@ -176,10 +176,15 @@ export default function ImageCropDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden bg-card">
         <DialogHeader className="p-4 border-b">
-          <DialogTitle className="text-lg font-medium">{title}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-lg font-medium">{title}</DialogTitle>
+            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
 
-        <div className="relative w-full h-[50vh] min-h-[400px] bg-[#141414]">
+        <div className="relative w-full h-[50vh] min-h-100 bg-[#141414]">
           {src && (
             <Cropper
               image={src}
@@ -204,9 +209,7 @@ export default function ImageCropDialog({
         </div>
 
         <div className="p-4 space-y-4 bg-background">
-          {/* Controls */}
           <div className="space-y-4">
-            {/* Zoom Control */}
             <div className="flex items-center gap-4">
               <ZoomOut className="w-4 h-4 text-muted-foreground" />
               <input
@@ -219,9 +222,11 @@ export default function ImageCropDialog({
                 className="flex-1 h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
               />
               <ZoomIn className="w-4 h-4 text-muted-foreground" />
+              <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                {Math.round(zoom * 100)}%
+              </span>
             </div>
 
-            {/* Rotation Control */}
             <div className="flex items-center gap-4">
               <RotateCcw className="w-4 h-4 text-muted-foreground" />
               <input
@@ -234,32 +239,34 @@ export default function ImageCropDialog({
                 className="flex-1 h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
               />
               <RotateCw className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleReset}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCcw className="w-4 h-4 mr-2" />
-              Reset
-            </Button>
-            
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={handleConfirm}>
-                <Check className="w-4 h-4 mr-2" />
-                Apply
-              </Button>
+              <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                {rotation}°
+              </span>
             </div>
           </div>
         </div>
+        <DialogFooter className="p-4 border-t flex items-center justify-between">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleReset}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCcw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
+          
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleConfirm}>
+              <Check className="w-4 h-4 mr-2" />
+              Apply
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

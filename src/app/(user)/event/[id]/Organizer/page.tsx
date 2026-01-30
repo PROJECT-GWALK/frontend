@@ -122,6 +122,10 @@ export default function OrganizerView({ id, event }: Props) {
 
             <TabsContent value="dashboard">
               <OrganizerDashboard event={localEvent} />
+              {/* Feedback Section - Only visible when event is finished */}
+              {localEvent?.endView && new Date() > new Date(localEvent.endView) && (
+                <FeedbackList eventId={id} />
+              )}
             </TabsContent>
 
             <TabsContent value="information">
@@ -185,10 +189,7 @@ export default function OrganizerView({ id, event }: Props) {
             </TabsContent>
           </Tabs>
 
-          {/* Feedback Section - Only visible when event is finished */}
-          {localEvent?.endView && new Date() > new Date(localEvent.endView) && (
-            <FeedbackList eventId={id} />
-          )}
+
         </div>
 
         {/* Edit Dialog */}

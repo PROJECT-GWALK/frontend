@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, BadgeCheck } from "lucide-react";
+import { Users, Building, BadgeCheck, MessageSquare, Gift } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -94,9 +94,9 @@ export default function GuestView({ id, event }: Props) {
           vrGiven: 0,
         },
       }));
-      toast.success("Reset Virtual Reward");
+      toast.success(t("toast.resetVR"));
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Failed to reset VR"));
+      toast.error(getErrorMessage(error, t("toast.failedResetVR")));
     }
   };
 
@@ -118,9 +118,9 @@ export default function GuestView({ id, event }: Props) {
           vrGiven: amount,
         },
       }));
-      toast.success("ให้ Virtual Reward เรียบร้อย");
+      toast.success(t("toast.giveVRSuccess"));
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Failed to give VR"));
+      toast.error(getErrorMessage(error, t("toast.failedGiveVR")));
     }
   };
 
@@ -191,13 +191,13 @@ export default function GuestView({ id, event }: Props) {
     <div className="min-h-screen bg-background">
       <div className="w-full">
         <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
           onClick={() => setBannerOpen(true)}
         >
           {localEvent?.imageCover ? (
             <Image
               src={localEvent.imageCover}
-              alt={localEvent.eventName || "Event banner"}
+              alt={localEvent.eventName || t("guest.bannerAlt")}
               fill
               sizes="100vw"
               className="object-cover rounded-xl"
@@ -205,7 +205,7 @@ export default function GuestView({ id, event }: Props) {
           ) : (
             <Image
               src="/banner.png"
-              alt="Default banner"
+              alt={t("guest.defaultBannerAlt")}
               fill
               sizes="100vw"
               className="object-cover rounded-xl"
@@ -237,7 +237,7 @@ export default function GuestView({ id, event }: Props) {
         </Dialog>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
           <Card 
-            className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
+            className="border-0 dark:border dark:border-white/10 shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-guest)" }}
           >
             <div 
@@ -263,7 +263,7 @@ export default function GuestView({ id, event }: Props) {
                   {/* Role Label */}
                   <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-guest) text-white font-medium shadow-md select-none">
                     <Building className="h-4 w-4" />
-                    <span>Guest</span>
+                    <span>{t("guest.role")}</span>
                   </div>
                 </div>
               </div>
@@ -272,19 +272,19 @@ export default function GuestView({ id, event }: Props) {
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">{t("guest.dashboard")}</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">{t("guest.information")}</TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">{t("guest.projects")}</TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">{t("guest.result")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 {/* My Virtual Rewards */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                         <BadgeCheck className="h-5 w-5" />
                       </div>
                       {t("committeeSection.myVirtualRewards") || "My Virtual Rewards"}
@@ -293,148 +293,101 @@ export default function GuestView({ id, event }: Props) {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-sm text-muted-foreground">{t("committeeSection.used") || "Used"}</p>
+                        <p className="text-sm text-muted-foreground">{t("committeeSection.used")}</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-bold">
+                          <span className="text-3xl font-bold text-foreground">
                             {localEvent?.myVirtualUsed ?? 0}
                           </span>
                           <span className="text-lg text-muted-foreground">
-                            / {localEvent?.myVirtualTotal ?? 0} {localEvent?.unitReward ?? "coins"}
+                            / {localEvent?.myVirtualTotal ?? 0} {localEvent?.unitReward ?? t("guest.defaultUnit")}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                        className="h-full bg-linear-to-r from-amber-500 to-yellow-400 dark:from-amber-600 dark:to-amber-400 rounded-full transition-all duration-1000"
                         style={{
                           width: `${
-                            ((localEvent?.myVirtualUsed ?? 0) /
-                              (localEvent?.myVirtualTotal || 1)) *
-                            100
+                            localEvent?.myVirtualTotal && localEvent.myVirtualTotal > 0
+                              ? ((localEvent.myVirtualUsed ?? 0) / localEvent.myVirtualTotal) * 100
+                              : 0
                           }%`,
                         }}
                       />
                     </div>
-                    <p className="text-xs text-amber-600 font-medium text-right">
-                      {t("committeeSection.remaining") || "Remaining"}{" "}
-                      {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)} {localEvent?.unitReward ?? "coins"}
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-right">
+                      {t("committeeSection.remaining")}{" "}
+                      {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)} {localEvent?.unitReward ?? t("guest.defaultUnit")}
                     </p>
                   </CardContent>
                 </Card>
 
-                {/* จำนวนผู้เข้าร่วมทั้งหมด */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                {/* Total Participants (Consolidated) */}
+                <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                      <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
                         <Users className="h-5 w-5" />
                       </div>
                        {t("dashboard.totalParticipants")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
+                    <div className="text-4xl font-bold text-foreground mb-4">
                       {(localEvent?.presentersCount ?? 0) +
                         (localEvent?.guestsCount ?? 0) +
                         (localEvent?.committeeCount ?? 0)}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.presenterCount")}: {localEvent?.presentersCount ?? localEvent?.maxTeams ?? 0} | 
-                      {" "}{t("dashboard.guestCount")}: {localEvent?.guestsCount ?? 0} | {t("dashboard.committeeCount")}:{" "}
-                      {localEvent?.committeeCount ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* ผู้นำเสนอ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      {t("dashboard.presenterCount")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.presenterTeams ?? 0}
+                    <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                        <div className="p-2 rounded-lg bg-muted/50 dark:bg-muted/20">
+                            <div className="font-semibold text-foreground">{localEvent?.presentersCount ?? 0}</div>
+                            <div className="text-xs text-muted-foreground">{t("dashboard.presenterCount")}</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-muted/50 dark:bg-muted/20">
+                            <div className="font-semibold text-foreground">{localEvent?.guestsCount ?? 0}</div>
+                            <div className="text-xs text-muted-foreground">{t("dashboard.guestCount")}</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-muted/50 dark:bg-muted/20">
+                            <div className="font-semibold text-foreground">{localEvent?.committeeCount ?? 0}</div>
+                            <div className="text-xs text-muted-foreground">{t("dashboard.committeeCount")}</div>
+                        </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">{t("dashboard.teamCount")}</p>
                   </CardContent>
                 </Card>
 
-                {/* ผู้เข้าร่วม */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                {/* All Comments */}
+                <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      {t("dashboard.guestCount")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.guestsCount ?? 0}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.commentGiven")}: {localEvent?.participantsCommentCount ?? 90} / {t("dashboard.used")}:{" "}
-                      {localEvent?.participantsVirtualUsed ?? 2000}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* กรรมการ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      {t("dashboard.committeeCount")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.committeeCount ?? 0}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.feedbackGiven")}: {localEvent?.committeeFeedbackCount ?? 10} / {t("dashboard.used")}:{" "}
-                      {localEvent?.committeeVirtualUsed ?? 2000}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* ความคิดเห็นทั้งหมด */}
-                <Card className="lg:col-span-2 border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300">
-                        <Users className="h-5 w-5" />
+                      <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-400">
+                        <MessageSquare className="h-5 w-5" />
                       </div>
                       {t("dashboard.allComments")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.opinionsGot ?? 33}
+                      {localEvent?.opinionsGot?.toLocaleString() ?? 33}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {t("dashboard.presenterCount")}: {localEvent?.opinionsPresenter ?? 10} | {t("dashboard.guestCount")}:{" "}
-                      {localEvent?.opinionsGuest ?? 20} | {t("dashboard.committeeCount")}:{" "}
-                      {localEvent?.opinionsCommittee ?? 3}
+                      {t("guest.totalFeedbackDesc")}
                     </p>
+                    <div className="h-2 w-full bg-pink-100 dark:bg-pink-900/30 rounded-full overflow-hidden mt-4">
+                      <div
+                        className="h-full bg-linear-to-r from-pink-500 to-rose-400 dark:from-pink-600 dark:to-rose-400 rounded-full transition-all duration-1000"
+                        style={{ width: "65%" }} 
+                      />
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Virtual Rewards */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                {/* Virtual Rewards (Global) */}
+                <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
-                        <Users className="h-5 w-5" />
+                      <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">
+                        <Gift className="h-5 w-5" />
                       </div>
                       {t("dashboard.reward")}
                     </CardTitle>
@@ -442,11 +395,11 @@ export default function GuestView({ id, event }: Props) {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">{t("dashboard.usedAlready")}</span>
-                      <span className="text-lg font-bold">{localEvent?.vrUsed ?? 20000} {localEvent?.unitReward ?? "coins"}</span>
+                      <span className="text-lg font-bold text-foreground">{localEvent?.vrUsed?.toLocaleString() ?? 20000}</span>
                     </div>
-                    <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-purple-100 dark:bg-purple-900/30 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out"
+                        className="h-full bg-linear-to-r from-purple-500 to-indigo-400 dark:from-purple-600 dark:to-indigo-400 rounded-full transition-all duration-1000 ease-out"
                         style={{
                           width: `${
                             ((localEvent?.vrUsed ?? 20000) / (localEvent?.vrTotal ?? 50000)) * 100
@@ -456,54 +409,16 @@ export default function GuestView({ id, event }: Props) {
                     </div>
                     <div className="flex justify-between items-center text-sm text-muted-foreground">
                       <span>
-                        {t("dashboard.remaining")} {t("dashboard.total")} {(localEvent?.vrTotal ?? 50000) - (localEvent?.vrUsed ?? 20000)}
+                         {t("guest.totalPool")} {(localEvent?.vrTotal ?? 50000).toLocaleString()}
                       </span>
-                      <span>{t("dashboard.total")} {localEvent?.vrTotal ?? 50000}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* รางวัลพิเศษ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      {t("dashboard.specialAwards")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.specialPrizeUsed ?? 4}{" "}
-                      <span className="text-xl font-normal text-muted-foreground">
-                        / {localEvent?.specialPrizeCount ?? 5}
+                      <span>
+                        {Math.round(
+                          ((localEvent?.vrUsed ?? 20000) /
+                            (localEvent?.vrTotal ?? 50000)) *
+                            100
+                        )}
+                        %
                       </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">{t("dashboard.usedOverTotal")}</p>
-                  </CardContent>
-                </Card>
-
-                {/* ยังไม่ได้ใช้ */}
-                <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      {t("dashboard.remainingAwards")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {(localEvent?.awardsUnused ?? []).map((a, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                          <span className="text-sm font-medium">
-                            {typeof a === "string" ? a : a.name}
-                          </span>
-                        </div>
-                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -515,7 +430,7 @@ export default function GuestView({ id, event }: Props) {
                 id={id}
                 event={localEvent as EventData}
                 editable={false}
-                linkLabel="ลิงก์"
+                linkLabel={t("information.link")}
               />
             </TabsContent>
 
@@ -524,7 +439,7 @@ export default function GuestView({ id, event }: Props) {
                 {/* Projects in the event */}
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-                    <h2 className="text-lg font-semibold">Projects</h2>
+                    <h2 className="text-lg font-semibold">{t("guest.projectSectionTitle")}</h2>
                     <div className="flex gap-2 w-full sm:w-auto">
                       <Select
                         value={filterStatus}
@@ -532,17 +447,17 @@ export default function GuestView({ id, event }: Props) {
                           setFilterStatus(v as "all" | "scored" | "unscored")
                         }
                       >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Filter" />
+                        <SelectTrigger className="w-32.5">
+                          <SelectValue placeholder={t("guest.filter")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Projects</SelectItem>
-                          <SelectItem value="scored">Evaluated</SelectItem>
-                          <SelectItem value="unscored">Pending</SelectItem>
+                          <SelectItem value="all">{t("guest.allProjects")}</SelectItem>
+                          <SelectItem value="scored">{t("guest.evaluated")}</SelectItem>
+                          <SelectItem value="unscored">{t("guest.pending")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <Input
-                        placeholder="Search projects..."
+                        placeholder={t("guest.searchProjects")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="max-w-xs"
@@ -563,10 +478,10 @@ export default function GuestView({ id, event }: Props) {
                     onAction={handleAction}
                     onGiveVr={handleGiveVr}
                     onPostComment={() => {
-                      toast.success("ส่งความคิดเห็นเรียบร้อย");
+                      toast.success(t("toast.commentSuccess"));
                     }}
                     onRefresh={fetchTeamsData}
-                    unitReward={localEvent?.unitReward ?? "coins"}
+                    unitReward={localEvent?.unitReward ?? t("guest.defaultUnit")}
                   />
                 </div>
               </div>
@@ -576,10 +491,10 @@ export default function GuestView({ id, event }: Props) {
               <div className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>ผลการจัดอันดับ</CardTitle>
+                    <CardTitle>{t("guest.ranking")}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-muted-foreground">ยังไม่มีผลการจัดอันดับ</div>
+                    <div className="text-muted-foreground">{t("guest.noRanking")}</div>
                   </CardContent>
                 </Card>
               </div>

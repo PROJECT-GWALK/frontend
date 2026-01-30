@@ -16,6 +16,7 @@ import { Loader2, Send, MessageSquare, Filter } from "lucide-react";
 import { getComments, giveComment } from "@/utils/apievent";
 import { toast } from "sonner";
 import { UserAvatar } from "@/utils/function";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type CommentType = {
   id: string;
@@ -33,9 +34,11 @@ type Props = {
   eventId: string;
   projectId: string;
   myRole?: string | null; // "COMMITTEE" | "GUEST" | "PRESENTER" | "ORGANIZER"
+  disabled?: boolean;
 };
 
-export default function CommentSection({ eventId, projectId, myRole }: Props) {
+export default function CommentSection({ eventId, projectId, myRole, disabled }: Props) {
+  const { t } = useLanguage();
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -82,10 +85,10 @@ export default function CommentSection({ eventId, projectId, myRole }: Props) {
     try {
       setSubmitting(true);
       await giveComment(eventId, projectId, myComment);
-      toast.success("Comment posted");
+      toast.success(t("projectDetail.comments.posted"));
       fetchData(); // Refresh to show updated timestamp/content
     } catch (error) {
-      toast.error("Failed to post comment");
+      toast.error(t("projectDetail.comments.postFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -106,20 +109,20 @@ export default function CommentSection({ eventId, projectId, myRole }: Props) {
         <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-xl">
             <MessageSquare className="w-5 h-5" />
-            Comments
+            {t("projectDetail.comments.title")}
             </CardTitle>
             
-            {comments.length > 0 && (
+            {comments.length > 0 && myRole === "PRESENTER" && (
                 <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4 text-muted-foreground" />
                     <Select value={filterRole} onValueChange={setFilterRole}>
-                        <SelectTrigger className="w-[140px] h-8 text-xs">
-                            <SelectValue placeholder="Filter by" />
+                        <SelectTrigger className="w-35 h-8 text-xs">
+                            <SelectValue placeholder={t("projectDetail.comments.filterBy")} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="ALL">All Comments</SelectItem>
-                            <SelectItem value="COMMITTEE">Committee</SelectItem>
-                            <SelectItem value="GUEST">Guest</SelectItem>
+                            <SelectItem value="ALL">{t("projectDetail.comments.allComments")}</SelectItem>
+                            <SelectItem value="COMMITTEE">{t("projectDetail.comments.filterCommittee")}</SelectItem>
+                            <SelectItem value="GUEST">{t("projectDetail.comments.filterGuest")}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -132,15 +135,16 @@ export default function CommentSection({ eventId, projectId, myRole }: Props) {
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
               <Textarea
-                placeholder={`Write your feedback as ${myRole?.toLowerCase()}...`}
+                placeholder={disabled ? t("projectDetail.comments.disabled") || "Comments are disabled" : `${t("projectDetail.comments.placeholder")} ${myRole?.toLowerCase()}...`}
                 value={myComment}
                 onChange={(e) => setMyComment(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-25"
+                disabled={disabled}
               />
               <div className="flex justify-end">
                 <Button 
                   onClick={handleSubmit} 
-                  disabled={submitting || !myComment.trim()}
+                  disabled={submitting || !myComment.trim() || disabled}
                   size="sm"
                 >
                   {submitting ? (
@@ -148,7 +152,7 @@ export default function CommentSection({ eventId, projectId, myRole }: Props) {
                   ) : (
                     <Send className="w-4 h-4 mr-2" />
                   )}
-                  {comments.length > 0 ? "Update Comment" : "Post Comment"}
+                  {comments.length > 0 ? t("projectDetail.comments.update") : t("projectDetail.comments.post")}
                 </Button>
               </div>
             </div>
@@ -156,7 +160,7 @@ export default function CommentSection({ eventId, projectId, myRole }: Props) {
         )}
 
         {/* Comments List */}
-        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
           {loading ? (
             <div className="flex justify-center py-4">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -189,7 +193,7 @@ export default function CommentSection({ eventId, projectId, myRole }: Props) {
           )}
           {!loading && filteredComments.length === 0 && (
              <div className="text-center text-muted-foreground py-4 text-sm">
-                {comments.length > 0 ? "No comments match filter." : (canComment ? "No comments yet. Be the first to share your feedback!" : "No comments available.")}
+                {comments.length > 0 ? t("projectDetail.comments.noMatch") : (canComment ? t("projectDetail.comments.noCommentsYet") : t("projectDetail.comments.noAvailable"))}
              </div>
           )}
         </div>

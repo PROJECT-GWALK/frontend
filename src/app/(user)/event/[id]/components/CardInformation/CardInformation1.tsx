@@ -26,10 +26,10 @@ export default function CardInformation1({
   const { t } = useLanguage();
 
   return (
-    <Card className="border-none shadow-md scroll-mt-20" id="info-card-1">
+    <Card className="border-none dark:border dark:border-white/10 shadow-md scroll-mt-20" id="info-card-1">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-          <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+          <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
             <Info className="h-5 w-5" />
           </div>
           <span>{t("eventInfo.eventInformation")}</span>
@@ -92,7 +92,7 @@ export default function CardInformation1({
                 {t("eventInfo.locationVenue")}
               </Label>
               <div className="flex items-center gap-2 font-medium">
-                <MapPin className="h-4 w-4 text-primary" />
+                <MapPin className="h-4 w-4 text-primary shrink-0" />
                 <span>{event.locationName || "-"}</span>
               </div>
             </div>
@@ -103,12 +103,12 @@ export default function CardInformation1({
               </Label>
               {event.location?.trim().startsWith("<iframe") ? (
                 <div 
-                  className="mt-2 relative w-full aspect-video rounded-lg overflow-hidden border bg-muted/10 [&>iframe]:absolute [&>iframe]:top-0 [&>iframe]:left-0 [&>iframe]:w-full [&>iframe]:h-full"
+                  className="mt-2 relative w-full aspect-video rounded-lg overflow-hidden border bg-muted/10 dark:bg-muted/20 [&>iframe]:absolute [&>iframe]:top-0 [&>iframe]:left-0 [&>iframe]:w-full [&>iframe]:h-full"
                   dangerouslySetInnerHTML={{ __html: event.location || "" }}
                 />
               ) : (
                 <div className="flex items-center gap-2 font-medium truncate">
-                  <LinkIcon className="h-4 w-4 text-primary" />
+                  <LinkIcon className="h-4 w-4 text-primary shrink-0" />
                   {event.location ? (
                     <a
                       href={event.location}

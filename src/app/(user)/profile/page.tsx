@@ -22,6 +22,13 @@ import { User } from "@/utils/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Calendar, Trophy, Star, ExternalLink } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Image from "next/image";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -32,6 +39,7 @@ interface ParticipatedEvent {
   teamName: string;
   place: string;
   specialReward: string;
+  specialRewards?: { name: string; image: string | null; description: string | null }[];
   userRating?: number;
 }
 
@@ -127,7 +135,7 @@ export default function ProfilePage() {
           {/* Event History Tabs */}
           <Tabs defaultValue="participated" className="w-full">
             <div className="flex items-center justify-between mb-6">
-              <TabsList className="grid w-full md:w-[400px] grid-cols-2 h-11 p-1 bg-gray-100 dark:bg-zinc-900">
+              <TabsList className="grid w-full md:w-100 grid-cols-2 h-11 p-1 bg-gray-100 dark:bg-zinc-900">
                 <TabsTrigger value="participated" className="rounded-md text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
                   Participated
                 </TabsTrigger>
@@ -179,7 +187,7 @@ export default function ProfilePage() {
                           </TableCell>
                           <TableCell className="text-center">
                             {event.place ? (
-                              <Badge variant="secondary" className="font-mono">
+                              <Badge variant="secondary" className="font-mono rounded-md">
                                 {event.place}
                               </Badge>
                             ) : (
@@ -187,8 +195,54 @@ export default function ProfilePage() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {event.specialReward ? (
-                              <Badge variant="default" className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                            {event.specialRewards && event.specialRewards.length > 0 ? (
+                              <div className="flex justify-end gap-2 flex-wrap">
+                                {event.specialRewards.map((reward, i) => (
+                                  <TooltipProvider key={i}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="cursor-help inline-flex items-center justify-center">
+                                          {reward.image ? (
+                                            <div className="relative w-8 h-8 rounded-md overflow-hidden border border-amber-200 dark:border-amber-500/50 shadow-sm hover:scale-110 transition-transform">
+                                              <Image
+                                                src={reward.image}
+                                                alt={reward.name}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            </div>
+                                          ) : (
+                                            <Badge
+                                              variant="default"
+                                              className="rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800"
+                                            >
+                                              <Trophy className="w-3 h-3 mr-1" />
+                                              {reward.name}
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="bg-popover text-popover-foreground border-border">
+                                        <div className="text-center p-1">
+                                          <p className="font-semibold text-amber-600 dark:text-amber-400">
+                                            {reward.name}
+                                          </p>
+                                          {reward.description && (
+                                            <p className="text-xs text-muted-foreground max-w-50">
+                                              {reward.description}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ))}
+                              </div>
+                            ) : event.specialReward && event.specialReward !== "-" ? (
+                              <Badge
+                                variant="default"
+                                className="rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800"
+                              >
                                 <Trophy className="w-3 h-3 mr-1" />
                                 {event.specialReward}
                               </Badge>

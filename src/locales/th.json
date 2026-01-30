@@ -287,5 +287,165 @@
     "title": "ไม่พบหน้านี้",
     "description": "ขออภัย เราไม่พบหน้าที่คุณกำลังมองหา",
     "backHome": "กลับหน้าหลัก"
+  },
+  "projectDetail": {
+    "title": "รายละเอียดโครงการ",
+    "viewDetailsFor": "ดูรายละเอียดและผลงานของ",
+    "defaultEventName": "โครงการอีเวนต์",
+    "roles": {
+      "leader": "หัวหน้าทีม"
+    },
+    "buttons": {
+      "share": "แชร์",
+      "leaveTeam": "ออกจากทีม",
+      "editProject": "แก้ไขโครงการ",
+      "manageFiles": "จัดการไฟล์",
+      "addMember": "เพิ่มสมาชิก",
+      "give": "มอบ",
+      "saveAwards": "บันทึกรางวัล",
+      "close": "ปิด",
+      "cancel": "ยกเลิก",
+      "backToProjects": "กลับไปหน้ารายการโครงการ",
+      "downloadImage": "ดาวน์โหลดรูปภาพ",
+      "downloadPDF": "ดาวน์โหลด PDF",
+      "openLink": "เปิดลิงก์",
+      "max": "สูงสุด"
+    },
+    "sections": {
+      "teamMembers": "สมาชิกทีม",
+      "evaluation": "การประเมิน",
+      "projectVideo": "วิดีโอโครงการ",
+      "projectWorks": "ผลงานโครงการ"
+    },
+    "dialogs": {
+      "manageFilesTitle": "จัดการไฟล์โครงการ",
+      "manageFilesDesc": "อัปโหลดและจัดการไฟล์สำหรับโครงการของคุณ",
+      "addMemberTitle": "เพิ่มสมาชิกทีม",
+      "addMemberDesc": "ค้นหาด้วยชื่อหรืออีเมลเพื่อเพิ่มสมาชิก",
+      "leaveTeamTitle": "ออกจากทีม",
+      "leaveTeamDesc": "คุณแน่ใจหรือไม่ว่าต้องการออกจากทีมนี้?",
+      "shareProjectTitle": "แชร์โครงการ",
+      "shareProjectDesc": "แชร์โครงการนี้ผ่านลิงก์หรือ QR Code"
+    },
+    "messages": {
+      "confirmRemoveMember": "คุณแน่ใจหรือไม่ว่าต้องการลบสมาชิกนี้?",
+      "confirmDeleteFile": "คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?",
+      "memberAdded": "เพิ่มสมาชิกเรียบร้อยแล้ว",
+      "addMemberFailed": "ไม่สามารถเพิ่มสมาชิกได้",
+      "memberRemoved": "ลบสมาชิกเรียบร้อยแล้ว",
+      "removeMemberFailed": "ไม่สามารถลบสมาชิกได้",
+      "fileUploaded": "อัปโหลดไฟล์เรียบร้อยแล้ว",
+      "uploadFailed": "การอัปโหลดล้มเหลว",
+      "fileDeleted": "ลบไฟล์เรียบร้อยแล้ว",
+      "deleteFileFailed": "ไม่สามารถลบไฟล์ได้",
+      "copiedToClipboard": "คัดลอกลงคลิปบอร์ดแล้ว",
+      "leftTeam": "คุณได้ออกจากทีมแล้ว",
+      "leaveTeamFailed": "ไม่สามารถออกจากทีมได้",
+      "projectNotFound": "ไม่พบโครงการ",
+      "vrSaved": "บันทึกรางวัลเสมือนเรียบร้อยแล้ว",
+      "vrSaveFailed": "บันทึกรางวัลเสมือนไม่สำเร็จ",
+      "specialRewardsSaved": "บันทึกรางวัลพิเศษเรียบร้อยแล้ว",
+      "specialRewardsSaveFailed": "บันทึกรางวัลพิเศษไม่สำเร็จ",
+      "noWorks": "ยังไม่มีผลงานที่อัปโหลด",
+      "noMembers": "ยังไม่มีสมาชิก",
+      "eventEnded": "งานจบแล้วหรือไม่อยู่ในช่วงเวลาที่กำหนด ไม่สามารถดำเนินการได้",
+      "submissionEnded": "หมดช่วงส่งผลงานแล้ว คุณไม่สามารถสร้างหรือแก้ไขโปรเจกต์ได้"
+    },
+    "files": {
+      "defaultFileName": "ไฟล์",
+      "defaultLinkName": "ลิงก์",
+      "uploadFile": "อัปโหลดไฟล์",
+      "replaceFile": "แทนที่ไฟล์",
+      "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?",
+      "required": "จำเป็น",
+      "uploaded": "อัปโหลดแล้ว",
+      "download": "ดาวน์โหลด",
+      "remove": "ลบ",
+      "open": "เปิด",
+      "noRequirements": "ไม่มีข้อกำหนดไฟล์สำหรับอีเวนต์นี้"
+    },
+    "evaluation": {
+      "virtualReward": "รางวัลเสมือน",
+      "specialReward": "รางวัลพิเศษ",
+      "totalToGive": "รางวัลเสมือนทั้งหมดที่จะมอบให้",
+      "remaining": "คงเหลือ:",
+      "save": "บันทึก",
+      "saving": "กำลังบันทึก...",
+      "budgetUsage": "งบประมาณที่ใช้",
+      "coins": "เหรียญ",
+      "left": "คงเหลือ",
+      "selectSpecialRewards": "เลือกรางวัลพิเศษ",
+      "selectRewardsPlaceholder": "เลือกรางวัล...",
+      "availableRewards": "รางวัลที่มีอยู่",
+      "selected": "รายการที่เลือก"
+    },
+    "member": {
+      "searchPlaceholder": "ค้นหาผู้ใช้...",
+      "searching": "กำลังค้นหา...",
+      "add": "เพิ่ม",
+      "owner": "เจ้าของ",
+      "unknown": "ไม่ระบุ",
+      "noUsers": "ไม่พบผู้ใช้",
+      "typeToSearch": "พิมพ์เพื่อค้นหา..."
+    },
+    "share": {
+      "scanQr": "สแกน QR Code",
+      "orCopyLink": "หรือคัดลอกลิงก์",
+      "copyLink": "คัดลอกลิงก์",
+      "committeeLink": "ลิงก์สำหรับกรรมการ",
+      "copyCommitteeLink": "คัดลอกลิงก์กรรมการ",
+      "qrAlt": "QR Code ของโครงการ"
+    },
+    "comments": {
+      "title": "ความคิดเห็น",
+      "filterBy": "กรองตาม",
+      "allComments": "ความคิดเห็นทั้งหมด",
+      "filterCommittee": "กรรมการ",
+      "filterGuest": "ผู้เข้าร่วม",
+      "placeholder": "เขียนความคิดเห็นในฐานะ",
+      "post": "ส่งความคิดเห็น",
+      "update": "อัปเดตความคิดเห็น",
+      "posted": "ส่งความคิดเห็นเรียบร้อยแล้ว",
+      "postFailed": "ส่งความคิดเห็นไม่สำเร็จ",
+      "noMatch": "ไม่มีความคิดเห็นที่ตรงกับตัวกรอง",
+      "noCommentsYet": "ยังไม่มีความคิดเห็น เป็นคนแรกที่จะแชร์ความคิดเห็นของคุณ!",
+      "noAvailable": "ไม่มีความคิดเห็น"
+    },
+    "banner": {
+      "title": "แบนเนอร์โครงการ",
+      "alt": "แบนเนอร์โครงการ"
+    },
+    "imagePreview": {
+      "title": "ดูรูปภาพ",
+      "alt": "ตัวอย่าง"
+    },
+    "noDescription": "ไม่มีคำอธิบาย"
+  },
+  "guest": {
+    "dashboard": "แดชบอร์ด",
+    "information": "ข้อมูล",
+    "projects": "โครงการ",
+    "result": "ผลลัพธ์",
+    "filter": "ตัวกรอง",
+    "allProjects": "โครงการทั้งหมด",
+    "evaluated": "ประเมินแล้ว",
+    "pending": "รอดำเนินการ",
+    "searchProjects": "ค้นหาโครงการ...",
+    "ranking": "การจัดอันดับ",
+    "noRanking": "ยังไม่มีผลการจัดอันดับ",
+    "role": "ผู้เยี่ยมชม",
+    "totalFeedbackDesc": "ความคิดเห็นทั้งหมดที่ได้รับในงาน",
+    "totalPool": "ยอดรวมทั้งหมด:",
+    "projectSectionTitle": "โครงการ",
+    "defaultUnit": "เหรียญ",
+    "bannerAlt": "แบนเนอร์งาน",
+    "defaultBannerAlt": "แบนเนอร์เริ่มต้น"
+  },
+  "toast": {
+    "resetVR": "รีเซ็ต Virtual Reward เรียบร้อย",
+    "failedResetVR": "ไม่สามารถรีเซ็ต VR ได้",
+    "giveVRSuccess": "ให้ Virtual Reward เรียบร้อย",
+    "failedGiveVR": "ไม่สามารถให้ VR ได้",
+    "commentSuccess": "ส่งความคิดเห็นเรียบร้อย"
   }
 }

@@ -131,7 +131,7 @@ export default function AdminUserChart() {
             onValueChange={(val) => setYear(val ? parseInt(val) : undefined)}
             value={year?.toString()}
           >
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-30">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
             <SelectContent>
@@ -150,7 +150,7 @@ export default function AdminUserChart() {
             value={month?.toString() ?? "all"}
             disabled={!year}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-35">
               <SelectValue placeholder="Select month" />
             </SelectTrigger>
             <SelectContent>

@@ -183,11 +183,11 @@ export default function CardInformation5({ event, editable }: Props) {
   return (
     <div className="space-y-6">
       {/* Organizers Card */}
-      <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col">
+      <Card className="border-none dark:border dark:border-white/10 shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col">
         <CardHeader>
           <div className="flex items-center justify-between w-full">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
-              <div className="p-2.5 rounded-xl bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300">
+              <div className="p-2.5 rounded-xl bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400">
                 <Users className="h-5 w-5" />
               </div>
               {t("organizers.title")}
@@ -205,7 +205,7 @@ export default function CardInformation5({ event, editable }: Props) {
                   >
                     <UserAvatar
                       user={org.user}
-                      className="h-12 w-12 border-2 border-white shadow-sm ring-2 ring-pink-50"
+                      className="h-12 w-12 border-2 border-white shadow-sm"
                     />
                     <div className="flex flex-col min-w-0">
                       <span className="font-bold text-sm truncate text-foreground/90">
@@ -254,27 +254,27 @@ export default function CardInformation5({ event, editable }: Props) {
       </Card>
 
       {/* Invite Links Card */}
-      <Card className="border-none shadow-md bg-linear-to-r from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-900/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <div className="p-2.5 rounded-xl bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  <Link className="h-5 w-5" />
+      <Card className="border-none shadow-md bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <div className="p-2.5 rounded-xl bg-muted text-muted-foreground">
+              <Link className="h-5 w-5" />
+            </div>
+            {t("invite.title") || "Invite Links"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            {/* Event Page Link */}
+            <div className="flex flex-col space-y-3 p-4 rounded-2xl bg-background dark:bg-muted/10 border dark:border-white/10 shadow-sm transition-all hover:shadow-md">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                  <Link className="h-4 w-4" />
                 </div>
-                {t("invite.title") || "Invite Links"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-4">
-                {/* Event Page Link */}
-                <div className="flex flex-col space-y-3 p-4 rounded-2xl bg-white dark:bg-card border shadow-sm transition-all hover:shadow-md">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                      <Link className="h-4 w-4" />
-                    </div>
-                    <span className="font-bold capitalize text-sm">
-                      {t("invite.eventPage") || "Event Page"}
-                    </span>
-                  </div>
+                <span className="font-bold capitalize text-sm">
+                  {t("invite.eventPage") || "Event Page"}
+                </span>
+              </div>
 
                   <div className="flex items-start gap-3">
                     {eventQrThumb && (
@@ -352,7 +352,7 @@ export default function CardInformation5({ event, editable }: Props) {
                   return (
                     <div
                       key={role}
-                      className="flex flex-col space-y-3 p-4 rounded-2xl bg-white dark:bg-card border shadow-sm transition-all hover:shadow-md"
+                      className="flex flex-col space-y-3 p-4 rounded-2xl bg-background dark:bg-muted/10 border dark:border-white/10 shadow-sm transition-all hover:shadow-md"
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <div

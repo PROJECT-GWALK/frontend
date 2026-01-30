@@ -119,7 +119,7 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
                 </div>
                 
                 {item.comment ? (
-                  <p className="text-sm text-foreground/90 leading-relaxed bg-background p-3 rounded-md border text-wrap break-words">
+                  <p className="text-sm text-foreground/90 leading-relaxed bg-background p-3 rounded-md border text-wrap wrap-break-word">
                     {item.comment}
                   </p>
                 ) : (

@@ -165,7 +165,7 @@ export function Navbar() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0 border-l-muted">
+            <SheetContent side="right" className="w-75 sm:w-100 p-0 border-l-muted">
               <SheetHeader className="p-6 text-left border-b bg-muted/5">
                 <SheetTitle className="flex items-center gap-3">
                   {appBrand.logo && (

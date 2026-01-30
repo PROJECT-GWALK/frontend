@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, Trophy, MessageSquare, Star, Gift } from "lucide-react";
+import { Users, Building, Trophy, MessageSquare, Star, Gift, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -73,6 +73,12 @@ export default function PresenterView({ id, event }: Props) {
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const { t } = useLanguage();
+
+  const now = new Date();
+  const isSubmissionActive = localEvent ? (
+      (!localEvent.startJoinDate || now >= new Date(localEvent.startJoinDate)) &&
+      (!localEvent.endJoinDate || now <= new Date(localEvent.endJoinDate))
+  ) : true;
 
   const fetchTeamsData = async () => {
     setProjectsLoading(true);
@@ -253,6 +259,17 @@ export default function PresenterView({ id, event }: Props) {
             </CardHeader>
           </Card>
 
+          {!isSubmissionActive && (
+            <Card className="border-l-4 border-l-destructive bg-destructive/10 mb-6">
+              <CardContent className="p-4 flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                <p className="text-sm font-medium text-destructive">
+                  {t("projectDetail.messages.submissionEnded") || "Submission period has ended. You cannot create or edit projects."}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           <Tabs
             value={tab}
             onValueChange={(v) => setTab(v as typeof tab)}
@@ -329,7 +346,7 @@ export default function PresenterView({ id, event }: Props) {
                       </CardHeader>
                       <CardContent>
                         {myStats.specialRewards.length > 0 ? (
-                          <div className="grid gap-3 sm:grid-cols-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                          <div className="grid gap-3 sm:grid-cols-2 max-h-75 overflow-y-auto custom-scrollbar pr-2">
                             {myStats.specialRewards.map((reward, index) => (
                               <div
                                 key={index}
@@ -380,7 +397,7 @@ export default function PresenterView({ id, event }: Props) {
                             ))}
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center h-[60px] text-muted-foreground text-sm">
+                          <div className="flex flex-col items-center justify-center h-15 text-muted-foreground text-sm">
                             <Star className="h-5 w-5 mb-1 opacity-20" />
                             No votes yet
                           </div>
@@ -493,6 +510,7 @@ export default function PresenterView({ id, event }: Props) {
                     open={createOpen}
                     onOpenChange={setCreateOpen}
                     onSuccess={fetchTeamsData}
+                    isSubmissionActive={isSubmissionActive}
                   />
                 </div>
 
@@ -534,6 +552,7 @@ export default function PresenterView({ id, event }: Props) {
             project={projectForm}
             eventId={id}
             onSuccess={fetchTeamsData}
+            isSubmissionActive={isSubmissionActive}
           />
         )}
       </div>

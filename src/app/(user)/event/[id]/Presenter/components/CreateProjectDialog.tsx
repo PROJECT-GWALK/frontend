@@ -18,9 +18,10 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  isSubmissionActive?: boolean;
 };
 
-export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: Props) {
+export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isSubmissionActive = true }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   
@@ -181,7 +182,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: P
             </Button>
             <Button
               size="sm"
-              disabled={loading}
+              disabled={loading || !isSubmissionActive}
               onClick={async () => {
                 if (!name.trim()) return;
                 setLoading(true);
