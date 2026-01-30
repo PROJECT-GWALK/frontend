@@ -23,6 +23,8 @@ import {
   ClipboardCopy,
   ArrowLeft,
   Gift,
+  Trophy,
+  AlertCircle,
 } from "lucide-react";
 import {
   getTeamById,
@@ -34,6 +36,8 @@ import {
   removeTeamMember,
   deleteTeamFile,
   getPresenterStats,
+  giveVr,
+  giveSpecial,
 } from "@/utils/apievent";
 import { getCurrentUser } from "@/utils/apiuser";
 import EditProjectDialog from "../../Presenter/components/EditProjectDialog";
@@ -66,12 +70,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { linkify, UserAvatar, generateQrCode } from "@/utils/function";
 import SelectTeam from "../../components/selectTeam";
 import { useSession } from "next-auth/react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   params: Promise<{ id: string; projectId: string }>;
 };
 
 export default function ProjectDetailPage({ params }: Props) {
+  const { t } = useLanguage();
   const router = useRouter();
   const paramsResolved = React.use(params);
   const { projectId, id } = paramsResolved;
@@ -98,6 +114,102 @@ export default function ProjectDetailPage({ params }: Props) {
   // Upload loading state per fileTypeId
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
+  // Evaluation State
+  const [virtualReward, setVirtualReward] = useState<number>(0);
+  const [selectedSpecialRewards, setSelectedSpecialRewards] = useState<string[]>([]);
+  const [savingVr, setSavingVr] = useState(false);
+  const [savingSpecial, setSavingSpecial] = useState(false);
+
+  // Derived state for Evaluation
+  const myVirtualTotal = eventData?.myVirtualTotal || 0;
+  const myVirtualUsed = eventData?.myVirtualUsed || 0;
+
+  const isEventActive = eventData ? new Date() >= new Date(eventData.startView || "") && new Date() <= new Date(eventData.endView || "") : false;
+
+  const isSubmissionActive = eventData ? (
+      (!eventData.startJoinDate || new Date() >= new Date(eventData.startJoinDate)) &&
+      (!eventData.endJoinDate || new Date() <= new Date(eventData.endJoinDate))
+  ) : true;
+
+  const handleSaveVr = async () => {
+    if (!eventData || !project) return;
+    try {
+      setSavingVr(true);
+      const res = await giveVr(id, projectId, Number(virtualReward));
+      
+      // Update local state directly from response
+      setEventData(prev => prev ? ({
+          ...prev,
+          myVirtualTotal: res.totalLimit,
+          myVirtualUsed: res.totalUsed
+      }) : prev);
+
+      toast.success(t("projectDetail.messages.vrSaved"));
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || t("projectDetail.messages.vrSaveFailed"));
+    } finally {
+      setSavingVr(false);
+    }
+  };
+
+  const handleSaveSpecial = async () => {
+    try {
+      setSavingSpecial(true);
+      await giveSpecial(id, projectId, selectedSpecialRewards);
+      toast.success(t("projectDetail.messages.specialRewardsSaved"));
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || t("projectDetail.messages.specialRewardsSaveFailed"));
+    } finally {
+      setSavingSpecial(false);
+    }
+  };
+
+  const toggleSpecialReward = (rewardId: string) => {
+    setSelectedSpecialRewards(prev => {
+      if (prev.includes(rewardId)) {
+        return prev.filter(id => id !== rewardId);
+      } else {
+        return [...prev, rewardId];
+      }
+    });
+  };
+
+  const isRewardDisabled = (rewardId: string) => {
+    // We need to check if this reward is assigned to THIS team or unused.
+    // However, project object here is PresenterProject, which doesn't have mySpecialRewards directly?
+    // Wait, project state is transformed from Team.
+    // But we init selectedSpecialRewards from Team.
+    // The logic in Scores page was:
+    // const assignedToThisTeam = team?.mySpecialRewards?.includes(rewardId);
+    // const isUnused = event?.awardsUnused?.some(r => r.id === rewardId);
+    // return !assignedToThisTeam && !isUnused;
+    
+    // Here we have selectedSpecialRewards state which reflects what user HAS selected (or saved).
+    // But strictly speaking "assignedToThisTeam" refers to the SERVER state.
+    // If I just select it in UI but haven't saved, it's not "assigned" yet in DB.
+    // But for the purpose of "Disabled", we care about whether *another* team has it.
+    // If it is unused, it's free.
+    // If it is used by THIS team, it's free (to keep).
+    // If it is used by ANOTHER team, it's disabled.
+    
+    const isUnused = eventData?.awardsUnused?.some(r => r.id === rewardId);
+    // We can check if it's in our initial selection (from server)
+    // But since we don't keep "initial" separate from "current" easily here without another state,
+    // we can approximate: if it's in selectedSpecialRewards (assuming we started with server state), it's ours.
+    // BETTER: check if it's in eventData.awardsUnused OR if it was already ours.
+    // But we don't have "was already ours" easily if we mutate selectedSpecialRewards.
+    // Actually, `awardsUnused` logic in backend usually excludes rewards taken by others.
+    // If I took it, it is NOT in awardsUnused? Or is it?
+    // Usually "unused" means nobody has it.
+    // If I have it, it is "used".
+    // So if I have it, I should be able to unselect it (enable).
+    // So if it's NOT in unused, AND NOT in my list, then it's someone else's -> Disabled.
+    
+    const currentlySelected = selectedSpecialRewards.includes(rewardId);
+    return !isUnused && !currentlySelected; 
+  };
+
+
   const [qrThumb, setQrThumb] = useState<string | null>(null);
   const [qrThumbCommittee, setQrThumbCommittee] = useState<string | null>(null);
 
@@ -120,6 +232,8 @@ export default function ProjectDetailPage({ params }: Props) {
 
       if (teamRes.message === "ok") {
         const t = teamRes.team as Team;
+        setVirtualReward(t.myReward || 0);
+        setSelectedSpecialRewards(t.mySpecialRewards || []);
         let isUserMember = false;
 
         // Check if current user is member of the team
@@ -230,29 +344,29 @@ export default function ProjectDetailPage({ params }: Props) {
     try {
       const res = await addTeamMember(id, projectId, userId);
       if (res.message === "ok") {
-        toast.success("Member added");
+        toast.success(t("projectDetail.messages.memberAdded"));
         setInviteOpen(false);
         setSearchQuery("");
         fetchData(); // Refresh list
       }
     } catch (e: unknown) {
       const msg =
-        (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to add member";
+        (e as AxiosError<{ message: string }>).response?.data?.message || t("projectDetail.messages.addMemberFailed");
       toast.error(msg);
     }
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (!confirm("Are you sure you want to remove this member?")) return;
+    if (!confirm(t("projectDetail.messages.confirmRemoveMember"))) return;
     try {
       const res = await removeTeamMember(id, projectId, userId);
       if (res.message === "ok") {
-        toast.success("Member removed");
+        toast.success(t("projectDetail.messages.memberRemoved"));
         fetchData();
       }
     } catch (e: unknown) {
       const msg =
-        (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to remove member";
+        (e as AxiosError<{ message: string }>).response?.data?.message || t("projectDetail.messages.removeMemberFailed");
       toast.error(msg);
     }
   };
@@ -281,7 +395,7 @@ export default function ProjectDetailPage({ params }: Props) {
       const res = await uploadTeamFile(id, project.id, fileTypeId, fileOrUrl);
       if (res.message === "ok") {
         const newUrl = res.teamFile.fileUrl;
-        const name = fileOrUrl instanceof File ? fileOrUrl.name : "Link";
+        const name = fileOrUrl instanceof File ? fileOrUrl.name : t("projectDetail.files.defaultLinkName");
 
         setProject((prev) => {
           if (!prev) return null;
@@ -294,17 +408,17 @@ export default function ProjectDetailPage({ params }: Props) {
           }
           return { ...prev, files: newFiles };
         });
-        toast.success("File uploaded");
+        toast.success(t("projectDetail.messages.fileUploaded"));
       }
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(t("projectDetail.messages.uploadFailed"));
     } finally {
       setUploading((prev) => ({ ...prev, [fileTypeId]: false }));
     }
   };
 
   const handleDeleteFile = async (fileTypeId: string) => {
-    if (!project || !confirm("Are you sure you want to delete this file?")) return;
+    if (!project || !confirm(t("projectDetail.messages.confirmDeleteFile"))) return;
     try {
       const res = await deleteTeamFile(id, project.id, fileTypeId);
       if (res.message === "ok") {
@@ -318,16 +432,16 @@ export default function ProjectDetailPage({ params }: Props) {
         const input = document.getElementById(`url-input-${fileTypeId}`) as HTMLInputElement;
         if (input) input.value = "";
 
-        toast.success("File deleted");
+        toast.success(t("projectDetail.messages.fileDeleted"));
       }
     } catch (e) {
-      toast.error("Failed to delete file");
+      toast.error(t("projectDetail.messages.deleteFileFailed"));
     }
   };
 
-  const copyToClipboard = (t: string) => {
-    navigator.clipboard.writeText(t);
-    toast.success("Copied to clipboard");
+  const copyToClipboard = (tText: string) => {
+    navigator.clipboard.writeText(tText);
+    toast.success(t("projectDetail.messages.copiedToClipboard"));
   };
 
   const handleLeaveTeam = async () => {
@@ -335,12 +449,12 @@ export default function ProjectDetailPage({ params }: Props) {
     try {
       const res = await removeTeamMember(id, projectId, currentUserId);
       if (res.message === "ok") {
-        toast.success("You have left the team");
+        toast.success(t("projectDetail.messages.leftTeam"));
         router.push(`/event/${id}`);
       }
     } catch (e) {
       const msg =
-        (e as AxiosError<{ message: string }>).response?.data?.message || "Failed to leave team";
+        (e as AxiosError<{ message: string }>).response?.data?.message || t("projectDetail.messages.leaveTeamFailed");
       toast.error(msg);
     }
   };
@@ -396,9 +510,9 @@ export default function ProjectDetailPage({ params }: Props) {
     return (
       <div className="p-6 bg-background min-h-screen">
         <Link href={`../`} className="text-sm text-primary underline">
-          Back to Projects
+          {t("projectDetail.buttons.backToProjects")}
         </Link>
-        <div className="mt-4 text-muted-foreground">Project not found.</div>
+        <div className="mt-4 text-muted-foreground">{t("projectDetail.messages.projectNotFound")}</div>
       </div>
     );
   }
@@ -415,7 +529,7 @@ export default function ProjectDetailPage({ params }: Props) {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Project Details</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("projectDetail.title")}</h1>
               {eventData?.myRole && (
                 <Badge
                   variant="secondary"
@@ -429,19 +543,19 @@ export default function ProjectDetailPage({ params }: Props) {
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              View details and works for <span className="font-bold">{project.title}</span>
+              {t("projectDetail.viewDetailsFor")} <span className="font-bold">{project.title}</span>
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <SelectTeam className="w-full md:w-[250px]" />
+          <SelectTeam className="w-full md:w-62.5" />
         </div>
       </div>
 
       {/* Hero Section */}
       <div className="relative group rounded-xl overflow-hidden shadow-sm border bg-card">
         <div
-          className="relative w-full aspect-[21/9] md:h-[400px] bg-muted cursor-pointer"
+          className="relative w-full aspect-21/9 md:h-100 bg-muted cursor-pointer"
           onClick={() => setBannerOpen(true)}
         >
           {project.img && !project.img.startsWith("data:image/png;base64src") ? (
@@ -459,14 +573,14 @@ export default function ProjectDetailPage({ params }: Props) {
               className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
 
           <div className="absolute bottom-0 left-0 p-6 md:p-10 text-white w-full max-w-4xl">
             <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-lg leading-tight">
               {project.title}
             </h1>
             <p className="text-white/80 line-clamp-3 text-lg md:text-xl font-light drop-shadow-md leading-relaxed">
-              {linkify(project.desc || "No description provided.")}
+              {linkify(project.desc || t("projectDetail.noDescription"))}
             </p>
           </div>
         </div>
@@ -475,19 +589,12 @@ export default function ProjectDetailPage({ params }: Props) {
         <div className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between bg-card border-t">
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Badge variant="outline" className="px-3 py-1 text-sm font-normal border-border">
-              {eventData?.eventName || "Event Project"}
+              {eventData?.eventName || t("projectDetail.defaultEventName")}
             </Badge>
           </div>
 
           <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-end w-full sm:w-auto">
-            <Button
-              size="sm"
-              className="h-9 px-3 font-medium bg-indigo-600 text-white hover:bg-indigo-700 border-0 shadow-sm"
-              onClick={() => window.open(`/event/${id}/Projects/${projectId}/Scores`, "_blank")}
-            >
-              <Gift className="w-4 h-4 mr-2" />
-              Evaluate
-            </Button>
+
 
             <Button
               variant="secondary"
@@ -501,7 +608,7 @@ export default function ProjectDetailPage({ params }: Props) {
               }}
             >
               <Share2 className="w-4 h-4 mr-2" />
-              Share
+              {t("projectDetail.buttons.share")}
             </Button>
 
             {isMember && !project.isLeader && (
@@ -512,7 +619,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 onClick={() => setLeaveDialogOpen(true)}
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Leave Team
+                {t("projectDetail.buttons.leaveTeam")}
               </Button>
             )}
 
@@ -522,9 +629,10 @@ export default function ProjectDetailPage({ params }: Props) {
                 size="sm"
                 className="shadow-sm border-primary/20 hover:border-primary/50 hover:bg-primary/5"
                 onClick={() => setEditOpen(true)}
+                disabled={!isSubmissionActive}
               >
                 <Edit3 className="w-4 h-4 mr-2" />
-                Edit Project
+                {t("projectDetail.buttons.editProject")}
               </Button>
             )}
 
@@ -536,9 +644,9 @@ export default function ProjectDetailPage({ params }: Props) {
                 onClick={() => setFilesOpen(true)}
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Manage Files
+                {t("projectDetail.buttons.manageFiles")}
                 {project.files && project.files.length > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 min-w-[1.25rem] px-1">
+                  <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1">
                     {project.files.length}
                   </Badge>
                 )}
@@ -548,14 +656,25 @@ export default function ProjectDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {project.isLeader && !isSubmissionActive && (
+        <Card className="border-l-4 border-l-destructive bg-destructive/10 mb-6">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <p className="text-sm font-medium text-destructive">
+              {t("projectDetail.messages.submissionEnded") || "Submission period has ended. You cannot edit this project."}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left Column: Video & Works */}
         <div className="lg:col-span-2 space-y-8">
           {/* Video Section */}
           {project.videoLink && (
             <Card className="border-none shadow-md overflow-hidden">
-              <CardHeader className="border-b bg-muted/50 px-6 py-4">
-                <CardTitle className="text-xl flex items-center gap-2">Project Video</CardTitle>
+              <CardHeader className="border-b px-6 py-4">
+                <CardTitle className="text-xl flex items-center gap-2">{t("projectDetail.sections.projectVideo")}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="aspect-video w-full bg-black">
@@ -574,10 +693,10 @@ export default function ProjectDetailPage({ params }: Props) {
 
           {/* Project Works Display */}
           <Card className="border-none shadow-md overflow-hidden bg-card">
-            <CardHeader className="border-b bg-muted/50 px-6 py-4">
+            <CardHeader className="border-b px-6 py-4">
               <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                 <FileText className="w-5 h-5 text-primary" />
-                Project Works
+                {t("projectDetail.sections.projectWorks")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -645,7 +764,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             <div className="flex flex-col">
                               <iframe
                                 src={`${file.url}#toolbar=0`}
-                                className="w-full h-[600px]"
+                                className="w-full h-150"
                                 title={file.name}
                               />
                               <div className="p-3 bg-card border-t flex justify-end">
@@ -718,7 +837,7 @@ export default function ProjectDetailPage({ params }: Props) {
         {/* Right Column: Members */}
         <div className="space-y-8">
           <Card className="border-none shadow-md bg-card">
-            <CardHeader className="border-b bg-muted/50 px-6 py-4 flex flex-row items-center justify-between">
+            <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                 <Users className="w-5 h-5 text-primary" />
                 Team Members
@@ -758,6 +877,7 @@ export default function ProjectDetailPage({ params }: Props) {
                         size="icon"
                         className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                         onClick={() => handleRemoveMember(m.id)}
+                        disabled={!isSubmissionActive}
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -766,7 +886,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 ))}
                 {membersData.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    No members yet.
+                    {t("projectDetail.messages.noMembers")}
                   </div>
                 )}
 
@@ -777,24 +897,178 @@ export default function ProjectDetailPage({ params }: Props) {
                     className="w-full mt-2 border-dashed border-2 hover:border-primary hover:text-primary"
                     onClick={() => setInviteOpen(true)}
                     disabled={
-                      !!eventData?.maxTeamMembers && membersData.length >= eventData.maxTeamMembers
+                      (!!eventData?.maxTeamMembers && membersData.length >= eventData.maxTeamMembers) || !isSubmissionActive
                     }
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Member
+                    {t("projectDetail.buttons.addMember")}
                   </Button>
                 )}
               </div>
             </CardContent>
           </Card>
-          <CommentSection eventId={id} projectId={projectId} myRole={eventData?.myRole} />
+
+          {/* Evaluation Section (Committee/Guest only) */}
+          {(eventData?.myRole === "COMMITTEE" || eventData?.myRole === "GUEST") && (
+            <>
+            {!isEventActive && (
+              <Card className="border-l-4 border-l-destructive bg-destructive/10 mb-6">
+                  <CardContent className="p-4 flex items-center gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                      <p className="text-sm font-medium text-destructive">
+                          {t("projectDetail.messages.eventEnded") || "Event has ended or not in active period. Actions are restricted."}
+                      </p>
+                  </CardContent>
+              </Card>
+            )}
+            <Card className="border-none shadow-md bg-card">
+              <CardHeader className="border-b px-6 py-4">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+                  <Gift className="w-5 h-5 text-purple-600" />
+                  {t("projectDetail.sections.evaluation")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <Tabs defaultValue="virtual" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-muted border rounded-lg mb-6">
+                    <TabsTrigger 
+                        value="virtual" 
+                        className="flex items-center gap-2 py-2"
+                    >
+                      <Gift className="w-4 h-4" />
+                      <span>{t("projectDetail.evaluation.virtualReward")}</span>
+                    </TabsTrigger>
+                    {eventData?.myRole === "COMMITTEE" && (
+                        <TabsTrigger 
+                            value="special" 
+                            className="flex items-center gap-2 py-2"
+                        >
+                        <Trophy className="w-4 h-4" />
+                        <span>{t("projectDetail.evaluation.specialReward")}</span>
+                        </TabsTrigger>
+                    )}
+                  </TabsList>
+
+                  <TabsContent value="virtual" className="space-y-6 mt-0">
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-end">
+                            <p className="text-sm font-medium text-muted-foreground">{t("projectDetail.evaluation.budgetUsage")}</p>
+                            <span className="text-sm font-bold text-foreground">{myVirtualTotal - myVirtualUsed} {eventData?.unitReward ?? t("projectDetail.evaluation.coins")} {t("projectDetail.evaluation.left")}</span>
+                        </div>
+                        <div className="relative h-3 w-full bg-muted rounded-full overflow-hidden">
+                            <div 
+                                className="absolute top-0 left-0 h-full bg-purple-600 transition-all duration-500 ease-out rounded-full"
+                                style={{ width: `${Math.min(100, (myVirtualUsed / (myVirtualTotal || 1)) * 100)}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                          {[100, 500, 1000].map(amount => (
+                              <Button 
+                                key={amount} 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setVirtualReward(amount)}
+                                className="h-7 text-xs"
+                                disabled={!isEventActive}
+                              >
+                                {amount}
+                              </Button>
+                          ))}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setVirtualReward(myVirtualTotal - myVirtualUsed)}
+                            className="h-7 text-xs text-purple-600 border-purple-200"
+                            disabled={!isEventActive}
+                          >
+                            {t("projectDetail.buttons.max")}
+                          </Button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Input
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            value={virtualReward}
+                            onChange={(e) => setVirtualReward(Number(e.target.value))}
+                            className="h-10"
+                            disabled={!isEventActive}
+                        />
+                        <Button 
+                            onClick={handleSaveVr}
+                            disabled={savingVr || !isEventActive}
+                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                            {savingVr ? <Loader2 className="h-4 w-4 animate-spin" /> : t("projectDetail.buttons.give")}
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {eventData?.myRole === "COMMITTEE" && (
+                    <TabsContent value="special" className="space-y-4 mt-0">
+                        <div className="space-y-2">
+                            <Label>{t("projectDetail.evaluation.selectSpecialRewards")}</Label>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild disabled={!isEventActive}>
+                                    <Button variant="outline" className="w-full justify-between px-3">
+                                        <span className="truncate text-sm">
+                                            {selectedSpecialRewards.length > 0 
+                                                ? `${selectedSpecialRewards.length} ${t("projectDetail.evaluation.selected")}` 
+                                                : t("projectDetail.evaluation.selectRewardsPlaceholder")}
+                                        </span>
+                                        <Trophy className="ml-2 h-4 w-4 opacity-50 shrink-0" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-70" align="start">
+                                    <DropdownMenuLabel>{t("projectDetail.evaluation.availableRewards")}</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <div className="max-h-50 overflow-y-auto custom-scrollbar">
+                                        {eventData.specialRewards?.map((reward) => {
+                                            const disabled = isRewardDisabled(reward.id);
+                                            return (
+                                            <DropdownMenuCheckboxItem
+                                                key={reward.id}
+                                                checked={selectedSpecialRewards.includes(reward.id)}
+                                                onCheckedChange={() => toggleSpecialReward(reward.id)}
+                                                disabled={disabled}
+                                            >
+                                                <span className={disabled ? "text-muted-foreground line-through opacity-70" : ""}>
+                                                    {reward.name}
+                                                </span>
+                                            </DropdownMenuCheckboxItem>
+                                            );
+                                        })}
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        <Button 
+                            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white" 
+                            onClick={handleSaveSpecial}
+                            disabled={savingSpecial || !isEventActive}
+                        >
+                            {savingSpecial ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t("projectDetail.buttons.saveAwards")}
+                        </Button>
+                    </TabsContent>
+                  )}
+                </Tabs>
+              </CardContent>
+            </Card>
+            </>
+          )}
+          <CommentSection eventId={id} projectId={projectId} myRole={eventData?.myRole} disabled={!isEventActive} />
         </div>
       </div>
 
       {/* Banner Dialog */}
       <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
         <DialogContent className="max-w-5xl p-0 overflow-hidden bg-transparent border-none shadow-none">
-          <DialogTitle className="sr-only">Project Banner</DialogTitle>
+          <DialogTitle className="sr-only">{t("projectDetail.banner.title")}</DialogTitle>
           <div className="relative w-full aspect-video">
             <Image
               src={
@@ -802,7 +1076,7 @@ export default function ProjectDetailPage({ params }: Props) {
                   ? project.img
                   : "/banner.png"
               }
-              alt={project?.title || "Project banner"}
+              alt={project?.title || t("projectDetail.banner.alt")}
               fill
               className="object-contain rounded-lg"
             />
@@ -816,10 +1090,10 @@ export default function ProjectDetailPage({ params }: Props) {
       {/* Image Preview Dialog */}
       <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
         <DialogContent className="max-w-[90vw] h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
-          <DialogTitle className="sr-only">Image Preview</DialogTitle>
+          <DialogTitle className="sr-only">{t("projectDetail.imagePreview.title")}</DialogTitle>
           <div className="relative w-full h-full">
             {previewImage && (
-              <Image src={previewImage} alt="Preview" fill className="object-contain" priority />
+              <Image src={previewImage} alt={t("projectDetail.imagePreview.alt")} fill className="object-contain" priority />
             )}
             <DialogClose className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 z-50">
               <X className="w-6 h-6" />
@@ -832,9 +1106,9 @@ export default function ProjectDetailPage({ params }: Props) {
       <Dialog open={filesOpen} onOpenChange={setFilesOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
           <DialogHeader className="p-6 pb-2">
-            <DialogTitle className="text-xl">Manage Project Files</DialogTitle>
+            <DialogTitle className="text-xl">{t("projectDetail.dialogs.manageFilesTitle")}</DialogTitle>
             <DialogDescription>
-              Upload and manage required documents for your project.
+              {t("projectDetail.dialogs.manageFilesDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -855,7 +1129,7 @@ export default function ProjectDetailPage({ params }: Props) {
                       <span className="font-semibold text-sm md:text-base">{ft.name}</span>
                       {ft.isRequired && (
                         <Badge variant="destructive" className="text-[10px] px-1.5 h-5">
-                          Required
+                          {t("projectDetail.files.required")}
                         </Badge>
                       )}
                       {uploaded && (
@@ -863,7 +1137,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           variant="secondary"
                           className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800/50 border-green-200 dark:border-green-800 text-[10px] px-1.5 h-5"
                         >
-                          Uploaded
+                          {t("projectDetail.files.uploaded")}
                         </Badge>
                       )}
                     </div>
@@ -876,7 +1150,7 @@ export default function ProjectDetailPage({ params }: Props) {
                   </div>
 
                   {/* Actions Section */}
-                  <div className="w-full md:w-[280px] flex flex-col justify-center gap-3 shrink-0">
+                  <div className="w-full md:w-70 flex flex-col justify-center gap-3 shrink-0">
                     {isUrlType ? (
                       <div className="flex flex-col gap-2 w-full">
                         <div className="flex gap-2 w-full items-center">
@@ -884,7 +1158,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             id={`url-input-${ft.id}`}
                             placeholder="https://..."
                             defaultValue={uploaded?.url || ""}
-                            disabled={isUploading}
+                            disabled={isUploading || !isSubmissionActive}
                             className="h-9 text-sm bg-background"
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
@@ -899,7 +1173,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           />
                           <Button
                             size="sm"
-                            disabled={isUploading}
+                            disabled={isUploading || !isSubmissionActive}
                             className="h-9"
                             onClick={() => {
                               const input = document.getElementById(
@@ -910,7 +1184,7 @@ export default function ProjectDetailPage({ params }: Props) {
                               }
                             }}
                           >
-                            {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                            {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : t("projectDetail.evaluation.save")}
                           </Button>
                         </div>
 
@@ -925,7 +1199,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                   rel="noreferrer"
                                   className="flex items-center gap-1.5"
                                 >
-                                  <Share2 className="w-3 h-3" /> Open
+                                  <Share2 className="w-3 h-3" /> {t("projectDetail.files.open")}
                                 </a>
                               </Button>
                               <Button
@@ -933,8 +1207,9 @@ export default function ProjectDetailPage({ params }: Props) {
                                 variant="ghost"
                                 className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => handleDeleteFile(ft.id!)}
+                                disabled={!isSubmissionActive}
                               >
-                                <X className="w-3 h-3 mr-1" /> Remove
+                                <X className="w-3 h-3 mr-1" /> {t("projectDetail.files.remove")}
                               </Button>
                             </>
                           )}
@@ -948,14 +1223,14 @@ export default function ProjectDetailPage({ params }: Props) {
                           className="hidden"
                           accept={ft.allowedFileTypes.map((t) => "." + t).join(",")}
                           onChange={(e) => handleFileUpload(e, ft.id)}
-                          disabled={isUploading}
+                          disabled={isUploading || !isSubmissionActive}
                         />
                         <div className="flex gap-2 w-full justify-end">
                           <Button
                             variant={uploaded ? "outline" : "default"}
                             size="sm"
                             className="w-full h-9"
-                            disabled={isUploading}
+                            disabled={isUploading || !isSubmissionActive}
                             onClick={() => document.getElementById(`file-${ft.id}`)?.click()}
                           >
                             {isUploading ? (
@@ -963,7 +1238,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             ) : (
                               <Plus className="w-4 h-4 mr-2" />
                             )}
-                            {uploaded ? "Replace File" : "Upload File"}
+                            {uploaded ? t("projectDetail.files.replaceFile") : t("projectDetail.files.uploadFile")}
                           </Button>
                         </div>
 
@@ -976,7 +1251,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                 rel="noreferrer"
                                 className="flex items-center gap-1.5"
                               >
-                                <Download className="w-3 h-3" /> Download
+                                <Download className="w-3 h-3" /> {t("projectDetail.files.download")}
                               </a>
                             </Button>
                             <Button
@@ -984,8 +1259,9 @@ export default function ProjectDetailPage({ params }: Props) {
                               variant="ghost"
                               className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => ft.id && handleDeleteFile(ft.id)}
+                              disabled={!isSubmissionActive}
                             >
-                              <X className="w-3 h-3 mr-1" /> Remove
+                              <X className="w-3 h-3 mr-1" /> {t("projectDetail.files.remove")}
                             </Button>
                           </div>
                         )}
@@ -999,12 +1275,12 @@ export default function ProjectDetailPage({ params }: Props) {
             {(!eventData?.fileTypes || eventData.fileTypes.length === 0) && (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border-2 border-dashed rounded-xl bg-muted/50">
                 <FileText className="w-10 h-10 mb-2 opacity-20" />
-                <p>No specific file requirements for this event.</p>
+                <p>{t("projectDetail.files.noRequirements")}</p>
               </div>
             )}
           </div>
           <div className="p-4 border-t bg-muted/50 flex justify-end">
-            <Button onClick={() => setFilesOpen(false)}>Close</Button>
+            <Button onClick={() => setFilesOpen(false)}>{t("projectDetail.buttons.close")}</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1013,15 +1289,15 @@ export default function ProjectDetailPage({ params }: Props) {
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
           <DialogHeader className="p-4 pb-2 border-b bg-muted/50">
-            <DialogTitle>Add Team Member</DialogTitle>
-            <DialogDescription>Search for a presenter by name or username.</DialogDescription>
+            <DialogTitle>{t("projectDetail.dialogs.addMemberTitle")}</DialogTitle>
+            <DialogDescription>{t("projectDetail.dialogs.addMemberDesc")}</DialogDescription>
           </DialogHeader>
 
           <div className="p-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search users..."
+                placeholder={t("projectDetail.member.searchPlaceholder")}
                 className="pl-9 bg-muted/50 border-border focus-visible:ring-1"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1029,11 +1305,11 @@ export default function ProjectDetailPage({ params }: Props) {
               />
             </div>
 
-            <div className="h-[300px] overflow-y-auto rounded-lg border bg-muted/30 p-2">
+            <div className="h-75 overflow-y-auto rounded-lg border bg-muted/30 p-2">
               {isSearching ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
-                  <span className="text-xs">Searching...</span>
+                  <span className="text-xs">{t("projectDetail.member.searching")}</span>
                 </div>
               ) : candidates.length > 0 ? (
                 <div className="space-y-1">
@@ -1060,7 +1336,7 @@ export default function ProjectDetailPage({ params }: Props) {
                         onClick={() => handleAddMember(c.userId)}
                       >
                         <Plus className="w-3.5 h-3.5 mr-1.5" />
-                        Add
+                        {t("projectDetail.member.add")}
                       </Button>
                     </div>
                   ))}
@@ -1068,19 +1344,19 @@ export default function ProjectDetailPage({ params }: Props) {
               ) : searchQuery.length >= 2 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
                   <Users className="w-8 h-8" />
-                  <span className="text-sm">No users found.</span>
+                  <span className="text-sm">{t("projectDetail.member.noUsers")}</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
                   <Search className="w-8 h-8" />
-                  <span className="text-sm">Type to search...</span>
+                  <span className="text-sm">{t("projectDetail.member.typeToSearch")}</span>
                 </div>
               )}
             </div>
           </div>
           <div className="p-3 bg-muted border-t flex justify-end">
             <Button variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
-              Cancel
+              {t("projectDetail.buttons.cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -1090,17 +1366,17 @@ export default function ProjectDetailPage({ params }: Props) {
       <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Leave Team</DialogTitle>
+            <DialogTitle>{t("projectDetail.dialogs.leaveTeamTitle")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to leave this team? This action cannot be undone.
+              {t("projectDetail.dialogs.leaveTeamDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLeaveDialogOpen(false)}>
-              Cancel
+              {t("projectDetail.buttons.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleLeaveTeam}>
-              Leave Team
+              {t("projectDetail.buttons.leaveTeam")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1112,15 +1388,16 @@ export default function ProjectDetailPage({ params }: Props) {
         project={project}
         onSuccess={fetchData}
         eventId={id}
+        isSubmissionActive={isSubmissionActive}
       />
 
       {/* Share Dialog */}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Share Project</DialogTitle>
+            <DialogTitle>{t("projectDetail.dialogs.shareProjectTitle")}</DialogTitle>
             <DialogDescription>
-              Scan the QR code or copy the link to share this project.
+              {t("projectDetail.dialogs.shareProjectDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-6 py-4">
@@ -1135,7 +1412,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 />
               </div>
             ) : (
-              <Skeleton className="w-[240px] h-[240px] rounded-lg" />
+              <Skeleton className="w-60 h-60 rounded-lg" />
             )}
 
             <div className="flex w-full gap-2">
