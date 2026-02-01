@@ -130,7 +130,7 @@ export default function CardInformation5({ event, editable }: Props) {
       for (const r of roles) {
         const token = tokens[r];
         if (!token) continue;
-        const link = `${origin}/event/${id}?invite=1&token=${encodeURIComponent(
+        const link = `${origin}/event/${id}/invite?token=${encodeURIComponent(
           token
         )}`;
         try {
@@ -344,7 +344,7 @@ export default function CardInformation5({ event, editable }: Props) {
                   const large = qrLarge[role];
                   const inviteLink =
                     typeof window !== "undefined"
-                      ? `${window.location.origin}/event/${id}?invite=1&token=${encodeURIComponent(
+                      ? `${window.location.origin}/event/${id}/invite?token=${encodeURIComponent(
                           token || ""
                         )}`
                       : "";
