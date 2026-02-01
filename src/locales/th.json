@@ -447,5 +447,22 @@
     "giveVRSuccess": "ให้ Virtual Reward เรียบร้อย",
     "failedGiveVR": "ไม่สามารถให้ VR ได้",
     "commentSuccess": "ส่งความคิดเห็นเรียบร้อย"
+  },
+  "participantSection": {
+    "user": "ผู้ใช้",
+    "role": "บทบาท",
+    "team": "ทีม",
+    "team_leader": "หัวหน้าทีม",
+    "management": "การจัดการ",
+    "count_unit": "คน",
+    "all": "ทั้งหมด",
+    "refresh": "รีเฟรช"
+  },
+  "removeParticipantModal": {
+    "title": "ลบผู้เข้าร่วม",
+    "description": "ต้องการลบผู้เข้าร่วมคนนี้ออกจากงานหรือไม่ การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "cancel_button": "ยกเลิก",
+    "confirm_button": "ลบ"
   }
+  
 }

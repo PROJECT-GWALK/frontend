@@ -447,5 +447,23 @@
     "giveVRSuccess": "Virtual Reward given successfully",
     "failedGiveVR": "Failed to give VR",
     "commentSuccess": "Comment posted successfully"
+  },
+  "participantSection": {
+    "user": "User",
+    "role": "Role",
+    "team": "Team",
+    "team_leader": "Team Leader",
+    "management": "Management",
+    "count_unit": "person",
+    "all": "total",
+    "refresh": "Refresh"
+    
+  },
+  "removeParticipantModal": {
+    "title": "Remove Participant",
+    "description": "Are you sure you want to remove this participant? This action cannot be undone.",
+    "cancel_button": "Cancel",
+    "confirm_button": "Delete"
   }
+  
 }
