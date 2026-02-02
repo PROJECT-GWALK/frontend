@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommitteeView from "./Committee/page";
 import GuestView from "./Guest/page";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Role = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST" | null;
 
@@ -37,6 +38,7 @@ export default function EventDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [inviteRole, setInviteRole] = useState<"presenter" | "committee" | "guest" | null>(null);
   const [joining, setJoining] = useState(false);
+  const {t} = useLanguage();
 
   useEffect(() => {
     const inviteFlag = searchParams.get("invite");

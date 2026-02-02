@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const { t } = useLanguage();
 
   const [cropOpen, setCropOpen] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -186,7 +188,7 @@ export default function SettingsPage() {
     <div className="flex justify-center">
       <Card className="w-full max-w-4xl">
         <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
+          <CardTitle>{t("settingSection.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -227,7 +229,7 @@ export default function SettingsPage() {
                     document.getElementById("imageUpload")?.click()
                   }
                 >
-                  Change
+                  {t("settingSection.change")}
                 </Button>
 
                 {(preview || user?.image) && (
@@ -236,19 +238,19 @@ export default function SettingsPage() {
                     variant="destructive"
                     onClick={handleRemoveImage}
                   >
-                    Remove
+                    {t("settingSection.remove")}
                   </Button>
                 )}
               </div>
             </div>
 
             <div>
-              <Label>Email</Label>
+              <Label>{t("settingSection.label_email")}</Label>
               <Input value={user?.email ?? ""} disabled />
             </div>
 
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t("settingSection.label_username")}</Label>
               <Input id="username" {...form.register("username")} />
               {form.formState.errors.username && (
                 <p className="text-sm text-destructive mt-1">
@@ -258,7 +260,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("settingSection.label_fullname")}</Label>
               <Input id="name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive mt-1">
@@ -268,7 +270,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("settingSection.label_description")}</Label>
               <Textarea
                 id="description"
                 {...form.register("description")}
@@ -283,7 +285,7 @@ export default function SettingsPage() {
             </div>
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Saving..." : t("settingSection.btn_save")}
             </Button>
           </form>
         </CardContent>

@@ -464,6 +464,40 @@
     "description": "Are you sure you want to remove this participant? This action cannot be undone.",
     "cancel_button": "Cancel",
     "confirm_button": "Delete"
+  },
+  "inviteSection": {
+    "your_role": "Your Role",
+    "already_member": "You are already a member of this event as",
+    "confirm_title": "Confirm Attendance",
+    "button_cancel": "Cancel",
+    "button_confirm": "Confirm Attendance",
+    "confirm_description": "You have been invited to join this event as",
+    "confirm_description2": "Please click confirm to proceed.",
+    "ongoing": "Joining..."
+  },
+  "profileSection": {
+    "tab_participated": "Participated",
+    "tab_organized": "Organized",
+    "table_header_event": "Event",
+    "table_header_team": "Team",
+    "table_header_place": "Place",
+    "table_header_reward": "Special Reward",
+    "no_participated_events": "No participated events found.",
+    "no_organized_events": "No organized events found.",
+    "table_header_rating": "Event Rating"
+  },
+  "settingSection": {
+    "title": "Account Settings",
+    "btn_change_photo": "Change",
+    "label_email": "Email",
+    "label_username": "Username",
+    "label_fullname": "Full Name",
+    "label_description": "Description",
+    "btn_save": "Save Changes",
+    "change": "Change",
+    "remove": "Remove"
   }
+  
+
   
 }

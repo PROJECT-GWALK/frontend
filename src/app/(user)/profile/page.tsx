@@ -4,6 +4,7 @@ import { UserAvatar } from "@/utils/function";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -50,6 +51,7 @@ interface OrganizedEvent {
 }
 
 export default function ProfilePage() {
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [participatedEvents, setParticipatedEvents] = useState<ParticipatedEvent[]>([]);
@@ -137,10 +139,10 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between mb-6">
               <TabsList className="grid w-full md:w-100 grid-cols-2 h-11 p-1 bg-gray-100 dark:bg-zinc-900">
                 <TabsTrigger value="participated" className="rounded-md text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
-                  Participated
+                  {t("profileSection.tab_participated")}
                 </TabsTrigger>
                 <TabsTrigger value="organized" className="rounded-md text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-800">
-                  Organized
+                  {t("profileSection.tab_organized")}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -150,10 +152,10 @@ export default function ProfilePage() {
                 <Table>
                   <TableHeader className="bg-gray-50 dark:bg-zinc-900">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[30%] font-semibold">Event</TableHead>
-                      <TableHead className="w-[30%] font-semibold">Team</TableHead>
-                      <TableHead className="text-center font-semibold">Place</TableHead>
-                      <TableHead className="text-right font-semibold">Special Reward</TableHead>
+                      <TableHead className="w-[30%] font-semibold">{t("profileSection.table_header_event")}</TableHead>
+                      <TableHead className="w-[30%] font-semibold">{t("profileSection.table_header_team")}</TableHead>
+                      <TableHead className="text-center font-semibold">{t("profileSection.table_header_place")}</TableHead>
+                      <TableHead className="text-right font-semibold">{t("profileSection.table_header_reward")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -257,7 +259,7 @@ export default function ProfilePage() {
                         <TableCell colSpan={5} className="h-32 text-center">
                           <div className="flex flex-col items-center justify-center text-muted-foreground">
                             <Calendar className="w-8 h-8 mb-2 opacity-20" />
-                            <p>No participated events found</p>
+                            <p>{t("profileSection.no_participated_events")}</p>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -272,8 +274,8 @@ export default function ProfilePage() {
                 <Table>
                   <TableHeader className="bg-gray-50 dark:bg-zinc-900">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-semibold">Event</TableHead>
-                      <TableHead className="text-right font-semibold">Rating</TableHead>
+                      <TableHead className="font-semibold">{t("profileSection.table_header_event")}</TableHead>
+                      <TableHead className="text-right font-semibold">{t("profileSection.table_header_rating")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -306,7 +308,7 @@ export default function ProfilePage() {
                         <TableCell colSpan={2} className="h-32 text-center">
                           <div className="flex flex-col items-center justify-center text-muted-foreground">
                             <Calendar className="w-8 h-8 mb-2 opacity-20" />
-                            <p>No organized events found</p>
+                            <p>{t("profileSection.no_organized_events")}</p>
                           </div>
                         </TableCell>
                       </TableRow>

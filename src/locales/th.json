@@ -463,6 +463,40 @@
     "description": "ต้องการลบผู้เข้าร่วมคนนี้ออกจากงานหรือไม่ การกระทำนี้ไม่สามารถย้อนกลับได้",
     "cancel_button": "ยกเลิก",
     "confirm_button": "ลบ"
+  },
+  "inviteSection": {
+    "your_role": "บทบาทของคุณ",
+    "already_member": "คุณเป็นสมาชิกของอีเวนต์นี้อยู่แล้วในฐานะ",
+    "confirm_title": "ยืนยันการเข้าร่วม",
+    "button_cancel": "ยกเลิก",
+    "button_confirm": "ยืนยันการเข้าร่วม",
+    "confirm_description": "คุณได้รับเชิญให้เข้าร่วมงานนี้ในฐานะ",
+    "confirm_description2": "กรุณาคลิกยืนยันเพื่อดำเนินการต่อ",
+    "ongoing": "กำลังเข้าร่วม..."
+  },
+  "profileSection": {
+    "tab_participated": "อีเว้นท์ที่เคยเข้าร่วม",
+    "tab_organized": "อีเว้นท์ที่เคยจัด",
+    "table_header_event": "อีเวนต์",
+    "table_header_team": "ทีม",
+    "table_header_place": "อันดับ",
+    "table_header_reward": "รางวัลพิเศษ",
+    "no_participated_events": "ไม่มีอีเว้นท์ที่เคยเข้าร่วม",
+    "no_organized_events": "ไม่มีอีเว้นท์ที่เคยจัด",
+    "table_header_rating": "คะแนนการจัดงาน"
+  },
+  "settingSection": {
+    "title": "การตั้งค่าบัญชี",
+    "btn_change_photo": "เปลี่ยนรูปภาพ",
+    "label_email": "อีเมล",
+    "label_username": "ชื่อผู้ใช้งาน",
+    "label_fullname": "ชื่อ-นามสกุล",
+    "label_description": "คำอธิบาย",
+    "btn_save": "บันทึกการเปลี่ยนแปลง",
+    "change": "เปลี่ยน",
+    "remove": "ลบ"
   }
+  
+  
   
 }

@@ -32,6 +32,7 @@ export default function InviteConfirmPage() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [joining, setJoining] = useState(false);
   const [loading, setLoading] = useState(true);
+  const {t} = useLanguage();
 
   useEffect(() => {
     if (!id) return;
@@ -179,7 +180,7 @@ export default function InviteConfirmPage() {
               {inviteRole && (
                 <div className="shrink-0">
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 text-center min-w-40">
-                    <p className="text-sm text-muted-foreground mb-1">บทบาทของคุณ</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t("inviteSection.your_role")}</p>
                     <Badge 
                       variant="secondary" 
                       className="text-xl font-bold text-white px-3 py-1"
@@ -197,7 +198,7 @@ export default function InviteConfirmPage() {
             {event?.myRole && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
                     <p className="text-yellow-800 dark:text-yellow-200">
-                        คุณเป็นสมาชิกของอีเวนต์นี้อยู่แล้วในฐานะ 
+                        {t("inviteSection.already_member")}
                         <Badge 
                             variant="secondary" 
                             className="ml-2 text-white"
@@ -227,11 +228,11 @@ export default function InviteConfirmPage() {
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold">ยืนยันการเข้าร่วม</h3>
+                  <h3 className="text-lg font-semibold">{t("inviteSection.confirm_title")}</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
                     {inviteRole 
-                      ? `คุณได้รับเชิญให้เข้าร่วมงานนี้ในฐานะ ${inviteRole} กรุณากดยืนยันเพื่อดำเนินการต่อ`
-                      : "คุณได้รับเชิญให้เข้าร่วมงานนี้ กรุณากดยืนยันเพื่อดำเนินการต่อ"
+                      ? `${t("inviteSection.confirm_description")} ${inviteRole} ${t("inviteSection.confirm_description2")}`
+                      : `${t("inviteSection.confirm_description2")}`
                     }
                   </p>
                 </div>
@@ -243,7 +244,7 @@ export default function InviteConfirmPage() {
                     className="sm:min-w-35 gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    ยกเลิก
+                    {t("inviteSection.button_cancel")}
                   </Button>
                   <Button 
                     onClick={doJoin} 
@@ -253,10 +254,10 @@ export default function InviteConfirmPage() {
                     {joining ? (
                       <>
                         <span className="animate-spin mr-2">⏳</span>
-                        กำลังเข้าร่วม...
+                        {t("inviteSection.ongoing")}
                       </>
                     ) : (
-                      "ยืนยันการเข้าร่วม"
+                      t("inviteSection.button_confirm")
                     )}
                   </Button>
                 </div>
