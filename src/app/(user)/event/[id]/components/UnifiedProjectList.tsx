@@ -50,6 +50,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { ro } from "date-fns/locale";
 
 export type ProjectRewardsState = Record<
   string,
@@ -74,7 +75,7 @@ type Props = {
       | "reset_vr"
       | "reset_special"
       | "delete_team",
-    projectId: string
+    projectId: string,
   ) => void;
   onDeleteTeam?: (projectId: string) => Promise<void> | void;
   onPostComment?: (projectId: string, text: string) => Promise<void> | void;
@@ -109,7 +110,9 @@ export default function UnifiedProjectList({
 
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [commentText, setCommentText] = React.useState("");
-  const [selectedProjectId, setSelectedProjectId] = React.useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = React.useState<
+    string | null
+  >(null);
 
   const [vrDialogOpen, setVrDialogOpen] = React.useState(false);
   const [vrAmount, setVrAmount] = React.useState<number>(0);
@@ -159,7 +162,7 @@ export default function UnifiedProjectList({
       result = result.filter(
         (p) =>
           p.title.toLowerCase().includes(lower) ||
-          p.desc?.toLowerCase().includes(lower)
+          p.desc?.toLowerCase().includes(lower),
       );
     }
 
@@ -168,6 +171,13 @@ export default function UnifiedProjectList({
     } else if (filterStatus === "unscored") {
       result = result.filter((p) => (projectRewards[p.id]?.vrGiven || 0) === 0);
     }
+
+    // Sort by createdAt (Oldest -> Newest)
+    result.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
 
     return result;
   }, [projects, searchQuery, filterStatus, projectRewards]);
@@ -180,7 +190,7 @@ export default function UnifiedProjectList({
           setVisibleCount((prev) => Math.min(prev + 30, sorted.length));
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (observerTarget.current) {
@@ -213,7 +223,9 @@ export default function UnifiedProjectList({
               disabled={loading}
               className="gap-2 hover:bg-primary/10 transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           </div>
@@ -258,7 +270,7 @@ export default function UnifiedProjectList({
             </div>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {visibleProjects.map((p, index) => {
               const isVrGiven = (projectRewards[p.id]?.vrGiven || 0) > 0;
               const isSpecialGiven = !!projectRewards[p.id]?.specialGiven;
@@ -267,187 +279,178 @@ export default function UnifiedProjectList({
               return (
                 <Card
                   key={p.id}
-                  className="group relative overflow-hidden border border-border/60 bg-card/40 hover:bg-card hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 rounded-xl flex flex-col"
+                  className="group relative flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 border border-border/60 p-0 gap-0"
                 >
-                  <div className="flex flex-col sm:flex-row p-4 gap-4 sm:gap-6">
-                    {/* Project Image Section */}
-                    <div className="relative shrink-0 w-full sm:w-56 aspect-video overflow-hidden rounded-lg bg-muted border border-border/50 group-hover:border-primary/20 transition-colors shadow-sm">
+                  {/* Image Section */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                    <Link
+                      href={`/event/${eventId}/Projects/${p.id}`}
+                      className="block w-full h-full"
+                    >
                       <Image
-                        src={p.img || "/banner.png"} // Fallback image
+                        src={p.img || "/banner.png"}
                         alt={p.title}
                         fill
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute top-2 left-2 flex gap-1">
-                        <Badge className="bg-primary/90 text-primary-foreground backdrop-blur-md text-[10px] font-bold shadow-sm border-none px-2 h-6 flex items-center">
-                          #{index + 1}
-                        </Badge>
-                      </div>
-                    </div>
+                    </Link>
 
-                    {/* Content Section */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between gap-4">
-                          <h3 className="text-xl sm:text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                            {p.title}
-                          </h3>
-                        </div>
-                        {p.desc && (
-                          <p className="text-sm text-muted-foreground line-clamp-3 sm:line-clamp-2 leading-relaxed">
-                            {p.desc}
-                          </p>
-                        )}
-                        
-                        {/* Status Badges for Committee/Guest */}
-                        {(role === "COMMITTEE" || role === "GUEST") && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {isVrGiven && (
-                                <Badge variant="outline" className="border-green-500/50 bg-green-500/10 text-green-600 gap-1.5 pl-1.5 pr-2.5 py-0.5">
-                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                    Given VR
-                                </Badge>
-                            )}
-                            {isSpecialGiven && (
-                                <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10 text-amber-600 gap-1.5 pl-1.5 pr-2.5 py-0.5">
-                                    <Award className="w-3.5 h-3.5" />
-                                    Given Award
-                                </Badge>
-                            )}
-                            {isCommented && (
-                                <Badge variant="outline" className="border-blue-500/50 bg-blue-500/10 text-blue-600 gap-1.5 pl-1.5 pr-2.5 py-0.5">
-                                    <MessageSquare className="w-3.5 h-3.5" />
-                                    Commented
-                                </Badge>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                    {/* Badge Index */}
+                    <Badge className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full shadow-lg bg-black/60 text-white border border-white/20 backdrop-blur-md z-10">
+                      #{index + 1}
+                    </Badge>
 
-                      {/* Metadata & Stats Row */}
-                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mt-4">
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
-                          {(p.members?.length ?? 0) > 0 && (
-                            <div className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 rounded-full border border-border/50">
-                              <Users className="w-3.5 h-3.5 text-blue-500/70" />
-                              <span>{p.members?.length} Members</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* VR Score Display - Moved inside content area */}
-                        {(role === "COMMITTEE" || role === "GUEST" || role === "ORGANIZER") && (
-                          <div className="w-full sm:w-auto flex items-center justify-between gap-4 bg-primary/5 px-3 py-2 rounded-lg border border-primary/10">
-                            <div className="flex flex-col">
-                              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                VR Score
-                              </div>
-                              <div className="text-xl font-black text-primary tabular-nums leading-none">
-                                {p.totalVr?.toLocaleString() ?? 0} <span className="text-xs font-normal text-muted-foreground">{unitReward}</span>
-                              </div>
-                            </div>
-                            {/* My Contribution */}
-                            {role !== "ORGANIZER" && (
-                              <div className="text-[10px] text-muted-foreground border-l border-primary/20 pl-4 text-right">
-                                You gave
-                                <div className="font-bold text-foreground tabular-nums">
-                                  {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0} {unitReward}
-                                </div>
-                              </div>
+                    {/* Dropdown Menu (Top Right) */}
+                    {role === "ORGANIZER" && (
+                      <div className="absolute top-2 right-2 z-20">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 rounded-full text-foreground"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">More options</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            {role === "ORGANIZER" && (
+                              <>
+                                <DropdownMenuLabel>จัดการทีม</DropdownMenuLabel>
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
+                                  onClick={() =>
+                                    handleActionInternal("delete_team", p.id)
+                                  }
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  ลบทีม
+                                </DropdownMenuItem>
+                              </>
                             )}
-                          </div>
-                        )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                    </div>
+                    )}
                   </div>
 
-                  {/* Actions Footer */}
-                  <div className="mt-auto border-t border-border/50 bg-muted/30 p-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  {/* Content Section */}
+                  <div className="flex flex-col flex-1 p-4 gap-3">
+                    <div className="space-y-2">
                       <Link
                         href={`/event/${eventId}/Projects/${p.id}`}
-                        target="_blank"
-                        className="w-full sm:w-auto sm:mr-auto"
+                        className="block"
                       >
-                        <Button
-                          variant={
-                            role === "ORGANIZER" || (role === "PRESENTER" && p.isLeader)
-                              ? "default"
-                              : "secondary"
-                          }
-                          size="sm"
-                          className="h-9 px-4 font-semibold w-full sm:w-auto min-w-24"
-                        >
-                          <Eye className="w-4 h-4 mr-2" /> View
-                        </Button>
+                        <h4 className="font-semibold text-lg line-clamp-1 hover:text-primary transition-colors">
+                          {p.title}
+                        </h4>
                       </Link>
 
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        {/* Evaluate button removed for Committee/Guest as requested */}
-                        
-                        {(role === "ORGANIZER" || role === "COMMITTEE" || role === "GUEST") && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                                <span className="sr-only">More options</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-52">
-                              {role === "ORGANIZER" && (
-                                <>
-                                  <DropdownMenuLabel>จัดการทีม</DropdownMenuLabel>
-                                  <DropdownMenuItem
-                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
-                                    onClick={() => handleActionInternal("delete_team", p.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    ลบทีม
-                                  </DropdownMenuItem>
-                                </>
-                              )}
+                      {p.desc && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {p.desc}
+                        </p>
+                      )}
 
-                              {(role === "COMMITTEE" || role === "GUEST") && (
-                                <>
-                                  <DropdownMenuLabel>การให้คะแนน</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => onAction?.("reset_vr", p.id)}>
-                                    <span className="w-4 h-4 mr-2 flex items-center justify-center text-muted-foreground">
-                                      ↺
-                                    </span>
-                                    ขอคืน VR
-                                  </DropdownMenuItem>
-                                  {role === "COMMITTEE" && (
-                                    <DropdownMenuItem onClick={() => onAction?.("reset_special", p.id)}>
-                                      <span className="w-4 h-4 mr-2 flex items-center justify-center text-muted-foreground">
-                                        ↺
-                                      </span>
-                                      ขอคืนรางวัลพิเศษ
-                                    </DropdownMenuItem>
-                                  )}
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                      {/* Badges */}
+                      {(role === "COMMITTEE" || role === "GUEST") && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {isVrGiven && (
+                            <Badge
+                              variant="outline"
+                              className="border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Given{" "}
+                              {projectRewards[
+                                p.id
+                              ]?.vrGiven?.toLocaleString()}{" "}
+                              {unitReward}
+                            </Badge>
+                          )}
+                          {isSpecialGiven && (
+                            <Badge
+                              variant="outline"
+                              className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <Award className="w-3 h-3 mr-1" />
+                              Award
+                            </Badge>
+                          )}
+                          {isCommented && (
+                            <Badge
+                              variant="outline"
+                              className="border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <MessageSquare className="w-3 h-3 mr-1" />
+                              Commented
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Info Row */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Users className="h-3.5 w-3.5" />
+                          <span>{p.members?.length ?? 0} Members</span>
+                        </div>
+
+                        <div className="text-xs font-bold text-primary flex items-center">
+                          {role === "ORGANIZER" || role === "PRESENTER" ? (
+                            <>
+                              <span className="font-normal text-muted-foreground mr-1">
+                                Total:
+                              </span>
+                              {p.totalVr?.toLocaleString() ?? 0} {unitReward}
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-green-600 dark:text-green-400 mr-1">
+                                {projectRewards[
+                                  p.id
+                                ]?.vrGiven?.toLocaleString() ?? 0}
+                              </span>
+                              <span className="text-muted-foreground mx-1">
+                                /
+                              </span>
+                              <span className="ml-1">
+                                {p.totalVr?.toLocaleString() ?? 0} {unitReward}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-auto pt-2 flex gap-2">
+                      <Link
+                        href={`/event/${eventId}/Projects/${p.id}`}
+                        className="flex-1"
+                      >
+                        <Button size="sm" variant="outline" className="w-full">
+                          <Eye className="w-3.5 h-3.5 mr-1.5" /> View
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </Card>
               );
             })}
-            
+
             {/* Sentinel for infinite scroll */}
             {visibleCount < sorted.length && (
-                <div ref={observerTarget} className="py-4 flex justify-center w-full">
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm animate-pulse">
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        Loading more teams...
-                    </div>
+              <div
+                ref={observerTarget}
+                className="py-4 flex justify-center w-full"
+              >
+                <div className="flex items-center gap-2 text-muted-foreground text-sm animate-pulse">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Loading more teams...
                 </div>
+              </div>
             )}
           </div>
         )}
@@ -458,7 +461,8 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                แสดงความคิดเห็น {selectedProject ? `- ${selectedProject.title}` : ""}
+                แสดงความคิดเห็น{" "}
+                {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
               <DrawerDescription>
                 เขียนความคิดเห็นของคุณเกี่ยวกับทีมนี้
@@ -519,7 +523,8 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                ให้ Virtual Reward {selectedProject ? `- ${selectedProject.title}` : ""}
+                ให้ Virtual Reward{" "}
+                {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
               <DrawerDescription>ระบุจำนวน VR ที่ต้องการให้</DrawerDescription>
             </DrawerHeader>
@@ -578,9 +583,12 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                ให้รางวัลพิเศษ {selectedProject ? `- ${selectedProject.title}` : ""}
+                ให้รางวัลพิเศษ{" "}
+                {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>เลือกรางวัลพิเศษที่ต้องการมอบให้</DrawerDescription>
+              <DrawerDescription>
+                เลือกรางวัลพิเศษที่ต้องการมอบให้
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0 space-y-3 mb-4">
               {selectedProject && (
@@ -611,8 +619,8 @@ export default function UnifiedProjectList({
                 ))
               ) : (
                 <div className="text-muted-foreground text-sm text-center py-4 bg-muted/30 rounded-lg">
-                  ไม่มีรางวัลที่เหลืออยู่
-                  (ท่านอาจใช้สิทธิ์โหวตไปแล้ว หรือยังไม่มีการตั้งค่ารางวัล)
+                  ไม่มีรางวัลที่เหลืออยู่ (ท่านอาจใช้สิทธิ์โหวตไปแล้ว
+                  หรือยังไม่มีการตั้งค่ารางวัล)
                 </div>
               )}
             </div>

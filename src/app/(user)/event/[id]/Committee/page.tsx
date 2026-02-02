@@ -28,6 +28,7 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
 import ResultSection from "../components/ResultSection";
+import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type Props = {
   params?: Promise<{ id: string }>;
@@ -316,7 +317,7 @@ export default function CommitteePage(props: Props) {
 
   if (loading || !localEvent) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="w-full justify-center flex">
         <div className="w-full">
           {/* Banner Skeleton */}
           <div className="relative w-full aspect-2/1 md:h-100 overflow-hidden">
@@ -353,87 +354,44 @@ export default function CommitteePage(props: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="w-full justify-center flex">
       <div className="w-full">
-        <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
-          onClick={() => setBannerOpen(true)}
-        >
-          {localEvent?.imageCover ? (
-            <Image
-              src={localEvent.imageCover}
-              alt={localEvent.eventName || "Event banner"}
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          ) : (
-            <Image
-              src="/banner.png"
-              alt="Default banner"
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          )}
-          <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent pointer-events-none" />
-        </div>
-        <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
-          <DialogContent
-            showCloseButton={false}
-            className="sm:max-w-3xl md:max-w-5xl bg-transparent border-none p-0"
-            aria-label="Event banner"
-          >
-            <DialogTitle className="sr-only">Event banner</DialogTitle>
-            <Image
-              src={localEvent?.imageCover || "/banner.png"}
-              alt={localEvent.eventName || "Event banner"}
-              width={800}
-              height={400}
-              className="w-full h-auto rounded-xl"
-            />
-            <DialogClose
-              aria-label="Close banner"
-              className="absolute top-3 right-3 z-50 rounded-full bg-black/60 text-white hover:bg-black/80 p-2 shadow"
-            >
-              <X className="h-4 w-4" />
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <Card 
-            className="border-0 dark:border dark:border-white/10 shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
+        <OrganizerBanner 
+          event={localEvent} 
+          open={bannerOpen} 
+          onOpenChange={setBannerOpen} 
+        />
+
+        <div className="max-w-6xl mx-auto mt-6">
+          <div 
+            className="bg-card rounded-xl shadow-sm border p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 transition-all hover:shadow-md relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-committee)" }}
           >
             <div 
               className="absolute inset-0 pointer-events-none" 
               style={{ background: "linear-gradient(to right, var(--role-committee), transparent)", opacity: 0.05 }} 
             />
-            <CardHeader className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                {/* LEFT SIDE: Title & Status */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <CardTitle 
-                      className="text-2xl lg:text-3xl font-bold"
-                      style={{ color: "var(--role-committee)" }}
-                    >
-                      {localEvent?.eventName || "Event"}
-                    </CardTitle>
-                  </div>
-                </div>
-
-                {/* RIGHT SIDE: Actions */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  {/* Role Label */}
-                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-committee) text-white font-medium shadow-md select-none">
-                    <Building className="h-4 w-4" />
-                    <span>Committee</span>
-                  </div>
-                </div>
+            {/* LEFT SIDE: Title & Status */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 
+                  className="text-2xl lg:text-3xl font-bold tracking-tight"
+                  style={{ color: "var(--role-committee)" }}
+                >
+                  {localEvent?.eventName || "Event"}
+                </h1>
               </div>
-            </CardHeader>
-          </Card>
+            </div>
+
+            {/* RIGHT SIDE: Actions */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Role Label */}
+              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-committee) text-white font-medium shadow-sm select-none">
+                <Building className="h-4 w-4" />
+                <span>Committee</span>
+              </div>
+            </div>
+          </div>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">

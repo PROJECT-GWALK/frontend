@@ -26,6 +26,7 @@ import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
 import type { PresenterProject } from "../Presenter/components/types";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
+import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type Props = {
   id: string;
@@ -182,60 +183,15 @@ export default function GuestView({ id, event }: Props) {
     fetchTeamsData();
   }, [id]);
 
-  // UI state for project viewer/editor
-  const [viewOpen, setViewOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState(false);
-  const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full justify-center flex">
       <div className="w-full">
-        <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
-          onClick={() => setBannerOpen(true)}
-        >
-          {localEvent?.imageCover ? (
-            <Image
-              src={localEvent.imageCover}
-              alt={localEvent.eventName || t("guest.bannerAlt")}
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          ) : (
-            <Image
-              src="/banner.png"
-              alt={t("guest.defaultBannerAlt")}
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          )}
-          <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent pointer-events-none" />
-        </div>
-        <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
-          <DialogContent
-            showCloseButton={false}
-            className="sm:max-w-3xl md:max-w-5xl bg-transparent border-none p-0"
-            aria-label="Event banner"
-          >
-            <DialogTitle className="sr-only">Event banner</DialogTitle>
-            <Image
-              src={localEvent?.imageCover || "/banner.png"}
-              alt={localEvent.eventName || "Event banner"}
-              width={800}
-              height={400}
-              className="w-full h-auto rounded-xl"
-            />
-            <DialogClose
-              aria-label="Close banner"
-              className="absolute top-3 right-3 z-50 rounded-full bg-black/60 text-white hover:bg-black/80 p-2 shadow"
-            >
-              <X className="h-4 w-4" />
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
+        <OrganizerBanner 
+          event={localEvent} 
+          open={bannerOpen} 
+          onOpenChange={setBannerOpen} 
+        />
+        <div className="max-w-6xl mx-auto mt-6">
           <Card 
             className="border-0 dark:border dark:border-white/10 shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-guest)" }}
@@ -373,12 +329,6 @@ export default function GuestView({ id, event }: Props) {
                     <p className="text-sm text-muted-foreground mt-2">
                       {t("guest.totalFeedbackDesc")}
                     </p>
-                    <div className="h-2 w-full bg-pink-100 dark:bg-pink-900/30 rounded-full overflow-hidden mt-4">
-                      <div
-                        className="h-full bg-linear-to-r from-pink-500 to-rose-400 dark:from-pink-600 dark:to-rose-400 rounded-full transition-all duration-1000"
-                        style={{ width: "65%" }} 
-                      />
-                    </div>
                   </CardContent>
                 </Card>
 

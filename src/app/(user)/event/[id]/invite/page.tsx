@@ -12,8 +12,9 @@ import { CalendarIcon, MapPinIcon, Users, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDateTime } from "@/utils/function";
+import { formatDateTime, linkify } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
+import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type RoleStr = "presenter" | "committee" | "guest";
 
@@ -32,6 +33,7 @@ export default function InviteConfirmPage() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [joining, setJoining] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [bannerOpen, setBannerOpen] = useState(false);
   const {t} = useLanguage();
 
   useEffect(() => {
@@ -71,11 +73,12 @@ export default function InviteConfirmPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pb-12">
+      <div className="min-h-screen bg-background pb-12 w-full justify-center flex">
+        <div className="w-full">
         <div className="relative w-full aspect-21/9 md:h-100">
           <Skeleton className="w-full h-full" />
         </div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
+        <div className="max-w-6xl mx-auto -mt-20 relative z-10">
           <Card className="border-none shadow-xl">
             <CardHeader className="p-6 md:p-8 space-y-6">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
@@ -100,6 +103,7 @@ export default function InviteConfirmPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     );
   }
@@ -133,18 +137,13 @@ export default function InviteConfirmPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Banner Section */}
-      <div className="relative w-full aspect-video md:aspect-21/9 md:h-100 overflow-hidden">
-        <Image 
-          src={event?.imageCover || "/banner.png"} 
-          alt={event?.eventName || "Event banner"} 
-          fill 
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-background/90 via-background/20 to-transparent pointer-events-none" />
-      </div>
+      <OrganizerBanner 
+        event={event} 
+        open={bannerOpen} 
+        onOpenChange={setBannerOpen} 
+      />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-12 md:-mt-20 relative z-10">
+      <div className="max-w-6xl mx-auto mt-6 relative z-10">
         <Card className="border-none shadow-xl bg-linear-to-br from-background/95 to-muted/20 backdrop-blur-sm overflow-hidden">
           <div className="h-2 bg-linear-to-r from-primary to-primary/60" />
           <CardHeader className="p-6 md:p-8 space-y-6">
@@ -215,9 +214,9 @@ export default function InviteConfirmPage() {
 
           <CardContent className="p-6 md:p-8 pt-0 space-y-8">
             {event?.eventDescription && (
-              <div className="prose dark:prose-invert max-w-none">
-                <p className="text-muted-foreground leading-relaxed">
-                  {event.eventDescription}
+              <div className="prose dark:prose-invert max-w-none max-h-60 overflow-y-auto pr-2">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {linkify(event.eventDescription)}
                 </p>
               </div>
             )}

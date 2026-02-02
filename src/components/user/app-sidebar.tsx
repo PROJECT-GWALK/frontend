@@ -40,8 +40,8 @@ export function AppSidebar() {
       </SidebarContent>
         <Separator />
       <SidebarFooter >
-        <Link href="/dashboard">
-          <Button className="w-full">Go to Dashboard</Button>
+        <Link href="/home">
+          <Button className="w-full">Go to Home</Button>
         </Link>
 
       </SidebarFooter>

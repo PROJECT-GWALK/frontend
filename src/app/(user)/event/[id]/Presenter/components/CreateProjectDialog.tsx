@@ -84,7 +84,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto rounded-lg">
         <DialogTitle>Create Project</DialogTitle>
         <div className="mt-4 space-y-3">
           <div>

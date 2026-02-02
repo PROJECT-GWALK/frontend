@@ -94,7 +94,7 @@ export default function OrganizerView({ id, event }: Props) {
   }, [id]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="w-full justify-center flex">
       <div className="w-full">
         {/* Banner Section */}
         <OrganizerBanner 
@@ -103,7 +103,7 @@ export default function OrganizerView({ id, event }: Props) {
           onOpenChange={setBannerOpen} 
         />
 
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
+        <div className="max-w-6xl mx-auto mt-6">
           {/* Header Section */}
           <OrganizerHeader 
             id={id} 

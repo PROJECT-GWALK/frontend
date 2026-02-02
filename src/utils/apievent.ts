@@ -104,6 +104,14 @@ export const getUserHistory = async () => {
   return res.data; // { message, participated, organized }
 };
 
+export const getUserHistoryByUsername = async (username: string) => {
+  const res = await axios.get(`/backend/api/events/user/${username}/history`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, participated, organized }
+};
+
+
 // ====================== CHECK EVENT NAME ======================
 export const checkEventName = async (eventName: string) => {
   const res = await axios.get("/backend/api/events/check-name", {

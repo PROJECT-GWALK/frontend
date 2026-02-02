@@ -17,7 +17,7 @@ export default async function RootLayout({
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto w-full px-6 py-8">{children}</main>
+      <main className="max-w-7xl mx-auto w-full px-4 py-8">{children}</main>
     </>
   );
 }

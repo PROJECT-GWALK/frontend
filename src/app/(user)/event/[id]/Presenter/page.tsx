@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, Trophy, MessageSquare, Star, Gift, AlertCircle } from "lucide-react";
@@ -27,6 +27,7 @@ import Link from "next/link";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
 import CommentSection from "./components/Comment";
+import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type Props = {
   id: string;
@@ -142,7 +143,7 @@ export default function PresenterView({ id, event }: Props) {
     }
   };
 
-  const fetchMyStats = async () => {
+  const fetchMyStats = useCallback(async () => {
     try {
       const res = await getPresenterStats(id);
       if (res.message === "ok") {
@@ -151,12 +152,17 @@ export default function PresenterView({ id, event }: Props) {
     } catch (e) {
       console.error("Failed to fetch presenter stats", e);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchTeamsData();
-    fetchMyStats();
   }, [id, userId]);
+
+  useEffect(() => {
+    if (userProject) {
+      fetchMyStats();
+    }
+  }, [userProject, fetchMyStats]);
 
   // Redirect from dashboard if not in a team
   useEffect(() => {
@@ -173,54 +179,14 @@ export default function PresenterView({ id, event }: Props) {
   const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full justify-center flex">
       <div className="w-full">
-        <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
-          onClick={() => setBannerOpen(true)}
-        >
-          {localEvent?.imageCover ? (
-            <Image
-              src={localEvent.imageCover}
-              alt={localEvent.eventName || "Event banner"}
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          ) : (
-            <Image
-              src="/banner.png"
-              alt="Default banner"
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          )}
-          <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent pointer-events-none" />
-        </div>
-        <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
-          <DialogContent
-            showCloseButton={false}
-            className="sm:max-w-3xl md:max-w-5xl bg-transparent border-none p-0"
-            aria-label="Event banner"
-          >
-            <DialogTitle className="sr-only">Event banner</DialogTitle>
-            <Image
-              src={localEvent?.imageCover || "/banner.png"}
-              alt={localEvent.eventName || "Event banner"}
-              width={800}
-              height={400}
-              className="w-full h-auto rounded-xl"
-            />
-            <DialogClose
-              aria-label="Close banner"
-              className="absolute top-3 right-3 z-50 rounded-full bg-black/60 text-white hover:bg-black/80 p-2 shadow"
-            >
-              <X className="h-4 w-4" />
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
+        <OrganizerBanner 
+          event={localEvent} 
+          open={bannerOpen} 
+          onOpenChange={setBannerOpen} 
+        />
+        <div className="max-w-6xl mx-auto mt-6">
           <Card
             className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-presenter)" }}

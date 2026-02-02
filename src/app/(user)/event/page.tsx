@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar } from "lucide-react";
+import { Search, Calendar, Users, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import {
@@ -19,9 +19,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function EventsPage() {
-  const { timeFormat } = useLanguage();
+  const { timeFormat, t } = useLanguage();
+  const { status: sessionStatus } = useSession();
+  const router = useRouter();
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -73,7 +77,7 @@ export default function EventsPage() {
         const res = await getPublishedEvents();
         setEvents(res.events || []);
       } catch {
-        toast.error("โหลดรายการอีเวนต์ไม่สำเร็จ");
+        toast.error(t.eventsPage.toast.loadError);
       } finally {
         setLoading(false);
       }
@@ -85,25 +89,30 @@ export default function EventsPage() {
     eventId: string,
     role: "presenter" | "committee" | "guest"
   ) => {
+    if (sessionStatus !== "authenticated") {
+      router.push("/sign-in");
+      return;
+    }
+
     try {
       const token = await getInviteToken(eventId, role);
       if (token?.message !== "ok" || !token?.token) {
-        toast.error("ไม่สามารถเข้าร่วมอีเวนต์ได้");
+        toast.error(t.eventsPage.toast.joinError);
         return;
       }
       const resJoin = await joinEventWithToken(eventId, token.token);
       if (resJoin?.message === "ok") {
-        toast.success("เข้าร่วมอีเวนต์สำเร็จ");
+        toast.success(t.eventsPage.toast.joinSuccess);
         setEvents((prev) =>
           prev.map((e) =>
             e.id === eventId ? { ...e, role: role.toUpperCase() } : e
           )
         );
       } else {
-        toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
+        toast.error(resJoin?.message || t.eventsPage.toast.joinFail);
       }
     } catch (err) {
-      let message = "เข้าร่วมอีเวนต์ไม่สำเร็จ";
+      let message = t.eventsPage.toast.joinFail;
       const ax = err as AxiosError<{ message?: string }>;
       const backendMessage = ax?.response?.data?.message;
       if (backendMessage) message = backendMessage;
@@ -113,7 +122,7 @@ export default function EventsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
           <div>
             <Skeleton className="h-9 w-32 mb-2" />
@@ -153,26 +162,26 @@ export default function EventsPage() {
 
   const getFilterLabel = (f: string) => {
     const labels: Record<string, string> = {
-      all: "All Events",
-      upcomingRecruit: "Coming Soon",
-      accepting: "Accepting",
-      viewSoon: "Viewing Soon",
-      viewOpen: "Live Now",
-      finished: "Finished",
+      all: t.eventsPage.filter.all,
+      upcomingRecruit: t.eventsPage.filter.upcomingRecruit,
+      accepting: t.eventsPage.filter.accepting,
+      viewSoon: t.eventsPage.filter.viewSoon,
+      viewOpen: t.eventsPage.filter.viewOpen,
+      finished: t.eventsPage.filter.finished,
     };
     return labels[f] || f;
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-          <p className="text-muted-foreground">รายการอีเวนต์ที่กำลังเปิดอยู่</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t.eventsPage.title}</h1>
+          <p className="text-muted-foreground">{t.eventsPage.subtitle}</p>
         </div>
         <div className="relative w-full md:w-80">
           <Input
-            placeholder="ค้นหาด้วยชื่ออีเวนต์..."
+            placeholder={t.eventsPage.searchPlaceholder}
             className="pl-10 bg-background/60 backdrop-blur-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -209,7 +218,7 @@ export default function EventsPage() {
           if (filter === "all") return true;
           return getEventStatus(e) === filter;
         }).length === 0 && (
-        <p className="text-muted-foreground">ยังไม่มีอีเวนต์ที่เผยแพร่</p>
+        <p className="text-muted-foreground">{t.eventsPage.noEvents}</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -232,113 +241,171 @@ export default function EventsPage() {
               finished: { label: "Finished", color: "bg-slate-500" },
             };
             const config = statusConfig[status as keyof typeof statusConfig] || { label: status, color: "bg-gray-500" };
+            
+            const getRoleColorVar = (role?: string) => {
+              switch (role) {
+                case "ORGANIZER": return "var(--role-organizer)";
+                case "PRESENTER": return "var(--role-presenter)";
+                case "COMMITTEE": return "var(--role-committee)";
+                case "GUEST": return "var(--role-guest)";
+                default: return undefined;
+              }
+            };
+
+            const roleColor = getRoleColorVar(event.role ?? undefined);
 
             return (
               <Card
                 key={event.id}
-                className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-all duration-300 hover:border-primary hover:shadow-xl"
+                className="group relative flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 border border-border/60 p-0 gap-0"
+                style={roleColor ? { 
+                  borderLeftWidth: "6px", 
+                  borderLeftColor: roleColor,
+                  "--card-role-color": roleColor 
+                } as React.CSSProperties : {}}
               >
-                <div className="relative aspect-video w-full overflow-hidden">
-                  {hasBanner ? (
-                    <Image
-                      src={event.imageCover as string}
-                      alt={event.eventName}
-                      fill
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+                {roleColor && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none z-0 transition-opacity duration-300 opacity-[0.08] group-hover:opacity-20"
+                    style={{ 
+                      background: `linear-gradient(to right, ${roleColor}, transparent 40%)`,
+                    }} 
+                  />
+                )}
+                
+                <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                  <Link href={`/event/${event.id}`} className="block w-full h-full">
+                    {hasBanner ? (
                       <Image
-                        src="/banner.png"
+                        src={event.imageCover as string}
                         alt={event.eventName}
                         fill
-                        className="h-full w-full object-cover opacity-80"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-40" />
-                  
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md ${config.color} text-white shadow-sm backdrop-blur-md`}>
-                      {config.label}
-                    </span>
-                  </div>
+                    ) : (
+                      <div className="h-full w-full bg-linear-to-br from-brand-tertiary/40 to-brand-primary/40 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+                        <Image
+                          src="/banner.png"
+                          alt={event.eventName}
+                          fill
+                          className="h-full w-full object-cover opacity-80"
+                        />
+                      </div>
+                    )}
+                  </Link>
 
-                  {event.role && (
-                    <div className="absolute top-3 right-3">
-                      <span className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md bg-white/90 text-primary shadow-sm backdrop-blur-md">
-                        {event.role}
-                      </span>
-                    </div>
-                  )}
+                  <span
+                    className={`absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full shadow-lg ${config.color} text-white z-10`}
+                  >
+                    {config.label}
+                  </span>
                 </div>
 
-                <div className="flex flex-1 flex-col p-5">
-                  <div className="mb-4 space-y-2">
+                <div className="flex flex-col flex-1 p-4 gap-3">
+                  <div className="space-y-2">
                     <Link
                       href={`/event/${event.id}`}
                       className="block"
                     >
-                      <h3 className="font-bold text-lg leading-tight tracking-tight text-foreground transition-colors group-hover:text-primary line-clamp-2">
+                      <h4 className="font-semibold text-lg line-clamp-1 hover:text-primary transition-colors">
                         {event.eventName}
-                      </h3>
+                      </h4>
                     </Link>
                     
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>
-                        {formatDateTime(new Date(event.createdAt), timeFormat)}
-                      </span>
+                    <div 
+                      className={`flex items-center gap-2 text-xs ${!roleColor ? "text-muted-foreground" : ""}`}
+                      style={roleColor ? { color: roleColor } : {}}
+                    >
+                      {event.role ? (
+                        <>
+                          <Users className="h-3.5 w-3.5" />
+                          <span className="font-medium">{event.role}</span>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>
+                            {formatDateTime(new Date(event.createdAt), timeFormat)}
+                          </span>
+                        </div>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    {(() => {
+                      const subStart = event.startJoinDate ? new Date(event.startJoinDate) : null;
+                      const subEnd = event.endJoinDate ? new Date(event.endJoinDate) : null;
+                      const eventStart = event.startView ? new Date(event.startView) : null;
+                      const eventEnd = event.endView ? new Date(event.endView) : null;
+                      
+                      return (
+                        <>
+                          {subStart && subEnd && (
+                            <div className="flex flex-col gap-1 p-2 rounded-md bg-muted/50 border border-border/50">
+                              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/80">
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span>Join Period</span>
+                              </div>
+                              <div className="text-xs pl-5">
+                                <span className="font-medium text-foreground">{formatDateTime(subStart, timeFormat)}</span>
+                                <span className="mx-1 text-muted-foreground">-</span>
+                                <span className="font-medium text-foreground">{formatDateTime(subEnd, timeFormat)}</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {eventStart && eventEnd && (
+                            <div className="flex flex-col gap-1 p-2 rounded-md bg-primary/5 border border-primary/10">
+                              <div className="flex items-center gap-1.5 text-xs font-medium text-primary/80">
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>Event Period</span>
+                              </div>
+                              <div className="text-xs pl-5">
+                                <span className="font-medium text-foreground">{formatDateTime(eventStart, timeFormat)}</span>
+                                <span className="mx-1 text-muted-foreground">-</span>
+                                <span className="font-medium text-foreground">{formatDateTime(eventEnd, timeFormat)}</span>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div className="mt-auto pt-2">
                     {event.role ? (
                       <Link href={`/event/${event.id}`} className="block w-full">
-                        <Button className="w-full group-hover:bg-primary/90 transition-colors" size="default">
-                          Joined Event
+                        <Button className="w-full hover:bg-primary/90 transition-colors" size="sm">
+                          {t.eventsPage.joinedEvent}
                         </Button>
                       </Link>
                     ) : (
                       <div className="space-y-3">
                         {status === "accepting" && (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <div className="h-px flex-1 bg-border" />
-                              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                Join As
-                              </span>
-                              <div className="h-px flex-1 bg-border" />
-                            </div>
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-full text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                              className="w-full text-xs hover:bg-primary hover:text-white dark:hover:text-black hover:border-primary transition-colors"
                               onClick={() => handleJoin(event.id, "presenter")}
                             >
-                              Presenter
+                              {t.eventsPage.joinAsPresenter}
                             </Button>
-                          </>
+                          </div>
                         )}
 
                         {(status === "viewSoon" || status === "viewOpen") && (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <div className="h-px flex-1 bg-border" />
-                              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                Join As
-                              </span>
-                              <div className="h-px flex-1 bg-border" />
-                            </div>
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-full text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                              className="w-full text-xs hover:bg-primary hover:text-white dark:hover:text-black hover:border-primary transition-colors"
                               onClick={() => handleJoin(event.id, "guest")}
                             >
-                              Guest
+                              {t.eventsPage.joinAsGuest}
                             </Button>
-                          </>
+                          </div>
                         )}
                       </div>
                     )}

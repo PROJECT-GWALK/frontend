@@ -168,7 +168,8 @@ export default function OrganizerEditDialog({
         }));
       }
     }
-  }, [open, section, event, form.hasCommittee, form.committeeReward, setForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, section, event, setForm]);
 
   const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -440,7 +441,14 @@ export default function OrganizerEditDialog({
                                   defaultMonth={selectedSubStart || new Date()}
                                   selected={selectedSubStart}
                                   onSelect={(d) => updateDate("startJoinDate", d, getTime(form.startJoinDate))}
-                                  disabled={selectedStart ? (date) => date >= selectedStart : undefined}
+                                  // SubmissionDateStart <= SubmissionDateEnd
+                                  disabled={(date) => {
+                                     // If submission end is set, start cannot be after end
+                                     if (selectedSubEnd && date > new Date(selectedSubEnd.setHours(0,0,0,0))) return true;
+                                     // If event start is set, submission start cannot be after event start
+                                     if (selectedStart && date > new Date(selectedStart.setHours(0,0,0,0))) return true;
+                                     return false;
+                                  }}
                                   formatters={{
                                     formatMonthDropdown: (date) => date.toLocaleString(dateFormat, { month: "long" }),
                                     formatYearDropdown: (date) => date.toLocaleDateString(dateFormat, { year: "numeric" }),
@@ -490,8 +498,10 @@ export default function OrganizerEditDialog({
                                   disabled={
                                     selectedSubStart || selectedStart
                                       ? (date) => {
-                                          if (selectedSubStart && date < selectedSubStart) return true;
-                                          if (selectedStart && date >= selectedStart) return true;
+                                          // Can end on same day as start, but not before
+                                          if (selectedSubStart && date < new Date(selectedSubStart.setHours(0,0,0,0))) return true;
+                                          // Submission end can be on same day as Event start
+                                          if (selectedStart && date >= new Date(selectedStart.setHours(0,0,0,0))) return true; 
                                           return false;
                                         }
                                       : undefined
@@ -548,11 +558,13 @@ export default function OrganizerEditDialog({
                                   defaultMonth={selectedStart || new Date()}
                                   selected={selectedStart}
                                   onSelect={(d) => updateDate("startView", d, getTime(form.startView))}
+                                  // SubmissionDateEnd > EventStart
                                   disabled={
                                     selectedSubEnd || selectedSubStart
                                       ? (date) => {
-                                          if (selectedSubEnd && date <= selectedSubEnd) return true;
-                                          if (selectedSubStart && date <= selectedSubStart) return true;
+                                          // Event can start on same day as Submission end
+                                          if (selectedSubEnd && date <= new Date(selectedSubEnd.setHours(0,0,0,0))) return true;
+                                          if (selectedSubStart && date < new Date(selectedSubStart.setHours(0,0,0,0))) return true;
                                           return false;
                                         }
                                       : undefined
@@ -603,7 +615,7 @@ export default function OrganizerEditDialog({
                                   defaultMonth={selectedEnd || selectedStart || new Date()}
                                   selected={selectedEnd}
                                   onSelect={(d) => updateDate("endView", d, getTime(form.endView))}
-                                  disabled={selectedStart ? (date) => date < selectedStart : undefined}
+                                  disabled={selectedStart ? (date) => date < new Date(selectedStart.setHours(0,0,0,0)) : undefined}
                                   formatters={{
                                     formatMonthDropdown: (date) => date.toLocaleString(dateFormat, { month: "long" }),
                                     formatYearDropdown: (date) => date.toLocaleDateString(dateFormat, { year: "numeric" }),

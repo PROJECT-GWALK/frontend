@@ -49,8 +49,8 @@ export const menuItemsAdmin = [
 
 export const navbarItems = [
   {
-    url: "/dashboard",
-    title: "Dashboard",
+    url: "/home",
+    title: "Home",
   },
   {
     url: "/event",
@@ -62,7 +62,7 @@ export const navbarItems = [
   },
 ];
 
-export const signInRedirect = "/dashboard";
+export const signInRedirect = "/home";
 
 const isThai = typeof window !== "undefined" && localStorage.getItem("language") === "th";
 

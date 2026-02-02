@@ -174,13 +174,10 @@ export default function ImageCropDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden bg-card">
+      <DialogContent className="sm:max-w-2xl w-full max-w-[calc(100%-2rem)] p-0 gap-0 overflow-hidden bg-card ">
         <DialogHeader className="p-4 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-medium">{title}</DialogTitle>
-            <Button type="button" variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 

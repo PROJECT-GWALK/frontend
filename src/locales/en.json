@@ -87,6 +87,22 @@
     "placeholderReqName": "e.g. Presentation Slides",
     "placeholderReqDesc": "e.g. PDF format only"
   },
+  "usersPage": {
+    "title": "Community Members",
+    "searchPlaceholder": "Search by name or username...",
+    "stats": "Stats",
+    "organized": "Organized",
+    "participated": "Participated",
+    "noUsersFound": "No users found matching your search.",
+    "viewProfile": "View Profile",
+    "ranking": "Ranking",
+    "topActive": "Top Active Members",
+    "allMembers": "All Members",
+    "rank": "Rank",
+    "user": "User",
+    "role": "Role",
+    "activity": "Activity"
+  },
   "committeeSection": {
     "used": "Used",
     "total": "Total",
@@ -123,7 +139,7 @@
     "delete": "Delete",
     "deleteSuccessTitle": "Deleted successfully",
     "deleteSuccessDesc": "Event draft has been deleted.",
-    "goToDashboard": "Go to Dashboard",
+    "goToDashboard": "Go to Home",
     "close": "Close"
   },
   "sidebar": {
@@ -256,6 +272,122 @@
     "allOrganizers": "All Organizers",
     "unknown": "Unknown"
   },
+  "eventsPage": {
+    "title": "Events",
+    "subtitle": "List of currently open events",
+    "searchPlaceholder": "Search by event name...",
+    "noEvents": "No published events yet",
+    "joinedEvent": "Joined Event",
+    "joinAsPresenter": "Join as Presenter",
+    "joinAsGuest": "Join as Guest",
+    "filter": {
+      "all": "All Events",
+      "upcomingRecruit": "Coming Soon",
+      "accepting": "Accepting",
+      "viewSoon": "Viewing Soon",
+      "viewOpen": "Live Now",
+      "finished": "Finished"
+    },
+    "status": {
+      "upcomingRecruit": "Coming Soon",
+      "accepting": "Accepting",
+      "viewSoon": "Viewing Soon",
+      "viewOpen": "Live",
+      "finished": "Finished"
+    },
+    "period": {
+      "join": "Join Period",
+      "event": "Event Period"
+    },
+    "toast": {
+      "loadError": "Failed to load event list",
+      "joinError": "Cannot join event",
+      "joinSuccess": "Joined event successfully",
+      "joinFail": "Failed to join event"
+    }
+  },
+  "homePage": {
+    "title": "Home",
+    "subtitle": "Create, manage, and join events with ease",
+    "createEvent": "Create New Event",
+    "searchPlaceholder": "Search events by name...",
+    "deleteEvent": "Delete Event",
+    "created": "Created",
+    "createDialog": {
+      "title": "Create New Event",
+      "description": "Enter an event name to get started. You can complete the setup later.",
+      "eventNameLabel": "Event Name",
+      "eventNamePlaceholder": "e.g., Annual Tech Conference 2024",
+      "cancel": "Cancel",
+      "submit": "Create Event"
+    },
+    "filter": {
+      "all": "All Events",
+      "draft": "Drafts",
+      "upcomingRecruit": "Upcoming",
+      "accepting": "Recruiting",
+      "viewSoon": "Starting Soon",
+      "viewOpen": "Live Now",
+      "finished": "Ended"
+    },
+    "roleFilter": {
+      "label": "Filter by role:",
+      "all": "All Roles",
+      "organizer": "Organizer",
+      "presenter": "Presenter",
+      "committee": "Committee",
+      "guest": "Guest"
+    },
+    "status": {
+      "draft": "Draft",
+      "upcomingRecruit": "Soon",
+      "accepting": "Recruiting",
+      "viewSoon": "Starting Soon",
+      "viewOpen": "Live",
+      "finished": "Ended"
+    },
+    "noEvents": {
+      "title": "No events found",
+      "description": "Try adjusting your filters or create a new event"
+    },
+    "rateButton": {
+      "rated": "Rated",
+      "rate": "Rate"
+    },
+    "actionButton": {
+      "edit": "Edit",
+      "open": "Open"
+    },
+    "stats": {
+      "title": "Quick Stats",
+      "totalEvents": "Total Events",
+      "drafts": "Drafts",
+      "live": "Live",
+      "recruiting": "Recruiting"
+    },
+    "links": {
+      "title": "Quick Links",
+      "viewProfile": "View Profile",
+      "settings": "Settings"
+    },
+    "deleteDialog": {
+      "title": "Delete Event?",
+      "description": "This will permanently delete {eventName}. This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting..."
+    },
+    "toast": {
+      "createSuccess": "Event created successfully!",
+      "createFail": "Failed to create event",
+      "deleteSuccess": "Deleted successfully",
+      "deleteFail": "Failed to delete event",
+      "nameExists": "Event name already exists"
+    },
+    "error": {
+      "nameExists": "Event name already exists"
+    }
+  },
   "invite": {
     "title": "Invite Links",
     "inviteSuffix": "Invite",
@@ -292,6 +424,7 @@
     "title": "Project Details",
     "viewDetailsFor": "View details and works for",
     "defaultEventName": "Event Project",
+    "noDescription": "No description provided.",
     "roles": {
       "leader": "Leader"
     },
@@ -308,10 +441,13 @@
       "backToProjects": "Back to Projects",
       "downloadImage": "Download Image",
       "downloadPDF": "Download PDF",
+      "readMore": "Read More",
+      "readLess": "Read Less",
       "openLink": "Open Link",
       "max": "Max"
     },
     "sections": {
+      "description": "Project Description",
       "teamMembers": "Team Members",
       "evaluation": "Evaluation",
       "projectVideo": "Project Video",

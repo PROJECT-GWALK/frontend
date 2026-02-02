@@ -6,7 +6,7 @@ export default async function BannedPage() {
   const session = await auth()
 
   if (!session?.banned) {
-    redirect("/dashboard")
+    redirect("/home")
   }
 
   return <BannedClient />

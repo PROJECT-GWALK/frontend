@@ -87,6 +87,22 @@
     "placeholderReqName": "เช่น ไฟล์สไลด์นำเสนอ",
     "placeholderReqDesc": "เช่น ไฟล์ PDF เท่านั้น"
   },
+  "usersPage": {
+    "title": "สมาชิกในชุมชน",
+    "searchPlaceholder": "ค้นหาด้วยชื่อหรือชื่อผู้ใช้...",
+    "stats": "สถิติ",
+    "organized": "จัดงาน",
+    "participated": "เข้าร่วม",
+    "noUsersFound": "ไม่พบผู้ใช้ที่ตรงกับการค้นหา",
+    "viewProfile": "ดูโปรไฟล์",
+    "ranking": "อันดับ",
+    "topActive": "สมาชิกยอดนิยม",
+    "allMembers": "สมาชิกทั้งหมด",
+    "rank": "อันดับ",
+    "user": "ผู้ใช้งาน",
+    "role": "บทบาท",
+    "activity": "กิจกรรม"
+  },
   "committeeSection": {
     "used": "ใช้ไปแล้ว",
     "total": "ทั้งหมด",
@@ -123,7 +139,7 @@
     "delete": "ลบ",
     "deleteSuccessTitle": "ลบสำเร็จ",
     "deleteSuccessDesc": "ลบ Event ฉบับร่างเรียบร้อยแล้ว",
-    "goToDashboard": "กลับสู่แดชบอร์ด",
+    "goToDashboard": "กลับสู่หน้าหนัก",
     "close": "ปิด"
   },
   "sidebar": {
@@ -256,6 +272,122 @@
     "allOrganizers": "ผู้จัดงานทั้งหมด",
     "unknown": "ไม่ระบุ"
   },
+  "eventsPage": {
+    "title": "อีเวนต์",
+    "subtitle": "รายการอีเวนต์ที่กำลังเปิดอยู่",
+    "searchPlaceholder": "ค้นหาด้วยชื่ออีเวนต์...",
+    "noEvents": "ยังไม่มีอีเวนต์ที่เผยแพร่",
+    "joinedEvent": "เข้าร่วมแล้ว",
+    "joinAsPresenter": "เข้าร่วมในฐานะผู้นำเสนอ",
+    "joinAsGuest": "เข้าร่วมในฐานะผู้เยี่ยมชม",
+    "filter": {
+      "all": "ทั้งหมด",
+      "upcomingRecruit": "เร็วๆ นี้",
+      "accepting": "รับสมัคร",
+      "viewSoon": "เตรียมเปิด",
+      "viewOpen": "กำลังจัด",
+      "finished": "จบแล้ว"
+    },
+    "status": {
+      "upcomingRecruit": "เร็วๆ นี้",
+      "accepting": "รับสมัคร",
+      "viewSoon": "เตรียมเปิด",
+      "viewOpen": "กำลังจัด",
+      "finished": "จบแล้ว"
+    },
+    "period": {
+      "join": "ช่วงรับสมัคร",
+      "event": "ช่วงจัดงาน"
+    },
+    "toast": {
+      "loadError": "โหลดรายการอีเวนต์ไม่สำเร็จ",
+      "joinError": "ไม่สามารถเข้าร่วมอีเวนต์ได้",
+      "joinSuccess": "เข้าร่วมอีเวนต์สำเร็จ",
+      "joinFail": "เข้าร่วมอีเวนต์ไม่สำเร็จ"
+    }
+  },
+  "homePage": {
+    "title": "หน้าหลัก",
+    "subtitle": "สร้าง จัดการ และเข้าร่วมอีเวนต์ได้ง่ายๆ",
+    "createEvent": "สร้างอีเวนต์ใหม่",
+    "searchPlaceholder": "ค้นหาอีเวนต์ด้วยชื่อ...",
+    "deleteEvent": "ลบอีเวนต์",
+    "created": "สร้างเมื่อ",
+    "createDialog": {
+      "title": "สร้างอีเวนต์ใหม่",
+      "description": "ใส่ชื่ออีเวนต์เพื่อเริ่มต้น คุณสามารถตั้งค่ารายละเอียดภายหลังได้",
+      "eventNameLabel": "ชื่ออีเวนต์",
+      "eventNamePlaceholder": "เช่น งานประชุมเทคโนโลยีประจำปี 2024",
+      "cancel": "ยกเลิก",
+      "submit": "สร้างอีเวนต์"
+    },
+    "filter": {
+      "all": "ทั้งหมด",
+      "draft": "ฉบับร่าง",
+      "upcomingRecruit": "กำลังมา",
+      "accepting": "รับสมัคร",
+      "viewSoon": "เตรียมเปิด",
+      "viewOpen": "กำลังจัด",
+      "finished": "จบแล้ว"
+    },
+    "roleFilter": {
+      "label": "กรองตามบทบาท:",
+      "all": "ทุกบทบาท",
+      "organizer": "ผู้จัดงาน",
+      "presenter": "ผู้นำเสนอ",
+      "committee": "กรรมการ",
+      "guest": "ผู้เข้าร่วม"
+    },
+    "status": {
+      "draft": "ร่าง",
+      "upcomingRecruit": "เร็วๆ นี้",
+      "accepting": "รับสมัคร",
+      "viewSoon": "เตรียมเปิด",
+      "viewOpen": "กำลังจัด",
+      "finished": "จบแล้ว"
+    },
+    "noEvents": {
+      "title": "ไม่พบอีเวนต์",
+      "description": "ลองปรับตัวกรองหรือสร้างอีเวนต์ใหม่"
+    },
+    "rateButton": {
+      "rated": "ให้คะแนนแล้ว",
+      "rate": "ให้คะแนน"
+    },
+    "actionButton": {
+      "edit": "แก้ไข",
+      "open": "เปิด"
+    },
+    "stats": {
+      "title": "สถิติด่วน",
+      "totalEvents": "อีเวนต์ทั้งหมด",
+      "drafts": "แบบร่าง",
+      "live": "กำลังจัด",
+      "recruiting": "รับสมัคร"
+    },
+    "links": {
+      "title": "ลิงก์ด่วน",
+      "viewProfile": "ดูโปรไฟล์",
+      "settings": "การตั้งค่า"
+    },
+    "deleteDialog": {
+      "title": "ลบอีเวนต์?",
+      "description": "สิ่งนี้จะลบ {eventName} อย่างถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "cancel": "ยกเลิก",
+      "delete": "ลบ",
+      "deleting": "กำลังลบ..."
+    },
+    "toast": {
+      "createSuccess": "สร้างอีเวนต์สำเร็จ!",
+      "createFail": "สร้างอีเวนต์ไม่สำเร็จ",
+      "deleteSuccess": "ลบสำเร็จ",
+      "deleteFail": "ลบอีเวนต์ไม่สำเร็จ",
+      "nameExists": "ชื่ออีเวนต์ซ้ำ"
+    },
+    "error": {
+      "nameExists": "ชื่ออีเวนต์ซ้ำ"
+    }
+  },
   "invite": {
     "title": "ลิงก์คำเชิญ",
     "inviteSuffix": "เชิญ",
@@ -292,6 +424,7 @@
     "title": "รายละเอียดโครงการ",
     "viewDetailsFor": "ดูรายละเอียดและผลงานของ",
     "defaultEventName": "โครงการอีเวนต์",
+    "noDescription": "ไม่มีรายละเอียด",
     "roles": {
       "leader": "หัวหน้าทีม"
     },
@@ -308,10 +441,13 @@
       "backToProjects": "กลับไปหน้ารายการโครงการ",
       "downloadImage": "ดาวน์โหลดรูปภาพ",
       "downloadPDF": "ดาวน์โหลด PDF",
+      "readMore": "ดูเพิ่มเติม",
+      "readLess": "ย่อ",
       "openLink": "เปิดลิงก์",
       "max": "สูงสุด"
     },
     "sections": {
+      "description": "รายละเอียดโปรเจกต์",
       "teamMembers": "สมาชิกทีม",
       "evaluation": "การประเมิน",
       "projectVideo": "วิดีโอโครงการ",

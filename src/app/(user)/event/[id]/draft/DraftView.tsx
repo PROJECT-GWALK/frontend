@@ -745,9 +745,9 @@ export default function EventDraft() {
         />
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-80 p-6 lg:p-8 w-full">
+        <main className="flex-1 w-full">
           {loading ? (
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Header Skeleton */}
               <div className="lg:col-span-2 flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
@@ -840,11 +840,12 @@ export default function EventDraft() {
               </div>
             </div>
           ) : event ? (
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="w-full max-w-6xl mx-auto py-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Header */}
               <div className="lg:col-span-2 flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
-                  <Link href="/dashboard">
+                  <Link href="/home">
                     <Button variant="ghost" size="icon">
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
@@ -997,9 +998,9 @@ export default function EventDraft() {
                 open={deleteSuccessOpen}
                 onOpenChange={(o) => {
                   setDeleteSuccessOpen(o);
-                  if (!o) router.push("/dashboard");
+                  if (!o) router.push("/home");
                 }}
-                onGoDashboard={() => router.push("/dashboard")}
+                onGoDashboard={() => router.push("/home")}
               />
 
               {/* Save Button (Mobile) */}
@@ -1046,6 +1047,7 @@ export default function EventDraft() {
                     {t('eventDraft.delete')}
                   </Button>
                 </div>
+              </div>
               </div>
             </div>
           ) : null}

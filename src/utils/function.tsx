@@ -1,10 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/utils/types";
 import { timeFormat, dateFormat } from "@/utils/settings";
+import Link from "next/link";
 import React from "react";
 import * as QRCode from "qrcode";
 
-export async function generateQrCode(url: string, width: number = 400): Promise<string | null> {
+export async function generateQrCode(
+  url: string,
+  width: number = 400,
+): Promise<string | null> {
   try {
     return await QRCode.toDataURL(url, { width });
   } catch (err) {
@@ -22,10 +26,12 @@ export function UserAvatar({
 }) {
   const fallback = user?.name?.trim() || user?.username || user?.email || "??";
   return (
-    <Avatar className={className}>
-      <AvatarImage src={user?.image || ""} />
-      <AvatarFallback>{fallback.slice(0, 2).toUpperCase()}</AvatarFallback>
-    </Avatar>
+    <Link href={`/profile/@${user?.username}`}>
+      <Avatar className={className}>
+        <AvatarImage src={user?.image || ""} />
+        <AvatarFallback>{fallback.slice(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+    </Link>
   );
 }
 
@@ -110,7 +116,11 @@ export function toYYYYMMDD(d: Date) {
 
 export function formatDate(d?: Date, emptyText: string = "-", locale?: string) {
   if (!d) return emptyText;
-  return d.toLocaleDateString(locale || dateFormat, { day: "numeric", month: "long", year: "numeric" });
+  return d.toLocaleDateString(locale || dateFormat, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export const toDate = (date?: string, time?: string) =>
@@ -119,7 +129,7 @@ export const toDate = (date?: string, time?: string) =>
 export const getDateTimeString = (
   date: string,
   time: string,
-  asIso: boolean = false
+  asIso: boolean = false,
 ) => {
   if (!date || !time) return null;
   if (asIso) {
@@ -137,7 +147,7 @@ export const validateEventTime = (
   submissionStartDate: string,
   submissionStartTime: string,
   submissionEndDate: string,
-  submissionEndTime: string
+  submissionEndTime: string,
 ) => {
   const errors: Record<string, string> = {};
   const startPresenter = toDate(submissionStartDate, submissionStartTime);
