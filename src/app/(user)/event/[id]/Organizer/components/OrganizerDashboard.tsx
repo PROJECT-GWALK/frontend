@@ -28,54 +28,65 @@ export default function OrganizerDashboard({ event }: Props) {
                 (event?.guestsCount ?? 0) +
                 (event?.committeeCount ?? 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">{t("organizerDashboard.totalPeopleInEvent")}</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              {t("organizerDashboard.totalPeopleInEvent")}
+            </p>
           </CardContent>
         </Card>
 
-        {/* Breakdown Cards - Compact Design */}
-        <Card className="shadow-sm">
+        {/* Presenters Card */}
+        <Card className="shadow-sm border-l-4 border-l-green-600">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("dashboard.teamCount")}
+              {t("organizerDashboard.presenters")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {event?.presenterTeams ?? 0}
-              <span className="text-sm font-normal text-muted-foreground ml-2">{t("organizerDashboard.team")}</span>
+            <div className="text-2xl font-bold text-green-700">{event?.presentersCount ?? 0}</div>
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              {t("organizerDashboard.people")}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {t("organizerDashboard.outOfTotalTeams")} {event?.maxTeams ?? 0} {t("organizerDashboard.team")}
+              {event?.presenterTeams ?? 0} {t("organizerDashboard.outOfTotalTeams")}{" "}
+              {event?.maxTeams ?? 0} {t("organizerDashboard.team")}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {t("organizerDashboard.guests")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{event?.guestsCount ?? 0}</div>
-            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
-              {t("organizerDashboard.comments")}: {event?.participantsCommentCount ?? 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
+        {/* Committee Card */}
+        <Card className="shadow-sm border-l-4 border-l-purple-600">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               {t("organizerDashboard.committee")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{event?.committeeCount ?? 0}</div>
-            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <div className="text-2xl font-bold text-purple-700">{event?.committeeCount ?? 0}</div>
+            {/* <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
               <MessageSquare className="h-3 w-3" />
               {t("organizerDashboard.feedback")}: {event?.opinionsCommittee ?? 0}
+            </div> */}
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              {t("organizerDashboard.people")}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Guest Card */}
+        <Card className="shadow-sm border-l-4 border-l-orange-600">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t("organizerDashboard.guests")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-700">{event?.guestsCount ?? 0}</div>
+            {/* <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              <MessageSquare className="h-3 w-3" />
+              {t("organizerDashboard.comments")}: {event?.participantsCommentCount ?? 0}
+            </div> */}
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              {t("organizerDashboard.people")}
             </div>
           </CardContent>
         </Card>
@@ -87,34 +98,39 @@ export default function OrganizerDashboard({ event }: Props) {
         <Card className="lg:col-span-1 border-t-4 border-t-amber-500 shadow-sm bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <Coins className="h-5 w-5 text-amber-600 dark:text-amber-400" /> Virtual Rewards
+              <Coins className="h-5 w-5 text-amber-600 dark:text-amber-400" />{" "}
+              {t("organizerDashboard.virtualRewards")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-end">
+          <CardContent className="space-y-5">
+            {/* Total Virtual Rewards */}
+            <div className="flex justify-between items-end pb-4 border-b border-border/50">
               <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                 {event?.vrUsed?.toLocaleString(timeFormat) ?? "0"}
               </span>
               <span className="text-sm text-muted-foreground mb-1">
-                / {event?.vrTotal?.toLocaleString(timeFormat) ?? "0"} {event?.unitReward ?? "coins"}
+                /
+                {(event?.guestsCount ?? 0) * (event?.virtualRewardGuest ?? 0) +
+                  (event?.committeeCount ?? 0) * (event?.virtualRewardCommittee ?? 0)}{" "}
+                {event?.unitReward ?? "coins"}
               </span>
             </div>
 
-            {/* Custom Progress Bar */}
+            {/* Overall Progress Bar */}
             <div className="h-2 w-full bg-amber-100 dark:bg-amber-900/20 rounded-full overflow-hidden">
               <div
                 className="h-full bg-amber-500 rounded-full transition-all duration-500"
                 style={{
                   width: `${
-                    event?.vrTotal && event.vrTotal > 0 
-                    ? ((event?.vrUsed ?? 0) / event.vrTotal) * 100 
-                    : 0
+                    event?.vrTotal && event.vrTotal > 0
+                      ? ((event?.vrUsed ?? 0) / event.vrTotal) * 100
+                      : 0
                   }%`,
                 }}
               />
             </div>
 
-            <div className="text-xs text-muted-foreground pt-1 flex justify-between">
+            <div className="text-xs text-muted-foreground flex justify-between">
               <span>
                 {t("organizerDashboard.used")}{" "}
                 {event?.vrUsed && event?.vrTotal && event.vrTotal > 0
@@ -123,9 +139,96 @@ export default function OrganizerDashboard({ event }: Props) {
                 %
               </span>
               <span>
-                {t("organizerDashboard.remaining")} {(event?.vrTotal ?? 0) - (event?.vrUsed ?? 0)} {event?.unitReward ?? "coins"}
+                {t("organizerDashboard.remaining")} {(event?.vrTotal ?? 0) - (event?.vrUsed ?? 0)}{" "}
+                {event?.unitReward ?? "coins"}
               </span>
             </div>
+
+            {/* Rewards by Role */}
+            {(event?.virtualRewardGuest ?? 0) > 0 || (event?.virtualRewardCommittee ?? 0) > 0 ? (
+              <div className="space-y-4 pt-2 border-t border-border/50">
+                {/* Committee Rewards */}
+                {(event?.virtualRewardCommittee ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-purple-700 dark:text-purple-400">
+                        {t("organizerDashboard.committeeVR")}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {event?.virtualRewardCommittee} {event?.unitReward ?? "coins"}/
+                        {t("organizerDashboard.committee")}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-purple-100 dark:bg-purple-900/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            event?.vrTotal && event.vrTotal > 0
+                              ? ((event?.virtualRewardCommittee ?? 0) / event.vrTotal) * 100
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground flex justify-between">
+                      <span>
+                        {t("organizerDashboard.total")}:{" "}
+                        {(event?.committeeCount ?? 0) * (event?.virtualRewardCommittee ?? 0)}{" "}
+                        {event?.unitReward ?? "coins"}
+                      </span>
+                      <span>
+                        {t("organizerDashboard.usedPercent")}{" "}
+                        {event?.vrTotal && event.vrTotal > 0
+                          ? Math.round(((event?.virtualRewardCommittee ?? 0) / event.vrTotal) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {/* Guest Rewards */}
+                {(event?.virtualRewardGuest ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                        {t("organizerDashboard.guestVR")}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {event?.virtualRewardGuest} {event?.unitReward ?? "coins"}/
+                        {t("organizerDashboard.guests")}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-orange-100 dark:bg-orange-900/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-orange-500 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            event?.vrTotal && event.vrTotal > 0
+                              ? ((event?.virtualRewardGuest ?? 0) / event.vrTotal) * 100
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground flex justify-between">
+                      <span>
+                        {t("organizerDashboard.total")}:{" "}
+                        {(event?.guestsCount ?? 0) * (event?.virtualRewardGuest ?? 0)}{" "}
+                        {event?.unitReward ?? "coins"}
+                      </span>
+                      <span>
+                        {t("organizerDashboard.usedPercent")}{" "}
+                        {event?.vrTotal && event.vrTotal > 0
+                          ? Math.round(((event?.virtualRewardGuest ?? 0) / event.vrTotal) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -133,7 +236,8 @@ export default function OrganizerDashboard({ event }: Props) {
         <Card className="lg:col-span-1 border-t-4 border-t-purple-500 shadow-sm bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-400">
-              <Trophy className="h-5 w-5 text-purple-600 dark:text-purple-400" /> {t("organizerDashboard.votingProgress")}
+              <Trophy className="h-5 w-5 text-purple-600 dark:text-purple-400" />{" "}
+              {t("organizerDashboard.votingProgress")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -141,23 +245,26 @@ export default function OrganizerDashboard({ event }: Props) {
             <div className="flex justify-between items-end">
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-purple-700 dark:text-purple-400">
-                   {event?.specialPrizeUsed ?? 0}
+                  {event?.specialPrizeUsed ?? 0}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  / {(event?.committeeCount ?? 0) * (event?.specialPrizeCount ?? 0)} {t("organizerDashboard.totalVotes")}
+                  / {(event?.committeeCount ?? 0) * (event?.specialPrizeCount ?? 0)}{" "}
+                  {t("organizerDashboard.totalVotes")}
                 </span>
               </div>
             </div>
-            
+
             {/* Progress Bar */}
-             <div className="h-2 w-full bg-purple-100 dark:bg-purple-900/20 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-purple-100 dark:bg-purple-900/20 rounded-full overflow-hidden">
               <div
                 className="h-full bg-purple-500 rounded-full transition-all duration-500"
                 style={{
                   width: `${
-                    ((event?.committeeCount ?? 0) * (event?.specialPrizeCount ?? 0)) > 0 
-                    ? ((event?.specialPrizeUsed ?? 0) / ((event?.committeeCount ?? 0) * (event?.specialPrizeCount ?? 0))) * 100 
-                    : 0
+                    (event?.committeeCount ?? 0) * (event?.specialPrizeCount ?? 0) > 0
+                      ? ((event?.specialPrizeUsed ?? 0) /
+                          ((event?.committeeCount ?? 0) * (event?.specialPrizeCount ?? 0))) *
+                        100
+                      : 0
                   }%`,
                 }}
               />
@@ -171,47 +278,62 @@ export default function OrganizerDashboard({ event }: Props) {
               <div className="space-y-3">
                 {event?.specialRewards && event.specialRewards.length > 0 ? (
                   event.specialRewards.map((reward, i) => (
-                    <div key={reward.id || i} className="flex items-start gap-3 p-3 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-800">
+                    <div
+                      key={reward.id || i}
+                      className="flex items-start gap-3 p-3 bg-purple-50/50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-800"
+                    >
                       {/* Badge Image */}
                       <div className="relative w-10 h-10 shrink-0 rounded-md overflow-hidden bg-card border border-border shadow-sm">
                         {reward.image ? (
-                          <img src={reward.image} alt={reward.name} className="w-full h-full object-cover" />
+                          <img
+                            src={reward.image}
+                            alt={reward.name}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           <div className="flex items-center justify-center w-full h-full text-muted-foreground">
                             <Trophy className="w-5 h-5" />
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
-                          <span className="text-sm font-semibold text-purple-900 dark:text-purple-100 truncate block pr-2">{reward.name}</span>
+                          <span className="text-sm font-semibold text-purple-900 dark:text-purple-100 truncate block pr-2">
+                            {reward.name}
+                          </span>
                           <span className="text-xs font-medium text-purple-600 dark:text-purple-300 shrink-0 bg-white dark:bg-purple-950/50 px-2 py-0.5 rounded-full border border-purple-100 dark:border-purple-800 shadow-sm">
-                            {reward.voteCount ?? 0} votes
+                            {reward.voteCount ?? 0} {t("organizerDashboard.vote")}
                           </span>
                         </div>
-                        
+
                         {/* Mini Progress Bar */}
                         <div className="h-1.5 w-full bg-purple-200 dark:bg-purple-900/30 rounded-full overflow-hidden mb-1.5">
-                          <div 
-                            className="h-full bg-purple-500 rounded-full transition-all duration-500" 
-                            style={{ width: `${event?.committeeCount && event.committeeCount > 0 ? Math.min(100, ((reward.voteCount ?? 0) / event.committeeCount) * 100) : 0}%` }}
+                          <div
+                            className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${event?.committeeCount && event.committeeCount > 0 ? Math.min(100, ((reward.voteCount ?? 0) / event.committeeCount) * 100) : 0}%`,
+                            }}
                           />
                         </div>
-                        
+
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <span>
-                             Committees: {reward.voteCount ?? 0}/{event?.committeeCount ?? 0}
+                            {t("organizerDashboard.committee")}: {reward.voteCount ?? 0}/
+                            {event?.committeeCount ?? 0}
                           </span>
                           <span>
-                             Candidates: {reward.teamCount ?? 0} teams
+                            {t("organizerDashboard.candidates")}: {reward.teamCount ?? 0}{" "}
+                            {t("organizerDashboard.team")}
                           </span>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                   <span className="text-xs text-muted-foreground italic">No special awards configured</span>
+                  <span className="text-xs text-muted-foreground italic">
+                    No special awards configured
+                  </span>
                 )}
               </div>
             </div>
@@ -220,14 +342,16 @@ export default function OrganizerDashboard({ event }: Props) {
       </div>
 
       {/* SECTION 3: ENGAGEMENT & OPINIONS */}
-      <Card className="bg-card border-border shadow-sm">
+      {/* <Card className="bg-card border-border shadow-sm">
         <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-muted/50 rounded-full shadow-sm border border-border">
               <MessageSquare className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">{t("organizerDashboard.totalFeedbackReceived")}</h3>
+              <h3 className="font-semibold text-lg">
+                {t("organizerDashboard.totalFeedbackReceived")}
+              </h3>
               <p className="text-muted-foreground text-sm">
                 {t("organizerDashboard.feedbackSummary")}
               </p>
@@ -236,31 +360,31 @@ export default function OrganizerDashboard({ event }: Props) {
 
           <div className="flex gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-foreground">
-                {event?.opinionsGot ?? 0}
-              </div>
+              <div className="text-3xl font-bold text-foreground">{event?.opinionsGot ?? 0}</div>
               <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 {t("organizerDashboard.total")}
               </div>
             </div>
-            <div className="h-10 w-px bg-border"></div> {/* Divider */}
+            <div className="h-10 w-px bg-border"></div>
             <div className="grid grid-cols-3 gap-6 text-left">
               <div>
-                <div className="text-xl font-bold text-foreground">
-                  {event?.opinionsGuest ?? 0}
+                <div className="text-xl font-bold text-foreground">{event?.opinionsGuest ?? 0}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t("organizerDashboard.guests")}
                 </div>
-                <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.guests")}</div>
               </div>
               <div>
                 <div className="text-xl font-bold text-foreground">
                   {event?.opinionsCommittee ?? 0}
                 </div>
-                <div className="text-[10px] text-muted-foreground">{t("organizerDashboard.committee")}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t("organizerDashboard.committee")}
+                </div>
               </div>
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

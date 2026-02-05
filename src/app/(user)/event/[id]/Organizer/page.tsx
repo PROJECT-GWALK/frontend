@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  getTeams,
-  deleteTeam,
-} from "@/utils/apievent";
+import { getTeams, deleteTeam } from "@/utils/apievent";
 import { toast } from "sonner";
 import InformationSection from "../components/InformationSection";
 import type { EventData, EventEditSection, EventFormState, Team } from "@/utils/types";
@@ -28,12 +25,14 @@ type Props = {
 };
 
 export default function OrganizerView({ id, event }: Props) {
-  const [tab, setTab] = useState<"dashboard" | "information" | "Participants" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<
+    "dashboard" | "information" | "Participants" | "project" | "result"
+  >("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<EventEditSection | null>(null);
   const [form, setForm] = useState<EventFormState>({});
-  
+
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -69,8 +68,7 @@ export default function OrganizerView({ id, event }: Props) {
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
-          members:
-            t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
           createdAt: t.createdAt,
           totalVr: t.totalVr,
         }));
@@ -97,27 +95,33 @@ export default function OrganizerView({ id, event }: Props) {
     <div className="w-full justify-center flex">
       <div className="w-full">
         {/* Banner Section */}
-        <OrganizerBanner 
-          event={localEvent} 
-          open={bannerOpen} 
-          onOpenChange={setBannerOpen} 
-        />
+        <OrganizerBanner event={localEvent} open={bannerOpen} onOpenChange={setBannerOpen} />
 
         <div className="max-w-6xl mx-auto mt-6">
           {/* Header Section */}
-          <OrganizerHeader 
-            id={id} 
-            event={localEvent} 
-            onEventUpdate={(updated) => setLocalEvent(prev => ({ ...(prev || {}), ...updated }))} 
+          <OrganizerHeader
+            id={id}
+            event={localEvent}
+            onEventUpdate={(updated) => setLocalEvent((prev) => ({ ...(prev || {}), ...updated }))}
           />
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-25">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
-              <TabsTrigger value="Participants" className="flex-1 min-w-25">Participants</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-25">Project</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+                {t("eventTab.dashboard")}
+              </TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">
+                {t("eventTab.information")}
+              </TabsTrigger>
+              <TabsTrigger value="Participants" className="flex-1 min-w-25">
+                {t("eventTab.participants")}
+              </TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">
+                {t("eventTab.projects")}
+              </TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">
+                {t("eventTab.results")}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -188,8 +192,6 @@ export default function OrganizerView({ id, event }: Props) {
               <ResultSection eventId={id} role="ORGANIZER" />
             </TabsContent>
           </Tabs>
-
-
         </div>
 
         {/* Edit Dialog */}
@@ -201,7 +203,7 @@ export default function OrganizerView({ id, event }: Props) {
           setForm={setForm}
           id={id}
           event={localEvent}
-          onEventUpdate={(updated) => setLocalEvent(prev => ({ ...(prev || {}), ...updated }))}
+          onEventUpdate={(updated) => setLocalEvent((prev) => ({ ...(prev || {}), ...updated }))}
         />
       </div>
     </div>

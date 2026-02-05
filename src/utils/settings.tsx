@@ -2,8 +2,6 @@ import {
   User as UserIcon,
   Settings,
   Lock,
-  Inbox,
-  Home,
   Users,
   LayoutDashboard,
 } from "lucide-react";
@@ -15,19 +13,19 @@ export const appBrand = {
 
 export const menuItems = [
   {
-    label: "Profile",
+    labelKey: "navbar.profile",
     href: "/profile",
     icon: <UserIcon className="w-4 h-4" />,
     role: "user",
   },
   {
-    label: "Settings",
+    labelKey: "navbar.settings",
     href: "/settings",
     icon: <Settings className="w-4 h-4" />,
     role: "user",
   },
   {
-    label: "Admin Panel",
+    labelKey: "navbar.adminPanel",
     href: "/admin",
     icon: <Lock className="w-4 h-4" />,
     role: "admin",
@@ -50,15 +48,15 @@ export const menuItemsAdmin = [
 export const navbarItems = [
   {
     url: "/home",
-    title: "Home",
+    titleKey: "navbar.home",
   },
   {
     url: "/event",
-    title: "Event",
+    titleKey: "navbar.events",
   },
   {
     url: "/users",
-    title: "Users",
+    titleKey: "navbar.users",
   },
 ];
 

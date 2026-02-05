@@ -21,13 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/utils/function";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "../ui/skeleton";
 
@@ -72,10 +66,7 @@ export function Navbar() {
       <div className="container flex h-16 items-center px-4 sm:px-8 mx-auto justify-between">
         {/* Logo */}
         <div className="flex items-center gap-8">
-          <Link
-            href="/"
-            className="flex items-center gap-3 transition-opacity hover:opacity-90"
-          >
+          <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
             {appBrand.logo && (
               <Image
                 src={appBrand.logo}
@@ -86,9 +77,7 @@ export function Navbar() {
                 className="h-9 w-auto object-contain"
               />
             )}
-            <span className="font-bold text-xl tracking-tight">
-              {appBrand.name}
-            </span>
+            <span className="font-bold text-xl tracking-tight">{appBrand.name}</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -110,7 +99,7 @@ export function Navbar() {
                     href={link.url}
                     className="px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground text-foreground/60 rounded-md"
                   >
-                    {t(link.title)}
+                    {t(link.titleKey)}
                   </Link>
                 ))
             )}
@@ -134,10 +123,7 @@ export function Navbar() {
             {user ? (
               <>
                 <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    className="select-none hover:border-2"
-                  >
+                  <DropdownMenuTrigger asChild className="select-none hover:border-2">
                     <button className="rounded-full outline-none">
                       <UserAvatar user={user} />
                     </button>
@@ -145,9 +131,7 @@ export function Navbar() {
                   <DropdownMenuContent align="end" className="w-56 p-2">
                     <DropdownMenuLabel className="font-normal p-2">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.name}
-                        </p>
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                           @{user.username}
                         </p>
@@ -158,8 +142,7 @@ export function Navbar() {
                       {menuItems
                         .filter((item) => {
                           if (item.role === "user") return true;
-                          if (item.role === "admin" && user.role === "ADMIN")
-                            return true;
+                          if (item.role === "admin" && user.role === "ADMIN") return true;
                           return false;
                         })
                         .map((item) => (
@@ -168,12 +151,9 @@ export function Navbar() {
                             asChild
                             className="cursor-pointer rounded-md"
                           >
-                            <Link
-                              href={item.href}
-                              className="flex items-center gap-2 w-full"
-                            >
+                            <Link href={item.href} className="flex items-center gap-2 w-full">
                               {item.icon}
-                              <span>{item.label}</span>
+                              <span>{t(item.labelKey)}</span>
                             </Link>
                           </DropdownMenuItem>
                         ))}
@@ -191,9 +171,7 @@ export function Navbar() {
               </>
             ) : (
               <Link href="/sign-in">
-                <Button className="px-6 shadow-sm hover:shadow-md transition-all">
-                  Log in
-                </Button>
+                <Button className="px-6 shadow-sm hover:shadow-md transition-all">{t("navbar.login")}</Button>
               </Link>
             )}
           </div>
@@ -207,13 +185,10 @@ export function Navbar() {
                 className="md:hidden rounded-full hover:bg-muted/50"
               >
                 <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle menu</span>
+                <span className="sr-only">{t("navbar.toggleMenu")}</span>
               </Button>
             </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="w-75 sm:w-100 p-0 border-l-muted"
-            >
+            <SheetContent side="right" className="w-75 sm:w-100 p-0 border-l-muted">
               <SheetHeader className="p-6 text-left border-b bg-muted/5">
                 <SheetTitle className="flex items-center gap-3">
                   {user ? (
@@ -226,9 +201,7 @@ export function Navbar() {
                             className="h-12 w-12 border-2 border-background shadow-sm"
                           />
                           <div className="flex flex-col min-w-0">
-                            <span className="font-semibold truncate">
-                              {user.name}
-                            </span>
+                            <span className="font-semibold truncate">{user.name}</span>
                             <span className="text-xs text-muted-foreground truncate">
                               @{user.username}
                             </span>
@@ -243,23 +216,14 @@ export function Navbar() {
                           <UserAvatar user={null} className="h-8 w-8" />
                         </div>
                         <div className="space-y-1">
-                          <h3 className="font-semibold">
-                            Welcome to {appBrand.name}
-                          </h3>
+                          <h3 className="font-semibold">{t("navbar.welcome")} {appBrand.name}</h3>
                           <p className="text-sm text-muted-foreground">
-                            Sign in to access your account
+                            {t("navbar.signin")}
                           </p>
                         </div>
-                        <Link
-                          href="/sign-in"
-                          onClick={() => setIsOpen(false)}
-                          className="w-full"
-                        >
-                          <Button
-                            className="w-full rounded-xl shadow-sm"
-                            size="lg"
-                          >
-                            Log in / Sign up
+                        <Link href="/sign-in" onClick={() => setIsOpen(false)} className="w-full">
+                          <Button className="w-full rounded-xl shadow-sm" size="lg">
+                            {t("navbar.login")}
                           </Button>
                         </Link>
                       </div>
@@ -296,7 +260,7 @@ export function Navbar() {
                             className="flex items-center px-3 py-2.5 text-sm font-medium transition-all hover:bg-muted/60 rounded-xl hover:pl-5 group"
                           >
                             <span className="group-hover:text-primary transition-colors">
-                              {t(link.title)}
+                              {t(link.titleKey)}
                             </span>
                           </Link>
                         ))}
@@ -310,8 +274,7 @@ export function Navbar() {
                       {menuItems
                         .filter((item) => {
                           if (item.role === "user") return true;
-                          if (item.role === "admin" && user.role === "ADMIN")
-                            return true;
+                          if (item.role === "admin" && user.role === "ADMIN") return true;
                           return false;
                         })
                         .map((item) => (
@@ -324,7 +287,7 @@ export function Navbar() {
                             <span className="text-muted-foreground group-hover:text-foreground">
                               {item.icon}
                             </span>
-                            <span>{item.label}</span>
+                            <span>{t(item.labelKey)}</span>
                           </Link>
                         ))}
                     </div>
@@ -334,7 +297,7 @@ export function Navbar() {
                     {/* Settings */}
                     <div className="px-3 flex flex-col gap-1">
                       <span className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Settings
+                        {t("navbar.settings")}
                       </span>
                       <div className="flex items-center justify-between px-3 py-2.5 hover:bg-muted/60 rounded-xl transition-colors">
                         <span className="text-sm font-medium">Language</span>
@@ -343,9 +306,7 @@ export function Navbar() {
 
                       <div
                         className="flex items-center justify-between px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-muted/60 rounded-xl transition-colors"
-                        onClick={() =>
-                          setTheme(theme === "dark" ? "light" : "dark")
-                        }
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                       >
                         <span>Theme</span>
                         <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">
@@ -384,7 +345,7 @@ export function Navbar() {
                             className="flex items-center px-3 py-2.5 text-sm font-medium transition-all hover:bg-muted/60 rounded-xl hover:pl-5 group"
                           >
                             <span className="group-hover:text-primary transition-colors">
-                              {t(link.title)}
+                              {t(link.titleKey)}
                             </span>
                           </Link>
                         ))}
@@ -399,9 +360,7 @@ export function Navbar() {
                       </div>
                       <div
                         className="flex items-center justify-between px-2 py-3 text-sm font-medium cursor-pointer hover:bg-muted/60 rounded-xl transition-colors"
-                        onClick={() =>
-                          setTheme(theme === "dark" ? "light" : "dark")
-                        }
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                       >
                         <span>Theme</span>
                         <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">

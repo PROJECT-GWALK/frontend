@@ -1,9 +1,16 @@
 {
   "navbar": {
-    "dashboard": "แดชบอร์ด",
+    "home": "หน้าหลัก",
     "events": "อีเวนต์",
     "users": "ผู้ใช้",
-    "logout": "ออกจากระบบ"
+    "profile": "โปรไฟล์",
+    "settings": "การตั้งค่า",
+    "adminPanel": "แผงผู้ดูแล",
+    "logout": "ออกจากระบบ",
+    "login": "เข้าสู่ระบบ",
+    "toggleMenu": "สลับเมนู",
+    "welcome": "ยินดีต้อนรับสู่",
+    "signin": "ลงชื่อเข้าใช้เพื่อเข้าถึงบัญชีของคุณ"
   },
   "eventDraft": {
     "editEvent": "แก้ไขอีเวนต์",
@@ -64,21 +71,21 @@
   },
   "configuration": {
     "title": "เงื่อนไขการเข้าร่วม",
-    "presenterConfig": "ข้อกำหนดทีมและสมาชิก",
+    "presenterConfig": "ตั้งค่าผู้นำเสนอ",
     "membersPerGroup": "จำนวนสมาชิกต่อกลุ่ม",
     "maxGroups": "จำนวนกลุ่มสูงสุด",
-    "committeeConfig": "ตั้งค่าคณะกรรมการ",
-    "hasCommittee": "มีคณะกรรมการในงาน",
-    "virtualRewardPerPerson": "รางวัลเสมือนต่อคน",
-    "guestRewards": "รางวัลผู้เข้าร่วม",
-    "amountPerGuest": "จำนวนต่อผู้เข้าร่วม",
-    "rewardUnit": "หน่วยของรางวัล",
-    "fileRequirements": "ข้อกำหนดไฟล์งาน",
+    "committeeConfig": "ตั้งค่ากรรมการ",
+    "hasCommittee": "มีกรรมการในอีเวนต์",
+    "virtualRewardPerPerson": "จำนวนรางวัลเสมือนต่อกรรมการ",
+    "guestRewards": "ตั้งค่าผู้เข้าร่วม",
+    "amountPerGuest": "จำนวนรางวัลเสมือนต่อผู้เข้าร่วม",
+    "rewardUnit": "หน่วยของรางวัลเสมือน",
+    "fileRequirements": "ข้อมูลที่ต้องส่ง",
     "reqTitle": "หัวข้อสิ่งที่ต้องส่ง",
     "reqDescription": "คำอธิบายเพิ่มเติม (ไม่บังคับ)",
     "allowedTypes": "ประเภทไฟล์ที่รองรับ",
     "required": "จำเป็นต้องส่ง",
-    "addFileReq": "เพิ่มข้อกำหนดไฟล์",
+    "addFileReq": "เพิ่มข้อมูลที่ต้องส่ง",
     "placeholderMaxPresenters": "เช่น 3",
     "placeholderMaxGroups": "เช่น 30",
     "placeholderCommitteeReward": "เช่น 1000",
@@ -222,15 +229,15 @@
   "organizerDashboard": {
     "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
     "totalPeopleInEvent": "คนรวมทั้งหมดในงาน",
-    "team": "ทีม",
+    "team": "กลุ่ม",
     "presenters": "ผู้นำเสนอ",
-    "outOfTotalTeams": "จากทั้งหมด",
+    "outOfTotalTeams": "กลุ่ม จากทั้งหมด",
     "people": "คน",
     "guests": "ผู้เข้าร่วม",
     "comments": "คอมเมนต์",
     "committee": "กรรมการ",
     "feedback": "ฟีดแบ็ก",
-    "virtualRewards": "Virtual Rewards",
+    "virtualRewards": "รางวัลเสมือน",
     "usedPercent": "ใช้ไปแล้ว",
     "remaining": "คงเหลือ",
     "specialAwards": "รางวัลพิเศษ",
@@ -242,9 +249,13 @@
     "feedbackSummary": "รวมทุกช่องทางจากผู้นำเสนอ กรรมการ ผู้เข้าร่วม",
     "used": "ใช้ไปแล้ว",
     "remainingAwards": "รางวัลที่เหลือ",
-    "votingProgress": "ความคืบหน้าการโหวต",
+    "votingProgress": "การโหวตรางวัลพิเศษ",
     "totalVotes": "คะแนนโหวตทั้งหมด",
-    "availableAwards": "รางวัลทั้งหมด"
+    "availableAwards": "รางวัลพิเศษทั้งหมด",
+    "committeeVR": "รางวัลเสมือนกรรมการ",
+    "guestVR": "รางวัลเสมือนผู้เข้าร่วม",
+    "vote": "โหวต",
+    "candidates": "มีโอกาสได้รับรางวัล"
   },
   "eventStatus": {
     "startsIn": "เริ่มใน",
@@ -254,7 +265,7 @@
     "eventEnded": "จบกิจกรรมแล้ว"
   },
   "fileRequirements": {
-    "title": "ข้อกำหนดไฟล์",
+    "title": "ข้อมูลที่ต้องส่ง",
     "required": "จำเป็น"
   },
   "rewardsCard": {
@@ -279,7 +290,8 @@
     "noEvents": "ยังไม่มีอีเวนต์ที่เผยแพร่",
     "joinedEvent": "เข้าร่วมแล้ว",
     "joinAsPresenter": "เข้าร่วมในฐานะผู้นำเสนอ",
-    "joinAsGuest": "เข้าร่วมในฐานะผู้เยี่ยมชม",
+    "joinAsGuest": "เข้าร่วมในฐานะผู้เข้าร่วม",
+    "organizeBy": "จัดกิจกรรมโดย",
     "filter": {
       "all": "ทั้งหมด",
       "upcomingRecruit": "เร็วๆ นี้",
@@ -288,16 +300,9 @@
       "viewOpen": "กำลังจัด",
       "finished": "จบแล้ว"
     },
-    "status": {
-      "upcomingRecruit": "เร็วๆ นี้",
-      "accepting": "รับสมัคร",
-      "viewSoon": "เตรียมเปิด",
-      "viewOpen": "กำลังจัด",
-      "finished": "จบแล้ว"
-    },
     "period": {
-      "join": "ช่วงรับสมัคร",
-      "event": "ช่วงจัดงาน"
+      "join": "ช่วงเวลาลงทะเบียน",
+      "event": "ช่วงเวลากิจกรรม"
     },
     "toast": {
       "loadError": "โหลดรายการอีเวนต์ไม่สำเร็จ",
@@ -323,12 +328,21 @@
     },
     "filter": {
       "all": "ทั้งหมด",
-      "draft": "ฉบับร่าง",
-      "upcomingRecruit": "กำลังมา",
-      "accepting": "รับสมัคร",
-      "viewSoon": "เตรียมเปิด",
-      "viewOpen": "กำลังจัด",
-      "finished": "จบแล้ว"
+      "draft": "แบบร่าง",
+      "upcomingRecruit": "เปิดรับลงทะเบียนเร็วๆ นี้",
+      "accepting": "กำลังรับลงทะเบียน",
+      "viewSoon": "เตรียมจัดกิจกรรม",
+      "viewOpen": "กำลังจัดกิจกรรม",
+      "finished": "เสร็จสิ้น"
+    },
+    "filterTooltip": {
+      "all": "แสดงอีเวนต์ทั้งหมด",
+      "draft": "อีเวนต์ที่ยังไม่เผยแพร่",
+      "upcomingRecruit": "อีเวนต์ที่กำลังจะเปิดกำลังรับสมัคร",
+      "accepting": "อีเวนต์ที่เปิดลงทะเบียนอยู่",
+      "viewSoon": "อีเวนต์ที่เตรียมจัดกิจกรรมหลังลงทะเบียนเสร็จ",
+      "viewOpen": "อีเวนต์ที่กำลังจัดกิจกรรม",
+      "finished": "อีเวนต์ที่เสร็จสิ้นแล้ว"
     },
     "roleFilter": {
       "label": "กรองตามบทบาท:",
@@ -339,12 +353,12 @@
       "guest": "ผู้เข้าร่วม"
     },
     "status": {
-      "draft": "ร่าง",
-      "upcomingRecruit": "เร็วๆ นี้",
-      "accepting": "รับสมัคร",
-      "viewSoon": "เตรียมเปิด",
-      "viewOpen": "กำลังจัด",
-      "finished": "จบแล้ว"
+      "draft": "แบบร่าง",
+      "upcomingRecruit": "ลงทะเบียนเร็วๆ นี้",
+      "accepting": "เปิดลงทะเบียน",
+      "viewSoon": "เตรียมจัดกิจกรรม",
+      "viewOpen": "กำลังจัดกิจกรรม",
+      "finished": "เสร็จสิ้น"
     },
     "noEvents": {
       "title": "ไม่พบอีเวนต์",
@@ -498,7 +512,7 @@
       "download": "ดาวน์โหลด",
       "remove": "ลบ",
       "open": "เปิด",
-      "noRequirements": "ไม่มีข้อกำหนดไฟล์สำหรับอีเวนต์นี้"
+      "noRequirements": "ไม่มีข้อมูลที่ต้องส่งสำหรับอีเวนต์นี้"
     },
     "evaluation": {
       "virtualReward": "รางวัลเสมือน",
@@ -631,8 +645,32 @@
     "btn_save": "บันทึกการเปลี่ยนแปลง",
     "change": "เปลี่ยน",
     "remove": "ลบ"
+  },
+  "eventTab": {
+    "information": "ข้อมูลอีเวนต์",
+    "dashboard": "แดชบอร์ด",
+    "participants": "ผู้เข้าร่วม",
+    "projects": "โครงการ",
+    "results": "ผลลัพธ์คะแนน",
+    "settings": "การตั้งค่า",
+    "invite": "คำเชิญ"
+  },
+  "publishedEventBanner": {
+    "publish": "เผยแพร่แล้ว",
+    "hidePublic": "ซ่อนจากสาธารณะ",
+    "showPublic": "แสดงต่อสาธารณะ"
+  },
+  "FeedbackList": {
+    "title": "รายการฟีดแบ็กและคะแนน",
+    "noFeedback": "ยังไม่มีฟีดแบ็กหรือคะแนน",
+    "loading": "กำลังโหลดฟีดแบ็ก...",
+    "review": "รีวิว",
+    "all": "ทั้งหมด",
+    "presenter": "ผู้นำเสนอ",
+    "committee": "กรรมการ",
+    "guest": "ผู้เข้าร่วม",
+    "noComment": "ไม่มีความคิดเห็นที่เขียนไว้",
+    "no": "ยังไม่มีฟีดแบ็กหรือคะแนนจาก ",
+    "yet": ""
   }
-  
-  
-  
 }

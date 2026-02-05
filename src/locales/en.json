@@ -1,9 +1,16 @@
 {
   "navbar": {
-    "dashboard": "Dashboard",
+    "home": "Home",
     "events": "Events",
     "users": "Users",
-    "logout": "Logout"
+    "profile": "Profile",
+    "settings": "Settings",
+    "adminPanel": "Admin Panel",
+    "logout": "Logout",
+    "login": "Log in",
+    "toggleMenu": "Toggle menu",
+    "welcome": "Welcome to",
+    "signin": "Sign in to access your account"
   },
   "eventDraft": {
     "editEvent": "Edit Event",
@@ -64,21 +71,21 @@
   },
   "configuration": {
     "title": "Participation Guidelines",
-    "presenterConfig": "Team & Member Limits",
+    "presenterConfig": "Presenter Configuration",
     "membersPerGroup": "Members per Group",
     "maxGroups": "Maximum Groups",
     "committeeConfig": "Committee Configuration",
-    "hasCommittee": "Event has committee members",
-    "virtualRewardPerPerson": "Virtual Rewards per Person",
-    "guestRewards": "Guest Rewards",
-    "amountPerGuest": "Amount per Guest",
-    "rewardUnit": "Reward Unit",
-    "fileRequirements": "File Requirements",
+    "hasCommittee": "Event has Committee",
+    "virtualRewardPerPerson": "Amount of Virtual Rewards per Commitee",
+    "guestRewards": "Guest Configuration",
+    "amountPerGuest": "Amount of Virtual Rewards per Guest",
+    "rewardUnit": "Virtual Rewards Unit",
+    "fileRequirements": "Submission Requirements",
     "reqTitle": "Title",
     "reqDescription": "Description (Optional)",
     "allowedTypes": "Allowed Types",
     "required": "Required",
-    "addFileReq": "Add File Requirement",
+    "addFileReq": "Add Submission Requirement",
     "placeholderMaxPresenters": "e.g. 3",
     "placeholderMaxGroups": "e.g. 30",
     "placeholderCommitteeReward": "e.g. 1000",
@@ -213,38 +220,42 @@
   },
   "userDashboard": {
     "eventdashboard": "Event Dashboard",
-    "recruting": "Recruting",
-    "startingSoon": "Starting Soon",
+    "recruting": "Applying",
+    "startingSoon": "Event Starting Soon",
     "draft": "Draft",
-    "liveNow": "Live Now",
+    "liveNow": "Live",
     "ended": "Ended"
   },
   "organizerDashboard": {
     "totalParticipants": "Total Participants",
     "totalPeopleInEvent": "Total People in Event",
-    "team": "Teams",
-    "presenters": "Presenters",
-    "outOfTotalTeams": "Out of",
-    "people": "people",
-    "guests": "Guests",
+    "team": "groups",
+    "presenters": "Presenter",
+    "outOfTotalTeams": "groups out of",
+    "people": "persons",
+    "guests": "Guest",
     "comments": "Comments",
     "committee": "Committee",
     "feedback": "Feedback",
     "virtualRewards": "Virtual Rewards",
     "usedPercent": "Used",
     "remaining": "Remaining",
-    "specialAwards": "Special Awards",
+    "specialAwards": "Special Rewards",
     "awarded": "Awarded",
     "total": "Total",
     "notYetAwarded": "Not Yet Awarded",
-    "awardDistributionProgress": "All Awards Have Been Distributed",
+    "awardDistributionProgress": "All Special Rewards Have Been Distributed",
     "totalFeedbackReceived": "Total Feedback Received",
     "feedbackSummary": "Combined from presenters, committee, and Guest",
     "used": "Used",
-    "remainingAwards": "Remaining Awards",
-    "votingProgress": "Voting Progress",
+    "remainingAwards": "Remaining Special Rewards",
+    "votingProgress": "Special Rewards Vote Progress",
     "totalVotes": "Total Votes",
-    "availableAwards": "All Awards"
+    "availableAwards": "All Special Rewards",
+    "committeeVR": "Committee Virtual Rewards",
+    "guestVR": "Guest Virtual Rewards",
+    "vote": "votes",
+    "candidates": "candidates"
   },
   "eventStatus": {
     "startsIn": "Starts In",
@@ -254,7 +265,7 @@
     "eventEnded": "Event Ended"
   },
   "fileRequirements": {
-    "title": "File Requirements",
+    "title": "Submission Requirements",
     "required": "REQUIRED"
   },
   "rewardsCard": {
@@ -280,23 +291,17 @@
     "joinedEvent": "Joined Event",
     "joinAsPresenter": "Join as Presenter",
     "joinAsGuest": "Join as Guest",
+    "organizeBy": "Organized by",
     "filter": {
       "all": "All Events",
-      "upcomingRecruit": "Coming Soon",
-      "accepting": "Accepting",
-      "viewSoon": "Viewing Soon",
-      "viewOpen": "Live Now",
-      "finished": "Finished"
-    },
-    "status": {
-      "upcomingRecruit": "Coming Soon",
-      "accepting": "Accepting",
-      "viewSoon": "Viewing Soon",
+      "upcomingRecruit": "Applying Soon",
+      "accepting": "Applying",
+      "viewSoon": "Event Starting Soon",
       "viewOpen": "Live",
       "finished": "Finished"
     },
     "period": {
-      "join": "Join Period",
+      "join": "Application Period",
       "event": "Event Period"
     },
     "toast": {
@@ -324,11 +329,20 @@
     "filter": {
       "all": "All Events",
       "draft": "Drafts",
-      "upcomingRecruit": "Upcoming",
-      "accepting": "Recruiting",
-      "viewSoon": "Starting Soon",
-      "viewOpen": "Live Now",
+      "upcomingRecruit": "Applying Soon",
+      "accepting": "Applying",
+      "viewSoon": "Event Starting Soon",
+      "viewOpen": "Live",
       "finished": "Ended"
+    },
+    "filterTooltip": {
+      "all": "Show all your events",
+      "draft": "Events that haven't been published yet",
+      "upcomingRecruit": "Events that will open for recruitment soon",
+      "accepting": "Events currently accepting participants",
+      "viewSoon": "Events starting soon after recruitment ends",
+      "viewOpen": "Events currently ongoing or in viewing period",
+      "finished": "Events that have ended"
     },
     "roleFilter": {
       "label": "Filter by role:",
@@ -340,9 +354,9 @@
     },
     "status": {
       "draft": "Draft",
-      "upcomingRecruit": "Soon",
-      "accepting": "Recruiting",
-      "viewSoon": "Starting Soon",
+      "upcomingRecruit": "Applying Soon",
+      "accepting": "Applying",
+      "viewSoon": "Event Starting Soon",
       "viewOpen": "Live",
       "finished": "Ended"
     },
@@ -487,7 +501,7 @@
       "eventEnded": "Event has ended or not in active period. Actions are restricted.",
       "submissionEnded": "Submission period has ended. You cannot create or edit projects."
     },
-  "files": {
+    "files": {
       "defaultFileName": "File",
       "defaultLinkName": "Link",
       "uploadFile": "Upload File",
@@ -498,7 +512,7 @@
       "download": "Download",
       "remove": "Remove",
       "open": "Open",
-      "noRequirements": "No specific file requirements for this event."
+      "noRequirements": "No specific submission requirements for this event."
     },
     "evaluation": {
       "virtualReward": "Virtual Reward",
@@ -593,7 +607,6 @@
     "count_unit": "person",
     "all": "total",
     "refresh": "Refresh"
-    
   },
   "removeParticipantModal": {
     "title": "Remove Participant",
@@ -632,8 +645,32 @@
     "btn_save": "Save Changes",
     "change": "Change",
     "remove": "Remove"
+  },
+  "eventTab": {
+    "information": "Event Information",
+    "dashboard": "Dashboard",
+    "participants": "Participants",
+    "projects": "Projects",
+    "results": "Results",
+    "settings": "Settings",
+    "invite": "Invite"
+  },
+  "publishedEventBanner": {
+    "publish": "Published",
+    "hidePublic": "Hide from Public",
+    "showPublic": "Show to Public"
+  },
+  "FeedbackList": {
+    "title": "Feedback & Ratings",
+    "noFeedbackYet": "No feedback received yet.",
+    "loading": "Loading feedback...",
+    "review": "reviews",
+    "all": "All",
+    "presenter": "Presenter",
+    "committee": "Committee",
+    "guest": "Guest",
+    "noComment": "No written comment",
+    "no": "No feedback from ",
+    "yet": "yet"
   }
-  
-
-  
 }

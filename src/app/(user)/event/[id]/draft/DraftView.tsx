@@ -283,7 +283,7 @@ export default function EventDraft() {
     if (specialRewards.length) {
       for (const r of specialRewards) {
         if (!r.name || !r.name.trim()) {
-          errors[r.id] = t('validation.rewardNameRequired');
+          errors[r.id] = t("validation.rewardNameRequired");
         }
       }
     }
@@ -292,7 +292,7 @@ export default function EventDraft() {
       setActiveSection("card4");
       const el = document.getElementById("card4");
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      toast.error(t('validation.rewardNameRequired'));
+      toast.error(t("validation.rewardNameRequired"));
       return false;
     }
     return true;
@@ -301,18 +301,18 @@ export default function EventDraft() {
     const errors: Record<string, string> = {};
 
     if (!eventTitle.trim()) {
-      errors.eventTitle = t('validation.eventTitleRequired');
-      toast.error(t('validation.eventTitleRequired'));
+      errors.eventTitle = t("validation.eventTitleRequired");
+      toast.error(t("validation.eventTitleRequired"));
       setActiveSection("card1");
     }
     if (!(startDate && startTime)) {
-      errors.startDateTime = t('validation.startDateTimeRequired');
-      toast.error(t('validation.startDateTimeRequired'));
+      errors.startDateTime = t("validation.startDateTimeRequired");
+      toast.error(t("validation.startDateTimeRequired"));
       setActiveSection("card2");
     }
     if (!(endDate && endTime)) {
-      errors.endDateTime = t('validation.endDateTimeRequired');
-      toast.error(t('validation.endDateTimeRequired'));
+      errors.endDateTime = t("validation.endDateTimeRequired");
+      toast.error(t("validation.endDateTimeRequired"));
       setActiveSection("card2");
     }
 
@@ -324,7 +324,7 @@ export default function EventDraft() {
       submissionStartDate,
       submissionStartTime,
       submissionEndDate,
-      submissionEndTime
+      submissionEndTime,
     );
     Object.assign(errors, timeErrors);
 
@@ -334,16 +334,16 @@ export default function EventDraft() {
     }
 
     const hasJoinInput = Boolean(
-      submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime
+      submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime,
     );
     // const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
     // const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
       if (!(submissionStartDate && submissionStartTime)) {
-        errors.submissionStart = t('validation.submissionStartRequired');
+        errors.submissionStart = t("validation.submissionStartRequired");
       }
       if (!(submissionEndDate && submissionEndTime)) {
-        errors.submissionEnd = t('validation.submissionEndRequired');
+        errors.submissionEnd = t("validation.submissionEndRequired");
       }
     }
     return errors;
@@ -404,7 +404,9 @@ export default function EventDraft() {
       const res = await checkEventName(eventTitle.trim());
       const ok = Boolean(res?.available);
       setNameChecked(ok);
-      toast[ok ? "success" : "error"](ok ? t('validation.nameAvailable') : t('validation.nameTaken'));
+      toast[ok ? "success" : "error"](
+        ok ? t("validation.nameAvailable") : t("validation.nameTaken"),
+      );
     } catch (e) {
       console.error(e);
       setNameChecked(null);
@@ -414,9 +416,9 @@ export default function EventDraft() {
             (e as AxiosError).response?.data?.message
           : null;
       if (backendMessage === "Event name already exists") {
-        toast.error(t('validation.nameTaken'));
+        toast.error(t("validation.nameTaken"));
       } else {
-        toast.error(t('messages.errorLoading'));
+        toast.error(t("messages.errorLoading"));
       }
     } finally {
       setCheckingName(false);
@@ -428,8 +430,8 @@ export default function EventDraft() {
 
     const okRewards = validateSpecialRewardsDraft();
     if (!okRewards) return;
-    
-    // Validate start/end 
+
+    // Validate start/end
     const timeErrors = validateEventTime(
       startDate,
       startTime,
@@ -438,7 +440,7 @@ export default function EventDraft() {
       submissionStartDate,
       submissionStartTime,
       submissionEndDate,
-      submissionEndTime
+      submissionEndTime,
     );
 
     if (timeErrors.endDateTime) {
@@ -448,7 +450,7 @@ export default function EventDraft() {
     }
 
     setIsSaving(true);
-    toast.info(t('messages.savingDraft'));
+    toast.info(t("messages.savingDraft"));
 
     try {
       const ok = await ensureNameAvailable();
@@ -461,12 +463,12 @@ export default function EventDraft() {
       } else {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
-      toast.success(t('messages.draftSaved'));
+      toast.success(t("messages.draftSaved"));
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : t('messages.draftFailed');
+      const message = err instanceof Error ? err.message : t("messages.draftFailed");
       if (message === "Event name already exists") {
-        toast.error(t('validation.nameTaken'));
+        toast.error(t("validation.nameTaken"));
       } else {
         toast.error(message);
       }
@@ -499,13 +501,13 @@ export default function EventDraft() {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
       await publishEvent(id);
-      toast.success(t('messages.publishSuccess'));
+      toast.success(t("messages.publishSuccess"));
       window.location.reload();
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : t('messages.publishFailed');
+      const message = err instanceof Error ? err.message : t("messages.publishFailed");
       if (message === "Event name already exists") {
-        toast.error(t('validation.nameTaken'));
+        toast.error(t("validation.nameTaken"));
       } else {
         toast.error(message);
       }
@@ -518,7 +520,7 @@ export default function EventDraft() {
     if (!event) return;
     const existingIds = new Set((event.specialRewards || []).map((r) => r.id));
     const removed = (event.specialRewards || []).filter(
-      (r) => !specialRewards.some((sr) => sr.id === r.id)
+      (r) => !specialRewards.some((sr) => sr.id === r.id),
     );
     for (const r of removed) {
       try {
@@ -560,8 +562,8 @@ export default function EventDraft() {
                         id: res.reward.id,
                         image: res.reward.image || null,
                       }
-                    : x
-                )
+                    : x,
+                ),
               );
               setSrPreviews((prev) => ({
                 ...prev,
@@ -573,7 +575,9 @@ export default function EventDraft() {
               });
             }
           } else {
-            const payload: { name: string; description?: string; image?: string | null } = { name: r.name };
+            const payload: { name: string; description?: string; image?: string | null } = {
+              name: r.name,
+            };
             if (r.description) payload.description = r.description;
             const res = await createSpecialReward(id, {
               name: r.name,
@@ -589,8 +593,8 @@ export default function EventDraft() {
                         id: res.reward.id,
                         image: res.reward.image || null,
                       }
-                    : x
-                )
+                    : x,
+                ),
               );
             }
           }
@@ -694,12 +698,12 @@ export default function EventDraft() {
         setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
         setSubmissionStartDate(data.startJoinDate ? data.startJoinDate.split("T")[0] : "");
         setSubmissionStartTime(
-          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01"
+          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01",
         );
         setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
         setSubmissionEndDate(data.endJoinDate ? data.endJoinDate.split("T")[0] : "");
         setSubmissionEndTime(
-          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59"
+          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59",
         );
 
         // ================= COMMITTEE & GUEST =================
@@ -732,7 +736,7 @@ export default function EventDraft() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex">
+      <div className="flex lg:ml-72">
         {/* Sidebar */}
         <EventSidebar
           sections={sections}
@@ -842,212 +846,210 @@ export default function EventDraft() {
           ) : event ? (
             <div className="w-full max-w-6xl mx-auto py-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Header */}
-              <div className="lg:col-span-2 flex items-center justify-between mb-2">
-                <div className="flex items-center gap-4">
-                  <Link href="/home">
-                    <Button variant="ghost" size="icon">
-                      <ArrowLeft className="h-5 w-5" />
+                {/* Header */}
+                <div className="lg:col-span-2 flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-4">
+                    <Link href="/home">
+                      <Button variant="ghost" size="icon">
+                        <ArrowLeft className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <div>
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {t("eventDraft.editEvent")}
+                      </h1>
+                      <p className="text-muted-foreground">{t("eventDraft.updateEventDetails")}</p>
+                    </div>
+                  </div>
+                  <div className="space-x-2">
+                    <Button
+                      variant="destructive"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="px-6 hidden lg:inline-flex"
+                      disabled={isPublishing || isSaving}
+                    >
+                      {t("eventDraft.delete")}
                     </Button>
-                  </Link>
-                  <div>
-                    <h1 className="text-2xl font-bold text-foreground">
-                      {t("eventDraft.editEvent")}
-                    </h1>
-                    <p className="text-muted-foreground">
-                      {t("eventDraft.updateEventDetails")}
-                    </p>
+                    <Button
+                      onClick={handlePublish}
+                      className="px-6 hidden lg:inline-flex"
+                      disabled={isPublishing || isSaving}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t("eventDraft.publishing")}
+                        </>
+                      ) : (
+                        t("eventDraft.publish")
+                      )}
+                    </Button>
                   </div>
                 </div>
-                <div className="space-x-2">
+
+                {/* Event Information Section */}
+                <Card1
+                  eventTitle={eventTitle}
+                  setEventTitle={(v) => {
+                    setEventTitle(v);
+                    setNameChecked(null);
+                  }}
+                  checkingName={checkingName}
+                  nameChecked={nameChecked}
+                  onCheckName={handleCheckName}
+                  eventDescription={eventDescription}
+                  setEventDescription={setEventDescription}
+                  cropOpen={cropOpen}
+                  cropSrc={cropSrc}
+                  pendingFileMeta={pendingFileMeta}
+                  onCropCancel={handleCropCancel}
+                  onCropConfirm={handleCropConfirm}
+                  bannerPreview={bannerPreview}
+                  openFilePicker={openFilePicker}
+                  fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+                  onBannerFileChange={handleBannerFileChange}
+                  onRemoveBanner={handleRemoveBanner}
+                  locationPlace={locationPlace}
+                  setLocationPlace={setLocationPlace}
+                  locationLink={locationLink}
+                  setLocationLink={setLocationLink}
+                  eventVisibility={eventVisibility}
+                  setEventVisibility={setEventVisibility}
+                  fieldErrors={fieldErrors}
+                />
+
+                {/* Time Configuration Section */}
+                <Card2
+                  selectedStart={selectedStart}
+                  setSelectedStart={setSelectedStart}
+                  setStartDate={setStartDate}
+                  startTime={startTime}
+                  setStartTime={setStartTime}
+                  selectedEnd={selectedEnd}
+                  setSelectedEnd={setSelectedEnd}
+                  setEndDate={setEndDate}
+                  endTime={endTime}
+                  setEndTime={setEndTime}
+                  calendarStartMonth={calendarStartMonth}
+                  calendarEndMonth={calendarEndMonth}
+                  fieldErrors={fieldErrors}
+                  selectedSubStart={selectedSubStart}
+                  setSelectedSubStart={setSelectedSubStart}
+                  setSubmissionStartDate={setSubmissionStartDate}
+                  submissionStartTime={submissionStartTime}
+                  setSubmissionStartTime={setSubmissionStartTime}
+                  selectedSubEnd={selectedSubEnd}
+                  setSelectedSubEnd={setSelectedSubEnd}
+                  setSubmissionEndDate={setSubmissionEndDate}
+                  submissionEndTime={submissionEndTime}
+                  setSubmissionEndTime={setSubmissionEndTime}
+                />
+
+                {/* Configuration Section */}
+                <Card3
+                  maxPresenters={maxPresenters}
+                  setMaxPresenters={setMaxPresenters}
+                  maxGroups={maxGroups}
+                  setMaxGroups={setMaxGroups}
+                  fileRequirements={fileRequirements}
+                  setFileRequirements={setFileRequirements}
+                  hasCommittee={hasCommittee}
+                  setHasCommittee={setHasCommittee}
+                  committeeReward={committeeReward}
+                  setCommitteeReward={setCommitteeReward}
+                  guestRewardAmount={guestRewardAmount}
+                  setGuestRewardAmount={setGuestRewardAmount}
+                  unitReward={unitReward}
+                  setUnitReward={setUnitReward}
+                />
+
+                {/* Special Rewards Section */}
+                <Card4
+                  specialRewards={specialRewards}
+                  srPreviews={srPreviews}
+                  openRewardFilePicker={openRewardFilePicker}
+                  rewardFileRefs={rewardFileRefs}
+                  handleRewardFileChange={handleRewardFileChange}
+                  handleRemoveRewardImage={handleRemoveRewardImage}
+                  handleAddSpecialReward={handleAddSpecialReward}
+                  handleRemoveReward={handleRemoveReward}
+                  handleRewardChange={handleRewardChange}
+                  rewardErrors={rewardErrors}
+                  srCropOpen={srCropOpen}
+                  srCropSrc={srCropSrc}
+                  srPendingMeta={srPendingMeta}
+                  onRewardCropCancel={handleRewardCropCancel}
+                  onRewardCropConfirm={handleRewardCropConfirm}
+                />
+
+                <DeleteConfirmDialog
+                  open={deleteConfirmOpen}
+                  onOpenChange={setDeleteConfirmOpen}
+                  onConfirm={async () => {
+                    try {
+                      await deleteEvent(id);
+                      setDeleteConfirmOpen(false);
+                      setDeleteSuccessOpen(true);
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                />
+
+                <DeleteSuccessDialog
+                  open={deleteSuccessOpen}
+                  onOpenChange={(o) => {
+                    setDeleteSuccessOpen(o);
+                    if (!o) router.push("/home");
+                  }}
+                  onGoDashboard={() => router.push("/home")}
+                />
+
+                {/* Save Button (Mobile) */}
+                <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
                   <Button
-                    variant="destructive"
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    className="px-6 hidden lg:inline-flex"
-                    disabled={isPublishing || isSaving}
-                  >
-                    {t("eventDraft.delete")}
-                  </Button>
-                  <Button 
-                    onClick={handlePublish} 
-                    className="px-6 hidden lg:inline-flex"
-                    disabled={isPublishing || isSaving}
-                  >
-                    {isPublishing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t("eventDraft.publishing")}
-                      </>
-                    ) : (
-                      t("eventDraft.publish")
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Event Information Section */}
-              <Card1
-                eventTitle={eventTitle}
-                setEventTitle={(v) => {
-                  setEventTitle(v);
-                  setNameChecked(null);
-                }}
-                checkingName={checkingName}
-                nameChecked={nameChecked}
-                onCheckName={handleCheckName}
-                eventDescription={eventDescription}
-                setEventDescription={setEventDescription}
-                cropOpen={cropOpen}
-                cropSrc={cropSrc}
-                pendingFileMeta={pendingFileMeta}
-                onCropCancel={handleCropCancel}
-                onCropConfirm={handleCropConfirm}
-                bannerPreview={bannerPreview}
-                openFilePicker={openFilePicker}
-                fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
-                onBannerFileChange={handleBannerFileChange}
-                onRemoveBanner={handleRemoveBanner}
-                locationPlace={locationPlace}
-                setLocationPlace={setLocationPlace}
-                locationLink={locationLink}
-                setLocationLink={setLocationLink}
-                eventVisibility={eventVisibility}
-                setEventVisibility={setEventVisibility}
-                fieldErrors={fieldErrors}
-              />
-
-              {/* Time Configuration Section */}
-              <Card2
-                selectedStart={selectedStart}
-                setSelectedStart={setSelectedStart}
-                setStartDate={setStartDate}
-                startTime={startTime}
-                setStartTime={setStartTime}
-                selectedEnd={selectedEnd}
-                setSelectedEnd={setSelectedEnd}
-                setEndDate={setEndDate}
-                endTime={endTime}
-                setEndTime={setEndTime}
-                calendarStartMonth={calendarStartMonth}
-                calendarEndMonth={calendarEndMonth}
-                fieldErrors={fieldErrors}
-                selectedSubStart={selectedSubStart}
-                setSelectedSubStart={setSelectedSubStart}
-                setSubmissionStartDate={setSubmissionStartDate}
-                submissionStartTime={submissionStartTime}
-                setSubmissionStartTime={setSubmissionStartTime}
-                selectedSubEnd={selectedSubEnd}
-                setSelectedSubEnd={setSelectedSubEnd}
-                setSubmissionEndDate={setSubmissionEndDate}
-                submissionEndTime={submissionEndTime}
-                setSubmissionEndTime={setSubmissionEndTime}
-              />
-
-              {/* Configuration Section */}
-              <Card3
-                maxPresenters={maxPresenters}
-                setMaxPresenters={setMaxPresenters}
-                maxGroups={maxGroups}
-                setMaxGroups={setMaxGroups}
-                fileRequirements={fileRequirements}
-                setFileRequirements={setFileRequirements}
-                hasCommittee={hasCommittee}
-                setHasCommittee={setHasCommittee}
-                committeeReward={committeeReward}
-                setCommitteeReward={setCommitteeReward}
-                guestRewardAmount={guestRewardAmount}
-                setGuestRewardAmount={setGuestRewardAmount}
-                unitReward={unitReward}
-                setUnitReward={setUnitReward}
-              />
-
-              {/* Special Rewards Section */}
-              <Card4
-                specialRewards={specialRewards}
-                srPreviews={srPreviews}
-                openRewardFilePicker={openRewardFilePicker}
-                rewardFileRefs={rewardFileRefs}
-                handleRewardFileChange={handleRewardFileChange}
-                handleRemoveRewardImage={handleRemoveRewardImage}
-                handleAddSpecialReward={handleAddSpecialReward}
-                handleRemoveReward={handleRemoveReward}
-                handleRewardChange={handleRewardChange}
-                rewardErrors={rewardErrors}
-                srCropOpen={srCropOpen}
-                srCropSrc={srCropSrc}
-                srPendingMeta={srPendingMeta}
-                onRewardCropCancel={handleRewardCropCancel}
-                onRewardCropConfirm={handleRewardCropConfirm}
-              />
-
-              <DeleteConfirmDialog
-                open={deleteConfirmOpen}
-                onOpenChange={setDeleteConfirmOpen}
-                onConfirm={async () => {
-                  try {
-                    await deleteEvent(id);
-                    setDeleteConfirmOpen(false);
-                    setDeleteSuccessOpen(true);
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-              />
-
-              <DeleteSuccessDialog
-                open={deleteSuccessOpen}
-                onOpenChange={(o) => {
-                  setDeleteSuccessOpen(o);
-                  if (!o) router.push("/home");
-                }}
-                onGoDashboard={() => router.push("/home")}
-              />
-
-              {/* Save Button (Mobile) */}
-              <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
-                <Button 
-                  variant="secondary" 
-                  onClick={handleSaveDraft} 
-                  className="w-full h-11 text-base shadow-sm"
-                  disabled={isSaving || isPublishing}
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('sidebar.saving')}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      {t('eventDraft.saveAsDraft')}
-                    </>
-                  )}
-                </Button>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    onClick={handlePublish} 
+                    variant="secondary"
+                    onClick={handleSaveDraft}
                     className="w-full h-11 text-base shadow-sm"
                     disabled={isSaving || isPublishing}
                   >
-                    {isPublishing ? (
+                    {isSaving ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('eventDraft.publishing')}
+                        {t("sidebar.saving")}
                       </>
                     ) : (
-                      t('eventDraft.publish')
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        {t("eventDraft.saveAsDraft")}
+                      </>
                     )}
                   </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    className="w-full h-11 text-base shadow-sm"
-                    disabled={isSaving || isPublishing}
-                  >
-                    {t('eventDraft.delete')}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={handlePublish}
+                      className="w-full h-11 text-base shadow-sm"
+                      disabled={isSaving || isPublishing}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t("eventDraft.publishing")}
+                        </>
+                      ) : (
+                        t("eventDraft.publish")
+                      )}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="w-full h-11 text-base shadow-sm"
+                      disabled={isSaving || isPublishing}
+                    >
+                      {t("eventDraft.delete")}
+                    </Button>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
           ) : null}
