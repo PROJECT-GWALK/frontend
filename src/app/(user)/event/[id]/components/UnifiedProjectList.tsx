@@ -10,12 +10,10 @@ import {
   MessageSquare,
   Eye,
   Award,
-  Gift,
   MoreHorizontal,
   Users,
   LayoutGrid,
   RefreshCw,
-  Check,
   CheckCircle2,
 } from "lucide-react";
 import type { PresenterProject } from "../Presenter/components/types";
@@ -50,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ro } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type ProjectRewardsState = Record<
   string,
@@ -110,9 +108,7 @@ export default function UnifiedProjectList({
 
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [commentText, setCommentText] = React.useState("");
-  const [selectedProjectId, setSelectedProjectId] = React.useState<
-    string | null
-  >(null);
+  const [selectedProjectId, setSelectedProjectId] = React.useState<string | null>(null);
 
   const [vrDialogOpen, setVrDialogOpen] = React.useState(false);
   const [vrAmount, setVrAmount] = React.useState<number>(0);
@@ -123,8 +119,7 @@ export default function UnifiedProjectList({
   // Infinite Scroll State
   const [visibleCount, setVisibleCount] = React.useState(30);
   const observerTarget = React.useRef(null);
-
-  // Reset dialog state when closed
+  const { t } = useLanguage(); // Reset dialog state when closed
   React.useEffect(() => {
     if (!specialDialogOpen) {
       setSpecialChoice(null);
@@ -160,9 +155,7 @@ export default function UnifiedProjectList({
     if (searchQuery) {
       const lower = searchQuery.toLowerCase();
       result = result.filter(
-        (p) =>
-          p.title.toLowerCase().includes(lower) ||
-          p.desc?.toLowerCase().includes(lower),
+        (p) => p.title.toLowerCase().includes(lower) || p.desc?.toLowerCase().includes(lower),
       );
     }
 
@@ -223,10 +216,8 @@ export default function UnifiedProjectList({
               disabled={loading}
               className="gap-2 hover:bg-primary/10 transition-colors"
             >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-              Refresh
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              {t("participantSection.refresh")}
             </Button>
           </div>
         )}
@@ -262,11 +253,9 @@ export default function UnifiedProjectList({
             </div>
             <div className="space-y-1">
               <p className="text-base font-semibold text-foreground">
-                ไม่พบผลงานที่ค้นหา
+                {t("projectTab.projectNotFound")}
               </p>
-              <p className="text-sm text-muted-foreground">
-                ลองค้นหาด้วยคำค้นอื่น หรือยังไม่มีทีมที่สร้างขึ้น
-              </p>
+              <p className="text-sm text-muted-foreground">{t("projectTab.ProjectNotFoundDesc")}</p>
             </div>
           </div>
         ) : (
@@ -311,21 +300,21 @@ export default function UnifiedProjectList({
                               className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 rounded-full text-foreground"
                             >
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More options</span>
+                              <span className="sr-only">{t("projectTab.moreOptions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-52">
                             {role === "ORGANIZER" && (
                               <>
-                                <DropdownMenuLabel>จัดการทีม</DropdownMenuLabel>
+                                <DropdownMenuLabel>
+                                  {t("projectTab.manageProject")}
+                                </DropdownMenuLabel>
                                 <DropdownMenuItem
                                   className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
-                                  onClick={() =>
-                                    handleActionInternal("delete_team", p.id)
-                                  }
+                                  onClick={() => handleActionInternal("delete_team", p.id)}
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
-                                  ลบทีม
+                                  {t("projectTab.deleteProject")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -338,19 +327,14 @@ export default function UnifiedProjectList({
                   {/* Content Section */}
                   <div className="flex flex-col flex-1 p-4 gap-3">
                     <div className="space-y-2">
-                      <Link
-                        href={`/event/${eventId}/Projects/${p.id}`}
-                        className="block"
-                      >
+                      <Link href={`/event/${eventId}/Projects/${p.id}`} className="block">
                         <h4 className="font-semibold text-lg line-clamp-1 hover:text-primary transition-colors">
                           {p.title}
                         </h4>
                       </Link>
 
                       {p.desc && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {p.desc}
-                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{p.desc}</p>
                       )}
 
                       {/* Badges */}
@@ -362,11 +346,8 @@ export default function UnifiedProjectList({
                               className="border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
                             >
                               <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Given{" "}
-                              {projectRewards[
-                                p.id
-                              ]?.vrGiven?.toLocaleString()}{" "}
-                              {unitReward}
+                              {t("projectTab.givenVR")}{" "}
+                              {projectRewards[p.id]?.vrGiven?.toLocaleString()} {unitReward}
                             </Badge>
                           )}
                           {isSpecialGiven && (
@@ -375,7 +356,7 @@ export default function UnifiedProjectList({
                               className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
                             >
                               <Award className="w-3 h-3 mr-1" />
-                              Award
+                              {t("projectTab.givenSR")}
                             </Badge>
                           )}
                           {isCommented && (
@@ -384,7 +365,7 @@ export default function UnifiedProjectList({
                               className="border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
                             >
                               <MessageSquare className="w-3 h-3 mr-1" />
-                              Commented
+                              {t("projectTab.commented")}
                             </Badge>
                           )}
                         </div>
@@ -394,27 +375,25 @@ export default function UnifiedProjectList({
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Users className="h-3.5 w-3.5" />
-                          <span>{p.members?.length ?? 0} Members</span>
+                          <span>
+                            {p.members?.length ?? 0} {t("projectTab.members")}
+                          </span>
                         </div>
 
                         <div className="text-xs font-bold text-primary flex items-center">
                           {role === "ORGANIZER" || role === "PRESENTER" ? (
                             <>
                               <span className="font-normal text-muted-foreground mr-1">
-                                Total:
+                                {t("projectTab.total")}{" "}
                               </span>
                               {p.totalVr?.toLocaleString() ?? 0} {unitReward}
                             </>
                           ) : (
                             <>
                               <span className="text-green-600 dark:text-green-400 mr-1">
-                                {projectRewards[
-                                  p.id
-                                ]?.vrGiven?.toLocaleString() ?? 0}
+                                {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0}
                               </span>
-                              <span className="text-muted-foreground mx-1">
-                                /
-                              </span>
+                              <span className="text-muted-foreground mx-1">/</span>
                               <span className="ml-1">
                                 {p.totalVr?.toLocaleString() ?? 0} {unitReward}
                               </span>
@@ -426,12 +405,9 @@ export default function UnifiedProjectList({
 
                     {/* Actions */}
                     <div className="mt-auto pt-2 flex gap-2">
-                      <Link
-                        href={`/event/${eventId}/Projects/${p.id}`}
-                        className="flex-1"
-                      >
+                      <Link href={`/event/${eventId}/Projects/${p.id}`} className="flex-1">
                         <Button size="sm" variant="outline" className="w-full">
-                          <Eye className="w-3.5 h-3.5 mr-1.5" /> View
+                          <Eye className="w-3.5 h-3.5 mr-1.5" /> {t("projectTab.viewProject")}
                         </Button>
                       </Link>
                     </div>
@@ -442,13 +418,10 @@ export default function UnifiedProjectList({
 
             {/* Sentinel for infinite scroll */}
             {visibleCount < sorted.length && (
-              <div
-                ref={observerTarget}
-                className="py-4 flex justify-center w-full"
-              >
+              <div ref={observerTarget} className="py-4 flex justify-center w-full">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm animate-pulse">
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Loading more teams...
+                  {t("projectTab.loadingMoreProjects")}
                 </div>
               </div>
             )}
@@ -461,12 +434,9 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                แสดงความคิดเห็น{" "}
-                {selectedProject ? `- ${selectedProject.title}` : ""}
+                {t("projectTab.comments")} {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>
-                เขียนความคิดเห็นของคุณเกี่ยวกับทีมนี้
-              </DrawerDescription>
+              <DrawerDescription>{t("projectTab.commentsDesc")}</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0">
               {selectedProject && (
@@ -484,7 +454,7 @@ export default function UnifiedProjectList({
                 onChange={(e) => setCommentText(e.target.value)}
                 className="w-full mb-4"
                 rows={6}
-                placeholder="เขียนความคิดเห็น..."
+                placeholder={t("projectTab.writeCommentPlaceholder")}
               />
             </div>
             <DrawerFooter className="pt-2 pb-8">
@@ -498,7 +468,7 @@ export default function UnifiedProjectList({
                 }}
                 className="h-11 text-base"
               >
-                ส่งความคิดเห็น
+                {t("projectTab.postComment")}
               </Button>
               <DrawerClose asChild>
                 <Button
@@ -509,7 +479,7 @@ export default function UnifiedProjectList({
                   }}
                   className="h-11 text-base"
                 >
-                  ยกเลิก
+                  {t("projectTab.cancel")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>
@@ -523,10 +493,9 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                ให้ Virtual Reward{" "}
-                {selectedProject ? `- ${selectedProject.title}` : ""}
+                {t("projectTab.giveVR")} {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>ระบุจำนวน VR ที่ต้องการให้</DrawerDescription>
+              <DrawerDescription>{t("projectTab.giveVRDesc")}</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0">
               {selectedProject && (
@@ -558,7 +527,7 @@ export default function UnifiedProjectList({
                 }}
                 className="h-11 text-base"
               >
-                ยืนยัน
+                {t("projectTab.confirm")}
               </Button>
               <DrawerClose asChild>
                 <Button
@@ -569,7 +538,7 @@ export default function UnifiedProjectList({
                   }}
                   className="h-11 text-base"
                 >
-                  ยกเลิก
+                  {t("projectTab.cancel")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>
@@ -583,12 +552,9 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                ให้รางวัลพิเศษ{" "}
-                {selectedProject ? `- ${selectedProject.title}` : ""}
+                {t("projectTab.giveSR")} {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>
-                เลือกรางวัลพิเศษที่ต้องการมอบให้
-              </DrawerDescription>
+              <DrawerDescription>{t("projectTab.giveSRDesc")}</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0 space-y-3 mb-4">
               {selectedProject && (
@@ -619,8 +585,7 @@ export default function UnifiedProjectList({
                 ))
               ) : (
                 <div className="text-muted-foreground text-sm text-center py-4 bg-muted/30 rounded-lg">
-                  ไม่มีรางวัลที่เหลืออยู่ (ท่านอาจใช้สิทธิ์โหวตไปแล้ว
-                  หรือยังไม่มีการตั้งค่ารางวัล)
+                  {t("projectTab.noMoreSR")}
                 </div>
               )}
             </div>
@@ -636,7 +601,7 @@ export default function UnifiedProjectList({
                 }}
                 className="h-11 text-base"
               >
-                ยืนยัน
+                {t("projectTab.confirm")}
               </Button>
               <DrawerClose asChild>
                 <Button
@@ -647,7 +612,7 @@ export default function UnifiedProjectList({
                   }}
                   className="h-11 text-base"
                 >
-                  ยกเลิก
+                  {t("projectTab.cancel")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>
@@ -658,15 +623,14 @@ export default function UnifiedProjectList({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบทีม?</AlertDialogTitle>
+            <AlertDialogTitle>{t("projectTab.confirmDeleteProject")}</AlertDialogTitle>
             <AlertDialogDescription>
-              การกระทำนี้ไม่สามารถย้อนกลับได้
-              ข้อมูลทีมและสมาชิกทั้งหมดจะถูกลบออกจากกิจกรรมนี้
+              {t("projectTab.confirmDeleteProjectDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setTeamToDelete(null)}>
-              ยกเลิก
+              {t("projectTab.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
@@ -677,7 +641,7 @@ export default function UnifiedProjectList({
               }}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              ยืนยันการลบ
+              {t("projectTab.deleteProject")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

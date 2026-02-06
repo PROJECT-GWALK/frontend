@@ -148,9 +148,9 @@ export default function OrganizerView({ id, event }: Props) {
             <TabsContent value="project">
               <div className="mt-6 space-y-6">
                 <div className="flex items-center justify-between gap-4 mb-3">
-                  <h2 className="text-lg font-semibold">Projects</h2>
+                  <h2 className="text-lg font-semibold">{t("projectTab.allProjects")}</h2>
                   <Input
-                    placeholder="Search projects by name..."
+                    placeholder={t("projectTab.searchProjects")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="max-w-sm"
@@ -164,7 +164,7 @@ export default function OrganizerView({ id, event }: Props) {
                   loading={projectsLoading}
                   onDeleteTeam={handleDeleteTeam}
                   onPostComment={(_projectId, _text) => {
-                    toast.success("ส่งความคิดเห็นเรียบร้อย");
+                    toast.success(t("projectDetail.comments.posted"));
                   }}
                   onRefresh={fetchTeamsData}
                   unitReward={localEvent?.unitReward ?? "coins"}

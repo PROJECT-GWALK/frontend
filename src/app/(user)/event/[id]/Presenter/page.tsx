@@ -8,12 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, Trophy, MessageSquare, Star, Gift, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData, Team } from "@/utils/types";
@@ -39,12 +34,10 @@ export default function PresenterView({ id, event }: Props) {
   const userId = session?.user?.id;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState<
-    "dashboard" | "information" | "project" | "result"
-  >("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
-  
+
   // Presenter Stats
   type PresenterStats = {
     rank: number | string;
@@ -76,10 +69,10 @@ export default function PresenterView({ id, event }: Props) {
   const { t } = useLanguage();
 
   const now = new Date();
-  const isSubmissionActive = localEvent ? (
-      (!localEvent.startJoinDate || now >= new Date(localEvent.startJoinDate)) &&
+  const isSubmissionActive = localEvent
+    ? (!localEvent.startJoinDate || now >= new Date(localEvent.startJoinDate)) &&
       (!localEvent.endJoinDate || now <= new Date(localEvent.endJoinDate))
-  ) : true;
+    : true;
 
   const fetchTeamsData = async () => {
     setProjectsLoading(true);
@@ -99,20 +92,15 @@ export default function PresenterView({ id, event }: Props) {
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
-          members:
-            t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
         }));
         setProjects(mappedProjects);
 
         // Update userProject if user is in one of these teams
         if (userId) {
-          const myTeam = teams.find((t) =>
-            t.participants.some((p) => p.userId === userId)
-          );
+          const myTeam = teams.find((t) => t.participants.some((p) => p.userId === userId));
           if (myTeam) {
-            const me = myTeam.participants.find(
-              (p) => p.userId === userId
-            );
+            const me = myTeam.participants.find((p) => p.userId === userId);
             setUserProject({
               id: myTeam.id,
               title: myTeam.teamName,
@@ -125,10 +113,7 @@ export default function PresenterView({ id, event }: Props) {
                   url: f.fileUrl,
                   fileTypeId: f.fileTypeId,
                 })) || [],
-              members:
-                myTeam.participants?.map(
-                  (p) => p.user?.name || "Unknown"
-                ) || [],
+              members: myTeam.participants?.map((p) => p.user?.name || "Unknown") || [],
               owner: me?.isLeader || false,
             });
           } else {
@@ -181,11 +166,7 @@ export default function PresenterView({ id, event }: Props) {
   return (
     <div className="min-h-screen bg-background w-full justify-center flex">
       <div className="w-full">
-        <OrganizerBanner 
-          event={localEvent} 
-          open={bannerOpen} 
-          onOpenChange={setBannerOpen} 
-        />
+        <OrganizerBanner event={localEvent} open={bannerOpen} onOpenChange={setBannerOpen} />
         <div className="max-w-6xl mx-auto mt-6">
           <Card
             className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
@@ -194,8 +175,7 @@ export default function PresenterView({ id, event }: Props) {
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background:
-                  "linear-gradient(to right, var(--role-presenter), transparent)",
+                background: "linear-gradient(to right, var(--role-presenter), transparent)",
                 opacity: 0.05,
               }}
             />
@@ -230,26 +210,29 @@ export default function PresenterView({ id, event }: Props) {
               <CardContent className="p-4 flex items-center gap-3">
                 <AlertCircle className="h-5 w-5 text-destructive" />
                 <p className="text-sm font-medium text-destructive">
-                  {t("projectDetail.messages.submissionEnded") || "Submission period has ended. You cannot create or edit projects."}
+                  {t("projectDetail.messages.submissionEnded") ||
+                    "Submission period has ended. You cannot create or edit projects."}
                 </p>
               </CardContent>
             </Card>
           )}
 
-          <Tabs
-            value={tab}
-            onValueChange={(v) => setTab(v as typeof tab)}
-            className="mt-6"
-          >
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
               {userProject && (
                 <TabsTrigger value="dashboard" className="flex-1 min-w-25">
-                  Dashboard
+                  {t("eventTab.dashboard")}
                 </TabsTrigger>
               )}
-              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-25">Projects</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">
+                {t("eventTab.information")}
+              </TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">
+                {t("eventTab.projects")}
+              </TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">
+                {t("eventTab.results")}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -270,10 +253,14 @@ export default function PresenterView({ id, event }: Props) {
                       <CardContent>
                         <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-bold">#{myStats.rank}</span>
-                          <span className="text-sm text-muted-foreground">/ {projects.length} Teams</span>
+                          <span className="text-sm text-muted-foreground">
+                            / {projects.length} Teams
+                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Total Score: <span className="font-semibold text-foreground">{myStats.score}</span> {localEvent?.unitReward ?? "coins"}
+                          Total Score:{" "}
+                          <span className="font-semibold text-foreground">{myStats.score}</span>{" "}
+                          {localEvent?.unitReward ?? "coins"}
                         </p>
                       </CardContent>
                     </Card>
@@ -293,11 +280,15 @@ export default function PresenterView({ id, event }: Props) {
                         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                           <div className="flex justify-between">
                             <span>Guest:</span>
-                            <span className="font-medium text-foreground">{myStats.comments.guest}</span>
+                            <span className="font-medium text-foreground">
+                              {myStats.comments.guest}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Committee:</span>
-                            <span className="font-medium text-foreground">{myStats.comments.committee}</span>
+                            <span className="font-medium text-foreground">
+                              {myStats.comments.committee}
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -340,19 +331,24 @@ export default function PresenterView({ id, event }: Props) {
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0 space-y-1">
-                                    <div className="font-semibold text-sm line-clamp-2" title={reward.name}>
+                                    <div
+                                      className="font-semibold text-sm line-clamp-2"
+                                      title={reward.name}
+                                    >
                                       {reward.name}
                                     </div>
-                                    
+
                                     <div className="pt-2 border-t mt-1 flex justify-between items-end">
                                       <div className="text-xs text-muted-foreground">
                                         Committee Votes
                                       </div>
-                                      <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${
-                                        reward.count > 0 
-                                          ? "bg-primary/10 text-primary" 
-                                          : "bg-muted text-muted-foreground"
-                                      }`}>
+                                      <div
+                                        className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${
+                                          reward.count > 0
+                                            ? "bg-primary/10 text-primary"
+                                            : "bg-muted text-muted-foreground"
+                                        }`}
+                                      >
                                         <span className="text-sm font-bold">{reward.count}</span>
                                         <Users className="h-3 w-3" />
                                       </div>
@@ -373,13 +369,11 @@ export default function PresenterView({ id, event }: Props) {
                   </div>
                 </div>
               )}
-              <div className="mt-6">
-                {/* Removed General Stats Cards as requested */}
-              </div>
+              <div className="mt-6">{/* Removed General Stats Cards as requested */}</div>
 
               {/* Comments Section */}
               {userProject?.id && (
-                 <CommentSection eventId={id} projectId={userProject.id} myRole="PRESENTER" />
+                <CommentSection eventId={id} projectId={userProject.id} myRole="PRESENTER" />
               )}
             </TabsContent>
 
@@ -397,7 +391,7 @@ export default function PresenterView({ id, event }: Props) {
                 {/* My Project */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold">My Project</h2>
+                    <h2 className="text-lg font-semibold">{t("guest.myProjects")}</h2>
                     <span className="text-sm text-muted-foreground">
                       Teams: {projects.length} / {localEvent?.maxTeams || "-"}
                     </span>
@@ -406,15 +400,16 @@ export default function PresenterView({ id, event }: Props) {
                   {!userProject ? (
                     <Card className="p-6 rounded-xl">
                       <div className="text-sm text-muted-foreground">
-                        You don&apos;t have any project yet. Create or join a group
-                        to appear here.
+                        You don&apos;t have any project yet. Create or join a group to appear here.
                       </div>
                       <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="default"
                           onClick={() => setCreateOpen(true)}
-                          disabled={!!localEvent?.maxTeams && projects.length >= localEvent.maxTeams}
+                          disabled={
+                            !!localEvent?.maxTeams && projects.length >= localEvent.maxTeams
+                          }
                         >
                           Create Project
                         </Button>
@@ -442,8 +437,7 @@ export default function PresenterView({ id, event }: Props) {
                               {userProject.title}
                             </div>
                             <div className="text-sm text-muted-foreground line-clamp-1">
-                              {userProject.description ||
-                                "No description provided"}
+                              {userProject.description || "No description provided"}
                             </div>
                           </div>
 
@@ -460,10 +454,7 @@ export default function PresenterView({ id, event }: Props) {
                         </div>
 
                         <div className="shrink-0 flex items-center gap-2 mt-2 md:mt-0">
-                          <Link
-                            href={`/event/${id}/Projects/${userProject.id}`}
-                            target="_blank"
-                          >
+                          <Link href={`/event/${id}/Projects/${userProject.id}`} target="_blank">
                             <Button variant="outline">Edit</Button>
                           </Link>
                         </div>
@@ -483,7 +474,7 @@ export default function PresenterView({ id, event }: Props) {
                 {/* Projects in the event */}
                 <div>
                   <div className="flex items-center justify-between gap-4 mb-3">
-                    <h2 className="text-lg font-semibold">Projects</h2>
+                    <h2 className="text-lg font-semibold">{t("guest.allProjects")}</h2>
                     <Input
                       placeholder="Search projects by name..."
                       value={searchQuery}

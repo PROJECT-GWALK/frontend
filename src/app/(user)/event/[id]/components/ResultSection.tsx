@@ -1,13 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -30,15 +24,7 @@ import {
 } from "lucide-react";
 import { getEventRankings, getTeamById, getEvent } from "@/utils/apievent";
 // import { generateMockRankings } from "./mockData";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  XAxis,
-  YAxis,
-  Cell,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis, Cell } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -50,16 +36,9 @@ import { Badge } from "@/components/ui/badge";
 import type { Team, EventDetail } from "@/utils/types";
 import { UserAvatar } from "@/utils/function";
 import Image from "next/image";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Ranking = {
   id: string;
@@ -92,9 +71,8 @@ type ChartEntry = {
   totalReward: number;
 };
 
-
-
 export default function ResultSection({ eventId, role }: Props) {
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [rankings, setRankings] = useState<Ranking[]>([]);
   const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
@@ -113,7 +91,7 @@ export default function ResultSection({ eventId, role }: Props) {
         color: "hsl(var(--chart-1))",
       },
     }),
-    [eventInfo?.unitReward]
+    [eventInfo?.unitReward],
   ) satisfies ChartConfig;
 
   // Team Selection State
@@ -170,8 +148,7 @@ export default function ResultSection({ eventId, role }: Props) {
   // Detect scroll to pause auto-updates
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled =
-        window.scrollY > 50 || (containerRef.current?.scrollTop || 0) > 50;
+      const scrolled = window.scrollY > 50 || (containerRef.current?.scrollTop || 0) > 50;
       isUserScrollingRef.current = scrolled;
     };
 
@@ -221,7 +198,7 @@ export default function ResultSection({ eventId, role }: Props) {
         setRefreshing(false);
       }
     },
-    [eventId]
+    [eventId],
   );
 
   useEffect(() => {
@@ -274,8 +251,7 @@ export default function ResultSection({ eventId, role }: Props) {
       }
     };
     document.addEventListener("fullscreenchange", handleFsChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
   const topLimit = useMemo(() => {
@@ -334,9 +310,7 @@ export default function ResultSection({ eventId, role }: Props) {
       )}
 
       <div
-        className={`relative z-10 flex flex-col lg:h-full space-y-4 ${
-          isFullscreen ? "p-6" : ""
-        }`}
+        className={`relative z-10 flex flex-col lg:h-full space-y-4 ${isFullscreen ? "p-6" : ""}`}
       >
         <div className="flex flex-col gap-3 shrink-0">
           {isFullscreen && eventInfo && (
@@ -363,20 +337,16 @@ export default function ResultSection({ eventId, role }: Props) {
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
-                 {/* Right side controls if needed, or just keep it clean */}
+                {/* Right side controls if needed, or just keep it clean */}
               </div>
             </Card>
           )}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight">
-                Event Results
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                อันดับคะแนน VR และรางวัลพิเศษ
-              </p>
+              <h2 className="text-2xl font-bold tracking-tight">{t("resultsTab.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("resultsTab.resultsDesc")}</p>
             </div>
             <div className="flex items-center gap-2">
               {!isFullscreen && (
@@ -386,10 +356,8 @@ export default function ResultSection({ eventId, role }: Props) {
                   onClick={() => fetchData("manual")}
                   disabled={loading}
                 >
-                  <RefreshCw
-                    className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                  />
-                  Refresh
+                  <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                  {t("resultsTab.refresh")}
                 </Button>
               )}
               <Button
@@ -422,7 +390,7 @@ export default function ResultSection({ eventId, role }: Props) {
                     onClick={() => fetchData("manual")}
                     disabled={loading}
                   >
-                    ลองใหม่
+                    {t("resultsTab.tryAgain")}
                   </Button>
                 )}
               </div>
@@ -447,17 +415,17 @@ export default function ResultSection({ eventId, role }: Props) {
                   (selectedTeamId
                     ? "lg:col-span-1"
                     : specialRewards.length > 0
-                    ? "lg:col-span-2"
-                    : "lg:col-span-3")
+                      ? "lg:col-span-2"
+                      : "lg:col-span-3")
                 : ""
             }`}
           >
             <CardHeader className="shrink-0">
               <div className="flex items-center justify-between">
-                <CardTitle>Top Rankings</CardTitle>
+                <CardTitle>{t("resultsTab.topProjects")}</CardTitle>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    Show Top:
+                    {t("resultsTab.showTop")}:
                   </span>
                   <Input
                     type="number"
@@ -485,7 +453,7 @@ export default function ResultSection({ eventId, role }: Props) {
                 </div>
               </div>
               <CardDescription>
-                Visualizing the top performing teams based on VR points ({eventInfo?.unitReward ?? "Points"}).
+                {t("resultsTab.topProjectsDesc")} ({eventInfo?.unitReward ?? "Points"}).
               </CardDescription>
             </CardHeader>
             <CardContent className="lg:flex-1 lg:min-h-0">
@@ -507,20 +475,16 @@ export default function ResultSection({ eventId, role }: Props) {
                   } flex items-center justify-center`}
                 >
                   <div className="text-center space-y-2">
-                    <div className="text-lg font-semibold">
-                      ยังไม่มีข้อมูลอันดับ
-                    </div>
+                    <div className="text-lg font-semibold">{t("resultsTab.noData")}</div>
                     <div className="text-sm text-muted-foreground">
-                      รอการให้คะแนนหรือการอัปเดตจากระบบ
+                      {t("resultsTab.noDataDesc")}
                     </div>
                   </div>
                 </div>
               ) : (
                 <ChartContainer
                   config={chartConfig}
-                  className={`w-full ${
-                    isFullscreen ? "lg:h-full min-h-125" : "min-h-75"
-                  }`}
+                  className={`w-full ${isFullscreen ? "lg:h-full min-h-125" : "min-h-75"}`}
                 >
                   <BarChart
                     accessibilityLayer
@@ -546,8 +510,7 @@ export default function ResultSection({ eventId, role }: Props) {
                       barSize={getBarSize(topLimit)}
                       onClick={(data) => {
                         if (!isFullscreen) return;
-                        const payload = (data as { payload?: ChartEntry })
-                          .payload;
+                        const payload = (data as { payload?: ChartEntry }).payload;
                         if (!payload) return;
                         handleBarClick(payload);
                       }}
@@ -576,9 +539,7 @@ export default function ResultSection({ eventId, role }: Props) {
                           className="fill-white font-semibold"
                           fontSize={14}
                           formatter={(value: string) =>
-                            value.length > 28
-                              ? `${value.slice(0, 28)}...`
-                              : value
+                            value.length > 28 ? `${value.slice(0, 28)}...` : value
                           }
                         />
                       )}
@@ -614,11 +575,9 @@ export default function ResultSection({ eventId, role }: Props) {
                       <div className="p-2 rounded-lg bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
                         <Trophy className="h-5 w-5" />
                       </div>
-                      Special Awards
+                      {t("resultsTab.SR")}
                     </CardTitle>
-                    <CardDescription>
-                      รางวัลโหวตพิเศษ แยกจากคะแนน VR
-                    </CardDescription>
+                    <CardDescription>{t("resultsTab.SRDesc")}</CardDescription>
                   </CardHeader>
                   <CardContent className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto custom-scrollbar">
                     <div className="space-y-4">
@@ -629,7 +588,7 @@ export default function ResultSection({ eventId, role }: Props) {
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">
-                              Reward #{index + 1}
+                              {t("resultsTab.SRRanking")} {index + 1}
                             </span>
                           </div>
                           <div className="flex items-start gap-4">
@@ -652,19 +611,16 @@ export default function ResultSection({ eventId, role }: Props) {
                             <div className="flex-1 min-w-0 space-y-2">
                               <div>
                                 <div className="text-xs text-muted-foreground">
-                                  Reward Name
+                                  {t("resultsTab.SRName")}
                                 </div>
-                                <div
-                                  className="font-semibold text-sm truncate"
-                                  title={reward.name}
-                                >
+                                <div className="font-semibold text-sm truncate" title={reward.name}>
                                   {reward.name}
                                 </div>
                               </div>
                               {reward.description && (
                                 <div>
                                   <div className="text-xs text-muted-foreground">
-                                    Description
+                                    {t("resultsTab.SRDescCol")}
                                   </div>
                                   <div
                                     className="text-xs text-muted-foreground line-clamp-2"
@@ -677,7 +633,7 @@ export default function ResultSection({ eventId, role }: Props) {
 
                               <div className="pt-2 border-t mt-2">
                                 <div className="text-xs text-muted-foreground">
-                                  Winner
+                                  {t("resultsTab.winner")}
                                 </div>
                                 <div className="flex justify-between items-baseline">
                                   <div className="font-bold text-primary truncate text-sm">
@@ -685,7 +641,7 @@ export default function ResultSection({ eventId, role }: Props) {
                                   </div>
                                   {reward.winner && (
                                     <div className="text-xs text-muted-foreground">
-                                      {reward.winner.votes} votes
+                                      {reward.winner.votes} {t("resultsTab.votes")}
                                     </div>
                                   )}
                                 </div>
@@ -705,7 +661,7 @@ export default function ResultSection({ eventId, role }: Props) {
                     <div className="flex items-start justify-between mt-[-2]">
                       <div className="min-w-0">
                         <CardTitle className="text-base font-bold leading-tight">
-                          Team Details
+                          {t("resultsTab.projectDetail")}
                         </CardTitle>
                       </div>
                       <Tooltip>
@@ -718,13 +674,13 @@ export default function ResultSection({ eventId, role }: Props) {
                               setSelectedTeamId(null);
                               setSelectedTeam(null);
                             }}
-                            aria-label="ปิดรายละเอียดทีม"
+                            aria-label={t("resultsTab.closeProjectDetail")}
                           >
                             <X className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent side="left" sideOffset={6}>
-                          ปิดรายละเอียดทีม
+                          {t("resultsTab.closeProjectDetail")}
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -767,13 +723,10 @@ export default function ResultSection({ eventId, role }: Props) {
                                         size="sm"
                                         className="h-auto p-0 text-xs mt-1 text-blue-500 font-semibold"
                                       >
-                                        ดูเพิ่มเติม
+                                        {t("resultsTab.seeMore")}
                                       </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent
-                                      align="start"
-                                      className="w-80 max-w-[90vw]"
-                                    >
+                                    <PopoverContent align="start" className="w-80 max-w-[90vw]">
                                       <div className="text-sm font-semibold mb-2">
                                         {selectedTeam.teamName}
                                       </div>
@@ -786,7 +739,7 @@ export default function ResultSection({ eventId, role }: Props) {
                               </div>
                             ) : (
                               <div className="text-xs text-muted-foreground italic">
-                                No description provided.
+                                {t("resultsTab.noProjectDesc")}
                               </div>
                             )}
                           </div>
@@ -795,7 +748,7 @@ export default function ResultSection({ eventId, role }: Props) {
                         <div className="flex flex-col">
                           <div className="flex items-center justify-between gap-2 shrink-0">
                             <div className="font-semibold text-xs flex items-center gap-1 text-muted-foreground uppercase tracking-wider">
-                              <UserIcon className="h-3 w-3" /> Members
+                              <UserIcon className="h-3 w-3" /> {t("resultsTab.member")}
                             </div>
                             <div className="text-[11px] text-muted-foreground">
                               {selectedTeam.participants?.length || 0}
@@ -805,15 +758,9 @@ export default function ResultSection({ eventId, role }: Props) {
                           {selectedTeam.participants?.length ? (
                             (() => {
                               const maxVisible = 8;
-                              const visible = selectedTeam.participants.slice(
-                                0,
-                                maxVisible
-                              );
-                              const hidden =
-                                selectedTeam.participants.slice(maxVisible);
-                              const leader = selectedTeam.participants.find(
-                                (p) => p.isLeader
-                              );
+                              const visible = selectedTeam.participants.slice(0, maxVisible);
+                              const hidden = selectedTeam.participants.slice(maxVisible);
+                              const leader = selectedTeam.participants.find((p) => p.isLeader);
 
                               return (
                                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -825,9 +772,7 @@ export default function ResultSection({ eventId, role }: Props) {
 
                                   {visible.map((p) => {
                                     const displayName =
-                                      p.user?.name ||
-                                      p.user?.username ||
-                                      "Unknown";
+                                      p.user?.name || p.user?.username || "Unknown";
                                     const tooltipText = p.user?.username
                                       ? `@${p.user.username}`
                                       : displayName;
@@ -844,15 +789,12 @@ export default function ResultSection({ eventId, role }: Props) {
                                             </div>
                                             {p.isLeader && (
                                               <div className="text-[10px] text-primary/80 font-semibold">
-                                                Leader
+                                                {t("resultsTab.leader")}
                                               </div>
                                             )}
                                           </div>
                                         </TooltipTrigger>
-                                        <TooltipContent
-                                          side="top"
-                                          sideOffset={6}
-                                        >
+                                        <TooltipContent side="top" sideOffset={6}>
                                           {tooltipText}
                                         </TooltipContent>
                                       </Tooltip>
@@ -871,20 +813,15 @@ export default function ResultSection({ eventId, role }: Props) {
                                           +{hidden.length}
                                         </Button>
                                       </PopoverTrigger>
-                                      <PopoverContent
-                                        align="start"
-                                        className="w-80 max-w-[90vw]"
-                                      >
+                                      <PopoverContent align="start" className="w-80 max-w-[90vw]">
                                         <div className="text-sm font-semibold mb-2">
-                                          สมาชิกทั้งหมด (
+                                          {t("resultsTab.allMembers")} (
                                           {selectedTeam.participants.length})
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto custom-scrollbar">
                                           {hidden.map((p) => {
                                             const displayName =
-                                              p.user?.name ||
-                                              p.user?.username ||
-                                              "Unknown";
+                                              p.user?.name || p.user?.username || "Unknown";
                                             return (
                                               <div
                                                 key={p.userId}
@@ -899,9 +836,7 @@ export default function ResultSection({ eventId, role }: Props) {
                                                     {displayName}
                                                   </div>
                                                   <div className="text-[11px] text-muted-foreground truncate">
-                                                    {p.user?.username
-                                                      ? `@${p.user.username}`
-                                                      : "—"}
+                                                    {p.user?.username ? `@${p.user.username}` : "—"}
                                                   </div>
                                                 </div>
                                               </div>
@@ -916,17 +851,15 @@ export default function ResultSection({ eventId, role }: Props) {
                             })()
                           ) : (
                             <div className="mt-2 text-xs text-muted-foreground italic">
-                              ยังไม่มีสมาชิก
+                              {t("resultsTab.noMembers")}
                             </div>
                           )}
                         </div>
                       </div>
                     ) : (
                       <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
-                        <p>ไม่พบข้อมูลทีม</p>
-                        <p className="text-xs mt-1">
-                          (อาจเป็นข้อมูล Mock หรือถูกลบไปแล้ว)
-                        </p>
+                        <p>{t("resultsTab.noProjectDetail")}</p>
+                        <p className="text-xs mt-1">{t("resultsTab.noProjectDetailDesc")}</p>
                       </div>
                     )}
                   </CardContent>
@@ -942,22 +875,17 @@ export default function ResultSection({ eventId, role }: Props) {
                     <div className="p-2 rounded-lg bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
                       <Trophy className="h-5 w-5" />
                     </div>
-                    Special Awards
+                    {t("resultsTab.SR")}
                   </CardTitle>
-                  <CardDescription>
-                    รางวัลโหวตพิเศษ แยกจากคะแนน VR
-                  </CardDescription>
+                  <CardDescription>{t("resultsTab.SRDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {specialRewards.map((reward, index) => (
-                      <div
-                        key={reward.id}
-                        className="border rounded-lg p-3 space-y-3 bg-muted/30"
-                      >
+                      <div key={reward.id} className="border rounded-lg p-3 space-y-3 bg-muted/30">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-muted-foreground">
-                            Reward #{index + 1}
+                            {t("resultsTab.SRRanking")} {index + 1}
                           </span>
                         </div>
                         <div className="flex items-start gap-3">
@@ -980,19 +908,16 @@ export default function ResultSection({ eventId, role }: Props) {
                           <div className="flex-1 min-w-0 space-y-2">
                             <div>
                               <div className="text-xs text-muted-foreground">
-                                Reward Name
+                                {t("resultsTab.SRName")}
                               </div>
-                              <div
-                                className="font-semibold text-sm truncate"
-                                title={reward.name}
-                              >
+                              <div className="font-semibold text-sm truncate" title={reward.name}>
                                 {reward.name}
                               </div>
                             </div>
                             {reward.description && (
                               <div>
                                 <div className="text-xs text-muted-foreground">
-                                  Description
+                                  {t("resultsTab.SRDescCol")}
                                 </div>
                                 <div
                                   className="text-xs text-muted-foreground line-clamp-2"
@@ -1005,7 +930,7 @@ export default function ResultSection({ eventId, role }: Props) {
 
                             <div className="pt-2 border-t mt-2">
                               <div className="text-xs text-muted-foreground">
-                                Winner
+                                {t("resultsTab.winner")}
                               </div>
                               <div className="flex justify-between items-baseline">
                                 <div className="font-bold text-primary truncate text-sm">
@@ -1013,7 +938,7 @@ export default function ResultSection({ eventId, role }: Props) {
                                 </div>
                                 {reward.winner && (
                                   <div className="text-xs text-muted-foreground">
-                                    {reward.winner.votes} votes
+                                    {reward.winner.votes} {t("resultsTab.votes")}
                                   </div>
                                 )}
                               </div>
@@ -1033,7 +958,7 @@ export default function ResultSection({ eventId, role }: Props) {
         {!isFullscreen && (
           <Card>
             <CardHeader>
-              <CardTitle>Overall Ranking</CardTitle>
+              <CardTitle>{t("resultsTab.OARanking")}</CardTitle>
             </CardHeader>
             <CardContent>
               {loading && rankings.length === 0 ? (
@@ -1044,25 +969,21 @@ export default function ResultSection({ eventId, role }: Props) {
                 </div>
               ) : rankings.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground">
-                  ยังไม่มีข้อมูล Ranking
+                  {t("resultsTab.noOARanking")}
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-20">Rank</TableHead>
-                      <TableHead>Team Name</TableHead>
-                      <TableHead className="text-right">Reward</TableHead>
-                      <TableHead className="text-right">
-                        Special Reward
-                      </TableHead>
+                      <TableHead className="w-20">{t("resultsTab.rank")}</TableHead>
+                      <TableHead>{t("resultsTab.project")}</TableHead>
+                      <TableHead className="text-right">{t("resultsTab.VR")}</TableHead>
+                      <TableHead className="text-right">{t("resultsTab.SR")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {rankings.map((team) => {
-                      const teamRewards = specialRewards.filter(
-                        (r) => r.winner?.id === team.id
-                      );
+                      const teamRewards = specialRewards.filter((r) => r.winner?.id === team.id);
                       return (
                         <TableRow key={team.id}>
                           <TableCell className="font-medium">
@@ -1105,7 +1026,7 @@ export default function ResultSection({ eventId, role }: Props) {
                                   >
                                     {reward.name}
                                   </Badge>
-                                )
+                                ),
                               )}
                             </div>
                           </TableCell>

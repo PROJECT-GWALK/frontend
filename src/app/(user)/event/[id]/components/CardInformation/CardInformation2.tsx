@@ -14,12 +14,7 @@ type Props = {
   language?: string;
 };
 
-export default function CardInformation2({
-  event,
-  editable,
-  onEdit,
-  language = "en",
-}: Props) {
+export default function CardInformation2({ event, editable, onEdit, language = "en" }: Props) {
   const { t } = useLanguage();
   const locale = language === "th" ? "th-TH" : "en-US";
 
@@ -92,7 +87,65 @@ export default function CardInformation2({
               );
             })()}
           </div>
+          {/* Event Period */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 pb-1 border-b">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">
+                {t("eventInfo.eventTimePeriod") || "Event Period"}
+              </span>
+            </div>
 
+            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
+                  <span className="font-bold">
+                    {event?.startView ? new Date(event.startView).getDate() : "-"}
+                  </span>
+                  <span className="text-[10px] uppercase text-muted-foreground">
+                    {event?.startView
+                      ? new Date(event.startView).toLocaleString(locale, {
+                          month: "short",
+                        })
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground uppercase font-medium">
+                    {t("information.start")}
+                  </span>
+                  <span className="font-medium text-sm">
+                    {event?.startView ? formatDateTime(new Date(event.startView), locale) : "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
+                  <span className="font-bold">
+                    {event?.endView ? new Date(event.endView).getDate() : "-"}
+                  </span>
+                  <span className="text-[10px] uppercase text-muted-foreground">
+                    {event?.endView
+                      ? new Date(event.endView).toLocaleString(locale, {
+                          month: "short",
+                        })
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground uppercase font-medium">
+                    {t("information.end")}
+                  </span>
+                  <span className="font-medium text-sm">
+                    {event?.endView ? formatDateTime(new Date(event.endView), locale) : "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
           {/* Submission Period */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 pb-1 border-b">
@@ -106,9 +159,7 @@ export default function CardInformation2({
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
                   <span className="font-bold">
-                    {event?.startJoinDate
-                      ? new Date(event.startJoinDate).getDate()
-                      : "-"}
+                    {event?.startJoinDate ? new Date(event.startJoinDate).getDate() : "-"}
                   </span>
                   <span className="text-[10px] uppercase text-muted-foreground">
                     {event?.startJoinDate
@@ -135,9 +186,7 @@ export default function CardInformation2({
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
                   <span className="font-bold">
-                    {event?.endJoinDate
-                      ? new Date(event.endJoinDate).getDate()
-                      : "-"}
+                    {event?.endJoinDate ? new Date(event.endJoinDate).getDate() : "-"}
                   </span>
                   <span className="text-[10px] uppercase text-muted-foreground">
                     {event?.endJoinDate
@@ -152,77 +201,7 @@ export default function CardInformation2({
                     {t("information.end")}
                   </span>
                   <span className="font-medium text-sm">
-                    {event?.endJoinDate
-                      ? formatDateTime(new Date(event.endJoinDate), locale)
-                      : "-"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Event Period */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-2 pb-1 border-b">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">
-                {t("eventInfo.eventTimePeriod") || "Event Period"}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
-                  <span className="font-bold">
-                    {event?.startView
-                      ? new Date(event.startView).getDate()
-                      : "-"}
-                  </span>
-                  <span className="text-[10px] uppercase text-muted-foreground">
-                    {event?.startView
-                      ? new Date(event.startView).toLocaleString(locale, {
-                          month: "short",
-                        })
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase font-medium">
-                    {t("information.start")}
-                  </span>
-                  <span className="font-medium text-sm">
-                    {event?.startView
-                      ? formatDateTime(new Date(event.startView), locale)
-                      : "-"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">
-                  <span className="font-bold">
-                    {event?.endView
-                      ? new Date(event.endView).getDate()
-                      : "-"}
-                  </span>
-                  <span className="text-[10px] uppercase text-muted-foreground">
-                    {event?.endView
-                      ? new Date(event.endView).toLocaleString(locale, {
-                          month: "short",
-                        })
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase font-medium">
-                    {t("information.end")}
-                  </span>
-                  <span className="font-medium text-sm">
-                    {event?.endView
-                      ? formatDateTime(new Date(event.endView), locale)
-                      : "-"}
+                    {event?.endJoinDate ? formatDateTime(new Date(event.endJoinDate), locale) : "-"}
                   </span>
                 </div>
               </div>

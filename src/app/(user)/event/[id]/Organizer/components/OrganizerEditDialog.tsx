@@ -5,13 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Upload, Trash2, Trophy, Plus, FileText, Check, X, HelpCircle, Calendar as CalendarIcon, Clock } from "lucide-react";
+  Upload,
+  Trash2,
+  Trophy,
+  Plus,
+  FileText,
+  Check,
+  X,
+  HelpCircle,
+  Calendar as CalendarIcon,
+  Clock,
+} from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
@@ -23,7 +29,13 @@ import {
 } from "@/utils/apievent";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import { autoResizeTextarea, toYYYYMMDD, formatDate } from "@/utils/function";
-import type { EventData, EventEditSection, EventFormState, SpecialRewardEdit, EventFileType } from "@/utils/types";
+import type {
+  EventData,
+  EventEditSection,
+  EventFormState,
+  SpecialRewardEdit,
+  EventFileType,
+} from "@/utils/types";
 import { FileType } from "@/utils/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -77,7 +89,9 @@ export default function OrganizerEditDialog({
   // Banner editing state
   const [bannerCropOpen, setBannerCropOpen] = useState(false);
   const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null);
-  const [bannerPendingMeta, setBannerPendingMeta] = useState<{ name: string; type: string } | null>(null);
+  const [bannerPendingMeta, setBannerPendingMeta] = useState<{ name: string; type: string } | null>(
+    null,
+  );
   const [bannerPendingFile, setBannerPendingFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -130,27 +144,27 @@ export default function OrganizerEditDialog({
             : Number(form.committeeReward ?? 0) > 0;
         setShowCommitteeInput(showCommittee);
       } else if (section === "rewards" && event?.specialRewards) {
-         // Initialize rewards list from event data
-         const initialList: SpecialRewardEdit[] = event.specialRewards.map(r => ({
-             id: r.id,
-             name: r.name,
-             description: r.description,
-             image: r.image,
-             voteCount: r.voteCount,
-             teamCount: r.teamCount,
-             _dirty: false
-         }));
-         setSrList(initialList);
-         setRemovedRewardIds([]);
-         setRewardErrors({});
-         setSrPreviews({});
+        // Initialize rewards list from event data
+        const initialList: SpecialRewardEdit[] = event.specialRewards.map((r) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          image: r.image,
+          voteCount: r.voteCount,
+          teamCount: r.teamCount,
+          _dirty: false,
+        }));
+        setSrList(initialList);
+        setRemovedRewardIds([]);
+        setRewardErrors({});
+        setSrPreviews({});
       } else if (section === "presenter") {
         // Initialize File Types
         if (event?.fileTypes) {
-           // Deep copy to avoid mutating props
-           setFtList(JSON.parse(JSON.stringify(event.fileTypes)));
+          // Deep copy to avoid mutating props
+          setFtList(JSON.parse(JSON.stringify(event.fileTypes)));
         } else {
-           setFtList([]);
+          setFtList([]);
         }
       } else if (section === "time") {
         setForm((prev) => ({
@@ -203,7 +217,7 @@ export default function OrganizerEditDialog({
       const event = {
         target: {
           files: [file],
-          value: "dummy", 
+          value: "dummy",
         },
       } as unknown as React.ChangeEvent<HTMLInputElement>;
       handleBannerFileChange(event);
@@ -238,7 +252,7 @@ export default function OrganizerEditDialog({
 
           const fresh = await getEvent(id);
           if (fresh.message === "ok" && fresh.event) {
-             onEventUpdate(fresh.event);
+            onEventUpdate(fresh.event);
           }
           toast.success("Updated");
           onClose();
@@ -327,7 +341,7 @@ export default function OrganizerEditDialog({
 
       await updateEvent(id, payload);
       if (event) {
-          onEventUpdate({ ...event, ...payload });
+        onEventUpdate({ ...event, ...payload });
       }
       toast.success("Updated");
       onClose();
@@ -338,8 +352,6 @@ export default function OrganizerEditDialog({
       setSaving(false);
     }
   };
-
-
 
   return (
     <>
@@ -395,142 +407,36 @@ export default function OrganizerEditDialog({
                   // Parse dates for logic
                   const selectedStart = form.startView ? new Date(form.startView) : undefined;
                   const selectedEnd = form.endView ? new Date(form.endView) : undefined;
-                  const selectedSubStart = form.startJoinDate ? new Date(form.startJoinDate) : undefined;
+                  const selectedSubStart = form.startJoinDate
+                    ? new Date(form.startJoinDate)
+                    : undefined;
                   const selectedSubEnd = form.endJoinDate ? new Date(form.endJoinDate) : undefined;
 
                   // Helpers
-                  const getTime = (val: string | undefined | null) => val ? (val.split("T")[1]?.substring(0, 5) || "00:00") : "00:00";
-                  
-                  const updateDate = (field: keyof EventFormState, date: Date | undefined, timeStr: string) => {
-                     if (!date) return;
-                     const dStr = toYYYYMMDD(date);
-                     setForm(prev => ({...prev, [field]: `${dStr}T${timeStr}`}));
+                  const getTime = (val: string | undefined | null) =>
+                    val ? val.split("T")[1]?.substring(0, 5) || "00:00" : "00:00";
+
+                  const updateDate = (
+                    field: keyof EventFormState,
+                    date: Date | undefined,
+                    timeStr: string,
+                  ) => {
+                    if (!date) return;
+                    const dStr = toYYYYMMDD(date);
+                    setForm((prev) => ({ ...prev, [field]: `${dStr}T${timeStr}` }));
                   };
-                  
-                  const updateTime = (field: keyof EventFormState, date: Date | undefined, newTime: string) => {
-                     const dStr = date ? toYYYYMMDD(date) : toYYYYMMDD(new Date());
-                     setForm(prev => ({...prev, [field]: `${dStr}T${newTime}`}));
+
+                  const updateTime = (
+                    field: keyof EventFormState,
+                    date: Date | undefined,
+                    newTime: string,
+                  ) => {
+                    const dStr = date ? toYYYYMMDD(date) : toYYYYMMDD(new Date());
+                    setForm((prev) => ({ ...prev, [field]: `${dStr}T${newTime}` }));
                   };
 
                   return (
                     <>
-                      {/* Submission Period Section */}
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-2 font-semibold text-lg">
-                          <CalendarIcon className="h-5 w-5" />
-                          {t("eventTime.submissionPeriod")} (For Participants)
-                        </div>
-
-                        {/* Submission Start */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>{t("eventTime.submissionStartDate")}</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                                  {formatDate(selectedSubStart, t("eventTime.selectDate"), dateFormat)}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="p-0 flex justify-center">
-                                <DateCalendar
-                                  mode="single"
-                                  captionLayout="dropdown"
-                                  className="mx-auto"
-                                  fixedWeeks
-                                  defaultMonth={selectedSubStart || new Date()}
-                                  selected={selectedSubStart}
-                                  onSelect={(d) => updateDate("startJoinDate", d, getTime(form.startJoinDate))}
-                                  // SubmissionDateStart <= SubmissionDateEnd
-                                  disabled={(date) => {
-                                     // If submission end is set, start cannot be after end
-                                     if (selectedSubEnd && date > new Date(selectedSubEnd.setHours(0,0,0,0))) return true;
-                                     // If event start is set, submission start cannot be after event start
-                                     if (selectedStart && date > new Date(selectedStart.setHours(0,0,0,0))) return true;
-                                     return false;
-                                  }}
-                                  formatters={{
-                                    formatMonthDropdown: (date) => date.toLocaleString(dateFormat, { month: "long" }),
-                                    formatYearDropdown: (date) => date.toLocaleDateString(dateFormat, { year: "numeric" }),
-                                  }}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>{t("eventInfo.startTime")}</Label>
-                            <div className="relative">
-                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                type="time"
-                                value={getTime(form.startJoinDate)}
-                                onChange={(e) => updateTime("startJoinDate", selectedSubStart, e.target.value)}
-                                className="pl-10"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Submission End */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>{t("eventTime.submissionEndDate")}</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  className="w-full justify-start text-left font-normal"
-                                  disabled={!selectedSubStart}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                                  {formatDate(selectedSubEnd, t("eventTime.selectDate"), dateFormat)}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="p-0 flex justify-center">
-                                <DateCalendar
-                                  mode="single"
-                                  captionLayout="dropdown"
-                                  className="mx-auto"
-                                  fixedWeeks
-                                  defaultMonth={selectedSubEnd || selectedSubStart || new Date()}
-                                  selected={selectedSubEnd}
-                                  onSelect={(d) => updateDate("endJoinDate", d, getTime(form.endJoinDate))}
-                                  disabled={
-                                    selectedSubStart || selectedStart
-                                      ? (date) => {
-                                          // Can end on same day as start, but not before
-                                          if (selectedSubStart && date < new Date(selectedSubStart.setHours(0,0,0,0))) return true;
-                                          // Submission end can be on same day as Event start
-                                          if (selectedStart && date >= new Date(selectedStart.setHours(0,0,0,0))) return true; 
-                                          return false;
-                                        }
-                                      : undefined
-                                  }
-                                  formatters={{
-                                    formatMonthDropdown: (date) => date.toLocaleString(dateFormat, { month: "long" }),
-                                    formatYearDropdown: (date) => date.toLocaleDateString(dateFormat, { year: "numeric" }),
-                                  }}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>{t("eventInfo.endTime")}</Label>
-                            <div className="relative">
-                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                type="time"
-                                value={getTime(form.endJoinDate)}
-                                onChange={(e) => updateTime("endJoinDate", selectedSubEnd, e.target.value)}
-                                className="pl-10"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator />
-
                       {/* Event Period Section */}
                       <div className="space-y-6">
                         <div className="flex items-center gap-2 font-semibold text-lg">
@@ -544,7 +450,10 @@ export default function OrganizerEditDialog({
                             <Label>{t("eventInfo.startDate")}</Label>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                >
                                   <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                   {formatDate(selectedStart, t("eventTime.selectDate"), dateFormat)}
                                 </Button>
@@ -557,21 +466,33 @@ export default function OrganizerEditDialog({
                                   fixedWeeks
                                   defaultMonth={selectedStart || new Date()}
                                   selected={selectedStart}
-                                  onSelect={(d) => updateDate("startView", d, getTime(form.startView))}
+                                  onSelect={(d) =>
+                                    updateDate("startView", d, getTime(form.startView))
+                                  }
                                   // SubmissionDateEnd > EventStart
                                   disabled={
                                     selectedSubEnd || selectedSubStart
                                       ? (date) => {
                                           // Event can start on same day as Submission end
-                                          if (selectedSubEnd && date <= new Date(selectedSubEnd.setHours(0,0,0,0))) return true;
-                                          if (selectedSubStart && date < new Date(selectedSubStart.setHours(0,0,0,0))) return true;
+                                          if (
+                                            selectedSubEnd &&
+                                            date <= new Date(selectedSubEnd.setHours(0, 0, 0, 0))
+                                          )
+                                            return true;
+                                          if (
+                                            selectedSubStart &&
+                                            date < new Date(selectedSubStart.setHours(0, 0, 0, 0))
+                                          )
+                                            return true;
                                           return false;
                                         }
                                       : undefined
                                   }
                                   formatters={{
-                                    formatMonthDropdown: (date) => date.toLocaleString(dateFormat, { month: "long" }),
-                                    formatYearDropdown: (date) => date.toLocaleDateString(dateFormat, { year: "numeric" }),
+                                    formatMonthDropdown: (date) =>
+                                      date.toLocaleString(dateFormat, { month: "long" }),
+                                    formatYearDropdown: (date) =>
+                                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
                                   }}
                                 />
                               </PopoverContent>
@@ -584,7 +505,9 @@ export default function OrganizerEditDialog({
                               <Input
                                 type="time"
                                 value={getTime(form.startView)}
-                                onChange={(e) => updateTime("startView", selectedStart, e.target.value)}
+                                onChange={(e) =>
+                                  updateTime("startView", selectedStart, e.target.value)
+                                }
                                 className="pl-10"
                               />
                             </div>
@@ -597,8 +520,8 @@ export default function OrganizerEditDialog({
                             <Label>{t("eventInfo.endDate")}</Label>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   className="w-full justify-start text-left font-normal"
                                   disabled={!selectedStart}
                                 >
@@ -615,10 +538,17 @@ export default function OrganizerEditDialog({
                                   defaultMonth={selectedEnd || selectedStart || new Date()}
                                   selected={selectedEnd}
                                   onSelect={(d) => updateDate("endView", d, getTime(form.endView))}
-                                  disabled={selectedStart ? (date) => date < new Date(selectedStart.setHours(0,0,0,0)) : undefined}
+                                  disabled={
+                                    selectedStart
+                                      ? (date) =>
+                                          date < new Date(selectedStart.setHours(0, 0, 0, 0))
+                                      : undefined
+                                  }
                                   formatters={{
-                                    formatMonthDropdown: (date) => date.toLocaleString(dateFormat, { month: "long" }),
-                                    formatYearDropdown: (date) => date.toLocaleDateString(dateFormat, { year: "numeric" }),
+                                    formatMonthDropdown: (date) =>
+                                      date.toLocaleString(dateFormat, { month: "long" }),
+                                    formatYearDropdown: (date) =>
+                                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
                                   }}
                                 />
                               </PopoverContent>
@@ -638,6 +568,161 @@ export default function OrganizerEditDialog({
                           </div>
                         </div>
                       </div>
+                      {/* Submission Period Section */}
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-2 font-semibold text-lg">
+                          <CalendarIcon className="h-5 w-5" />
+                          {t("eventTime.submissionPeriod")} (For Participants)
+                        </div>
+
+                        {/* Submission Start */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>{t("eventTime.submissionStartDate")}</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  {formatDate(
+                                    selectedSubStart,
+                                    t("eventTime.selectDate"),
+                                    dateFormat,
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0 flex justify-center">
+                                <DateCalendar
+                                  mode="single"
+                                  captionLayout="dropdown"
+                                  className="mx-auto"
+                                  fixedWeeks
+                                  defaultMonth={selectedSubStart || new Date()}
+                                  selected={selectedSubStart}
+                                  onSelect={(d) =>
+                                    updateDate("startJoinDate", d, getTime(form.startJoinDate))
+                                  }
+                                  // SubmissionDateStart <= SubmissionDateEnd
+                                  disabled={(date) => {
+                                    // If submission end is set, start cannot be after end
+                                    if (
+                                      selectedSubEnd &&
+                                      date > new Date(selectedSubEnd.setHours(0, 0, 0, 0))
+                                    )
+                                      return true;
+                                    // If event start is set, submission start cannot be after event start
+                                    if (
+                                      selectedStart &&
+                                      date > new Date(selectedStart.setHours(0, 0, 0, 0))
+                                    )
+                                      return true;
+                                    return false;
+                                  }}
+                                  formatters={{
+                                    formatMonthDropdown: (date) =>
+                                      date.toLocaleString(dateFormat, { month: "long" }),
+                                    formatYearDropdown: (date) =>
+                                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t("eventInfo.startTime")}</Label>
+                            <div className="relative">
+                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                type="time"
+                                value={getTime(form.startJoinDate)}
+                                onChange={(e) =>
+                                  updateTime("startJoinDate", selectedSubStart, e.target.value)
+                                }
+                                className="pl-10"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Submission End */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>{t("eventTime.submissionEndDate")}</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                  disabled={!selectedSubStart}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  {formatDate(
+                                    selectedSubEnd,
+                                    t("eventTime.selectDate"),
+                                    dateFormat,
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0 flex justify-center">
+                                <DateCalendar
+                                  mode="single"
+                                  captionLayout="dropdown"
+                                  className="mx-auto"
+                                  fixedWeeks
+                                  defaultMonth={selectedSubEnd || selectedSubStart || new Date()}
+                                  selected={selectedSubEnd}
+                                  onSelect={(d) =>
+                                    updateDate("endJoinDate", d, getTime(form.endJoinDate))
+                                  }
+                                  disabled={
+                                    selectedSubStart || selectedStart
+                                      ? (date) => {
+                                          // Can end on same day as start, but not before
+                                          if (
+                                            selectedSubStart &&
+                                            date < new Date(selectedSubStart.setHours(0, 0, 0, 0))
+                                          )
+                                            return true;
+                                          // Submission end can be on same day as Event start
+                                          if (
+                                            selectedStart &&
+                                            date >= new Date(selectedStart.setHours(0, 0, 0, 0))
+                                          )
+                                            return true;
+                                          return false;
+                                        }
+                                      : undefined
+                                  }
+                                  formatters={{
+                                    formatMonthDropdown: (date) =>
+                                      date.toLocaleString(dateFormat, { month: "long" }),
+                                    formatYearDropdown: (date) =>
+                                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t("eventInfo.endTime")}</Label>
+                            <div className="relative">
+                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                type="time"
+                                value={getTime(form.endJoinDate)}
+                                onChange={(e) =>
+                                  updateTime("endJoinDate", selectedSubEnd, e.target.value)
+                                }
+                                className="pl-10"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator />
                     </>
                   );
                 })()}
@@ -691,7 +776,9 @@ export default function OrganizerEditDialog({
                         onDrop={handleDrop}
                       >
                         <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">{t("eventDraft.cropTitle")}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("eventDraft.cropTitle")}
+                        </span>
                         <p className="text-xs text-muted-foreground mt-1">
                           {t("eventInfo.clickToUpload")}
                         </p>
@@ -739,15 +826,18 @@ export default function OrganizerEditDialog({
                     type="number"
                     value={form.guestReward ?? ""}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, guestReward: e.target.value ? Number(e.target.value) : undefined }))
+                      setForm((f) => ({
+                        ...f,
+                        guestReward: e.target.value ? Number(e.target.value) : undefined,
+                      }))
                     }
                     placeholder={t("configuration.placeholderGuestReward")}
                   />
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="hasCommittee" 
+                  <Checkbox
+                    id="hasCommittee"
                     checked={showCommitteeInput}
                     onCheckedChange={(checked) => setShowCommitteeInput(checked === true)}
                   />
@@ -761,7 +851,10 @@ export default function OrganizerEditDialog({
                       type="number"
                       value={form.committeeReward ?? ""}
                       onChange={(e) =>
-                        setForm((f) => ({ ...f, committeeReward: e.target.value ? Number(e.target.value) : undefined }))
+                        setForm((f) => ({
+                          ...f,
+                          committeeReward: e.target.value ? Number(e.target.value) : undefined,
+                        }))
                       }
                       placeholder={t("configuration.placeholderCommitteeReward")}
                     />
@@ -771,146 +864,187 @@ export default function OrganizerEditDialog({
             )}
 
             {section === "presenter" && (
-               <div className="space-y-6">
-                 <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                     <Label>{t("configuration.maxGroups")}</Label>
-                     <Input 
-                        type="number"
-                        min={0}
-                        value={form.maxTeams ?? ""}
-                        onChange={(e) => setForm(f => ({...f, maxTeams: e.target.value ? Number(e.target.value) : undefined}))}
-                        placeholder={t("configuration.placeholderMaxGroups")}
-                     />
-                   </div>
-                   <div className="space-y-2">
-                     <Label>{t("configuration.membersPerGroup")}</Label>
-                     <Input 
-                        type="number"
-                        min={1}
-                        value={form.maxTeamMembers ?? ""}
-                        onChange={(e) => setForm(f => ({...f, maxTeamMembers: e.target.value ? Number(e.target.value) : undefined}))}
-                        placeholder={t("configuration.placeholderMaxPresenters")}
-                     />
-                   </div>
-                 </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("configuration.maxGroups")}</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={form.maxTeams ?? ""}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          maxTeams: e.target.value ? Number(e.target.value) : undefined,
+                        }))
+                      }
+                      placeholder={t("configuration.placeholderMaxGroups")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("configuration.membersPerGroup")}</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.maxTeamMembers ?? ""}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          maxTeamMembers: e.target.value ? Number(e.target.value) : undefined,
+                        }))
+                      }
+                      placeholder={t("configuration.placeholderMaxPresenters")}
+                    />
+                  </div>
+                </div>
 
-                 <Separator />
-                 
-                 <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                       <Label className="text-base">{t("configuration.fileRequirements")}</Label>
-                       <Button size="sm" variant="outline" onClick={() => {
-                          setFtList(prev => [...prev, {
-                             id: `temp-${Date.now()}`,
-                             name: "",
-                             description: "",
-                             allowedFileTypes: [FileType.pdf],
-                             isRequired: true
-                          }]);
-                       }}>
-                          <Plus className="h-4 w-4 mr-1" /> {t("configuration.addFileReq")}
-                       </Button>
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-base">{t("configuration.fileRequirements")}</Label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setFtList((prev) => [
+                          ...prev,
+                          {
+                            id: `temp-${Date.now()}`,
+                            name: "",
+                            description: "",
+                            allowedFileTypes: [FileType.pdf],
+                            isRequired: true,
+                          },
+                        ]);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> {t("configuration.addFileReq")}
+                    </Button>
+                  </div>
+
+                  {ftList.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground border border-dashed rounded-lg">
+                      No file requirements added
                     </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {ftList.map((ft, idx) => (
+                        <div
+                          key={ft.id || idx}
+                          className="p-4 border rounded-lg space-y-3 bg-card relative"
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => setFtList((prev) => prev.filter((_, i) => i !== idx))}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
 
-                    {ftList.length === 0 ? (
-                       <div className="text-center py-4 text-muted-foreground border border-dashed rounded-lg">
-                          No file requirements added
-                       </div>
-                    ) : (
-                       <div className="space-y-4">
-                          {ftList.map((ft, idx) => (
-                             <div key={ft.id || idx} className="p-4 border rounded-lg space-y-3 bg-card relative">
-                                <Button 
-                                   variant="ghost" 
-                                   size="icon" 
-                                   className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-                                   onClick={() => setFtList(prev => prev.filter((_, i) => i !== idx))}
-                                >
-                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                          <div className="space-y-2">
+                            <Label>{t("configuration.reqTitle")}</Label>
+                            <Input
+                              value={ft.name}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFtList((prev) =>
+                                  prev.map((item, i) =>
+                                    i === idx ? { ...item, name: val } : item,
+                                  ),
+                                );
+                              }}
+                              placeholder={t("configuration.placeholderReqName")}
+                            />
+                          </div>
 
-                                <div className="space-y-2">
-                                   <Label>{t("configuration.reqTitle")}</Label>
-                                   <Input 
-                                      value={ft.name}
-                                      onChange={(e) => {
-                                         const val = e.target.value;
-                                         setFtList(prev => prev.map((item, i) => i === idx ? {...item, name: val} : item));
-                                      }}
-                                      placeholder={t("configuration.placeholderReqName")}
-                                   />
+                          <div className="space-y-2">
+                            <Label>{t("configuration.reqDescription")}</Label>
+                            <Input
+                              value={ft.description || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFtList((prev) =>
+                                  prev.map((item, i) =>
+                                    i === idx ? { ...item, description: val } : item,
+                                  ),
+                                );
+                              }}
+                              placeholder={t("configuration.placeholderReqDesc")}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>{t("configuration.allowedTypes")}</Label>
+                            <div className="flex flex-wrap gap-4">
+                              {Object.values(FileType).map((type) => (
+                                <div key={type} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`ft-${idx}-${type}`}
+                                    checked={ft.allowedFileTypes.includes(type)}
+                                    onCheckedChange={(checked) => {
+                                      setFtList((prev) =>
+                                        prev.map((item, i) => {
+                                          if (i !== idx) return item;
+                                          let types = [...item.allowedFileTypes];
+                                          if (checked) {
+                                            if (type === FileType.url) {
+                                              types = [FileType.url];
+                                            } else {
+                                              types = types.filter((t) => t !== FileType.url);
+                                              types.push(type);
+                                            }
+                                          } else {
+                                            if (types.length <= 1) return item;
+                                            types = types.filter((t) => t !== type);
+                                          }
+                                          return { ...item, allowedFileTypes: types };
+                                        }),
+                                      );
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={`ft-${idx}-${type}`}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase"
+                                  >
+                                    {type}
+                                  </label>
                                 </div>
+                              ))}
+                            </div>
+                          </div>
 
-                                <div className="space-y-2">
-                                   <Label>{t("configuration.reqDescription")}</Label>
-                                   <Input
-                                      value={ft.description || ""}
-                                      onChange={(e) => {
-                                         const val = e.target.value;
-                                         setFtList(prev => prev.map((item, i) => i === idx ? {...item, description: val} : item));
-                                      }}
-                                      placeholder={t("configuration.placeholderReqDesc")}
-                                   />
-                                </div>
-
-                                <div className="space-y-2">
-                                   <Label>{t("configuration.allowedTypes")}</Label>
-                                   <div className="flex flex-wrap gap-4">
-                                      {Object.values(FileType).map((type) => (
-                                         <div key={type} className="flex items-center space-x-2">
-                                            <Checkbox 
-                                               id={`ft-${idx}-${type}`}
-                                               checked={ft.allowedFileTypes.includes(type)}
-                                               onCheckedChange={(checked) => {
-                                                  setFtList(prev => prev.map((item, i) => {
-                                                     if (i !== idx) return item;
-                                                     let types = [...item.allowedFileTypes];
-                                                     if (checked) {
-                                                        if (type === FileType.url) {
-                                                           types = [FileType.url];
-                                                        } else {
-                                                           types = types.filter(t => t !== FileType.url);
-                                                           types.push(type);
-                                                        }
-                                                     } else {
-                                                        if (types.length <= 1) return item;
-                                                        types = types.filter(t => t !== type);
-                                                     }
-                                                     return {...item, allowedFileTypes: types};
-                                                  }));
-                                               }}
-                                            />
-                                            <label htmlFor={`ft-${idx}-${type}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase">
-                                               {type}
-                                            </label>
-                                         </div>
-                                      ))}
-                                   </div>
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                   <Checkbox 
-                                      id={`req-${idx}`}
-                                      checked={ft.isRequired}
-                                      onCheckedChange={(checked) => {
-                                         setFtList(prev => prev.map((item, i) => i === idx ? {...item, isRequired: checked === true} : item));
-                                      }}
-                                   />
-                                   <label htmlFor={`req-${idx}`} className="text-sm font-medium">{t("configuration.required")}</label>
-                                </div>
-                             </div>
-                          ))}
-                       </div>
-                    )}
-                 </div>
-               </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`req-${idx}`}
+                              checked={ft.isRequired}
+                              onCheckedChange={(checked) => {
+                                setFtList((prev) =>
+                                  prev.map((item, i) =>
+                                    i === idx ? { ...item, isRequired: checked === true } : item,
+                                  ),
+                                );
+                              }}
+                            />
+                            <label htmlFor={`req-${idx}`} className="text-sm font-medium">
+                              {t("configuration.required")}
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {section === "rewards" && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium text-muted-foreground">{t("rewardsSection.specialRewards")}</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    {t("rewardsSection.specialRewards")}
+                  </h3>
                   <Button
                     size="sm"
                     variant="outline"
@@ -925,7 +1059,7 @@ export default function OrganizerEditDialog({
                     + {t("rewardsSection.addReward")}
                   </Button>
                 </div>
-                
+
                 {srList.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                     {t("rewardsSection.noRewards")}
@@ -980,8 +1114,8 @@ export default function OrganizerEditDialog({
                                               preview: null,
                                               removeImage: !!r.image,
                                             }
-                                          : r
-                                      )
+                                          : r,
+                                      ),
                                     );
                                     setSrPreviews((p) => {
                                       const np = { ...p };
@@ -1005,9 +1139,13 @@ export default function OrganizerEditDialog({
                                 onDragLeave={(e) => handleSrDragLeave(e, reward.id)}
                                 onDrop={(e) => handleSrDrop(e, reward.id)}
                               >
-                                <div className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
-                                  srDragState[reward.id] ? "border-primary" : "border-border hover:border-primary/50"
-                                }`}>
+                                <div
+                                  className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
+                                    srDragState[reward.id]
+                                      ? "border-primary"
+                                      : "border-border hover:border-primary/50"
+                                  }`}
+                                >
                                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
                                     <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
                                     <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
@@ -1077,8 +1215,8 @@ export default function OrganizerEditDialog({
                                             ? true
                                             : r._dirty,
                                         }
-                                      : r
-                                  )
+                                      : r,
+                                  ),
                                 )
                               }
                             />
@@ -1112,8 +1250,8 @@ export default function OrganizerEditDialog({
                                             ? true
                                             : r._dirty,
                                         }
-                                      : r
-                                  )
+                                      : r,
+                                  ),
                                 );
                               }}
                               className="resize-none overflow-hidden"
@@ -1126,18 +1264,14 @@ export default function OrganizerEditDialog({
                 )}
               </div>
             )}
-
           </div>
           <DialogFooter className="gap-2 sm:justify-end">
-              <Button variant="secondary" onClick={onClose}>
-                ยกเลิก
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-              >
-                บันทึก
-              </Button>
+            <Button variant="secondary" onClick={onClose}>
+              ยกเลิก
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              บันทึก
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1163,8 +1297,8 @@ export default function OrganizerEditDialog({
                       _dirty: !String(r.id).startsWith("temp-"),
                       removeImage: false,
                     }
-                  : r
-              )
+                  : r,
+              ),
             );
           }
           setSrCropOpen(false);
