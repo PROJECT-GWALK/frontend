@@ -42,11 +42,11 @@ export default function OrganizerView({ id, event }: Props) {
   const handleDeleteTeam = async (projectId: string) => {
     try {
       await deleteTeam(id, projectId);
-      toast.success("ลบทีมเรียบร้อยแล้ว");
+      toast.success(t("toast.teamDeleted"));
       fetchTeamsData();
     } catch (error) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการลบทีม");
+      toast.error(t("toast.teamDeleteFailed"));
     }
   };
 

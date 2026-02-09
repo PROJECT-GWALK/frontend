@@ -145,7 +145,7 @@ export default function EventDetail() {
       if (tokenParam) {
         const resJoin = await joinEventWithToken(id, tokenParam);
         if (resJoin?.message === "ok") {
-          toast.success("เข้าร่วมอีเวนต์สำเร็จ");
+          toast.success(t("toast.joinEventSuccess"));
           try {
             const my = await getMyEvents();
             const meEvent = ((my.events ?? []) as Array<{ id: string; role?: Role }>).find(
@@ -154,13 +154,13 @@ export default function EventDetail() {
             if (meEvent?.role) setRole(meEvent.role as Role);
           } catch {}
         } else {
-          toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
+          toast.error(resJoin?.message || t("toast.joinEventFailed"));
         }
       } else {
-         toast.error("ลิงก์เชิญไม่ถูกต้อง");
+         toast.error(t("toast.invalidInviteLink"));
       }
     } catch (err) {
-      let message = "เข้าร่วมอีเวนต์ไม่สำเร็จ";
+      let message = t("toast.joinEventFailed");
       const ax = err as AxiosError<{ message?: string }>;
       const backendMessage = ax?.response?.data?.message;
       if (backendMessage) message = backendMessage;
@@ -180,9 +180,17 @@ export default function EventDetail() {
         <>
           <Dialog open={confirmOpen} onOpenChange={(o) => setConfirmOpen(o)}>
             <DialogContent>
-              <DialogTitle>ยืนยันการเข้าร่วมอีเวนต์</DialogTitle>
+              <DialogTitle>{t("inviteSection.confirm_title")}</DialogTitle>
               <div className="text-sm text-muted-foreground mt-2">
-                ต้องการเข้าร่วมอีเวนต์นี้{inviteRole ? `ในบทบาท ${inviteRole}` : ""} หรือไม่?
+                {inviteRole
+                  ? `${t("inviteSection.joinQuestionPrefix")} ${t("inviteSection.joinQuestionRolePrefix")} ${
+                      inviteRole === "presenter"
+                        ? t("roles.presenter")
+                        : inviteRole === "committee"
+                          ? t("roles.committee")
+                          : t("roles.guest")
+                    } ${t("inviteSection.joinQuestionSuffix")}`
+                  : `${t("inviteSection.joinQuestionPrefix")} ${t("inviteSection.joinQuestionSuffix")}`}
               </div>
               <DialogFooter className="mt-4">
                 <Button
@@ -192,10 +200,10 @@ export default function EventDetail() {
                     router.replace(`/event/${id}`);
                   }}
                 >
-                  ยกเลิก
+                  {t("inviteSection.button_cancel")}
                 </Button>
                 <Button onClick={doJoin} disabled={joining}>
-                  {joining ? "กำลังเข้าร่วม..." : "ยืนยัน"}
+                  {joining ? t("inviteSection.ongoing") : t("inviteSection.confirm_short")}
                 </Button>
               </DialogFooter>
             </DialogContent>

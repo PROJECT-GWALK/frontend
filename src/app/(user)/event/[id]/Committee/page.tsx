@@ -201,7 +201,7 @@ export default function CommitteePage(props: Props) {
           specialGiven: null,
         },
       }));
-      toast.success("คืนรางวัลพิเศษเรียบร้อย");
+      toast.success(t("toast.specialRewardRefunded"));
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to reset special reward"));
     }
@@ -268,7 +268,7 @@ export default function CommitteePage(props: Props) {
           specialGiven: newSpecial,
         },
       }});
-      toast.success("ให้รางวัลพิเศษเรียบร้อย");
+      toast.success(t("toast.specialRewardGiven"));
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to give special reward"));
     }

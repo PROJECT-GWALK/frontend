@@ -92,7 +92,13 @@
     "placeholderGuestReward": "เช่น 50",
     "placeholderUnitReward": "เช่น THB, Coin, Points",
     "placeholderReqName": "เช่น ไฟล์สไลด์นำเสนอ",
-    "placeholderReqDesc": "เช่น ไฟล์ PDF เท่านั้น"
+    "placeholderReqDesc": "เช่น ไฟล์ PDF เท่านั้น",
+    "vrTeamCapTitle": "จำนวน VR สูงสุดที่ให้ได้ต่อทีม",
+    "vrTeamCapSubtitle": "จำกัด VR สูงสุดที่ผู้ใช้ 1 คนให้ทีมหนึ่งทีมได้ (แยก Guest/Committee)",
+    "vrTeamCapGuest": "ผู้เข้าร่วม 1 คน ให้ต่อทีมได้สูงสุด",
+    "vrTeamCapCommittee": "กรรมการ 1 คน ให้ต่อทีมได้สูงสุด",
+    "placeholderVrTeamCapGuest": "เช่น 100",
+    "placeholderVrTeamCapCommittee": "เช่น 500"
   },
   "usersPage": {
     "title": "สมาชิกในชุมชน",
@@ -143,6 +149,7 @@
     "deleteConfirmTitle": "ยืนยันการลบ",
     "deleteConfirmDesc": "ยืนยันลบ Event ฉบับร่างนี้หรือไม่?",
     "cancel": "ยกเลิก",
+    "save": "บันทึก",
     "delete": "ลบ",
     "deleteSuccessTitle": "ลบสำเร็จ",
     "deleteSuccessDesc": "ลบ Event ฉบับร่างเรียบร้อยแล้ว",
@@ -450,6 +457,7 @@
       "manageFiles": "จัดการไฟล์",
       "addMember": "เพิ่มสมาชิก",
       "give": "มอบ",
+      "clear": "ล้าง",
       "saveAwards": "บันทึกรางวัล",
       "close": "ปิด",
       "cancel": "ยกเลิก",
@@ -519,6 +527,8 @@
     "evaluation": {
       "virtualReward": "รางวัลเสมือน",
       "specialReward": "รางวัลพิเศษ",
+      "vrCategories": "หมวดหมู่ VR",
+      "total": "รวม",
       "totalToGive": "รางวัลเสมือนทั้งหมดที่จะมอบให้",
       "remaining": "คงเหลือ:",
       "save": "บันทึก",
@@ -526,6 +536,12 @@
       "budgetUsage": "งบประมาณที่ใช้",
       "coins": "เหรียญ",
       "left": "คงเหลือ",
+      "vrTeamCapTitle": "เพดาน VR ต่อทีม (ของฉัน)",
+      "vrTeamCapLimit": "ไม่เกิน",
+      "vrTeamCapNoLimit": "ไม่จำกัด",
+      "vrTeamCapCurrent": "ให้ทีมนี้แล้ว (ของฉัน)",
+      "vrTeamCapRemaining": "ฉันยังให้ทีมนี้ได้อีก",
+      "vrTeamCapExceeded": "เกินเพดานที่ฉันให้ทีมนี้ได้",
       "selectSpecialRewards": "เลือกรางวัลพิเศษ",
       "selectRewardsPlaceholder": "เลือกรางวัล...",
       "availableRewards": "รางวัลที่มีอยู่",
@@ -599,7 +615,37 @@
     "failedResetVR": "ไม่สามารถรีเซ็ต VR ได้",
     "giveVRSuccess": "ให้ Virtual Reward เรียบร้อย",
     "failedGiveVR": "ไม่สามารถให้ VR ได้",
-    "commentSuccess": "ส่งความคิดเห็นเรียบร้อย"
+    "commentSuccess": "ส่งความคิดเห็นเรียบร้อย",
+    "updated": "อัปเดตเรียบร้อย",
+    "updateFailed": "อัปเดตไม่สำเร็จ",
+    "saveSuccess": "บันทึกสำเร็จ",
+    "saveFailed": "บันทึกไม่สำเร็จ",
+    "saveRewardsFailed": "บันทึกรางวัลไม่สำเร็จ",
+    "fixRewardErrors": "กรุณาแก้ไขข้อผิดพลาดของรางวัล",
+    "loadParticipantsFailed": "โหลดรายชื่อผู้เข้าร่วมไม่สำเร็จ",
+    "participantDeleted": "ลบแล้ว",
+    "participantDeleteFailed": "ลบไม่สำเร็จ",
+    "teamDeleted": "ลบทีมเรียบร้อยแล้ว",
+    "teamDeleteFailed": "เกิดข้อผิดพลาดในการลบทีม",
+    "joinEventSuccess": "เข้าร่วมอีเวนต์สำเร็จ",
+    "joinEventFailed": "เข้าร่วมอีเวนต์ไม่สำเร็จ",
+    "invalidInviteLink": "ลิงก์เชิญไม่ถูกต้อง",
+    "projectCreated": "สร้างโปรเจกต์เรียบร้อย",
+    "projectUpdated": "อัปเดตโปรเจกต์เรียบร้อย",
+    "projectUpdateFailed": "อัปเดตโปรเจกต์ไม่สำเร็จ",
+    "projectDeleted": "ลบโปรเจกต์เรียบร้อย",
+    "projectDeleteFailed": "ลบโปรเจกต์ไม่สำเร็จ",
+    "fileUploaded": "อัปโหลดไฟล์เรียบร้อย",
+    "uploadFailed": "อัปโหลดไม่สำเร็จ",
+    "loadEventDataFailed": "โหลดข้อมูลงานไม่สำเร็จ",
+    "selectRating": "กรุณาเลือกระดับคะแนน",
+    "ratingSubmitted": "ส่งคะแนนเรียบร้อย",
+    "profileLinkCopied": "คัดลอกลิงก์โปรไฟล์ไปที่คลิปบอร์ดแล้ว!",
+    "profileLinkCopyFailed": "คัดลอกลิงก์ไม่สำเร็จ",
+    "settingsSaved": "บันทึกการเปลี่ยนแปลงเรียบร้อย",
+    "settingsSaveFailed": "อัปเดตการตั้งค่าไม่สำเร็จ",
+    "specialRewardGiven": "ให้รางวัลพิเศษเรียบร้อย",
+    "specialRewardRefunded": "คืนรางวัลพิเศษเรียบร้อย"
   },
   "participantSection": {
     "user": "ผู้ใช้",
@@ -609,7 +655,9 @@
     "management": "การจัดการ",
     "count_unit": "คน",
     "all": "ทั้งหมด",
-    "refresh": "รีเฟรช"
+    "refresh": "รีเฟรช",
+    "noSearchResults": "ไม่พบผู้เข้าร่วมที่ค้นหา",
+    "noParticipantsInGroup": "ยังไม่มีผู้เข้าร่วมกลุ่มนี้"
   },
   "removeParticipantModal": {
     "title": "ลบผู้เข้าร่วม",
@@ -625,7 +673,16 @@
     "button_confirm": "ยืนยันการเข้าร่วม",
     "confirm_description": "คุณได้รับเชิญให้เข้าร่วมงานนี้ในฐานะ",
     "confirm_description2": "กรุณาคลิกยืนยันเพื่อดำเนินการต่อ",
-    "ongoing": "กำลังเข้าร่วม..."
+    "ongoing": "กำลังเข้าร่วม...",
+    "confirm_short": "ยืนยัน",
+    "joinQuestionPrefix": "ต้องการเข้าร่วมอีเวนต์นี้",
+    "joinQuestionRolePrefix": "ในบทบาท",
+    "joinQuestionSuffix": "หรือไม่?"
+  },
+  "roles": {
+    "presenter": "ผู้นำเสนอ",
+    "committee": "กรรมการ",
+    "guest": "ผู้เยี่ยมชม"
   },
   "profileSection": {
     "tab_participated": "อีเว้นท์ที่เคยเข้าร่วม",
@@ -708,11 +765,21 @@
     "confirmDeleteProject": "ยืนยันการลบโครงการ?",
     "confirmDeleteProjectDesc": "คุณแน่ใจหรือไม่ว่าต้องการลบโครงการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้"
   },
+  "vrCategories": {
+    "title": "หมวดหมู่ VR",
+    "subtitle": "สร้างหมวดหมู่สำหรับการให้คะแนน Virtual Reward",
+    "add": "เพิ่มหมวดหมู่",
+    "name": "ชื่อ",
+    "order": "ลำดับ",
+    "placeholder": "เช่น UI สวยงาม",
+    "requiredName": "กรุณากรอกชื่อหมวดหมู่"
+  },
   "resultsTab": {
     "title": "ผลลัพธ์ของอีเวนต์",
     "resultsDesc": "จัดอันดับจากรางวัลเสมือนและรางวัลพิเศษ",
     "refresh": "รีเฟรชผลลัพธ์",
     "tryAgain": "ลองอีกครั้ง",
+    "loadFailed": "โหลดผลการจัดอันดับไม่สำเร็จ",
     "topProjects": "โครงการยอดนิยม",
     "showTop": "แสดงอันดับ",
     "topProjectsDesc": "แสดงอันดับโครงการที่ได้รางวัลเสมือนสูงสุด",

@@ -11,6 +11,8 @@ import {
   Trash2,
   Trophy,
   Plus,
+  ChevronUp,
+  ChevronDown,
   FileText,
   Check,
   X,
@@ -25,6 +27,9 @@ import {
   createSpecialReward,
   updateSpecialReward,
   deleteSpecialReward,
+  createVrCategory,
+  updateVrCategory,
+  deleteVrCategory,
   getEvent,
 } from "@/utils/apievent";
 import ImageCropDialog from "@/lib/image-crop-dialog";
@@ -35,6 +40,7 @@ import type {
   EventFormState,
   SpecialRewardEdit,
   EventFileType,
+  VrCategory,
 } from "@/utils/types";
 import { FileType } from "@/utils/types";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,9 +71,11 @@ export default function OrganizerEditDialog({
   event,
   onEventUpdate,
 }: Props) {
-  const { t, dateFormat } = useLanguage();
+  const { t, dateFormat, language } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [showCommitteeInput, setShowCommitteeInput] = useState(false);
+  const [vrCatList, setVrCatList] = useState<(VrCategory & { _dirty?: boolean })[]>([]);
+  const [removedVrCatIds, setRemovedVrCatIds] = useState<string[]>([]);
 
   // Presenter editing state (File Types)
   const [ftList, setFtList] = useState<EventFileType[]>([]);
@@ -143,6 +151,24 @@ export default function OrganizerEditDialog({
             ? form.hasCommittee
             : Number(form.committeeReward ?? 0) > 0;
         setShowCommitteeInput(showCommittee);
+        setForm((prev) => ({
+          ...prev,
+          vrTeamCapEnabled: prev.vrTeamCapEnabled ?? event?.vrTeamCapEnabled ?? true,
+          vrTeamCapGuest: prev.vrTeamCapGuest ?? event?.vrTeamCapGuest ?? 10,
+          vrTeamCapCommittee: prev.vrTeamCapCommittee ?? event?.vrTeamCapCommittee ?? 20,
+        }));
+        setVrCatList(
+          [...(event?.vrCategories || [])]
+            .sort((a, b) => {
+              const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+              if (so !== 0) return so;
+              const at = new Date(a.createdAt ?? 0).getTime();
+              const bt = new Date(b.createdAt ?? 0).getTime();
+              return at - bt;
+            })
+            .map((c) => ({ ...c, _dirty: false })),
+        );
+        setRemovedVrCatIds([]);
       } else if (section === "rewards" && event?.specialRewards) {
         // Initialize rewards list from event data
         const initialList: SpecialRewardEdit[] = event.specialRewards.map((r) => ({
@@ -254,17 +280,45 @@ export default function OrganizerEditDialog({
           if (fresh.message === "ok" && fresh.event) {
             onEventUpdate(fresh.event);
           }
-          toast.success("Updated");
           onClose();
+          toast.success(t("toast.updated"));
           setSaving(false);
           return;
         }
         payload.eventDescription = form.eventDescription;
       } else if (section === "guest") {
+        for (const rid of removedVrCatIds) {
+          if (!String(rid).startsWith("temp-")) {
+            await deleteVrCategory(id, rid);
+          }
+        }
+        for (const [idx, c] of vrCatList.entries()) {
+          if (removedVrCatIds.includes(c.id)) continue;
+          const preferred = language === "th" ? c.nameTh : c.nameEn;
+          const name = String(preferred || c.nameEn || c.nameTh || "").trim();
+          if (!name) {
+            toast.error(t("vrCategories.requiredName"));
+            setSaving(false);
+            return;
+          }
+
+          const nameEn = name;
+          const nameTh = name;
+          const sortOrder = idx;
+          if (String(c.id).startsWith("temp-")) {
+            await createVrCategory(id, { nameEn, nameTh, sortOrder });
+          } else if (c._dirty || c.sortOrder !== sortOrder) {
+            await updateVrCategory(id, c.id, { nameEn, nameTh, sortOrder });
+          }
+        }
+
         payload.virtualRewardGuest = Number(form.guestReward ?? 0);
         payload.virtualRewardCommittee = Number(form.committeeReward ?? 0);
         payload.hasCommittee = showCommitteeInput;
         payload.unitReward = form.unitReward;
+        payload.vrTeamCapEnabled = form.vrTeamCapEnabled ?? true;
+        payload.vrTeamCapGuest = Math.max(0, Number(form.vrTeamCapGuest ?? 0));
+        payload.vrTeamCapCommittee = Math.max(0, Number(form.vrTeamCapCommittee ?? 0));
       } else if (section === "rewards") {
         // handle create / update / delete of special rewards
         try {
@@ -274,7 +328,7 @@ export default function OrganizerEditDialog({
           });
           if (Object.keys(errs).length) {
             setRewardErrors(errs);
-            toast.error("Please fix reward errors");
+            toast.error(t("toast.fixRewardErrors"));
             setSaving(false);
             return;
           }
@@ -328,11 +382,11 @@ export default function OrganizerEditDialog({
             console.error("Failed to refresh event after rewards update", e);
           }
 
-          toast.success("Updated");
+          toast.success(t("toast.updated"));
           onClose();
         } catch (e) {
           console.error(e);
-          toast.error((e as Error)?.message || "Failed to save rewards");
+          toast.error((e as Error)?.message || t("toast.saveRewardsFailed"));
         } finally {
           setSaving(false);
         }
@@ -340,14 +394,21 @@ export default function OrganizerEditDialog({
       }
 
       await updateEvent(id, payload);
-      if (event) {
-        onEventUpdate({ ...event, ...payload });
+      if (section === "guest") {
+        const fresh = await getEvent(id);
+        if (fresh.message === "ok" && fresh.event) {
+          onEventUpdate(fresh.event);
+        }
+        toast.success(t("toast.updated"));
+        onClose();
+        return;
       }
-      toast.success("Updated");
+      if (event) onEventUpdate({ ...event, ...payload });
+      toast.success(t("toast.updated"));
       onClose();
     } catch (e) {
       console.error(e);
-      toast.error((e as Error)?.message || "Update failed");
+      toast.error((e as Error)?.message || t("toast.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -860,6 +921,185 @@ export default function OrganizerEditDialog({
                     />
                   </div>
                 )}
+
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-semibold">{t("configuration.vrTeamCapTitle")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t("configuration.vrTeamCapSubtitle")}
+                      </div>
+                    </div>
+                    <Checkbox
+                      id="vrTeamCapEnabled"
+                      checked={form.vrTeamCapEnabled ?? true}
+                      onCheckedChange={(checked) =>
+                        setForm((f) => ({ ...f, vrTeamCapEnabled: checked === true }))
+                      }
+                    />
+                  </div>
+
+                  {form.vrTeamCapEnabled ?? true ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-2">
+                        <Label>{t("configuration.vrTeamCapGuest")}</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={form.vrTeamCapGuest ?? ""}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              vrTeamCapGuest: e.target.value ? Number(e.target.value) : undefined,
+                            }))
+                          }
+                          placeholder={t("configuration.placeholderVrTeamCapGuest")}
+                        />
+                      </div>
+
+                      {showCommitteeInput && (
+                        <div className="grid grid-cols-1 gap-2">
+                          <Label>{t("configuration.vrTeamCapCommittee")}</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={form.vrTeamCapCommittee ?? ""}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                vrTeamCapCommittee: e.target.value
+                                  ? Number(e.target.value)
+                                  : undefined,
+                              }))
+                            }
+                            placeholder={t("configuration.placeholderVrTeamCapCommittee")}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-semibold">{t("vrCategories.title")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t("vrCategories.subtitle")}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const now = Date.now();
+                        setVrCatList((prev) => [
+                          ...prev,
+                          {
+                            id: `temp-${now}`,
+                            eventId: id,
+                            nameEn: "",
+                            nameTh: "",
+                            sortOrder: prev.length,
+                            _dirty: true,
+                          },
+                        ]);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      {t("vrCategories.add")}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {vrCatList.map((c) => (
+                      <div key={c.id} className="rounded-lg border p-3 space-y-3">
+                        <div className="grid grid-cols-1 gap-2">
+                          <Label>{t("vrCategories.name")}</Label>
+                          <Input
+                            value={(language === "th" ? c.nameTh : c.nameEn) || c.nameEn || c.nameTh || ""}
+                            onChange={(e) =>
+                              setVrCatList((prev) =>
+                                prev.map((x) =>
+                                  x.id === c.id
+                                    ? {
+                                        ...x,
+                                        nameEn: e.target.value,
+                                        nameTh: e.target.value,
+                                        _dirty: true,
+                                      }
+                                    : x,
+                                ),
+                              )
+                            }
+                            placeholder={t("vrCategories.placeholder")}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-xs text-muted-foreground">
+                            {t("vrCategories.order")}: {vrCatList.findIndex((x) => x.id === c.id) + 1}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={vrCatList.findIndex((x) => x.id === c.id) === 0}
+                              onClick={() => {
+                                setVrCatList((prev) => {
+                                  const index = prev.findIndex((x) => x.id === c.id);
+                                  if (index <= 0) return prev;
+                                  const next = [...prev];
+                                  const tmp = next[index - 1];
+                                  next[index - 1] = { ...next[index], _dirty: true };
+                                  next[index] = { ...tmp, _dirty: true };
+                                  return next;
+                                });
+                              }}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={vrCatList.findIndex((x) => x.id === c.id) === vrCatList.length - 1}
+                              onClick={() => {
+                                setVrCatList((prev) => {
+                                  const index = prev.findIndex((x) => x.id === c.id);
+                                  if (index < 0 || index >= prev.length - 1) return prev;
+                                  const next = [...prev];
+                                  const tmp = next[index + 1];
+                                  next[index + 1] = { ...next[index], _dirty: true };
+                                  next[index] = { ...tmp, _dirty: true };
+                                  return next;
+                                });
+                              }}
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                if (!String(c.id).startsWith("temp-")) {
+                                  setRemovedVrCatIds((prev) => [...prev, c.id]);
+                                }
+                                setVrCatList((prev) => prev.filter((x) => x.id !== c.id));
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1267,10 +1507,10 @@ export default function OrganizerEditDialog({
           </div>
           <DialogFooter className="gap-2 sm:justify-end">
             <Button variant="secondary" onClick={onClose}>
-              ยกเลิก
+              {t("dialog.cancel")}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              บันทึก
+              {t("dialog.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

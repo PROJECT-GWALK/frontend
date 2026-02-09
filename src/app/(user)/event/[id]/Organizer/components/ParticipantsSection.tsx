@@ -163,13 +163,13 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
             );
             return next;
           });
-          toast.success("บันทึกสำเร็จ");
+          toast.success(t("toast.saveSuccess"));
         }
       } catch {
-        toast.error("บันทึกไม่สำเร็จ");
+        toast.error(t("toast.saveFailed"));
       }
     },
-    [id]
+    [id, t]
   );
 
   const loadParticipants = useCallback(async () => {
@@ -182,11 +182,11 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
         setParticipants(list);
       }
     } catch {
-      toast.error("โหลดรายชื่อผู้เข้าร่วมไม่สำเร็จ");
+      toast.error(t("toast.loadParticipantsFailed"));
     } finally {
       setLoadingParticipants(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     loadParticipants();
@@ -371,8 +371,8 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
                       {total === 0 ? (
                         <div className="text-center py-8 text-sm text-muted-foreground">
                           {searchQueries[g]
-                            ? "ไม่พบผู้เข้าร่วมที่ค้นหา"
-                            : "ยังไม่มีผู้เข้าร่วมกลุ่มนี้"}
+                            ? t("participantSection.noSearchResults")
+                            : t("participantSection.noParticipantsInGroup")}
                         </div>
                       ) : (
                         <>
@@ -636,9 +636,9 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
                                                     );
                                                     return next;
                                                   });
-                                                  toast.success("ลบแล้ว");
+                                                  toast.success(t("toast.participantDeleted"));
                                                 } catch {
-                                                  toast.error("ลบไม่สำเร็จ");
+                                                  toast.error(t("toast.participantDeleteFailed"));
                                                 } finally {
                                                   setDeleteTarget(null);
                                                 }

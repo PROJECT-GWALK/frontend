@@ -86,10 +86,10 @@ export default function ProfileView({
       try {
         await navigator.clipboard.writeText(url);
         setCopied(true);
-        toast.success("Profile link copied to clipboard!");
+        toast.success(t("toast.profileLinkCopied"));
         setTimeout(() => setCopied(false), 2000);
       } catch (err) {
-        toast.error("Failed to copy link.");
+        toast.error(t("toast.profileLinkCopyFailed"));
       }
     }
   };

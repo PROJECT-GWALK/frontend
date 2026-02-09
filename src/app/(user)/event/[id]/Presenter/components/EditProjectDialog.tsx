@@ -21,6 +21,7 @@ import type { EventFileType } from "@/utils/types";
 import { toast } from "sonner";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import Image from "next/image";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   open: boolean;
@@ -40,6 +41,7 @@ export default function EditProjectDialog({
   isSubmissionActive = true,
 }: Props) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [form, setForm] = useState<PresenterProject>(project);
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -109,11 +111,11 @@ export default function EditProjectDialog({
         description: form.desc,
         imageCover,
       });
-      toast.success("Project updated");
+      toast.success(t("toast.projectUpdated"));
       onSuccess();
       onOpenChange(false);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to update project";
+      const msg = e instanceof Error ? e.message : t("toast.projectUpdateFailed");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -124,13 +126,13 @@ export default function EditProjectDialog({
     setLoading(true);
     try {
       await deleteTeam(eventId, project.id);
-      toast.success("Project deleted");
+      toast.success(t("toast.projectDeleted"));
       onSuccess();
       onOpenChange(false);
       setDeleteDialogOpen(false);
       router.push(`/event/${eventId}`);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to delete project";
+      const msg = e instanceof Error ? e.message : t("toast.projectDeleteFailed");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -164,10 +166,10 @@ export default function EditProjectDialog({
           }
           return { ...f, files: newFiles };
         });
-        toast.success("File uploaded");
+        toast.success(t("toast.fileUploaded"));
       }
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(t("toast.uploadFailed"));
     }
   };
 

@@ -192,13 +192,13 @@ export default function ResultSection({ eventId, role }: Props) {
         setLastUpdatedAt(Date.now());
       } catch (error) {
         console.error("Failed to fetch rankings", error);
-        setErrorMessage("โหลดผลการจัดอันดับไม่สำเร็จ");
+        setErrorMessage(t("resultsTab.loadFailed"));
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [eventId],
+    [eventId, t],
   );
 
   useEffect(() => {

@@ -21,11 +21,13 @@ import InformationSection from "../components/InformationSection";
 import type { EventData } from "@/utils/types";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 import { AxiosError } from "axios";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FeedbackEventPage() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.id as string;
+  const { t } = useLanguage();
 
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState("");
@@ -51,7 +53,7 @@ export default function FeedbackEventPage() {
         setEventData(eventRes.event);
       } catch (error) {
         console.error("Failed to fetch data", error);
-        toast.error("Failed to load event data");
+        toast.error(t("toast.loadEventDataFailed"));
       } finally {
         setLoading(false);
       }
@@ -61,14 +63,14 @@ export default function FeedbackEventPage() {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error("Please select a rating");
+      toast.error(t("toast.selectRating"));
       return;
     }
 
     setSubmitting(true);
     try {
       await submitRating(eventId, rating, comment);
-      toast.success("Rating submitted successfully");
+      toast.success(t("toast.ratingSubmitted"));
       router.push("/home");
     } catch (error: unknown) {
       console.error("Failed to submit rating", error);

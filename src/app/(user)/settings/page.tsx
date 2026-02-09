@@ -161,7 +161,7 @@ export default function SettingsPage() {
 
       const updated = await updateCurrentUser(formData);
 
-      toast.success("Saved changes successfully");
+      toast.success(t("toast.settingsSaved"));
       setUser(updated.user);
       setPreview(updated.user.image ?? null);
 
@@ -173,7 +173,7 @@ export default function SettingsPage() {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update settings");
+      toast.error(t("toast.settingsSaveFailed"));
     } finally {
       setLoading(false);
     }

@@ -9,6 +9,21 @@ type Props = {
 
 export default function OrganizerDashboard({ event }: Props) {
   const { t, timeFormat } = useLanguage();
+  const unitReward = event?.unitReward ?? "coins";
+  const vrTotal = event?.vrTotal ?? 0;
+  const vrUsed = event?.vrUsed ?? 0;
+  const vrRemaining = Math.max(0, vrTotal - vrUsed);
+
+  const committeeVrTotal =
+    event?.committeeVirtualTotal ??
+    (event?.committeeCount ?? 0) * (event?.virtualRewardCommittee ?? 0);
+  const committeeVrUsed = event?.committeeVirtualUsed ?? 0;
+  const committeeVrRemaining = Math.max(0, committeeVrTotal - committeeVrUsed);
+
+  const guestVrTotal =
+    event?.participantsVirtualTotal ?? (event?.guestsCount ?? 0) * (event?.virtualRewardGuest ?? 0);
+  const guestVrUsed = event?.participantsVirtualUsed ?? 0;
+  const guestVrRemaining = Math.max(0, guestVrTotal - guestVrUsed);
 
   return (
     <div className="space-y-6 mt-6">
@@ -106,13 +121,11 @@ export default function OrganizerDashboard({ event }: Props) {
             {/* Total Virtual Rewards */}
             <div className="flex justify-between items-end pb-4 border-b border-border/50">
               <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">
-                {event?.vrUsed?.toLocaleString(timeFormat) ?? "0"}
+                {vrUsed.toLocaleString(timeFormat)}
               </span>
               <span className="text-sm text-muted-foreground mb-1">
                 /
-                {(event?.guestsCount ?? 0) * (event?.virtualRewardGuest ?? 0) +
-                  (event?.committeeCount ?? 0) * (event?.virtualRewardCommittee ?? 0)}{" "}
-                {event?.unitReward ?? "coins"}
+                {vrTotal.toLocaleString(timeFormat)} {unitReward}
               </span>
             </div>
 
@@ -122,9 +135,7 @@ export default function OrganizerDashboard({ event }: Props) {
                 className="h-full bg-amber-500 rounded-full transition-all duration-500"
                 style={{
                   width: `${
-                    event?.vrTotal && event.vrTotal > 0
-                      ? ((event?.vrUsed ?? 0) / event.vrTotal) * 100
-                      : 0
+                    vrTotal > 0 ? Math.min(100, (vrUsed / vrTotal) * 100) : 0
                   }%`,
                 }}
               />
@@ -133,14 +144,12 @@ export default function OrganizerDashboard({ event }: Props) {
             <div className="text-xs text-muted-foreground flex justify-between">
               <span>
                 {t("organizerDashboard.used")}{" "}
-                {event?.vrUsed && event?.vrTotal && event.vrTotal > 0
-                  ? Math.round((event.vrUsed / event.vrTotal) * 100)
-                  : 0}
+                {vrTotal > 0 ? Math.round((vrUsed / vrTotal) * 100) : 0}
                 %
               </span>
               <span>
-                {t("organizerDashboard.remaining")} {(event?.vrTotal ?? 0) - (event?.vrUsed ?? 0)}{" "}
-                {event?.unitReward ?? "coins"}
+                {t("organizerDashboard.remaining")} {vrRemaining.toLocaleString(timeFormat)}{" "}
+                {unitReward}
               </span>
             </div>
 
@@ -155,8 +164,8 @@ export default function OrganizerDashboard({ event }: Props) {
                         {t("organizerDashboard.committeeVR")}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {event?.virtualRewardCommittee} {event?.unitReward ?? "coins"}/
-                        {t("organizerDashboard.committee")}
+                        {committeeVrUsed.toLocaleString(timeFormat)}/
+                        {committeeVrTotal.toLocaleString(timeFormat)} {unitReward}
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-purple-100 dark:bg-purple-900/20 rounded-full overflow-hidden">
@@ -164,8 +173,8 @@ export default function OrganizerDashboard({ event }: Props) {
                         className="h-full bg-purple-500 rounded-full transition-all duration-500"
                         style={{
                           width: `${
-                            event?.vrTotal && event.vrTotal > 0
-                              ? ((event?.virtualRewardCommittee ?? 0) / event.vrTotal) * 100
+                            committeeVrTotal > 0
+                              ? Math.min(100, (committeeVrUsed / committeeVrTotal) * 100)
                               : 0
                           }%`,
                         }}
@@ -174,16 +183,19 @@ export default function OrganizerDashboard({ event }: Props) {
                     <div className="text-xs text-muted-foreground flex justify-between">
                       <span>
                         {t("organizerDashboard.total")}:{" "}
-                        {(event?.committeeCount ?? 0) * (event?.virtualRewardCommittee ?? 0)}{" "}
-                        {event?.unitReward ?? "coins"}
+                        {committeeVrTotal.toLocaleString(timeFormat)} {unitReward} (
+                        {event?.virtualRewardCommittee ?? 0} {unitReward}/
+                        {t("organizerDashboard.committee")})
                       </span>
                       <span>
                         {t("organizerDashboard.usedPercent")}{" "}
-                        {event?.vrTotal && event.vrTotal > 0
-                          ? Math.round(((event?.virtualRewardCommittee ?? 0) / event.vrTotal) * 100)
-                          : 0}
+                        {committeeVrTotal > 0 ? Math.round((committeeVrUsed / committeeVrTotal) * 100) : 0}
                         %
                       </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {t("organizerDashboard.remaining")} {committeeVrRemaining.toLocaleString(timeFormat)}{" "}
+                      {unitReward}
                     </div>
                   </div>
                 )}
@@ -195,8 +207,8 @@ export default function OrganizerDashboard({ event }: Props) {
                         {t("organizerDashboard.guestVR")}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {event?.virtualRewardGuest} {event?.unitReward ?? "coins"}/
-                        {t("organizerDashboard.guests")}
+                        {guestVrUsed.toLocaleString(timeFormat)}/
+                        {guestVrTotal.toLocaleString(timeFormat)} {unitReward}
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-orange-100 dark:bg-orange-900/20 rounded-full overflow-hidden">
@@ -204,9 +216,7 @@ export default function OrganizerDashboard({ event }: Props) {
                         className="h-full bg-orange-500 rounded-full transition-all duration-500"
                         style={{
                           width: `${
-                            event?.vrTotal && event.vrTotal > 0
-                              ? ((event?.virtualRewardGuest ?? 0) / event.vrTotal) * 100
-                              : 0
+                            guestVrTotal > 0 ? Math.min(100, (guestVrUsed / guestVrTotal) * 100) : 0
                           }%`,
                         }}
                       />
@@ -214,16 +224,19 @@ export default function OrganizerDashboard({ event }: Props) {
                     <div className="text-xs text-muted-foreground flex justify-between">
                       <span>
                         {t("organizerDashboard.total")}:{" "}
-                        {(event?.guestsCount ?? 0) * (event?.virtualRewardGuest ?? 0)}{" "}
-                        {event?.unitReward ?? "coins"}
+                        {guestVrTotal.toLocaleString(timeFormat)} {unitReward} (
+                        {event?.virtualRewardGuest ?? 0} {unitReward}/
+                        {t("organizerDashboard.guests")})
                       </span>
                       <span>
                         {t("organizerDashboard.usedPercent")}{" "}
-                        {event?.vrTotal && event.vrTotal > 0
-                          ? Math.round(((event?.virtualRewardGuest ?? 0) / event.vrTotal) * 100)
-                          : 0}
+                        {guestVrTotal > 0 ? Math.round((guestVrUsed / guestVrTotal) * 100) : 0}
                         %
                       </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {t("organizerDashboard.remaining")} {guestVrRemaining.toLocaleString(timeFormat)}{" "}
+                      {unitReward}
                     </div>
                   </div>
                 )}

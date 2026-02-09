@@ -329,10 +329,54 @@ export const getEventRankings = async (eventId: string) => {
   return res.data; // { message, rankings, specialRewards }
 };
 
-export const giveVr = async (eventId: string, projectId: string, amount: number) => {
+export const getVrCategories = async (eventId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/vr-categories`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, categories }
+};
+
+export const createVrCategory = async (
+  eventId: string,
+  data: { nameEn: string; nameTh: string; sortOrder?: number },
+) => {
+  const res = await axios.post(`/backend/api/events/${eventId}/vr-categories`, data, {
+    withCredentials: true,
+  });
+  return res.data; // { message, category }
+};
+
+export const updateVrCategory = async (
+  eventId: string,
+  categoryId: string,
+  data: { nameEn?: string; nameTh?: string; sortOrder?: number },
+) => {
+  const res = await axios.put(
+    `/backend/api/events/${eventId}/vr-categories/${categoryId}`,
+    data,
+    { withCredentials: true },
+  );
+  return res.data; // { message, category }
+};
+
+export const deleteVrCategory = async (eventId: string, categoryId: string) => {
+  const res = await axios.delete(`/backend/api/events/${eventId}/vr-categories/${categoryId}`, {
+    withCredentials: true,
+  });
+  return res.data; // { message, deletedId }
+};
+
+export const giveVr = async (
+  eventId: string,
+  projectId: string,
+  amountOrCategories: number | { categoryId: string; amount: number }[],
+) => {
+  const body = Array.isArray(amountOrCategories)
+    ? { projectId, categories: amountOrCategories }
+    : { projectId, amount: amountOrCategories };
   const res = await axios.put(
     `/backend/api/events/${eventId}/action/give-vr`,
-    { projectId, amount },
+    body,
     { withCredentials: true }
   );
   return res.data;

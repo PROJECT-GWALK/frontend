@@ -116,19 +116,19 @@ export default function InviteConfirmPage() {
       if (tokenParam) {
         const resJoin = await joinEventWithToken(id, tokenParam);
         if (resJoin?.message === "ok") {
-          toast.success("เข้าร่วมอีเวนต์สำเร็จ");
+          toast.success(t("toast.joinEventSuccess"));
         } else {
-          toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
+          toast.error(resJoin?.message || t("toast.joinEventFailed"));
         }
       } else {
-         toast.error("ลิงก์เชิญไม่ถูกต้อง");
+         toast.error(t("toast.invalidInviteLink"));
       }
       try {
         await getMyEvents();
       } catch {}
       router.replace(`/event/${id}`);
     } catch (e: unknown) {
-      toast.error("เข้าร่วมอีเวนต์ไม่สำเร็จ");
+      toast.error(t("toast.joinEventFailed"));
     } finally {
       setJoining(false);
     }

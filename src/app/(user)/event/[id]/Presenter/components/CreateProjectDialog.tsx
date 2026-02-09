@@ -13,6 +13,7 @@ import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import ImageCropDialog from "@/lib/image-crop-dialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   open: boolean;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isSubmissionActive = true }: Props) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   
@@ -188,7 +190,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
                 setLoading(true);
                 try {
                   await createTeam(eventId, name, description, undefined, imageFile || undefined);
-                  toast.success("Project created");
+                  toast.success(t("toast.projectCreated"));
                   resetForm();
                   onOpenChange(false);
                   onSuccess();

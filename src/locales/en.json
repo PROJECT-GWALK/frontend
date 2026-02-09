@@ -92,7 +92,13 @@
     "placeholderGuestReward": "e.g. 50",
     "placeholderUnitReward": "e.g. THB, Coin, Points",
     "placeholderReqName": "e.g. Presentation Slides",
-    "placeholderReqDesc": "e.g. PDF format only"
+    "placeholderReqDesc": "e.g. PDF format only",
+    "vrTeamCapTitle": "Per-team VR cap (per person)",
+    "vrTeamCapSubtitle": "Limit how much VR one person can give to a team (Guest/Committee).",
+    "vrTeamCapGuest": "Max per team per Guest",
+    "vrTeamCapCommittee": "Max per team per Committee",
+    "placeholderVrTeamCapGuest": "e.g. 100",
+    "placeholderVrTeamCapCommittee": "e.g. 500"
   },
   "usersPage": {
     "title": "Community Members",
@@ -143,6 +149,7 @@
     "deleteConfirmTitle": "Confirm Deletion",
     "deleteConfirmDesc": "Are you sure you want to delete this event draft?",
     "cancel": "Cancel",
+    "save": "Save",
     "delete": "Delete",
     "deleteSuccessTitle": "Deleted successfully",
     "deleteSuccessDesc": "Event draft has been deleted.",
@@ -450,6 +457,7 @@
       "manageFiles": "Manage Files",
       "addMember": "Add Member",
       "give": "Give",
+      "clear": "Clear",
       "saveAwards": "Save Awards",
       "close": "Close",
       "cancel": "Cancel",
@@ -519,6 +527,8 @@
     "evaluation": {
       "virtualReward": "Virtual Reward",
       "specialReward": "Special Reward",
+      "vrCategories": "VR Categories",
+      "total": "Total",
       "totalToGive": "Total Virtual Rewards to Give",
       "remaining": "Remaining:",
       "save": "Save",
@@ -526,6 +536,12 @@
       "budgetUsage": "Budget Usage",
       "coins": "coins",
       "left": "left",
+      "vrTeamCapTitle": "Per-team cap (me → this team)",
+      "vrTeamCapLimit": "Limit",
+      "vrTeamCapNoLimit": "No limit",
+      "vrTeamCapCurrent": "Given (me → this team)",
+      "vrTeamCapRemaining": "Remaining (me → this team)",
+      "vrTeamCapExceeded": "Over my per-team limit",
       "selectSpecialRewards": "Select Special Rewards",
       "selectRewardsPlaceholder": "Select rewards...",
       "availableRewards": "Available Rewards",
@@ -599,7 +615,37 @@
     "failedResetVR": "Failed to reset VR",
     "giveVRSuccess": "Virtual Reward given successfully",
     "failedGiveVR": "Failed to give VR",
-    "commentSuccess": "Comment posted successfully"
+    "commentSuccess": "Comment posted successfully",
+    "updated": "Updated",
+    "updateFailed": "Update failed",
+    "saveSuccess": "Saved successfully",
+    "saveFailed": "Save failed",
+    "saveRewardsFailed": "Failed to save rewards",
+    "fixRewardErrors": "Please fix reward errors",
+    "loadParticipantsFailed": "Failed to load participants",
+    "participantDeleted": "Deleted",
+    "participantDeleteFailed": "Delete failed",
+    "teamDeleted": "Team deleted successfully",
+    "teamDeleteFailed": "Failed to delete team",
+    "joinEventSuccess": "Joined event successfully",
+    "joinEventFailed": "Failed to join event",
+    "invalidInviteLink": "Invalid invite link",
+    "projectCreated": "Project created",
+    "projectUpdated": "Project updated",
+    "projectUpdateFailed": "Failed to update project",
+    "projectDeleted": "Project deleted",
+    "projectDeleteFailed": "Failed to delete project",
+    "fileUploaded": "File uploaded",
+    "uploadFailed": "Upload failed",
+    "loadEventDataFailed": "Failed to load event data",
+    "selectRating": "Please select a rating",
+    "ratingSubmitted": "Rating submitted successfully",
+    "profileLinkCopied": "Profile link copied to clipboard!",
+    "profileLinkCopyFailed": "Failed to copy link.",
+    "settingsSaved": "Saved changes successfully",
+    "settingsSaveFailed": "Failed to update settings",
+    "specialRewardGiven": "Special reward given successfully",
+    "specialRewardRefunded": "Special reward refunded successfully"
   },
   "participantSection": {
     "user": "User",
@@ -609,7 +655,9 @@
     "management": "Management",
     "count_unit": "person",
     "all": "total",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "noSearchResults": "No participants found for your search",
+    "noParticipantsInGroup": "No participants in this group yet"
   },
   "removeParticipantModal": {
     "title": "Remove Participant",
@@ -625,7 +673,16 @@
     "button_confirm": "Confirm Attendance",
     "confirm_description": "You have been invited to join this event as",
     "confirm_description2": "Please click confirm to proceed.",
-    "ongoing": "Joining..."
+    "ongoing": "Joining...",
+    "confirm_short": "Confirm",
+    "joinQuestionPrefix": "Do you want to join this event",
+    "joinQuestionRolePrefix": "as",
+    "joinQuestionSuffix": "?"
+  },
+  "roles": {
+    "presenter": "Presenter",
+    "committee": "Committee",
+    "guest": "Guest"
   },
   "profileSection": {
     "tab_participated": "Participated",
@@ -708,11 +765,21 @@
     "confirmDeleteProject": "Confirm Delete This Project?",
     "confirmDeleteProjectDesc": "Are you sure you want to delete this project? This action cannot be undone."
   },
+  "vrCategories": {
+    "title": "VR categories",
+    "subtitle": "Create categories for Virtual Reward scoring",
+    "add": "Add category",
+    "name": "Name",
+    "order": "Order",
+    "placeholder": "e.g. Beautiful UI",
+    "requiredName": "Please provide a category name"
+  },
   "resultsTab": {
     "title": "Event Results",
     "resultsDesc": "Ranking by Virtual Rewards and Special Rewards",
     "refresh": "Refresh Results",
     "tryAgain": "Try Again",
+    "loadFailed": "Failed to load rankings",
     "topProjects": "Top Ranking Projects",
     "showTop": "Show Top",
     "topProjectsDesc": "Visualizing the top performing teams based on Virtual Rewards",
