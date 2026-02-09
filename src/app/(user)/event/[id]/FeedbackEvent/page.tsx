@@ -20,6 +20,7 @@ import Image from "next/image";
 import InformationSection from "../components/InformationSection";
 import type { EventData } from "@/utils/types";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
+import { AxiosError } from "axios";
 
 export default function FeedbackEventPage() {
   const params = useParams();
@@ -69,10 +70,15 @@ export default function FeedbackEventPage() {
       await submitRating(eventId, rating, comment);
       toast.success("Rating submitted successfully");
       router.push("/home");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to submit rating", error);
-      const msg = error?.response?.data?.message || "Failed to submit rating";
-      toast.error(msg);
+      let message = "Failed to submit rating";
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || message;
+      } else if (error instanceof Error && error.message) {
+        message = error.message;
+      }
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

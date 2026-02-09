@@ -164,11 +164,15 @@ export default function ProjectDetailPage({ params }: Props) {
       );
 
       toast.success(t("projectDetail.messages.vrSaved"));
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          t("projectDetail.messages.vrSaveFailed"),
-      );
+    } catch (error: unknown) {
+      const fallback = t("projectDetail.messages.vrSaveFailed");
+      let message = fallback;
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || fallback;
+      } else if (error instanceof Error && error.message) {
+        message = error.message;
+      }
+      toast.error(message);
     } finally {
       setSavingVr(false);
     }
@@ -179,11 +183,15 @@ export default function ProjectDetailPage({ params }: Props) {
       setSavingSpecial(true);
       await giveSpecial(id, projectId, selectedSpecialRewards);
       toast.success(t("projectDetail.messages.specialRewardsSaved"));
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          t("projectDetail.messages.specialRewardsSaveFailed"),
-      );
+    } catch (error: unknown) {
+      const fallback = t("projectDetail.messages.specialRewardsSaveFailed");
+      let message = fallback;
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || fallback;
+      } else if (error instanceof Error && error.message) {
+        message = error.message;
+      }
+      toast.error(message);
     } finally {
       setSavingSpecial(false);
     }

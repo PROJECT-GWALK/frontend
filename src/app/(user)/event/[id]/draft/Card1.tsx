@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { autoResizeTextarea } from "@/utils/function";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -178,7 +178,7 @@ export default function Card1(props: Props) {
               value={eventDescription}
               onChange={(e) => setEventDescription(e.target.value)}
               className="min-h-30 resize-none overflow-hidden"
-              style={{ fieldSizing: "fixed" } as any}
+              style={{ fieldSizing: "fixed" } as CSSProperties}
             />
           </div>
 

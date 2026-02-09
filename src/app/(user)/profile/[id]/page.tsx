@@ -33,9 +33,13 @@ export default function OtherProfilePage() {
       const history = await getUserHistoryByUsername(decodedId);
       setParticipatedEvents(history.participated);
       setOrganizedEvents(history.organized);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching user:", error);
-      setError(error.message || "User not found");
+      if (error instanceof Error && error.message) {
+        setError(error.message);
+      } else {
+        setError("User not found");
+      }
     } finally {
       setLoading(false);
     }

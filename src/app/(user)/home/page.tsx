@@ -160,6 +160,8 @@ export default function DashboardPage() {
   const [drafts, setDrafts] = useState<DraftEvent[]>([]);
   const [myEvents, setMyEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [newEventName, setNewEventName] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
@@ -185,18 +187,40 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  const handleCreateEvent = async (eventName: string) => {
+  const setBusyKey = (key: string, value: boolean) => {
+    setBusy((prev) => {
+      if (prev[key] === value) return prev;
+      return { ...prev, [key]: value };
+    });
+  };
+
+  const pulseBusy = (key: string, ms = 450) => {
+    setBusyKey(key, true);
+    window.setTimeout(() => setBusyKey(key, false), ms);
+  };
+
+  const runBusy = async (key: string, fn: () => Promise<void>) => {
+    setBusyKey(key, true);
+    try {
+      await fn();
+    } finally {
+      setBusyKey(key, false);
+    }
+  };
+
+  const handleCreateEvent = async (eventName: string): Promise<boolean> => {
     try {
       const resCreate = await createEvent(eventName);
 
       if (resCreate?.message === "Event name already exists") {
         toast.error(mapEventNameMessage(resCreate.message));
-        return;
+        return false;
       }
 
       const resDrafts = await getMyDraftEvents();
       setDrafts(resDrafts.events || []);
       toast.success(t.homePage.toast.createSuccess);
+      return true;
     } catch (err) {
       let message = t.homePage.toast.createFail;
       if (typeof err === "object" && err) {
@@ -208,6 +232,7 @@ export default function DashboardPage() {
         }
       }
       toast.error(mapEventNameMessage(message));
+      return false;
     }
   };
 
@@ -279,11 +304,17 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold tracking-tight">{t.homePage.title}</h1>
               <p className="text-sm text-muted-foreground mt-1">{t.homePage.subtitle}</p>
             </div>
-            <Dialog>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
+                <Button
+                  className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow"
+                  onClick={() => pulseBusy("create:open")}
+                >
                   <CalendarPlus className="mr-2 h-5 w-5" />
                   {t.homePage.createEvent}
+                  {busy["create:open"] && (
+                    <span className="ml-2 text-xs opacity-80">{t.homePage.loadingInline}</span>
+                  )}
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -304,22 +335,35 @@ export default function DashboardPage() {
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button variant="outline">{t.homePage.createDialog.cancel}</Button>
-                  </DialogClose>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      onClick={async () => {
-                        const name = newEventName.trim();
-                        if (!name) return;
-                        await handleCreateEvent(name);
-                        setNewEventName("");
-                      }}
-                      disabled={!newEventName.trim()}
-                    >
-                      {t.homePage.createDialog.submit}
+                    <Button variant="outline" onClick={() => pulseBusy("create:cancel")}>
+                      {t.homePage.createDialog.cancel}
+                      {busy["create:cancel"] && (
+                        <span className="ml-2 text-xs opacity-80">
+                          {t.homePage.loadingInline}
+                        </span>
+                      )}
                     </Button>
                   </DialogClose>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      const name = newEventName.trim();
+                      if (!name) return;
+                      await runBusy("create:submit", async () => {
+                        const ok = await handleCreateEvent(name);
+                        if (ok) {
+                          setNewEventName("");
+                          setCreateDialogOpen(false);
+                        }
+                      });
+                    }}
+                    disabled={!newEventName.trim() || busy["create:submit"]}
+                  >
+                    {t.homePage.createDialog.submit}
+                    {busy["create:submit"] && (
+                      <span className="ml-2 text-xs opacity-80">{t.homePage.loadingInline}</span>
+                    )}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -361,12 +405,20 @@ export default function DashboardPage() {
                           <Button
                             size="sm"
                             variant={filter === f ? "default" : "outline"}
-                            onClick={() => setFilter(f)}
+                            onClick={() => {
+                              pulseBusy(`filter:${f}`);
+                              setFilter(f);
+                            }}
                             className={`rounded-full transition-all ${
                               filter === f ? "shadow-md" : "hover:border-primary/50"
                             }`}
                           >
                             {getFilterLabel(f)}
+                            {busy[`filter:${f}`] && (
+                              <span className="ml-1.5 text-[11px] opacity-80">
+                                {t.homePage.loadingInline}
+                              </span>
+                            )}
                             <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-background/20">
                               {counts[f]}
                             </span>
@@ -497,21 +549,34 @@ export default function DashboardPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 rounded-full text-foreground"
+                                    onClick={() => pulseBusy(`menu:${event.id}`)}
                                   >
-                                    <MoreHorizontal className="h-4 w-4" />
+                                    {busy[`menu:${event.id}`] ? (
+                                      <span className="text-[10px] leading-none">
+                                        {t.homePage.loadingInline}
+                                      </span>
+                                    ) : (
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    )}
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() =>
+                                    onClick={() => {
+                                      pulseBusy(`delete:menu:${event.id}`);
                                       openDeleteConfirm({
                                         id: event.id,
                                         eventName: event.eventName,
-                                      })
-                                    }
+                                      });
+                                    }}
                                     className="text-red-600 cursor-pointer"
                                   >
                                     {t.homePage.deleteEvent}
+                                    {busy[`delete:menu:${event.id}`] && (
+                                      <span className="ml-2 text-xs opacity-80">
+                                        {t.homePage.loadingInline}
+                                      </span>
+                                    )}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -621,7 +686,11 @@ export default function DashboardPage() {
                             {!event.isDraft &&
                               eventStatus === "finished" &&
                               event.role !== "ORGANIZER" && (
-                                <Link href={`/event/${event.id}/FeedbackEvent`} className="flex-1">
+                                <Link
+                                  href={`/event/${event.id}/FeedbackEvent`}
+                                  className={`flex-1 ${busy[`nav:rate:${event.id}`] ? "pointer-events-none" : ""}`}
+                                  onClick={() => pulseBusy(`nav:rate:${event.id}`, 1200)}
+                                >
                                   <Button
                                     size="sm"
                                     variant="outline"
@@ -637,10 +706,19 @@ export default function DashboardPage() {
                                     {event.userRating
                                       ? t.homePage.rateButton.rated
                                       : t.homePage.rateButton.rate}
+                                    {busy[`nav:rate:${event.id}`] && (
+                                      <span className="ml-2 text-xs opacity-80">
+                                        {t.homePage.loadingInline}
+                                      </span>
+                                    )}
                                   </Button>
                                 </Link>
                               )}
-                            <Link href={`/event/${event.id}`} className="flex-1">
+                            <Link
+                              href={`/event/${event.id}`}
+                              className={`flex-1 ${busy[`nav:event:${event.id}`] ? "pointer-events-none" : ""}`}
+                              onClick={() => pulseBusy(`nav:event:${event.id}`, 1200)}
+                            >
                               <Button
                                 size="sm"
                                 variant={event.isDraft ? "default" : "outline"}
@@ -649,6 +727,11 @@ export default function DashboardPage() {
                                 {event.isDraft
                                   ? t.homePage.actionButton.edit
                                   : t.homePage.actionButton.open}
+                                {busy[`nav:event:${event.id}`] && (
+                                  <span className="ml-2 text-xs opacity-80">
+                                    {t.homePage.loadingInline}
+                                  </span>
+                                )}
                               </Button>
                             </Link>
                           </div>
@@ -695,20 +778,40 @@ export default function DashboardPage() {
                   <h3 className="font-semibold text-base">{t.homePage.links.title}</h3>
                 </CardHeader>
                 <CardContent className="space-y-1">
-                  <Link href="/profile">
+                  <Link
+                    href="/profile"
+                    className={busy["nav:profile"] ? "pointer-events-none" : ""}
+                    onClick={() => pulseBusy("nav:profile", 1200)}
+                  >
                     <Button
                       variant="ghost"
                       className="w-full justify-between h-10 hover:bg-primary/5"
                     >
-                      {t.homePage.links.viewProfile} <ChevronRight className="h-4 w-4" />
+                      <span>{t.homePage.links.viewProfile}</span>
+                      <span className="flex items-center gap-2">
+                        {busy["nav:profile"] && (
+                          <span className="text-xs opacity-80">{t.homePage.loadingInline}</span>
+                        )}
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
                     </Button>
                   </Link>
-                  <Link href="/settings">
+                  <Link
+                    href="/settings"
+                    className={busy["nav:settings"] ? "pointer-events-none" : ""}
+                    onClick={() => pulseBusy("nav:settings", 1200)}
+                  >
                     <Button
                       variant="ghost"
                       className="w-full justify-between h-10 hover:bg-primary/5"
                     >
-                      {t.homePage.links.settings} <ChevronRight className="h-4 w-4" />
+                      <span>{t.homePage.links.settings}</span>
+                      <span className="flex items-center gap-2">
+                        {busy["nav:settings"] && (
+                          <span className="text-xs opacity-80">{t.homePage.loadingInline}</span>
+                        )}
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
                     </Button>
                   </Link>
                 </CardContent>
@@ -731,7 +834,12 @@ export default function DashboardPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t.homePage.deleteDialog.cancel}</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => pulseBusy("delete:cancel")}>
+              {t.homePage.deleteDialog.cancel}
+              {busy["delete:cancel"] && (
+                <span className="ml-2 text-xs opacity-80">{t.homePage.loadingInline}</span>
+              )}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteEvent}
               disabled={deleting}

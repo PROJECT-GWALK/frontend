@@ -4,6 +4,7 @@ import {
   Lock,
   Users,
   LayoutDashboard,
+  Calendar,
 } from "lucide-react";
 
 export const appBrand = {
@@ -42,6 +43,11 @@ export const menuItemsAdmin = [
     title: "User Management",
     url: "/admin/usermanagement",
     icon: <Users />,
+  },
+  {
+    title: "Event Management",
+    url: "/admin/eventmanagement",
+    icon: <Calendar />,
   },
 ];
 

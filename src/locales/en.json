@@ -318,6 +318,7 @@
     "searchPlaceholder": "Search events by name...",
     "deleteEvent": "Delete Event",
     "created": "Created",
+    "loadingInline": "Loading...",
     "createDialog": {
       "title": "Create New Event",
       "description": "Enter an event name to get started. You can complete the setup later.",

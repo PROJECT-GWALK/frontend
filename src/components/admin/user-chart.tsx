@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, Tooltip } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
@@ -90,12 +90,19 @@ export default function AdminUserChart() {
         });
       } else {
         const months = generateMonths(timeFormat);
+        const monthLabelToValue = new Map(
+          generateMonths("en-US").map((m) => [m.label, m.value]),
+        );
+        const countsByMonthValue = new Map<number, number>();
+        rawChart.forEach((c) => {
+          const v = monthLabelToValue.get(c.label);
+          if (v) countsByMonthValue.set(v, c.count);
+        });
 
         filled = months.map((m) => {
-          const found = rawChart.find((c) => c.label === m.label);
           return {
             date: m.label,
-            active: found ? found.count : 0,
+            active: countsByMonthValue.get(m.value) ?? 0,
             fullLabel: new Date(christianYear, m.value - 1).toLocaleDateString(timeFormat, { month: 'long', year: 'numeric' }),
           };
         });
@@ -104,75 +111,79 @@ export default function AdminUserChart() {
       setChartData(filled);
     };
     fetchData();
-  }, [year, month, currentYear]);
+  }, [year, month, currentYear, timeFormat]);
 
   const monthOptions = generateMonths(timeFormat);
 
   return (
-      <Card className="w-full">
-        <CardHeader className="p-4">
-          <CardTitle className="text-lg flex gap-2"><ChartBar/>User Active Chart</CardTitle>
-          <CardDescription className="text-xs">
-            {year
-              ? `Year ${year}${
-                  month
-                    ? ` Month ${
-                        monthOptions.find((m) => m.value === month)?.label
-                      }`
-                    : ""
-                }`
-              : `Select a year to view data`}
-          </CardDescription>
+      <Card className="col-span-4">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2">
+                    <ChartBar className="h-4 w-4 text-muted-foreground"/>
+                    User Active Chart
+                </CardTitle>
+                <CardDescription>
+                    {year
+                    ? `Showing active users for ${year}${
+                        month
+                            ? ` - ${
+                                monthOptions.find((m) => m.value === month)?.label
+                            }`
+                            : ""
+                        }`
+                    : `Select a year to view data`}
+                </CardDescription>
+            </div>
+            <div className="flex gap-2">
+                <Select
+                    onValueChange={(val) => setYear(val ? parseInt(val) : undefined)}
+                    value={year?.toString()}
+                >
+                    <SelectTrigger className="w-[100px]">
+                        <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {yearOptions.map((y) => (
+                            <SelectItem key={y} value={y.toString()}>
+                                {y}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <Select
+                    onValueChange={(val) =>
+                        setMonth(val === "all" ? undefined : parseInt(val))
+                    }
+                    value={month?.toString() ?? "all"}
+                    disabled={!year}
+                >
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Months</SelectItem>
+                        {monthOptions.map((m) => (
+                            <SelectItem key={m.value} value={m.value.toString()}>
+                                {m.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+          </div>
         </CardHeader>
 
-        {/* Year / Month Selectors */}
-        <div className="flex gap-4 px-4 pb-2">
-          <Select
-            onValueChange={(val) => setYear(val ? parseInt(val) : undefined)}
-            value={year?.toString()}
-          >
-            <SelectTrigger className="w-30">
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
-            <SelectContent>
-              {yearOptions.map((y) => (
-                <SelectItem key={y} value={y.toString()}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            onValueChange={(val) =>
-              setMonth(val === "all" ? undefined : parseInt(val))
-            }
-            value={month?.toString() ?? "all"}
-            disabled={!year}
-          >
-            <SelectTrigger className="w-35">
-              <SelectValue placeholder="Select month" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              {monthOptions.map((m) => (
-                <SelectItem key={m.value} value={m.value.toString()}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Bar Chart */}
-        <CardContent className="p-4">
-          <ChartContainer config={chartConfig} className="h-64 w-full">
+        <CardContent className="pl-2">
+          <ChartContainer config={chartConfig} className="h-[300px] w-full">
             <BarChart
               accessibilityLayer
               data={chartData}
-              margin={{ left: 12, right: 12 }}
+              margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
             >
-              <CartesianGrid vertical={false} />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -182,34 +193,15 @@ export default function AdminUserChart() {
                   value.length > 3 ? value.slice(0, 3) : value
                 }
               />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length > 0) {
-                    const item = payload[0].payload;
-                    return (
-                      <Card className="rounded shadow text-xs p-2">
-                        <CardContent>
-                          <div>{item.fullLabel}</div>
-                          <div>Active Users: {item.active}</div>
-                        </CardContent>
-                      </Card>
-                    );
-                  }
-                  return null;
-                }}
-              />
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Bar
                 dataKey="active"
                 fill="var(--color-active)"
-                radius={[6, 6, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ChartContainer>
         </CardContent>
-
-        <CardFooter>
-          <span className="opacity-50">Chart showing active users</span>
-        </CardFooter>
       </Card>
   );
 }
