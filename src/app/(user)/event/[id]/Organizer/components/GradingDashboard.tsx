@@ -73,8 +73,7 @@ export default function GradingDashboard({ eventId }: Props) {
           criteria.forEach((crit) => {
             const criteriaScore = score.scores[crit.id];
             if (criteriaScore !== undefined) {
-              row[`${score.committeeName} - ${crit.name}`] =
-                criteriaScore.toFixed(2);
+              row[`${score.committeeName} - ${crit.name}`] = criteriaScore.toFixed(2);
             }
           });
         });
@@ -89,9 +88,7 @@ export default function GradingDashboard({ eventId }: Props) {
 
       // Set column widths
       const maxWidth = 30;
-      const colWidths = Array(Object.keys(exportData[0] || {}).length).fill(
-        maxWidth
-      );
+      const colWidths = Array(Object.keys(exportData[0] || {}).length).fill(maxWidth);
       worksheet["!cols"] = colWidths.map((width) => ({ wch: width }));
 
       // Generate filename
@@ -147,14 +144,9 @@ export default function GradingDashboard({ eventId }: Props) {
               <tr className="border-b bg-muted/50">
                 <th className="text-left p-3 font-semibold">Team Name</th>
                 <th className="text-left p-3 font-semibold">Presenter</th>
-                <th className="text-center p-3 font-semibold">
-                  Overall Average
-                </th>
+                <th className="text-center p-3 font-semibold">Overall Average</th>
                 {criteria.map((crit) => (
-                  <th
-                    key={crit.id}
-                    className="text-center p-3 font-semibold text-sm"
-                  >
+                  <th key={crit.id} className="text-center p-3 font-semibold text-sm">
                     {crit.name}
                   </th>
                 ))}
@@ -164,17 +156,13 @@ export default function GradingDashboard({ eventId }: Props) {
               {results.map((result, idx) => (
                 <tr
                   key={result.teamId}
-                  className={`border-b ${
-                    idx % 2 === 0 ? "bg-background" : "bg-muted/30"
-                  }`}
+                  className={`border-b ${idx % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
                 >
                   <td className="p-3 font-semibold">{result.teamName}</td>
                   <td className="p-3">{result.presenterName}</td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <span className="font-bold text-lg">
-                        {result.overallAverage.toFixed(2)}
-                      </span>
+                      <span className="font-bold text-lg">{result.overallAverage.toFixed(2)}</span>
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     </div>
                   </td>
@@ -188,13 +176,10 @@ export default function GradingDashboard({ eventId }: Props) {
                               <div key={score.committeeId} className="text-xs">
                                 <span className="text-muted-foreground">
                                   {score.committeeName.split(" ")[0]}:
-                                </span>
-                                {" "}
+                                </span>{" "}
                                 <span className="font-semibold">
-                                  {scoreValue !== undefined
-                                    ? scoreValue.toFixed(1)
-                                    : "-"}
-                                  /{crit.maxScore}
+                                  {scoreValue !== undefined ? scoreValue.toFixed(1) : "-"}/
+                                  {crit.maxScore}
                                 </span>
                               </div>
                             );
@@ -223,7 +208,7 @@ export default function GradingDashboard({ eventId }: Props) {
                   .flatMap((r) =>
                     r.committeeScores
                       .filter((s) => s.committeeName === committeeName)
-                      .map((s) => s.avgScore)
+                      .map((s) => s.avgScore),
                   )
                   .filter((score) => score > 0);
 
@@ -235,13 +220,9 @@ export default function GradingDashboard({ eventId }: Props) {
                 return (
                   <Card key={committeeName} className="bg-muted/50">
                     <CardContent className="pt-4">
-                      <p className="text-sm font-semibold text-muted-foreground">
-                        {committeeName}
-                      </p>
+                      <p className="text-sm font-semibold text-muted-foreground">{committeeName}</p>
                       <p className="text-2xl font-bold mt-2">{avgScore}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Avg Score
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Avg Score</p>
                       <p className="text-xs text-muted-foreground">
                         {scores.length} projects graded
                       </p>

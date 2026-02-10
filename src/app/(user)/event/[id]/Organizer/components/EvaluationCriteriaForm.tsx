@@ -8,7 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { createEvaluationCriteria, updateEvaluationCriteria, deleteEvaluationCriteria } from "@/utils/apievaluation";
+import {
+  createEvaluationCriteria,
+  updateEvaluationCriteria,
+  deleteEvaluationCriteria,
+} from "@/utils/apievaluation";
 
 type CriteriaFormData = {
   id?: string;
@@ -25,11 +29,7 @@ type Props = {
   onUpdate: (criteria: CriteriaFormData[]) => void;
 };
 
-export default function EvaluationCriteriaForm({
-  eventId,
-  initialCriteria,
-  onUpdate,
-}: Props) {
+export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpdate }: Props) {
   const [criteria, setCriteria] = useState<CriteriaFormData[]>(initialCriteria);
   const [editing, setEditing] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -50,14 +50,8 @@ export default function EvaluationCriteriaForm({
     setEditing(new Set([...editing, newCriteria.id!]));
   };
 
-  const handleUpdateField = (
-    id: string,
-    field: keyof CriteriaFormData,
-    value: any
-  ) => {
-    setCriteria(
-      criteria.map((c) => (c.id === id ? { ...c, [field]: value } : c))
-    );
+  const handleUpdateField = (id: string, field: keyof CriteriaFormData, value: any) => {
+    setCriteria(criteria.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
   const handleSave = async (id: string) => {
@@ -91,11 +85,7 @@ export default function EvaluationCriteriaForm({
           sortOrder: item.sortOrder,
         });
 
-        setCriteria(
-          criteria.map((c) =>
-            c.id === id ? { ...c, id: res.criteria.id } : c
-          )
-        );
+        setCriteria(criteria.map((c) => (c.id === id ? { ...c, id: res.criteria.id } : c)));
         toast.success("Criteria created");
       } else {
         // Update existing criteria
@@ -165,9 +155,7 @@ export default function EvaluationCriteriaForm({
         {/* Criteria List */}
         <div className="space-y-3">
           {criteria.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              No criteria added yet
-            </p>
+            <p className="text-center text-muted-foreground py-4">No criteria added yet</p>
           ) : (
             criteria.map((item) => {
               const isEditing = editing.has(item.id!);
@@ -185,27 +173,19 @@ export default function EvaluationCriteriaForm({
                           <label className="text-sm font-semibold">Name *</label>
                           <Input
                             value={item.name}
-                            onChange={(e) =>
-                              handleUpdateField(item.id!, "name", e.target.value)
-                            }
+                            onChange={(e) => handleUpdateField(item.id!, "name", e.target.value)}
                             placeholder="e.g., Creativity"
                             className="mt-1"
                             disabled={loading}
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-semibold">
-                            Max Score *
-                          </label>
+                          <label className="text-sm font-semibold">Max Score *</label>
                           <Input
                             type="number"
                             value={item.maxScore}
                             onChange={(e) =>
-                              handleUpdateField(
-                                item.id!,
-                                "maxScore",
-                                parseFloat(e.target.value)
-                              )
+                              handleUpdateField(item.id!, "maxScore", parseFloat(e.target.value))
                             }
                             placeholder="100"
                             className="mt-1"
@@ -215,17 +195,11 @@ export default function EvaluationCriteriaForm({
                       </div>
 
                       <div>
-                        <label className="text-sm font-semibold">
-                          Description
-                        </label>
+                        <label className="text-sm font-semibold">Description</label>
                         <Textarea
                           value={item.description}
                           onChange={(e) =>
-                            handleUpdateField(
-                              item.id!,
-                              "description",
-                              e.target.value
-                            )
+                            handleUpdateField(item.id!, "description", e.target.value)
                           }
                           placeholder="Optional description"
                           className="mt-1 min-h-20"
@@ -234,9 +208,7 @@ export default function EvaluationCriteriaForm({
                       </div>
 
                       <div>
-                        <label className="text-sm font-semibold">
-                          Weight Percentage (%) *
-                        </label>
+                        <label className="text-sm font-semibold">Weight Percentage (%) *</label>
                         <Input
                           type="number"
                           value={item.weightPercentage}
@@ -244,7 +216,7 @@ export default function EvaluationCriteriaForm({
                             handleUpdateField(
                               item.id!,
                               "weightPercentage",
-                              parseFloat(e.target.value)
+                              parseFloat(e.target.value),
                             )
                           }
                           placeholder="0-100"
@@ -257,18 +229,12 @@ export default function EvaluationCriteriaForm({
                       </div>
 
                       <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleSave(item.id!)}
-                          disabled={loading}
-                          size="sm"
-                        >
+                        <Button onClick={() => handleSave(item.id!)} disabled={loading} size="sm">
                           Save
                         </Button>
                         <Button
                           onClick={() =>
-                            setEditing(
-                              new Set([...editing].filter((e) => e !== item.id))
-                            )
+                            setEditing(new Set([...editing].filter((e) => e !== item.id)))
                           }
                           variant="outline"
                           disabled={loading}
@@ -284,24 +250,16 @@ export default function EvaluationCriteriaForm({
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold">{item.name}</h4>
-                          <Badge variant="secondary">
-                            {item.weightPercentage}%
-                          </Badge>
-                          <Badge variant="outline">
-                            Max: {item.maxScore}
-                          </Badge>
+                          <Badge variant="secondary">{item.weightPercentage}%</Badge>
+                          <Badge variant="outline">Max: {item.maxScore}</Badge>
                         </div>
                         {item.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {item.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                         )}
                       </div>
                       <div className="flex gap-2 ml-4">
                         <Button
-                          onClick={() =>
-                            setEditing(new Set([...editing, item.id!]))
-                          }
+                          onClick={() => setEditing(new Set([...editing, item.id!]))}
                           variant="outline"
                           size="sm"
                           disabled={loading}
@@ -330,11 +288,7 @@ export default function EvaluationCriteriaForm({
           <div className="pt-2 border-t">
             <div className="flex items-center justify-between text-sm">
               <span className="font-semibold">Total Weight:</span>
-              <span
-                className={`font-bold ${
-                  isValidWeight ? "text-green-600" : "text-orange-600"
-                }`}
-              >
+              <span className={`font-bold ${isValidWeight ? "text-green-600" : "text-orange-600"}`}>
                 {totalWeight.toFixed(2)}%
               </span>
             </div>

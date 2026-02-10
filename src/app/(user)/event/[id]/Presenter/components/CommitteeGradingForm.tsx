@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getEvaluationCriteria,
-  getTeamGrades,
-  submitGrade,
-} from "@/utils/apievaluation";
+import { getEvaluationCriteria, getTeamGrades, submitGrade } from "@/utils/apievaluation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +57,9 @@ export default function CommitteeGradingForm({
           gradeMap.set(g.criteriaId, g.score);
         });
         setGrades(gradeMap);
-        setSubmitted(gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) && criteria.length > 0);
+        setSubmitted(
+          gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) && criteria.length > 0,
+        );
       } catch (error) {
         console.error("Failed to fetch data:", error);
         toast.error("Failed to load grading form");
@@ -169,9 +167,7 @@ export default function CommitteeGradingForm({
               <div className="flex-1">
                 <h3 className="font-semibold">{c.name}</h3>
                 {c.description && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {c.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">{c.description}</p>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">
                   Weight: {c.weightPercentage}% | Max Score: {c.maxScore}
@@ -191,19 +187,14 @@ export default function CommitteeGradingForm({
                 disabled={disabled || submitted}
                 className="w-32"
               />
-              <span className="text-sm text-muted-foreground">
-                / {c.maxScore}
-              </span>
+              <span className="text-sm text-muted-foreground">/ {c.maxScore}</span>
             </div>
 
             {grades.has(c.id) && (
               <div className="mt-2 text-xs">
                 <span className="text-muted-foreground">Score: </span>
                 <span className="font-semibold">
-                  {(
-                    ((grades.get(c.id) || 0) / c.maxScore) *
-                    100
-                  ).toFixed(1)}%
+                  {(((grades.get(c.id) || 0) / c.maxScore) * 100).toFixed(1)}%
                 </span>
               </div>
             )}
@@ -219,10 +210,7 @@ export default function CommitteeGradingForm({
                 const score = grades.get(c.id) ?? 0;
                 const percentage = ((score / c.maxScore) * 100).toFixed(1);
                 return (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between"
-                  >
+                  <div key={c.id} className="flex items-center justify-between">
                     <span className="text-muted-foreground">{c.name}</span>
                     <span className="font-semibold">
                       {score}/{c.maxScore} ({percentage}%)
@@ -242,11 +230,9 @@ export default function CommitteeGradingForm({
                       criteria.reduce((sum, c) => {
                         const score = grades.get(c.id) || 0;
                         const normalized = (score / c.maxScore) * 100;
-                        return (
-                          sum +
-                          (normalized * c.weightPercentage) / 100
-                        );
-                      }, 0) / (criteria.reduce((sum, c) => sum + c.weightPercentage, 0) / 100)
+                        return sum + (normalized * c.weightPercentage) / 100;
+                      }, 0) /
+                      (criteria.reduce((sum, c) => sum + c.weightPercentage, 0) / 100)
                     ).toFixed(2)}
                     %
                   </span>
@@ -263,9 +249,7 @@ export default function CommitteeGradingForm({
             disabled={submitting || grades.size !== criteria.length || disabled || submitted}
             className="flex-1"
           >
-            {submitting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
+            {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             {submitted ? "Grades Submitted" : "Submit Grades"}
           </Button>
         </div>
