@@ -13,11 +13,14 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ResultSection from "../components/ResultSection";
 import FeedbackList from "./components/FeedbackList";
+import { getEvaluationCriteria } from "@/utils/apievaluation";
 
 import OrganizerHeader from "./components/OrganizerHeader";
 import OrganizerBanner from "./components/OrganizerBanner";
 import OrganizerDashboard from "./components/OrganizerDashboard";
 import OrganizerEditDialog from "./components/OrganizerEditDialog";
+import EvaluationCriteriaForm from "./components/EvaluationCriteriaForm";
+import GradingDashboard from "./components/GradingDashboard";
 
 type Props = {
   id: string;
@@ -26,7 +29,7 @@ type Props = {
 
 export default function OrganizerView({ id, event }: Props) {
   const [tab, setTab] = useState<
-    "dashboard" | "information" | "Participants" | "project" | "result"
+    "dashboard" | "information" | "Participants" | "project" | "result" | "grading"
   >("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -36,6 +39,16 @@ export default function OrganizerView({ id, event }: Props) {
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [projectsLoading, setProjectsLoading] = useState(false);
+  const [evaluationCriteria, setEvaluationCriteria] = useState<
+    {
+      id?: string;
+      name: string;
+      description: string;
+      maxScore: number;
+      weightPercentage: number;
+      sortOrder: number;
+    }[]
+  >([]);
 
   const { t } = useLanguage();
 
@@ -88,7 +101,27 @@ export default function OrganizerView({ id, event }: Props) {
   }, [event]);
 
   useEffect(() => {
+    const gradingEnabled = localEvent?.gradingEnabled ?? true;
+    if (!gradingEnabled && tab === "grading") {
+      setTab("dashboard");
+    }
+  }, [localEvent?.gradingEnabled, tab]);
+
+  useEffect(() => {
     fetchTeamsData();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchCriteria = async () => {
+      try {
+        const res = await getEvaluationCriteria(id);
+        setEvaluationCriteria(res.criteria || []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load evaluation criteria");
+      }
+    };
+    fetchCriteria();
   }, [id]);
 
   return (
@@ -122,6 +155,11 @@ export default function OrganizerView({ id, event }: Props) {
               <TabsTrigger value="result" className="flex-1 min-w-25">
                 {t("eventTab.results")}
               </TabsTrigger>
+              {(localEvent?.gradingEnabled ?? true) && (
+                <TabsTrigger value="grading" className="flex-1 min-w-25">
+                  {t("eventTab.grading")}
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -191,6 +229,19 @@ export default function OrganizerView({ id, event }: Props) {
             <TabsContent value="result">
               <ResultSection eventId={id} role="ORGANIZER" />
             </TabsContent>
+
+            {(localEvent?.gradingEnabled ?? true) && (
+              <TabsContent value="grading">
+                <div className="mt-6 space-y-6">
+                  <EvaluationCriteriaForm
+                    eventId={id}
+                    initialCriteria={evaluationCriteria}
+                    onUpdate={setEvaluationCriteria}
+                  />
+                  <GradingDashboard eventId={id} />
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 

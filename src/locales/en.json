@@ -98,7 +98,9 @@
     "vrTeamCapGuest": "Max per team per Guest",
     "vrTeamCapCommittee": "Max per team per Committee",
     "placeholderVrTeamCapGuest": "e.g. 100",
-    "placeholderVrTeamCapCommittee": "e.g. 500"
+    "placeholderVrTeamCapCommittee": "e.g. 500",
+    "gradingEnabled": "Enable grading",
+    "gradingEnabledSubtitle": "Show grading & criteria in this event."
   },
   "usersPage": {
     "title": "Community Members",
@@ -712,6 +714,7 @@
     "participants": "Participants",
     "projects": "Projects",
     "results": "Results",
+    "grading": "Grading",
     "settings": "Settings",
     "invite": "Invite"
   },

@@ -98,7 +98,9 @@
     "vrTeamCapGuest": "ผู้เข้าร่วม 1 คน ให้ต่อทีมได้สูงสุด",
     "vrTeamCapCommittee": "กรรมการ 1 คน ให้ต่อทีมได้สูงสุด",
     "placeholderVrTeamCapGuest": "เช่น 100",
-    "placeholderVrTeamCapCommittee": "เช่น 500"
+    "placeholderVrTeamCapCommittee": "เช่น 500",
+    "gradingEnabled": "เปิดใช้งานการให้คะแนน",
+    "gradingEnabledSubtitle": "แสดงแท็บเกณฑ์ให้คะแนนและผลการให้คะแนนในอีเวนต์นี้"
   },
   "usersPage": {
     "title": "สมาชิกในชุมชน",
@@ -712,6 +714,7 @@
     "participants": "ผู้เข้าร่วม",
     "projects": "โครงการ",
     "results": "ผลลัพธ์",
+    "grading": "ให้คะแนน",
     "settings": "การตั้งค่า",
     "invite": "คำเชิญ"
   },

@@ -58,7 +58,8 @@ export default function CommitteeGradingForm({
         });
         setGrades(gradeMap);
         setSubmitted(
-          gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) && criteria.length > 0,
+          gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) &&
+            (criteriaRes.criteria?.length || 0) > 0,
         );
       } catch (error) {
         console.error("Failed to fetch data:", error);

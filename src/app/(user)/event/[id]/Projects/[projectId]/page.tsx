@@ -44,6 +44,7 @@ import {
 import { getCurrentUser } from "@/utils/apiuser";
 import EditProjectDialog from "../../Presenter/components/EditProjectDialog";
 import CommentSection from "../../Presenter/components/Comment";
+import CommitteeGradingForm from "../../Presenter/components/CommitteeGradingForm";
 import type { PresenterProject } from "../../Presenter/components/types";
 import {
   type EventData,
@@ -95,7 +96,7 @@ type Props = {
 };
 
 export default function ProjectDetailPage({ params }: Props) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const router = useRouter();
   const paramsResolved = React.use(params);
   const { projectId, id } = paramsResolved;
@@ -125,7 +126,6 @@ export default function ProjectDetailPage({ params }: Props) {
 
   // Evaluation State
   const [virtualReward, setVirtualReward] = useState<number>(0);
-  const [categoryRewards, setCategoryRewards] = useState<Record<string, number>>({});
   const [selectedSpecialRewards, setSelectedSpecialRewards] = useState<
     string[]
   >([]);
@@ -147,17 +147,12 @@ export default function ProjectDetailPage({ params }: Props) {
       (!eventData.endJoinDate || new Date() <= new Date(eventData.endJoinDate))
     : true;
 
-  const vrCategories = eventData?.vrCategories ?? [];
-  const isCategorizedVr = vrCategories.length > 0;
-  const categoryTotal = Object.values(categoryRewards).reduce((sum, n) => sum + (n || 0), 0);
   const vrTeamCapEnabled = eventData?.vrTeamCapEnabled ?? true;
   const vrTeamCap =
     eventData?.myRole === "COMMITTEE"
       ? eventData?.vrTeamCapCommittee ?? 20
       : eventData?.vrTeamCapGuest ?? 10;
-  const totalVrForThisTeam = isCategorizedVr
-    ? categoryTotal
-    : Math.max(0, Number(virtualReward || 0));
+  const totalVrForThisTeam = Math.max(0, Number(virtualReward || 0));
   const isVrOverTeamCap =
     (eventData?.myRole === "COMMITTEE" || eventData?.myRole === "GUEST") &&
     vrTeamCapEnabled &&
@@ -170,12 +165,7 @@ export default function ProjectDetailPage({ params }: Props) {
       const res = await giveVr(
         id,
         projectId,
-        isCategorizedVr
-          ? vrCategories.map((c) => ({
-              categoryId: c.id,
-              amount: Math.max(0, Number(categoryRewards[c.id] || 0)),
-            }))
-          : Number(virtualReward),
+        Number(virtualReward),
       );
 
       // Update local state directly from response
@@ -282,20 +272,6 @@ export default function ProjectDetailPage({ params }: Props) {
       if (teamRes.message === "ok") {
         const t = teamRes.team as Team;
         setVirtualReward(t.myReward || 0);
-        const eventFromRes = eventRes.message === "ok" ? (eventRes.event as EventData) : null;
-        const categories = eventFromRes?.vrCategories ?? t.vrCategories ?? [];
-        if (categories.length > 0) {
-          const initial: Record<string, number> = {};
-          categories.forEach((c) => {
-            initial[c.id] = 0;
-          });
-          (t.myCategoryRewards || []).forEach((r) => {
-            initial[r.categoryId] = r.amount;
-          });
-          setCategoryRewards(initial);
-        } else {
-          setCategoryRewards({});
-        }
         setSelectedSpecialRewards(t.mySpecialRewards || []);
         let isUserMember = false;
 
@@ -1178,133 +1154,59 @@ export default function ProjectDetailPage({ params }: Props) {
                         </div>
 
                         <div className="space-y-4">
-                          {!isCategorizedVr ? (
-                            <>
-                              <div className="flex flex-wrap gap-2">
-                                {[100, 500, 1000].map((amount) => (
-                                  <Button
-                                    key={amount}
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setVirtualReward(amount)}
-                                    className="h-7 text-xs"
-                                    disabled={!isEventActive}
-                                  >
-                                    {amount}
-                                  </Button>
-                                ))}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    setVirtualReward(
-                                      Math.min(
-                                        myVirtualTotal - myVirtualUsed,
-                                        vrTeamCapEnabled ? vrTeamCap : myVirtualTotal - myVirtualUsed,
-                                      ),
-                                    )
-                                  }
-                                  className="h-7 text-xs text-purple-600 border-purple-200"
-                                  disabled={!isEventActive}
-                                >
-                                  {t("projectDetail.buttons.max")}
-                                </Button>
-                              </div>
+                          <div className="flex flex-wrap gap-2">
+                            {[100, 500, 1000].map((amount) => (
+                              <Button
+                                key={amount}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setVirtualReward(amount)}
+                                className="h-7 text-xs"
+                                disabled={!isEventActive}
+                              >
+                                {amount}
+                              </Button>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setVirtualReward(
+                                  Math.min(
+                                    myVirtualTotal - myVirtualUsed,
+                                    vrTeamCapEnabled ? vrTeamCap : myVirtualTotal - myVirtualUsed,
+                                  ),
+                                )
+                              }
+                              className="h-7 text-xs text-purple-600 border-purple-200"
+                              disabled={!isEventActive}
+                            >
+                              {t("projectDetail.buttons.max")}
+                            </Button>
+                          </div>
 
-                              <div className="flex gap-2">
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  min="0"
-                                  value={virtualReward}
-                                  onChange={(e) => setVirtualReward(Number(e.target.value))}
-                                  className="h-10"
-                                  disabled={!isEventActive}
-                                />
-                                <Button
-                                  onClick={handleSaveVr}
-                                  disabled={savingVr || !isEventActive || isVrOverTeamCap}
-                                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                                >
-                                  {savingVr ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    t("projectDetail.buttons.give")
-                                  )}
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium text-muted-foreground">
-                                    {t("projectDetail.evaluation.vrCategories")}
-                                  </p>
-                                  <span className="text-sm font-bold text-foreground">
-                                    {t("projectDetail.evaluation.total")}: {categoryTotal}{" "}
-                                    {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
-                                  </span>
-                                </div>
-
-                                <div className="space-y-2">
-                                  {vrCategories.map((cat) => (
-                                    <div
-                                      key={cat.id}
-                                      className="flex items-center gap-3 rounded-lg border p-3"
-                                    >
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium truncate">
-                                          {language === "th" ? cat.nameTh : cat.nameEn}
-                                        </div>
-                                      </div>
-                                      <Input
-                                        type="number"
-                                        min="0"
-                                        value={categoryRewards[cat.id] ?? 0}
-                                        onChange={(e) =>
-                                          setCategoryRewards((prev) => ({
-                                            ...prev,
-                                            [cat.id]: Number(e.target.value),
-                                          }))
-                                        }
-                                        className="h-10 w-28"
-                                        disabled={!isEventActive}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    className="flex-1"
-                                    onClick={() => {
-                                      const cleared: Record<string, number> = {};
-                                      vrCategories.forEach((c) => {
-                                        cleared[c.id] = 0;
-                                      });
-                                      setCategoryRewards(cleared);
-                                    }}
-                                    disabled={!isEventActive}
-                                  >
-                                    {t("projectDetail.buttons.clear")}
-                                  </Button>
-                                  <Button
-                                    onClick={handleSaveVr}
-                                    disabled={savingVr || !isEventActive || isVrOverTeamCap}
-                                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                                  >
-                                    {savingVr ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      t("projectDetail.buttons.give")
-                                    )}
-                                  </Button>
-                                </div>
-                              </div>
-                            </>
-                          )}
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              min="0"
+                              value={virtualReward}
+                              onChange={(e) => setVirtualReward(Number(e.target.value))}
+                              className="h-10"
+                              disabled={!isEventActive}
+                            />
+                            <Button
+                              onClick={handleSaveVr}
+                              disabled={savingVr || !isEventActive || isVrOverTeamCap}
+                              className="bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                              {savingVr ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                t("projectDetail.buttons.give")
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       </TabsContent>
 
@@ -1421,6 +1323,14 @@ export default function ProjectDetailPage({ params }: Props) {
                   </CardContent>
                 </Card>
               </>
+            )}
+            {eventData?.myRole === "COMMITTEE" && (eventData?.gradingEnabled ?? true) && (
+              <CommitteeGradingForm
+                eventId={id}
+                teamId={projectId}
+                teamName={project.title}
+                disabled={!isEventActive}
+              />
             )}
             <CommentSection
               eventId={id}

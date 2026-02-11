@@ -90,16 +90,6 @@ export type SpecialReward = {
   teamCount?: number;
 };
 
-export type VrCategory = {
-  id: string;
-  eventId: string;
-  nameEn: string;
-  nameTh: string;
-  sortOrder: number;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 export type TeamFile = {
   fileUrl: string;
   fileTypeId?: string;
@@ -127,9 +117,6 @@ export type Team = {
   createdAt?: string;
   totalVr?: number;
   myReward?: number;
-  myCategoryRewards?: { categoryId: string; amount: number }[];
-  vrCategories?: VrCategory[];
-  categoryTotals?: { categoryId: string; total: number }[];
   mySpecialRewards?: string[];
   myComment?: string;
 };
@@ -199,6 +186,7 @@ export type EventData = {
   imageCover?: string | null;
   status?: "DRAFT" | "PUBLISHED";
   publicView?: boolean;
+  gradingEnabled?: boolean;
   startView?: string;
   endView?: string;
   startJoinDate?: string;
@@ -232,7 +220,6 @@ export type EventData = {
   opinionsCommittee?: number;
   vrTotal?: number;
   vrUsed?: number;
-  vrCategories?: VrCategory[];
   awardsUnused?: SpecialReward[];
   specialRewards?: SpecialReward[];
   specialPrizeUsed?: number;
@@ -291,6 +278,7 @@ export type EventFormState = {
   guestReward?: number;
   hasCommittee?: boolean;
   committeeReward?: number;
+  gradingEnabled?: boolean;
   vrTeamCapEnabled?: boolean;
   vrTeamCapGuest?: number;
   vrTeamCapCommittee?: number;

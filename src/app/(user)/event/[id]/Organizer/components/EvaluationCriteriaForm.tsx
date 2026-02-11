@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Trash2, Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   createEvaluationCriteria,
+  getEvaluationCriteria,
   updateEvaluationCriteria,
   deleteEvaluationCriteria,
 } from "@/utils/apievaluation";
@@ -34,8 +35,120 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
   const [editing, setEditing] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
 
+  const getApiErrorMessage = (error: unknown, fallback: string) => {
+    if (typeof error === "object" && error !== null) {
+      const response = (error as { response?: unknown }).response;
+      if (typeof response === "object" && response !== null) {
+        const data = (response as { data?: unknown }).data;
+        if (typeof data === "object" && data !== null) {
+          const msg = (data as { message?: unknown }).message;
+          if (typeof msg === "string" && msg.trim()) return msg;
+        }
+      }
+
+      const msg = (error as { message?: unknown }).message;
+      if (typeof msg === "string" && msg.trim()) return msg;
+    }
+    return fallback;
+  };
+
+  useEffect(() => {
+    setCriteria(initialCriteria);
+    setEditing(new Set());
+  }, [initialCriteria]);
+
   const totalWeight = criteria.reduce((sum, c) => sum + c.weightPercentage, 0);
   const isValidWeight = Math.abs(totalWeight - 100) < 0.01; // Allow for floating point precision
+  const remainingWeight = 100 - totalWeight;
+
+  const handleAutoBalance = async () => {
+    if (criteria.length === 0) return;
+
+    const sorted = criteria
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    if (sorted.some((c) => !c.id)) return;
+
+    const n = sorted.length;
+    const base = Math.floor(10000 / n) / 100;
+    let remainder = Number((100 - base * n).toFixed(2));
+
+    const nextSorted = sorted.map((c) => {
+      let nextWeight = base;
+      if (remainder > 0) {
+        nextWeight = Number((nextWeight + 0.01).toFixed(2));
+        remainder = Number((remainder - 0.01).toFixed(2));
+      }
+      return { ...c, weightPercentage: nextWeight };
+    });
+
+    const nextCriteria = criteria.map((c) => nextSorted.find((s) => s.id === c.id) ?? c);
+
+    for (const item of nextCriteria) {
+      if (!item.id) return;
+      const isNew = item.id.startsWith("new-");
+      if (isNew) {
+        if (!item.name.trim()) {
+          toast.error("Criteria name is required");
+          return;
+        }
+        if (!Number.isFinite(item.maxScore) || item.maxScore <= 0) {
+          toast.error("Max score must be greater than 0");
+          return;
+        }
+      }
+    }
+
+    try {
+      setLoading(true);
+      setCriteria(nextCriteria);
+
+      let updatedCriteria = nextCriteria;
+
+      for (const item of nextSorted) {
+        if (!item.id) continue;
+
+        if (item.id.startsWith("new-")) {
+          const res = await createEvaluationCriteria(eventId, {
+            name: item.name,
+            description: item.description || undefined,
+            maxScore: item.maxScore,
+            weightPercentage: item.weightPercentage,
+            sortOrder: item.sortOrder,
+          });
+
+          updatedCriteria = updatedCriteria.map((c) =>
+            c.id === item.id ? { ...c, id: res.criteria.id, weightPercentage: item.weightPercentage } : c,
+          );
+        } else {
+          await updateEvaluationCriteria(eventId, item.id, {
+            weightPercentage: item.weightPercentage,
+            sortOrder: item.sortOrder,
+          });
+          updatedCriteria = updatedCriteria.map((c) =>
+            c.id === item.id ? { ...c, weightPercentage: item.weightPercentage } : c,
+          );
+        }
+      }
+
+      setCriteria(updatedCriteria);
+      onUpdate(updatedCriteria);
+      setEditing(new Set());
+      toast.success("Equalized weights and saved");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to save criteria"));
+      console.error(error);
+      try {
+        const res = await getEvaluationCriteria(eventId);
+        const fresh = res.criteria || [];
+        setCriteria(fresh);
+        onUpdate(fresh);
+      } catch {}
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddCriteria = () => {
     const newCriteria: CriteriaFormData = {
@@ -50,7 +163,11 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
     setEditing(new Set([...editing, newCriteria.id!]));
   };
 
-  const handleUpdateField = (id: string, field: keyof CriteriaFormData, value: any) => {
+  const handleUpdateField = (
+    id: string,
+    field: keyof CriteriaFormData,
+    value: CriteriaFormData[keyof CriteriaFormData],
+  ) => {
     setCriteria(criteria.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
@@ -65,12 +182,16 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         return;
       }
 
-      if (item.maxScore <= 0) {
+      if (!Number.isFinite(item.maxScore) || item.maxScore <= 0) {
         toast.error("Max score must be greater than 0");
         return;
       }
 
-      if (item.weightPercentage < 0 || item.weightPercentage > 100) {
+      if (
+        !Number.isFinite(item.weightPercentage) ||
+        item.weightPercentage < 0 ||
+        item.weightPercentage > 100
+      ) {
         toast.error("Weight percentage must be between 0 and 100");
         return;
       }
@@ -85,7 +206,11 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           sortOrder: item.sortOrder,
         });
 
-        setCriteria(criteria.map((c) => (c.id === id ? { ...c, id: res.criteria.id } : c)));
+        const nextCriteria = criteria.map((c) =>
+          c.id === id ? { ...c, id: res.criteria.id } : c,
+        );
+        setCriteria(nextCriteria);
+        onUpdate(nextCriteria);
         toast.success("Criteria created");
       } else {
         // Update existing criteria
@@ -96,13 +221,13 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           weightPercentage: item.weightPercentage,
           sortOrder: item.sortOrder,
         });
+        onUpdate(criteria);
         toast.success("Criteria updated");
       }
 
       setEditing(new Set([...editing].filter((e) => e !== id)));
-      onUpdate(criteria);
     } catch (error) {
-      toast.error("Failed to save criteria");
+      toast.error(getApiErrorMessage(error, "Failed to save criteria"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -117,9 +242,10 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       if (!id.startsWith("new-")) {
         await deleteEvaluationCriteria(eventId, id);
       }
-      setCriteria(criteria.filter((c) => c.id !== id));
+      const nextCriteria = criteria.filter((c) => c.id !== id);
+      setCriteria(nextCriteria);
       setEditing(new Set([...editing].filter((e) => e !== id)));
-      onUpdate(criteria.filter((c) => c.id !== id));
+      onUpdate(nextCriteria);
       toast.success("Criteria deleted");
     } catch (error) {
       toast.error("Failed to delete criteria");
@@ -141,6 +267,42 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {criteria.length > 0 && (
+          <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="text-sm font-semibold">Weight Summary</div>
+                <div className="text-xs text-muted-foreground">
+                  {remainingWeight >= 0
+                    ? `Remaining: ${remainingWeight.toFixed(2)}%`
+                    : `Over: ${Math.abs(remainingWeight).toFixed(2)}%`}
+                </div>
+              </div>
+              <Button onClick={handleAutoBalance} size="sm" variant="outline" disabled={loading}>
+                Equalize &amp; save
+              </Button>
+            </div>
+            <div className="mt-3">
+              <div className="h-2 w-full rounded bg-muted">
+                <div
+                  className={`h-full rounded ${
+                    isValidWeight ? "bg-green-600" : totalWeight > 100 ? "bg-red-600" : "bg-orange-600"
+                  }`}
+                  style={{ width: `${Math.max(0, Math.min(100, totalWeight))}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-sm">
+                <span className="font-semibold">Total</span>
+                <span
+                  className={`font-bold ${isValidWeight ? "text-green-600" : "text-orange-600"}`}
+                >
+                  {totalWeight.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Weight Warning */}
         {criteria.length > 0 && !isValidWeight && (
           <div className="flex gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
@@ -185,7 +347,13 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                             type="number"
                             value={item.maxScore}
                             onChange={(e) =>
-                              handleUpdateField(item.id!, "maxScore", parseFloat(e.target.value))
+                              handleUpdateField(
+                                item.id!,
+                                "maxScore",
+                                Number.isFinite(parseFloat(e.target.value))
+                                  ? parseFloat(e.target.value)
+                                  : 0,
+                              )
                             }
                             placeholder="100"
                             className="mt-1"
@@ -216,7 +384,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                             handleUpdateField(
                               item.id!,
                               "weightPercentage",
-                              parseFloat(e.target.value),
+                                Number.isFinite(parseFloat(e.target.value))
+                                  ? parseFloat(e.target.value)
+                                  : 0,
                             )
                           }
                           placeholder="0-100"
@@ -283,17 +453,6 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           )}
         </div>
 
-        {/* Total Weight Display */}
-        {criteria.length > 0 && (
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold">Total Weight:</span>
-              <span className={`font-bold ${isValidWeight ? "text-green-600" : "text-orange-600"}`}>
-                {totalWeight.toFixed(2)}%
-              </span>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

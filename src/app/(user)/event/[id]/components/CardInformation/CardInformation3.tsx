@@ -64,6 +64,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                     committeeReward: event?.virtualRewardCommittee ?? 0,
                     unitReward: event?.unitReward ?? "coins",
                     hasCommittee: event?.hasCommittee ?? false,
+                    gradingEnabled: event?.gradingEnabled ?? true,
                     vrTeamCapEnabled: event?.vrTeamCapEnabled ?? true,
                     vrTeamCapGuest: event?.vrTeamCapGuest ?? 10,
                     vrTeamCapCommittee: event?.vrTeamCapCommittee ?? 20,
@@ -220,23 +221,6 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
               </div>
             </div>
 
-            {(event.vrCategories?.length ?? 0) > 0 && (
-              <div className="pt-2 space-y-2">
-                <div className="text-sm font-semibold text-foreground">
-                  {t("projectDetail.evaluation.vrCategories")}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(event.vrCategories ?? []).map((c) => (
-                    <div
-                      key={c.id}
-                      className="text-xs px-2.5 py-1 rounded-full border bg-muted/40 text-foreground/80"
-                    >
-                      {language === "th" ? c.nameTh : c.nameEn}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </CardContent>
