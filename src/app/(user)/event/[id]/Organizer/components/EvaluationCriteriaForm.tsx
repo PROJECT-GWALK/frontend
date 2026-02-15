@@ -64,9 +64,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
   const handleAutoBalance = async () => {
     if (criteria.length === 0) return;
 
-    const sorted = criteria
-      .slice()
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const sorted = criteria.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
     if (sorted.some((c) => !c.id)) return;
 
@@ -119,7 +117,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           });
 
           updatedCriteria = updatedCriteria.map((c) =>
-            c.id === item.id ? { ...c, id: res.criteria.id, weightPercentage: item.weightPercentage } : c,
+            c.id === item.id
+              ? { ...c, id: res.criteria.id, weightPercentage: item.weightPercentage }
+              : c,
           );
         } else {
           await updateEvaluationCriteria(eventId, item.id, {
@@ -206,9 +206,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           sortOrder: item.sortOrder,
         });
 
-        const nextCriteria = criteria.map((c) =>
-          c.id === id ? { ...c, id: res.criteria.id } : c,
-        );
+        const nextCriteria = criteria.map((c) => (c.id === id ? { ...c, id: res.criteria.id } : c));
         setCriteria(nextCriteria);
         onUpdate(nextCriteria);
         toast.success("Criteria created");
@@ -286,7 +284,11 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
               <div className="h-2 w-full rounded bg-muted">
                 <div
                   className={`h-full rounded ${
-                    isValidWeight ? "bg-green-600" : totalWeight > 100 ? "bg-red-600" : "bg-orange-600"
+                    isValidWeight
+                      ? "bg-green-600"
+                      : totalWeight > 100
+                        ? "bg-red-600"
+                        : "bg-orange-600"
                   }`}
                   style={{ width: `${Math.max(0, Math.min(100, totalWeight))}%` }}
                 />
@@ -306,7 +308,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         {/* Weight Warning */}
         {criteria.length > 0 && !isValidWeight && (
           <div className="flex gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Weight Total: {totalWeight.toFixed(2)}%</p>
               <p className="text-sm">Total weight should equal 100%</p>
@@ -384,9 +386,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                             handleUpdateField(
                               item.id!,
                               "weightPercentage",
-                                Number.isFinite(parseFloat(e.target.value))
-                                  ? parseFloat(e.target.value)
-                                  : 0,
+                              Number.isFinite(parseFloat(e.target.value))
+                                ? parseFloat(e.target.value)
+                                : 0,
                             )
                           }
                           placeholder="0-100"
@@ -452,7 +454,6 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
             })
           )}
         </div>
-
       </CardContent>
     </Card>
   );

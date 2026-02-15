@@ -813,7 +813,7 @@
   },
   "gradingSection": {
     "title": "Grading",
-    "enableGrading": "Enable Grading",
+    "enableGrading": "Enable Grading Only for Committee",
     "criteria": "Grading Criteria",
     "addCriteria": "Add Criteria",
     "criteriaName": "Criteria Name",

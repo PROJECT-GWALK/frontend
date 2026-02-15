@@ -29,6 +29,12 @@ import {
   updateSpecialReward,
   deleteSpecialReward,
 } from "@/utils/apievent";
+import {
+  createEvaluationCriteria,
+  updateEvaluationCriteria,
+  deleteEvaluationCriteria,
+  getEvaluationCriteria,
+} from "@/utils/apievaluation";
 
 import { EventDetail, EventFileType } from "@/utils/types";
 import { toast } from "sonner";
@@ -67,6 +73,8 @@ type EventUpdatePayload = {
   specialRewards: SpecialReward[];
   unitReward?: string | null;
   fileTypes?: EventFileType[];
+  gradingEnabled: boolean;
+  gradingCriteria: GradingCriteria[];
 };
 
 const BANNER_MAX_SIZE = 20 * 1024 * 1024; // 20MB
@@ -241,6 +249,8 @@ export default function EventDraft() {
       specialRewards,
       unitReward: unitReward || null,
       fileTypes: fileRequirements,
+      gradingEnabled,
+      gradingCriteria,
     };
   };
   const buildFormData = (payload: EventUpdatePayload, file: File) => {
@@ -463,6 +473,7 @@ export default function EventDraft() {
       if (!ok) return;
       const payload = buildPayload({ isoDates: false });
       await syncSpecialRewards();
+      await syncGradingCriteria();
       if (eventBanner) {
         const data = buildFormData(payload, eventBanner);
         await updateEvent(id, data);
@@ -500,6 +511,7 @@ export default function EventDraft() {
     try {
       const payload = buildPayload({ isoDates: false });
       await syncSpecialRewards();
+      await syncGradingCriteria();
       if (eventBanner) {
         const data = buildFormData(payload, eventBanner);
         await updateEvent(id, data);
@@ -631,6 +643,72 @@ export default function EventDraft() {
     { id: "card5", label: t("gradingSection.title") || "Grading", icon: BookOpen },
   ];
 
+  const syncGradingCriteria = async () => {
+    if (!id) return;
+    if (!gradingEnabled) return; // Don't sync if grading is disabled
+
+    // Helper to check if an ID is a valid UUID (from database)
+    const isUUID = (str: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+    // Separate new criteria from existing ones
+    // New criteria either start with "new-" or are not valid UUIDs
+    const newCriteria = gradingCriteria.filter((c) => c.id.startsWith("new-") || !isUUID(c.id));
+    const existingCriteria = gradingCriteria.filter(
+      (c) => !c.id.startsWith("new-") && isUUID(c.id),
+    );
+
+    // Create new criteria
+    const createdCriteria: GradingCriteria[] = [];
+    for (const criteria of newCriteria) {
+      try {
+        const res = await createEvaluationCriteria(id, {
+          name: criteria.name,
+          description: criteria.description,
+          maxScore: criteria.maxScore,
+          weightPercentage: criteria.weightPercentage,
+          sortOrder: criteria.sortOrder,
+        });
+        if (res?.criteria?.id) {
+          createdCriteria.push({
+            id: res.criteria.id,
+            name: res.criteria.name,
+            description: res.criteria.description,
+            maxScore: res.criteria.maxScore,
+            weightPercentage: res.criteria.weightPercentage,
+            sortOrder: res.criteria.sortOrder,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to create criteria", e);
+      }
+    }
+
+    // Update gradingCriteria state with newly created IDs
+    if (createdCriteria.length > 0) {
+      setGradingCriteria((prev) => {
+        // Keep only existing valid UUID criteria (not temporary ones)
+        const validExisting = prev.filter((c) => !c.id.startsWith("new-") && isUUID(c.id));
+        return [...validExisting, ...createdCriteria];
+      });
+    }
+
+    // Update existing criteria
+    for (const criteria of existingCriteria) {
+      try {
+        await updateEvaluationCriteria(id, criteria.id, {
+          name: criteria.name,
+          description: criteria.description,
+          maxScore: criteria.maxScore,
+          weightPercentage: criteria.weightPercentage,
+          sortOrder: criteria.sortOrder,
+        });
+      } catch (e) {
+        console.error("Failed to update criteria", e);
+      }
+    }
+  };
+
   const completionPercent = (() => {
     const list = [
       eventTitle,
@@ -730,6 +808,19 @@ export default function EventDraft() {
         } else {
           setSpecialRewards([]);
           setSrPreviews({});
+        }
+
+        // ================= GRADING =================
+        setGradingEnabled(data.gradingEnabled ?? false);
+
+        // Fetch existing evaluation criteria (always try to load, even if grading disabled)
+        try {
+          const criteriaRes = await getEvaluationCriteria(id);
+          if (criteriaRes?.criteria?.length) {
+            setGradingCriteria(criteriaRes.criteria);
+          }
+        } catch (err) {
+          console.error("Failed to load evaluation criteria:", err);
         }
       } catch (err) {
         console.error("Failed to load event:", err);

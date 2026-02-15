@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { getGradingResults } from "@/utils/apievaluation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Star } from "lucide-react";
+import { Loader2, Star, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 type GradingResult = {
   teamId: string;
@@ -26,6 +27,9 @@ type Criteria = {
   weightPercentage: number;
 };
 
+type SortField = "teamName" | "overallAverage";
+type SortDirection = "asc" | "desc";
+
 type Props = {
   eventId: string;
 };
@@ -34,8 +38,13 @@ export default function GradingDashboard({ eventId }: Props) {
   const [results, setResults] = useState<GradingResult[]>([]);
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const getAverageForCriteria = (committeeScores: GradingResult["committeeScores"], criteriaId: string) => {
+  const getAverageForCriteria = (
+    committeeScores: GradingResult["committeeScores"],
+    criteriaId: string,
+  ) => {
     const values = committeeScores
       .map((s) => s.scores[criteriaId])
       .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
@@ -43,6 +52,41 @@ export default function GradingDashboard({ eventId }: Props) {
     if (values.length === 0) return null;
     return values.reduce((a, b) => a + b, 0) / values.length;
   };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field with ascending by default (or descending for score)
+      setSortField(field);
+      setSortDirection(field === "overallAverage" ? "desc" : "asc");
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-4 h-4 ml-1" />
+    ) : (
+      <ArrowDown className="w-4 h-4 ml-1" />
+    );
+  };
+
+  const sortedResults = [...results].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let comparison = 0;
+    if (sortField === "teamName") {
+      comparison = a.teamName.localeCompare(b.teamName);
+    } else if (sortField === "overallAverage") {
+      comparison = a.overallAverage - b.overallAverage;
+    }
+
+    return sortDirection === "asc" ? comparison : -comparison;
+  });
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -97,9 +141,29 @@ export default function GradingDashboard({ eventId }: Props) {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-3 font-semibold">Team Name</th>
+                <th className="text-left p-3 font-semibold">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSort("teamName")}
+                    className="h-auto p-0 font-semibold hover:bg-transparent"
+                  >
+                    Project Name
+                    {getSortIcon("teamName")}
+                  </Button>
+                </th>
                 <th className="text-left p-3 font-semibold">Presenter</th>
-                <th className="text-center p-3 font-semibold">Overall Average</th>
+                <th className="text-center p-3 font-semibold">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSort("overallAverage")}
+                    className="h-auto p-0 font-semibold hover:bg-transparent"
+                  >
+                    Grade
+                    {getSortIcon("overallAverage")}
+                  </Button>
+                </th>
                 {criteria.map((crit) => (
                   <th key={crit.id} className="text-center p-3 font-semibold text-sm">
                     {crit.name}
@@ -108,7 +172,7 @@ export default function GradingDashboard({ eventId }: Props) {
               </tr>
             </thead>
             <tbody>
-              {results.map((result, idx) => (
+              {sortedResults.map((result, idx) => (
                 <tr
                   key={result.teamId}
                   className={`border-b ${idx % 2 === 0 ? "bg-background" : "bg-muted/30"}`}

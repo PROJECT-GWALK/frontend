@@ -147,7 +147,7 @@ export default function Card5(props: Props) {
       toast.success(t("gradingSection.criteriaUpdated") || "Criteria updated successfully");
     } else {
       const newCriteria: GradingCriteria = {
-        id: Date.now().toString(),
+        id: `new-${Date.now()}`,
         name: formData.name.trim(),
         description: formData.description.trim(),
         maxScore,

@@ -171,29 +171,29 @@
     "rewards": "รางวัลพิเศษ"
   },
   "validation": {
-    "eventTitleRequired": "กรุณากรอก Event Title",
-    "startDateTimeRequired": "กรุณากรอก Start View วันที่และเวลา",
-    "endDateTimeRequired": "กรุณากรอก End View วันที่และเวลา",
-    "startBeforeEnd": "Start View ต้องอยู่ก่อน End View",
-    "submissionStartRequired": "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน",
-    "submissionEndRequired": "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน",
-    "submissionBeforeEvent": "Submission Start ต้องอยู่ก่อน Event Start",
-    "rewardNameRequired": "กรุณากรอกชื่อรางวัล",
-    "nameTaken": "ชื่อ Event ถูกใช้แล้ว",
-    "nameAvailable": "ชื่อ Event ใช้ได้",
-    "checkName": "ตรวจสอบชื่อ",
+    "eventTitleRequired": "กรุณากรอกชื่ออีเวนต์",
+    "startDateTimeRequired": "กรุณากรอกวันที่และเวลาที่เริ่มต้นอีเวนต์",
+    "endDateTimeRequired": "กรุณากรอกวันที่และเวลาที่สิ้นสุดอีเวนต์",
+    "startBeforeEnd": "วันที่และเวลาที่เริ่มต้นต้องอยู่ก่อนวันที่และเวลาที่สิ้นสุด",
+    "submissionStartRequired": "กรุณากรอกวันที่และเวลาเริ่มส่งผลงาน",
+    "submissionEndRequired": "กรุณากรอกวันที่และเวลาสิ้นสุดส่งผลงาน",
+    "submissionBeforeEvent": "วันที่และเวลาส่งผลงานต้องอยู่ก่อนวันที่และเวลาที่เริ่มต้นอีเวนต์",
+    "rewardNameRequired": "กรุณากรอกชื่อรางวัลพิเศษ",
+    "nameTaken": "ชื่ออีเวนต์ถูกใช้แล้ว",
+    "nameAvailable": "ชื่ออีเวนต์สามารถใช้ได้",
+    "checkName": "ตรวจสอบชื่ออีเวนต์",
     "fileTypeNotSupported": "รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP",
     "fileSizeExceeded": "ไฟล์ต้องไม่เกิน 5MB",
-    "checkNameFailed": "ตรวจสอบชื่อไม่สำเร็จ"
+    "checkNameFailed": "ตรวจสอบชื่ออีเวนต์ไม่สำเร็จ"
   },
   "messages": {
     "savingDraft": "กำลังบันทึกแบบร่าง...",
     "draftSaved": "บันทึกแบบร่างสำเร็จ",
     "draftFailed": "บันทึกแบบร่างไม่สำเร็จ",
-    "publishing": "กำลังเผยแพร่ Event...",
-    "publishSuccess": "เผยแพร่ Event สำเร็จ",
-    "publishFailed": "เผยแพร่ Event ไม่สำเร็จ",
-    "errorLoading": "โหลด Event ไม่สำเร็จ"
+    "publishing": "กำลังเผยแพร่อีเวนต์...",
+    "publishSuccess": "เผยแพร่อีเวนต์สำเร็จ",
+    "publishFailed": "เผยแพร่อีเวนต์ไม่สำเร็จ",
+    "errorLoading": "โหลดอีเวนต์ไม่สำเร็จ"
   },
   "dashboard": {
     "presenterCount": "ผู้นำเสนอ",
@@ -205,7 +205,7 @@
     "commentGiven": "ให้คอมเมนต์",
     "feedbackGiven": "ให้ฟีดแบ็ก",
     "used": "ใช้ไป",
-    "reward": "Virtual Rewards",
+    "reward": "รางวัลเสมือน",
     "usedAlready": "ใช้ไปแล้ว",
     "remaining": "คงเหลือ",
     "total": "ทั้งหมด",
@@ -228,7 +228,7 @@
     "end": "สิ้นสุด"
   },
   "userDashboard": {
-    "eventdashboard": "Event Dashboard",
+    "eventdashboard": "แดชบอร์ดอีเวนต์",
     "recruting": "กำลังรับสมัคร",
     "startingSoon": "เร็วๆ นี้จะเริ่ม",
     "draft": "แบบร่าง",
@@ -813,7 +813,7 @@
   },
   "gradingSection": {
     "title": "การให้คะแนน",
-    "enableGrading": "เปิดการให้คะแนน",
+    "enableGrading": "เปิดการให้คะแนน สำหรับกรรมการเท่านั้น",
     "criteria": "เกณฑ์การให้คะแนน",
     "addCriteria": "เพิ่มเกณฑ์",
     "criteriaName": "ชื่อเกณฑ์",
