@@ -187,9 +187,9 @@
     "checkNameFailed": "ตรวจสอบชื่อไม่สำเร็จ"
   },
   "messages": {
-    "savingDraft": "กำลังบันทึก Draft...",
-    "draftSaved": "บันทึก Draft สำเร็จ",
-    "draftFailed": "บันทึก Draft ไม่สำเร็จ",
+    "savingDraft": "กำลังบันทึกแบบร่าง...",
+    "draftSaved": "บันทึกแบบร่างสำเร็จ",
+    "draftFailed": "บันทึกแบบร่างไม่สำเร็จ",
     "publishing": "กำลังเผยแพร่ Event...",
     "publishSuccess": "เผยแพร่ Event สำเร็จ",
     "publishFailed": "เผยแพร่ Event ไม่สำเร็จ",
@@ -231,7 +231,7 @@
     "eventdashboard": "Event Dashboard",
     "recruting": "กำลังรับสมัคร",
     "startingSoon": "เร็วๆ นี้จะเริ่ม",
-    "draft": "ร่าง",
+    "draft": "แบบร่าง",
     "liveNow": "กำลังดำเนินอยู่",
     "ended": "สิ้นสุดแล้ว"
   },
@@ -810,5 +810,35 @@
     "rank": "อันดับ",
     "project": "โครงการ",
     "VR": "รางวัลเสมือน"
+  },
+  "gradingSection": {
+    "title": "การให้คะแนน",
+    "enableGrading": "เปิดการให้คะแนน",
+    "criteria": "เกณฑ์การให้คะแนน",
+    "addCriteria": "เพิ่มเกณฑ์",
+    "criteriaName": "ชื่อเกณฑ์",
+    "criteriaDescription": "คำอธิบายเกณฑ์",
+    "maxScore": "คะแนนสูงสุด",
+    "weight": "น้ำหนัก",
+    "save": "บันทึกเกณฑ์",
+    "cancel": "ยกเลิก",
+    "placeholderCriteriaName": "เช่น ความคิดสร้างสรรค์",
+    "placeholderCriteriaDescription": "คำอธิบายเกณฑ์นี้",
+    "noCriteria": "ยังไม่มีเกณฑ์การให้คะแนน",
+    "clickToAddCriteria": "คลิกเพื่อเพิ่มเกณฑ์การให้คะแนน",
+    "criteriaNameRequired": "กรุณากรอกชื่อเกณฑ์",
+    "criteriaNameTooShort": "ชื่อเกณฑ์ต้องมีอย่างน้อย 2 ตัวอักษร",
+    "criteriaNameTooLong": "ชื่อเกณฑ์ต้องมีไม่เกิน 120 ตัวอักษร",
+    "maxScoreRequired": "กรุณากรอกคะแนนสูงสุด",
+    "maxScoreMustBePositive": "คะแนนสูงสุดต้องมากกว่า 0",
+    "weightRequired": "กรุณากรอกน้ำหนักของเกณฑ์",
+    "weightPercentageMustBeBetween": "น้ำหนักของเกณฑ์ต้องเป็นเปอร์เซ็นต์ระหว่าง 0 ถึง 100",
+    "descriptionTooLong": "คำอธิบายเกณฑ์ต้องมีไม่เกิน 500 ตัวอักษร",
+    "criteriaUpdated": "เกณฑ์อัปเดตเรียบร้อยแล้ว",
+    "criteriaAdded": "เพิ่มเกณฑ์เรียบร้อยแล้ว",
+    "deleteConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเกณฑ์การให้คะแนนนี้?",
+    "criteriaDeleted": "ลบเกณฑ์เรียบร้อยแล้ว",
+    "totalWeight": "น้ำหนักของเกณฑ์รวม:",
+    "weightWarning": "น้ำหนักของเกณฑ์รวมไม่เท่ากับ 100% ซึ่งอาจส่งผลต่อการคำนวณคะแนนโดยรวม"
   }
 }

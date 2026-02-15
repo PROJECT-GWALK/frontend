@@ -13,6 +13,7 @@ import {
   Award,
   Save,
   Loader2,
+  BookOpen,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
@@ -38,6 +39,7 @@ import Card1 from "./Card1";
 import Card2 from "./Card2";
 import Card3 from "./Card3";
 import Card4 from "./Card4";
+import Card5, { type GradingCriteria } from "./Card5";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type SpecialReward = {
@@ -131,6 +133,10 @@ export default function EventDraft() {
 
   // Special Rewards
   const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
+
+  // Grading Configuration
+  const [gradingEnabled, setGradingEnabled] = useState(false);
+  const [gradingCriteria, setGradingCriteria] = useState<GradingCriteria[]>([]);
 
   const handleAddSpecialReward = () => {
     const newReward: SpecialReward = {
@@ -622,6 +628,7 @@ export default function EventDraft() {
       icon: Users,
     },
     { id: "card4", label: t("rewardsSection.specialRewards"), icon: Award },
+    { id: "card5", label: t("gradingSection.title") || "Grading", icon: BookOpen },
   ];
 
   const completionPercent = (() => {
@@ -980,6 +987,14 @@ export default function EventDraft() {
                   srPendingMeta={srPendingMeta}
                   onRewardCropCancel={handleRewardCropCancel}
                   onRewardCropConfirm={handleRewardCropConfirm}
+                />
+
+                {/* Grading Configuration Section */}
+                <Card5
+                  gradingEnabled={gradingEnabled}
+                  setGradingEnabled={setGradingEnabled}
+                  gradingCriteria={gradingCriteria}
+                  setGradingCriteria={setGradingCriteria}
                 />
 
                 <DeleteConfirmDialog

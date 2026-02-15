@@ -17,21 +17,12 @@ type Props = {
   specialRewards: SpecialReward[];
   srPreviews: Record<string, string | null>;
   openRewardFilePicker: (id: string) => void;
-  rewardFileRefs: React.MutableRefObject<
-    Record<string, HTMLInputElement | null>
-  >;
-  handleRewardFileChange: (
-    id: string,
-    e: ChangeEvent<HTMLInputElement>
-  ) => void;
+  rewardFileRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+  handleRewardFileChange: (id: string, e: ChangeEvent<HTMLInputElement>) => void;
   handleRemoveRewardImage: (id: string) => void;
   handleAddSpecialReward: () => void;
   handleRemoveReward: (id: string) => void;
-  handleRewardChange: (
-    id: string,
-    field: "name" | "description",
-    value: string
-  ) => void;
+  handleRewardChange: (id: string, field: "name" | "description", value: string) => void;
   rewardErrors?: Record<string, string>;
   srCropOpen: boolean;
   srCropSrc: string | null;
@@ -64,28 +55,28 @@ export default function Card4(props: Props) {
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragState(prev => ({ ...prev, [id]: true }));
+    setDragState((prev) => ({ ...prev, [id]: true }));
   };
 
   const handleDragLeave = (e: React.DragEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragState(prev => ({ ...prev, [id]: false }));
+    setDragState((prev) => ({ ...prev, [id]: false }));
   };
 
   const handleDrop = (e: React.DragEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragState(prev => ({ ...prev, [id]: false }));
-    
+    setDragState((prev) => ({ ...prev, [id]: false }));
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       const event = {
         target: {
-          files: [file]
-        }
+          files: [file],
+        },
       } as unknown as React.ChangeEvent<HTMLInputElement>;
-      
+
       handleRewardFileChange(id, event);
     }
   };
@@ -99,9 +90,7 @@ export default function Card4(props: Props) {
           <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
             <Award className="h-5 w-5" />
           </div>
-          <span className="">
-            {t("rewardsSection.specialRewards")}
-          </span>
+          <span className="">{t("rewardsSection.specialRewards")}</span>
         </CardTitle>
         <Button onClick={handleAddSpecialReward} size="sm" variant="outline">
           <Plus className="h-4 w-4 mr-1" />
@@ -130,16 +119,11 @@ export default function Card4(props: Props) {
           <div className="text-center py-8 text-muted-foreground">
             <Gift className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>{t("rewardsSection.noRewards")}</p>
-            <p className="text-sm">
-              {t("rewardsSection.clickToAdd")}
-            </p>
+            <p className="text-sm">{t("rewardsSection.clickToAdd")}</p>
           </div>
         ) : (
           specialRewards.map((reward, index) => (
-            <div
-              key={reward.id}
-              className="border rounded-lg p-4 space-y-4 bg-muted/30"
-            >
+            <div key={reward.id} className="border rounded-lg p-4 space-y-4 bg-muted/30">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
                   {t("rewardsSection.rewardNum")} #{index + 1}
@@ -209,9 +193,13 @@ export default function Card4(props: Props) {
                         onDragLeave={(e) => handleDragLeave(e, reward.id)}
                         onDrop={(e) => handleDrop(e, reward.id)}
                       >
-                        <div className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
-                          dragState[reward.id] ? "border-primary" : "border-border hover:border-primary/50"
-                        }`}>
+                        <div
+                          className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
+                            dragState[reward.id]
+                              ? "border-primary"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
                           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
                             <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
                             <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
@@ -252,9 +240,7 @@ export default function Card4(props: Props) {
                     <Input
                       placeholder={t("rewardsSection.placeholderRewardName")}
                       value={reward.name}
-                      onChange={(e) =>
-                        handleRewardChange(reward.id, "name", e.target.value)
-                      }
+                      onChange={(e) => handleRewardChange(reward.id, "name", e.target.value)}
                     />
                     {rewardErrors && rewardErrors[reward.id] && (
                       <p className="text-xs text-destructive mt-1">{rewardErrors[reward.id]}</p>
