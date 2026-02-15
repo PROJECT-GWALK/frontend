@@ -40,7 +40,7 @@ export default function CommitteePage(props: Props) {
   const paramsHook = useParams();
   const idFromParams = paramsHook?.id as string;
   const id = props.id || idFromParams;
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
@@ -55,7 +55,7 @@ export default function CommitteePage(props: Props) {
       if (res.message === "ok") {
         setLocalEvent(res.event);
         if (res.event.awardsUnused) {
-            setAwardsUnused(res.event.awardsUnused);
+          setAwardsUnused(res.event.awardsUnused);
         }
       }
     } catch (error) {
@@ -103,11 +103,11 @@ export default function CommitteePage(props: Props) {
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
-          members:
-            t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
           createdAt: t.createdAt,
           totalVr: t.totalVr,
           myComment: t.myComment,
+          myGraded: t.myGraded,
         }));
         setProjects(mappedProjects);
 
@@ -117,9 +117,10 @@ export default function CommitteePage(props: Props) {
           teams.forEach((t) => {
             // Update or initialize with fetched myReward
             if (!newState[t.id]) {
-              newState[t.id] = { 
-                vrGiven: t.myReward || 0, 
-                specialGiven: t.mySpecialRewards && t.mySpecialRewards.length > 0 ? t.mySpecialRewards : null 
+              newState[t.id] = {
+                vrGiven: t.myReward || 0,
+                specialGiven:
+                  t.mySpecialRewards && t.mySpecialRewards.length > 0 ? t.mySpecialRewards : null,
               };
             } else {
               // If re-fetching, update the vrGiven to match server state
@@ -128,7 +129,8 @@ export default function CommitteePage(props: Props) {
                 vrGiven: t.myReward || 0,
                 // We trust local state for special rewards unless we want to force sync from server always
                 // For now let's sync from server if we are refetching
-                 specialGiven: t.mySpecialRewards && t.mySpecialRewards.length > 0 ? t.mySpecialRewards : null
+                specialGiven:
+                  t.mySpecialRewards && t.mySpecialRewards.length > 0 ? t.mySpecialRewards : null,
               };
             }
           });
@@ -171,12 +173,16 @@ export default function CommitteePage(props: Props) {
     try {
       const res = await resetVr(id, projectId);
       // Update local event state with new totals from backend
-      setLocalEvent((prev) => (prev ? {
-        ...prev,
-        myVirtualTotal: res.totalLimit,
-        myVirtualUsed: res.totalUsed
-      } : prev));
-      
+      setLocalEvent((prev) =>
+        prev
+          ? {
+              ...prev,
+              myVirtualTotal: res.totalLimit,
+              myVirtualUsed: res.totalUsed,
+            }
+          : prev,
+      );
+
       setProjectRewards((prev) => ({
         ...prev,
         [projectId]: {
@@ -235,49 +241,47 @@ export default function CommitteePage(props: Props) {
     try {
       await giveSpecial(id, projectId, [rewardId]);
       fetchData();
-      
+
       setProjectRewards((prev) => {
         const currentSpecial = prev[projectId]?.specialGiven;
         let newSpecial: string | string[] | null = rewardId;
-        
+
         // If there were existing rewards, we might want to append (if logic supports multiple)
         // But the API giveSpecial replaces or adds? The API takes array.
         // Assuming the UI drawer picks one, we add it to the list if we want to support multiple.
         // For now, let's just use array of IDs.
         if (Array.isArray(currentSpecial)) {
-            if (!currentSpecial.includes(rewardId)) {
-                newSpecial = [...currentSpecial, rewardId];
-            } else {
-                newSpecial = currentSpecial;
-            }
-        } else if (currentSpecial && typeof currentSpecial === 'string') {
-             // If previously stored as string (shouldn't happen with new logic but for safety)
-             if (currentSpecial !== rewardId) {
-                 newSpecial = [currentSpecial, rewardId];
-             } else {
-                 newSpecial = [rewardId];
-             }
-        } else {
+          if (!currentSpecial.includes(rewardId)) {
+            newSpecial = [...currentSpecial, rewardId];
+          } else {
+            newSpecial = currentSpecial;
+          }
+        } else if (currentSpecial && typeof currentSpecial === "string") {
+          // If previously stored as string (shouldn't happen with new logic but for safety)
+          if (currentSpecial !== rewardId) {
+            newSpecial = [currentSpecial, rewardId];
+          } else {
             newSpecial = [rewardId];
+          }
+        } else {
+          newSpecial = [rewardId];
         }
 
         return {
-        ...prev,
-        [projectId]: {
-          ...prev[projectId],
-          specialGiven: newSpecial,
-        },
-      }});
+          ...prev,
+          [projectId]: {
+            ...prev[projectId],
+            specialGiven: newSpecial,
+          },
+        };
+      });
       toast.success(t("toast.specialRewardGiven"));
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to give special reward"));
     }
   };
 
-  const handleAction = (
-    action: string,
-    projectId: string
-  ) => {
+  const handleAction = (action: string, projectId: string) => {
     if (action === "reset_vr") {
       handleResetVR(projectId);
     } else if (action === "reset_special") {
@@ -327,8 +331,8 @@ export default function CommitteePage(props: Props) {
             {/* Header Card Skeleton */}
             <div className="border rounded-xl shadow-md mb-6 p-6 h-25 bg-card">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 h-full">
-                 <Skeleton className="h-8 w-1/3" />
-                 <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-32" />
               </div>
             </div>
 
@@ -356,25 +360,24 @@ export default function CommitteePage(props: Props) {
   return (
     <div className="w-full justify-center flex">
       <div className="w-full">
-        <OrganizerBanner 
-          event={localEvent} 
-          open={bannerOpen} 
-          onOpenChange={setBannerOpen} 
-        />
+        <OrganizerBanner event={localEvent} open={bannerOpen} onOpenChange={setBannerOpen} />
 
         <div className="max-w-6xl mx-auto mt-6">
-          <div 
+          <div
             className="bg-card rounded-xl shadow-sm border p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 transition-all hover:shadow-md relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-committee)" }}
           >
-            <div 
-              className="absolute inset-0 pointer-events-none" 
-              style={{ background: "linear-gradient(to right, var(--role-committee), transparent)", opacity: 0.05 }} 
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(to right, var(--role-committee), transparent)",
+                opacity: 0.05,
+              }}
             />
             {/* LEFT SIDE: Title & Status */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 
+                <h1
                   className="text-2xl lg:text-3xl font-bold tracking-tight"
                   style={{ color: "var(--role-committee)" }}
                 >
@@ -395,10 +398,18 @@ export default function CommitteePage(props: Props) {
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-25">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-25">Information</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-25">Projects</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-25">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">
+                Information
+              </TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">
+                Result
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -418,13 +429,16 @@ export default function CommitteePage(props: Props) {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-sm text-muted-foreground">{t("committeeSection.used")}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t("committeeSection.used")}
+                          </p>
                           <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold">
                               {localEvent?.myVirtualUsed?.toLocaleString() ?? 0}
                             </span>
                             <span className="text-lg text-muted-foreground">
-                              / {localEvent?.myVirtualTotal?.toLocaleString() ?? 0} {localEvent?.unitReward ?? "coins"}
+                              / {localEvent?.myVirtualTotal?.toLocaleString() ?? 0}{" "}
+                              {localEvent?.unitReward ?? "coins"}
                             </span>
                           </div>
                         </div>
@@ -435,7 +449,7 @@ export default function CommitteePage(props: Props) {
                               {teamsGivenVrCount}
                             </span>
                             <span className="text-sm text-muted-foreground">
-                               / {localEvent?.presenterTeams ?? projects.length} Teams
+                              / {localEvent?.presenterTeams ?? projects.length} Teams
                             </span>
                           </div>
                         </div>
@@ -446,7 +460,8 @@ export default function CommitteePage(props: Props) {
                           style={{
                             width: `${
                               localEvent?.myVirtualTotal && localEvent.myVirtualTotal > 0
-                                ? ((localEvent.myVirtualUsed ?? 0) / localEvent.myVirtualTotal) * 100
+                                ? ((localEvent.myVirtualUsed ?? 0) / localEvent.myVirtualTotal) *
+                                  100
                                 : 0
                             }%`,
                           }}
@@ -454,7 +469,10 @@ export default function CommitteePage(props: Props) {
                       </div>
                       <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-right">
                         {t("committeeSection.remaining")}{" "}
-                        {((localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)).toLocaleString()} {localEvent?.unitReward ?? "coins"}
+                        {(
+                          (localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)
+                        ).toLocaleString()}{" "}
+                        {localEvent?.unitReward ?? "coins"}
                       </p>
                     </CardContent>
                   </Card>
@@ -507,77 +525,90 @@ export default function CommitteePage(props: Props) {
                             / {localEvent?.specialPrizeCount ?? 0}
                           </span>
                         </span>
-                        <span className="text-sm text-muted-foreground">{t("committeeSection.usedOverTotal")}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("committeeSection.usedOverTotal")}
+                        </span>
                       </div>
-                      
+
                       {/* Voted Awards List */}
                       <div className="grid gap-3 sm:grid-cols-2 mt-4 max-h-100 overflow-y-auto custom-scrollbar pr-2">
-                         {localEvent?.specialRewards?.map((reward) => {
-                           const teams = givenSpecialRewardsStats[reward.id];
-                           const isGiven = teams && teams.length > 0;
-                           
-                           return (
-                             <div 
-                               key={reward.id} 
-                               className={`border rounded-lg p-3 space-y-3 transition-all ${
-                                 isGiven 
-                                   ? "bg-indigo-50/50 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-500/30" 
-                                   : "bg-background border-dashed border-muted opacity-60 grayscale hover:opacity-100 hover:grayscale-0 hover:border-solid hover:shadow-sm"
-                               }`}
-                             >
-                               <div className="flex items-start gap-3">
-                                  <div className="w-16 shrink-0">
-                                    {reward.image ? (
-                                      <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
-                                        <Image
-                                          src={reward.image}
-                                          alt={reward.name}
-                                          fill
-                                          className="object-cover"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className="border-2 border-dashed border-border rounded-lg aspect-square bg-muted flex items-center justify-center">
-                                        <Gift className="h-6 w-6 text-muted-foreground/50" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0 space-y-1">
-                                    <div className="font-semibold text-sm line-clamp-2" title={reward.name}>
-                                      {reward.name}
+                        {localEvent?.specialRewards?.map((reward) => {
+                          const teams = givenSpecialRewardsStats[reward.id];
+                          const isGiven = teams && teams.length > 0;
+
+                          return (
+                            <div
+                              key={reward.id}
+                              className={`border rounded-lg p-3 space-y-3 transition-all ${
+                                isGiven
+                                  ? "bg-indigo-50/50 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-500/30"
+                                  : "bg-background border-dashed border-muted opacity-60 grayscale hover:opacity-100 hover:grayscale-0 hover:border-solid hover:shadow-sm"
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-16 shrink-0">
+                                  {reward.image ? (
+                                    <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
+                                      <Image
+                                        src={reward.image}
+                                        alt={reward.name}
+                                        fill
+                                        className="object-cover"
+                                      />
                                     </div>
-                                    
-                                    <div className="pt-2 border-t mt-1 flex justify-between items-end">
-                                      <div className="text-xs text-muted-foreground">
-                                        Given to
-                                      </div>
-                                      <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${
-                                        isGiven 
-                                          ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300" 
+                                  ) : (
+                                    <div className="border-2 border-dashed border-border rounded-lg aspect-square bg-muted flex items-center justify-center">
+                                      <Gift className="h-6 w-6 text-muted-foreground/50" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 space-y-1">
+                                  <div
+                                    className="font-semibold text-sm line-clamp-2"
+                                    title={reward.name}
+                                  >
+                                    {reward.name}
+                                  </div>
+
+                                  <div className="pt-2 border-t mt-1 flex justify-between items-end">
+                                    <div className="text-xs text-muted-foreground">Given to</div>
+                                    <div
+                                      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${
+                                        isGiven
+                                          ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
                                           : "bg-muted text-muted-foreground"
-                                      }`}>
-                                        <span className="text-sm font-bold">{teams ? teams.length : 0}</span>
-                                        <span className="text-[10px]">Teams</span>
-                                      </div>
+                                      }`}
+                                    >
+                                      <span className="text-sm font-bold">
+                                        {teams ? teams.length : 0}
+                                      </span>
+                                      <span className="text-[10px]">Teams</span>
                                     </div>
                                   </div>
-                               </div>
-                               
-                               {isGiven && (
-                                 <div className="flex flex-wrap gap-1 mt-2">
-                                   {teams.map((teamName, idx) => (
-                                     <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 truncate max-w-full">
-                                       {teamName}
-                                     </span>
-                                   ))}
-                                 </div>
-                               )}
-                             </div>
-                           );
-                         })}
-                         {(!localEvent?.specialRewards || localEvent.specialRewards.length === 0) && (
-                            <p className="text-sm text-muted-foreground text-center py-2 col-span-2">No special rewards available</p>
-                         )}
+                                </div>
+                              </div>
+
+                              {isGiven && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {teams.map((teamName, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 truncate max-w-full"
+                                    >
+                                      {teamName}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {(!localEvent?.specialRewards ||
+                          localEvent.specialRewards.length === 0) && (
+                          <p className="text-sm text-muted-foreground text-center py-2 col-span-2">
+                            No special rewards available
+                          </p>
+                        )}
                       </div>
 
                       {/* Unused Awards List (Remaining) */}
@@ -614,7 +645,9 @@ export default function CommitteePage(props: Props) {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-sm text-muted-foreground">{t("committeeSection.feedbackGiven")}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t("committeeSection.feedbackGiven")}
+                          </p>
                           <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">
                               {localEvent?.opinionsCommittee ?? 0}
@@ -631,14 +664,18 @@ export default function CommitteePage(props: Props) {
                           style={{
                             width: `${
                               localEvent?.presenterTeams && localEvent.presenterTeams > 0
-                                ? ((localEvent.opinionsCommittee ?? 0) / localEvent.presenterTeams) * 100
+                                ? ((localEvent.opinionsCommittee ?? 0) /
+                                    localEvent.presenterTeams) *
+                                  100
                                 : 0
                             }%`,
                           }}
                         />
                       </div>
                       <p className="text-xs text-rose-600 dark:text-rose-400 font-medium text-right">
-                        {t("committeeSection.remaining")} {(localEvent?.presenterTeams ?? 0) - (localEvent?.opinionsCommittee ?? 0)} Teams
+                        {t("committeeSection.remaining")}{" "}
+                        {(localEvent?.presenterTeams ?? 0) - (localEvent?.opinionsCommittee ?? 0)}{" "}
+                        Teams
                       </p>
                     </CardContent>
                   </Card>
@@ -664,9 +701,7 @@ export default function CommitteePage(props: Props) {
                     <div className="flex gap-2 w-full sm:w-auto">
                       <Select
                         value={filterStatus}
-                        onValueChange={(v) =>
-                          setFilterStatus(v as "all" | "scored" | "unscored")
-                        }
+                        onValueChange={(v) => setFilterStatus(v as "all" | "scored" | "unscored")}
                       >
                         <SelectTrigger className="w-35">
                           <SelectValue placeholder="Filter" />

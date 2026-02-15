@@ -119,6 +119,7 @@ export type Team = {
   myReward?: number;
   mySpecialRewards?: string[];
   myComment?: string;
+  myGraded?: boolean;
 };
 
 export type ProjectMember = {

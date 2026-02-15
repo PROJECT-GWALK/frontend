@@ -5,7 +5,7 @@ import { getEvaluationCriteria, getTeamGrades, submitGrade } from "@/utils/apiev
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Criteria = {
@@ -40,6 +40,7 @@ export default function CommitteeGradingForm({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,6 +110,7 @@ export default function CommitteeGradingForm({
       }
 
       setSubmitted(true);
+      setIsEditing(false);
       toast.success("Grades submitted successfully");
     } catch (error) {
       console.error("Error submitting grades:", error);
@@ -153,10 +155,27 @@ export default function CommitteeGradingForm({
               Please rate this project based on the following criteria
             </p>
           </div>
-          {submitted && (
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-semibold">Submitted</span>
+          {submitted && !isEditing && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="text-sm font-semibold">Submitted</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                disabled={disabled}
+              >
+                <Edit2 className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+            </div>
+          )}
+          {isEditing && (
+            <div className="flex items-center gap-2 text-amber-600">
+              <Edit2 className="w-4 h-4" />
+              <span className="text-sm font-semibold">Editing</span>
             </div>
           )}
         </div>
@@ -185,7 +204,7 @@ export default function CommitteeGradingForm({
                 value={grades.get(c.id) ?? ""}
                 onChange={(e) => handleScoreChange(c.id, e.target.value)}
                 placeholder={`0 - ${c.maxScore}`}
-                disabled={disabled || submitted}
+                disabled={disabled || (submitted && !isEditing)}
                 className="w-32"
               />
               <span className="text-sm text-muted-foreground">/ {c.maxScore}</span>
@@ -245,13 +264,29 @@ export default function CommitteeGradingForm({
 
         {/* Submit Button */}
         <div className="flex gap-2 pt-4">
+          {isEditing && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              disabled={submitting}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          )}
           <Button
             onClick={handleSubmit}
-            disabled={submitting || grades.size !== criteria.length || disabled || submitted}
+            disabled={
+              submitting || grades.size !== criteria.length || disabled || (submitted && !isEditing)
+            }
             className="flex-1"
           >
             {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            {submitted ? "Grades Submitted" : "Submit Grades"}
+            {submitted && !isEditing
+              ? "Grades Submitted"
+              : isEditing
+                ? "Update Grades"
+                : "Submit Grades"}
           </Button>
         </div>
       </CardContent>

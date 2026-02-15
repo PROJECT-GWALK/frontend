@@ -10,4 +10,5 @@ export type PresenterProject = {
   createdAt?: string;
   totalVr?: number;
   myComment?: string;
+  myGraded?: boolean;
 };

@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   RefreshCw,
   CheckCircle2,
+  ClipboardCheck,
 } from "lucide-react";
 import type { PresenterProject } from "../Presenter/components/types";
 import type { SpecialReward } from "@/utils/types";
@@ -264,6 +265,7 @@ export default function UnifiedProjectList({
               const isVrGiven = (projectRewards[p.id]?.vrGiven || 0) > 0;
               const isSpecialGiven = !!projectRewards[p.id]?.specialGiven;
               const isCommented = !!p.myComment;
+              const isGraded = !!p.myGraded;
 
               return (
                 <Card
@@ -366,6 +368,15 @@ export default function UnifiedProjectList({
                             >
                               <MessageSquare className="w-3 h-3 mr-1" />
                               {t("projectTab.commented")}
+                            </Badge>
+                          )}
+                          {isGraded && (
+                            <Badge
+                              variant="outline"
+                              className="border-purple-500/50 bg-purple-500/10 text-purple-600 dark:text-purple-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <ClipboardCheck className="w-3 h-3 mr-1" />
+                              {t("projectTab.graded")}
                             </Badge>
                           )}
                         </div>
