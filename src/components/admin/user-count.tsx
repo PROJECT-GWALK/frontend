@@ -23,14 +23,15 @@ export default function AdminUserCount() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-          <User2 /> Users
-        </CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+        <User2 className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <p className="text-4xl font-bold">{countUser}</p>
-        <p className="text-sm text-muted-foreground">Total registered users</p>
+        <div className="text-2xl font-bold">{countUser}</div>
+        <p className="text-xs text-muted-foreground">
+          Registered users
+        </p>
       </CardContent>
     </Card>
   );

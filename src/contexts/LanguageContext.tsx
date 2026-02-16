@@ -8,17 +8,23 @@ type Language = "en" | "th";
 
 type TranslationValue = string | { [key: string]: TranslationValue };
 
+// Define the shape of the translation object based on en.json
+type TranslationObject = typeof en;
+
+// Define the hybrid type: Callable function AND Translation Object properties
+export type Translator = ((key: string) => string) & TranslationObject;
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: Translator;
   timeFormat: string;
   dateFormat: string;
 }
 
-const translations: Record<Language, TranslationValue> = {
-  en: en as unknown as TranslationValue,
-  th: th as unknown as TranslationValue,
+const translations: Record<Language, TranslationObject> = {
+  en: en,
+  th: th as unknown as TranslationObject,
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -44,13 +50,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const timeFormat = language === "th" ? "th-TH" : "en-US";
   const dateFormat = language === "th" ? "th-TH" : "en-US";
 
-  const t = (key: string): string => {
+  const tFunc = (key: string): string => {
     const keys = key.split(".");
-    let value: TranslationValue | undefined = translations[language];
+    let value: unknown = translations[language];
 
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {
-        value = value[k];
+        value = (value as Record<string, unknown>)[k];
       } else {
         return key; // Return key if translation not found
       }
@@ -58,6 +64,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
     return typeof value === "string" ? value : key;
   };
+
+  // Create a hybrid object that is both a function and contains translation properties
+  const t = Object.assign(tFunc, translations[language]) as Translator;
 
   // if (!mounted) return <>{children}</>;
 

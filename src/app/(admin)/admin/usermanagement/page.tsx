@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   getAllUsers,
   updateUserRole,
@@ -42,7 +43,7 @@ import {
 } from "@/components/ui/pagination";
 import { getCurrentUser } from "@/utils/apiuser";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, ShieldOff, Ban, UserCheck, Trash2, Check } from "lucide-react";
+import { Shield, ShieldOff, Ban, UserCheck, Trash2, Check, Search } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -166,278 +167,263 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="flex justify-center">
-      <div className="space-y-4 w-full max-w-6xl">
-        <Card>
-          <CardHeader className="flex items-center justify-between gap-2 text-lg font-semibold">
-            <span>User Management</span>
-            {/* กลุ่มเครื่องมือด้านขวา: Select + Search */}
-            <div className="flex items-center gap-2">
-              <Select
-                value={filterRole}
-                onValueChange={(v) => {
-                  setFilterRole(v as "ALL" | "ADMIN" | "USER");
-                  setPage(1); // รีเซ็ตหน้าเมื่อเปลี่ยนตัวกรอง
-                }}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="USER">User</SelectItem>
-                </SelectContent>
-              </Select>
+    <div className="space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
+      </div>
 
-              <Input
-                placeholder="Search by name, email, or username..."
-                className="max-w-xs"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
+      <div className="flex items-center justify-between space-y-2">
+        <div className="flex flex-1 items-center space-x-2">
+          <Input
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 w-[150px] lg:w-[250px]"
+          />
+          <Select
+            value={filterRole}
+            onValueChange={(v) => {
+              setFilterRole(v as "ALL" | "ADMIN" | "USER");
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-8 w-[130px]">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Roles</SelectItem>
+              <SelectItem value="ADMIN">Admin</SelectItem>
+              <SelectItem value="USER">User</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Username</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <p>Loading users...</p>
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Loading users...
+                </TableCell>
+              </TableRow>
+            ) : paginatedUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  No users found.
+                </TableCell>
+              </TableRow>
             ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Username</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedUsers.map((u) => (
-                      <TableRow key={u.id}>
-                        <TableCell>
-                          {u.name ?? "—"}
-                          {currentUser?.id === u.id && (
-                            <span className="ml-1 text-xs text-blue-500">
-                              (me)
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>{u.username ?? "—"}</TableCell>
-                        <TableCell>{u.email ?? "—"}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-2xl ${
-                              u.role === "ADMIN" ? "bg-accent" : "bg-accent"
-                            }`}
-                          >
-                            {u.role}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {u.banned ? (
-                            <span className="px-2 py-1 text-xs font-medium rounded-2xl bg-destructive text-white">
-                              Banned
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs font-medium rounded-2xl bg-green-500 text-white">
-                              Active
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="align-middle text-center">
-                          <div className="inline-flex items-center justify-center gap-2">
-                            {/* ถ้าเป็นตัวเอง → ไม่ให้ action */}
-                            {currentUser?.id === u.id ? (
-                              <span>-</span>
-                            ) : (
-                              <>
-                                {/* Change Role */}
-                                {!u.banned && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button size="sm" variant="secondary" className="gap-2 hover:brightness-90">
-                                        {u.role === "ADMIN" ? (
-                                          <ShieldOff className="h-4 w-4" />
-                                        ) : (
-                                          <Shield className="h-4 w-4" />
-                                        )}
-                                        Set {u.role === "ADMIN" ? "USER" : "ADMIN"}
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                          Confirm Role Change
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Change role of{" "}
-                                          <span className="font-semibold">
-                                            {u.email ?? u.username}
-                                          </span>{" "}
-                                          to <b>{u.role === "ADMIN" ? "USER" : "ADMIN"}</b>?
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                          Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() =>
-                                            handleRoleChange(
-                                              u.id,
-                                              u.role === "ADMIN" ? "USER" : "ADMIN"
-                                            )
-                                          }
-                                          className="gap-2 hover:brightness-90"
-                                        >
-                                          <Check className="h-4 w-4" />
-                                          Confirm
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
-                                
-                                {/* Ban / Unban */}
-                                {u.banned ? (
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="gap-2 hover:brightness-90"
-                                    onClick={() => handleUnban(u.id)}
+              paginatedUsers.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>
+                    <div className="font-medium">{u.name ?? "—"}</div>
+                    {currentUser?.id === u.id && (
+                      <span className="text-xs text-muted-foreground">
+                        (You)
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>{u.username ?? "—"}</TableCell>
+                  <TableCell>{u.email ?? "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={u.role === "ADMIN" ? "destructive" : "secondary"}>
+                      {u.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {u.banned ? (
+                      <Badge variant="destructive">Banned</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-green-500 text-green-600 bg-green-500/10">
+                        Active
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      {currentUser?.id === u.id ? (
+                        <span className="text-muted-foreground">-</span>
+                      ) : (
+                        <>
+                          {!u.banned && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-8 w-8">
+                                  {u.role === "ADMIN" ? (
+                                    <ShieldOff className="h-4 w-4" />
+                                  ) : (
+                                    <Shield className="h-4 w-4" />
+                                  )}
+                                  <span className="sr-only">Toggle Role</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Change Role</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to change role of <b>{u.name}</b> to <b>{u.role === "ADMIN" ? "USER" : "ADMIN"}</b>?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleRoleChange(
+                                        u.id,
+                                        u.role === "ADMIN" ? "USER" : "ADMIN"
+                                      )
+                                    }
                                   >
-                                    <UserCheck className="h-4 w-4" />
-                                    Unban
-                                  </Button>
-                                ) : (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button size="sm" variant="secondary" className="gap-2 hover:brightness-90">
-                                        <Ban className="h-4 w-4" />
-                                        Ban
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Ban User</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Please provide a reason for banning this user.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <Textarea
-                                        className="overflow-hidden resize-none"
-                                        rows={3}
-                                        placeholder="Reason"
-                                        value={banReason}
-                                        onChange={(e) => setBanReason(e.target.value)}
-                                        onInput={handleAutoResize}
-                                      />
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                          Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          variant="destructive"
-                                          onClick={() => handleBanConfirm(u.id)}
-                                          className="gap-2 hover:brightness-90"
-                                        >
-                                          <Ban className="h-4 w-4" />
-                                          Confirm Ban
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
-                                
-                                {/* Delete */}
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="destructive" className="gap-2 hover:brightness-90">
-                                      <Trash2 className="h-4 w-4" />
-                                      Delete
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        This will permanently delete{" "}
-                                        <span className="font-semibold">
-                                          {u.email ?? u.username}
-                                        </span>
-                                        .
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>
-                                        Cancel
-                                      </AlertDialogCancel>
-                                      <AlertDialogAction
-                                        variant="destructive"
-                                        onClick={() => handleDelete(u.id)}
-                                        className="gap-2 hover:brightness-90"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                        Confirm Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                                    Confirm
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
 
-                {/* Pagination */}
-                <div className="flex justify-center mt-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        />
-                      </PaginationItem>
-                      {getRenderedPages().map((pItem, idx) =>
-                        pItem === "ellipsis" ? (
-                          <PaginationItem key={`ellipsis-${idx}`}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        ) : (
-                          <PaginationItem key={`page-${pItem}`}>
-                            <PaginationLink
-                              href="#"
-                              isActive={pItem === page}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setPage(pItem as number);
-                              }}
-                            >
-                              {pItem}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                              >
+                                {u.banned ? (
+                                  <UserCheck className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Ban className="h-4 w-4 text-orange-500" />
+                                )}
+                                <span className="sr-only">Ban/Unban</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  {u.banned ? "Unban User" : "Ban User"}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {u.banned
+                                    ? "Are you sure you want to unban this user?"
+                                    : "Please provide a reason for banning this user."}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              {!u.banned && (
+                                <div className="py-2">
+                                  <Textarea
+                                    placeholder="Reason for ban..."
+                                    value={banReason}
+                                    onChange={(e) => {
+                                      setBanReason(e.target.value);
+                                      handleAutoResize(e);
+                                    }}
+                                    className="resize-none overflow-hidden min-h-[80px]"
+                                    rows={1}
+                                  />
+                                </div>
+                              )}
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    u.banned
+                                      ? handleUnban(u.id)
+                                      : handleBanConfirm(u.id)
+                                  }
+                                  className={!u.banned ? "bg-destructive hover:bg-destructive/90" : ""}
+                                >
+                                  {u.banned ? "Unban" : "Ban"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" className="h-8 w-8">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete <b>{u.name}</b>? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(u.id)}
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
                       )}
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            setPage((p) => Math.min(totalPages || 1, p + 1))
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
-          </CardContent>
-        </Card>
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex justify-end">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="cursor-pointer"
+              />
+            </PaginationItem>
+            {getRenderedPages().map((pItem, idx) =>
+              pItem === "ellipsis" ? (
+                <PaginationItem key={`ellipsis-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={`page-${pItem}`}>
+                  <PaginationLink
+                    isActive={pItem === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(pItem as number);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {pItem}
+                  </PaginationLink>
+                </PaginationItem>
+              )
+            )}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setPage((p) => Math.min(totalPages || 1, p + 1))
+                }
+                className="cursor-pointer"
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   );

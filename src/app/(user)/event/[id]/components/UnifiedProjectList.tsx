@@ -10,10 +10,12 @@ import {
   MessageSquare,
   Eye,
   Award,
-  Gift,
   MoreHorizontal,
   Users,
   LayoutGrid,
+  RefreshCw,
+  CheckCircle2,
+  ClipboardCheck,
 } from "lucide-react";
 import type { PresenterProject } from "../Presenter/components/types";
 import type { SpecialReward } from "@/utils/types";
@@ -46,10 +48,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type ProjectRewardsState = Record<
   string,
-  { vrGiven: number; specialGiven: string | null }
+  { vrGiven: number; specialGiven: string | null | string[] }
 >;
 
 type Props = {
@@ -70,15 +74,16 @@ type Props = {
       | "reset_vr"
       | "reset_special"
       | "delete_team",
-    projectId: string
+    projectId: string,
   ) => void;
   onDeleteTeam?: (projectId: string) => Promise<void> | void;
   onPostComment?: (projectId: string, text: string) => Promise<void> | void;
   onGiveVr?: (projectId: string, amount: number) => Promise<void> | void;
   onGiveSpecial?: (projectId: string, rewardId: string) => Promise<void> | void;
   unusedAwards?: SpecialReward[];
+  onRefresh?: () => void;
+  unitReward?: string;
 };
-import { Input } from "@/components/ui/input";
 
 type ActionType = Parameters<NonNullable<Props["onAction"]>>[0];
 
@@ -96,10 +101,12 @@ export default function UnifiedProjectList({
   onGiveVr,
   onGiveSpecial,
   unusedAwards = [],
+  unitReward,
+  onRefresh,
 }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [teamToDelete, setTeamToDelete] = React.useState<string | null>(null);
-  
+
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [commentText, setCommentText] = React.useState("");
   const [selectedProjectId, setSelectedProjectId] = React.useState<string | null>(null);
@@ -110,7 +117,10 @@ export default function UnifiedProjectList({
   const [specialDialogOpen, setSpecialDialogOpen] = React.useState(false);
   const [specialChoice, setSpecialChoice] = React.useState<string | null>(null);
 
-  // Reset dialog state when closed
+  // Infinite Scroll State
+  const [visibleCount, setVisibleCount] = React.useState(30);
+  const observerTarget = React.useRef(null);
+  const { t } = useLanguage(); // Reset dialog state when closed
   React.useEffect(() => {
     if (!specialDialogOpen) {
       setSpecialChoice(null);
@@ -138,273 +148,306 @@ export default function UnifiedProjectList({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="grid gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card
-            key={i}
-            className="group border border-border/50 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm p-4 flex items-start gap-4"
-          >
-            {/* Image Skeleton */}
-            <div className="relative w-32 sm:w-48 aspect-video shrink-0 overflow-hidden bg-muted rounded-lg">
-              <Skeleton className="w-full h-full" />
-            </div>
-
-            {/* Content Skeleton */}
-            <div className="flex-1 flex flex-col gap-3">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <div className="flex gap-3 mt-auto">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  const filtered = projects.filter(
-    (p) => {
-      const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-      if (!matchesSearch) return false;
-
-      if (filterStatus === "all") return true;
-
-      const reward = projectRewards[p.id];
-      const hasGivenReward = reward && (reward.vrGiven > 0 || reward.specialGiven !== null);
-
-      if (filterStatus === "scored") return hasGivenReward;
-      if (filterStatus === "unscored") return !hasGivenReward;
-
-      return true;
-    }
-  );
-
-  if (filtered.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 bg-muted/20 rounded-2xl border-2 border-dashed border-muted-foreground/20">
-        <div className="p-4 rounded-full bg-muted/50 ring-8 ring-muted/20">
-          <LayoutGrid className="w-8 h-8 text-muted-foreground/50" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-base font-semibold text-foreground">
-            ไม่พบผลงานที่ค้นหา
-          </p>
-          <p className="text-sm text-muted-foreground">
-            ลองค้นหาด้วยคำค้นอื่น หรือยังไม่มีทีมที่สร้างขึ้น
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
+
+  const sorted = React.useMemo(() => {
+    let result = [...projects];
+
+    if (searchQuery) {
+      const lower = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) => p.title.toLowerCase().includes(lower) || p.desc?.toLowerCase().includes(lower),
+      );
+    }
+
+    if (filterStatus === "scored") {
+      result = result.filter((p) => (projectRewards[p.id]?.vrGiven || 0) > 0);
+    } else if (filterStatus === "unscored") {
+      result = result.filter((p) => (projectRewards[p.id]?.vrGiven || 0) === 0);
+    }
+
+    // Sort by createdAt (Oldest -> Newest)
+    result.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    return result;
+  }, [projects, searchQuery, filterStatus, projectRewards]);
+
+  // Infinite Scroll Effect
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 30, sorted.length));
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [sorted.length]);
+
+  // Reset visible count when search or filter changes
+  React.useEffect(() => {
+    setVisibleCount(30);
+  }, [searchQuery, filterStatus]);
+
+  const visibleProjects = sorted.slice(0, visibleCount);
 
   return (
     <>
-      <div className="grid gap-4">
-      {filtered.map((p) => (
-        <Card
-          key={p.id}
-          className="group relative overflow-hidden border border-border/60 bg-card/40 hover:bg-card hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 rounded-xl flex flex-col"
-        >
-          <div className="flex flex-col sm:flex-row p-4 gap-4 sm:gap-6">
-            {/* Project Image Section */}
-            <div className="relative shrink-0 w-full sm:w-56 aspect-video overflow-hidden rounded-lg bg-muted border border-border/50 group-hover:border-primary/20 transition-colors shadow-sm">
-              <Image
-                src={p.img || "/banner.png"} // Fallback image
-                alt={p.title}
-                fill
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute top-2 left-2 flex gap-1">
-                <Badge
-                  variant="secondary"
-                  className="bg-background/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider shadow-sm border-none px-2 h-6 flex items-center"
-                >
-                  Team
-                </Badge>
-              </div>
+      <div className="flex flex-col gap-4">
+        {onRefresh && (
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={loading}
+              className="gap-2 hover:bg-primary/10 transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              {t("participantSection.refresh")}
+            </Button>
+          </div>
+        )}
+
+        {loading && visibleProjects.length === 0 ? (
+          <div className="grid gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card
+                key={i}
+                className="group border border-border/50 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm p-4 flex items-start gap-4"
+              >
+                {/* Image Skeleton */}
+                <div className="relative w-32 sm:w-48 aspect-video shrink-0 overflow-hidden bg-muted rounded-lg">
+                  <Skeleton className="w-full h-full" />
+                </div>
+
+                {/* Content Skeleton */}
+                <div className="flex-1 flex flex-col gap-3">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-3 mt-auto">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 bg-muted/20 rounded-2xl border-2 border-dashed border-muted-foreground/20">
+            <div className="p-4 rounded-full bg-muted/50 ring-8 ring-muted/20">
+              <LayoutGrid className="w-8 h-8 text-muted-foreground/50" />
             </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-foreground">
+                {t("projectTab.projectNotFound")}
+              </p>
+              <p className="text-sm text-muted-foreground">{t("projectTab.ProjectNotFoundDesc")}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visibleProjects.map((p, index) => {
+              const isVrGiven = (projectRewards[p.id]?.vrGiven || 0) > 0;
+              const isSpecialGiven = !!projectRewards[p.id]?.specialGiven;
+              const isCommented = !!p.myComment;
+              const isGraded = !!p.myGraded;
 
-            {/* Content Section */}
-            <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="text-xl sm:text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                    {p.title}
-                  </h3>
-                </div>
-                {p.desc && (
-                  <p className="text-sm text-muted-foreground line-clamp-3 sm:line-clamp-2 leading-relaxed">
-                    {p.desc}
-                  </p>
-                )}
-              </div>
+              return (
+                <Card
+                  key={p.id}
+                  className="group relative flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 border border-border/60 p-0 gap-0"
+                >
+                  {/* Image Section */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                    <Link
+                      href={`/event/${eventId}/Projects/${p.id}`}
+                      className="block w-full h-full"
+                    >
+                      <Image
+                        src={p.img || "/banner.png"}
+                        alt={p.title}
+                        fill
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </Link>
 
-              {/* Metadata & Stats Row */}
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mt-4">
-                <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
-                  {(p.members?.length ?? 0) > 0 && (
-                    <div className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 rounded-full border border-border/50">
-                      <Users className="w-3.5 h-3.5 text-blue-500/70" />
-                      <span>{p.members?.length} Members</span>
-                    </div>
-                  )}
-                </div>
+                    {/* Badge Index */}
+                    <Badge className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full shadow-lg bg-black/60 text-white border border-white/20 backdrop-blur-md z-10">
+                      #{index + 1}
+                    </Badge>
 
-                {/* VR Score Display - Moved inside content area */}
-                {(role === "COMMITTEE" || role === "GUEST" || role === "ORGANIZER") && (
-                  <div className="w-full sm:w-auto flex items-center justify-between gap-4 bg-primary/5 px-3 py-2 rounded-lg border border-primary/10">
-                    <div className="flex flex-col">
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        VR Score
-                      </div>
-                      <div className="text-xl font-black text-primary tabular-nums leading-none">
-                        {p.totalVr?.toLocaleString() ?? 0}
-                      </div>
-                    </div>
-                    {/* My Contribution */}
-                    {role !== "ORGANIZER" && (
-                      <div className="text-[10px] text-muted-foreground border-l border-primary/20 pl-4 text-right">
-                        You gave
-                        <div className="font-bold text-foreground tabular-nums">
-                          {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0}
-                        </div>
+                    {/* Dropdown Menu (Top Right) */}
+                    {role === "ORGANIZER" && (
+                      <div className="absolute top-2 right-2 z-20">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 rounded-full text-foreground"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">{t("projectTab.moreOptions")}</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            {role === "ORGANIZER" && (
+                              <>
+                                <DropdownMenuLabel>
+                                  {t("projectTab.manageProject")}
+                                </DropdownMenuLabel>
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
+                                  onClick={() => handleActionInternal("delete_team", p.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  {t("projectTab.deleteProject")}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* Actions Footer */}
-          <div className="mt-auto border-t border-border/50 bg-muted/30 p-3">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <Link
-                href={`/event/${eventId}/Projects/${p.id}`}
-                className="w-full sm:w-auto sm:mr-auto"
-              >
-                <Button
-                  variant={
-                    role === "ORGANIZER" || (role === "PRESENTER" && p.isLeader)
-                      ? "default"
-                      : "secondary"
-                  }
-                  size="sm"
-                  className="h-9 px-4 font-semibold w-full sm:w-auto min-w-24"
-                >
-                  <Eye className="w-4 h-4 mr-2" /> View
-                </Button>
-              </Link>
+                  {/* Content Section */}
+                  <div className="flex flex-col flex-1 p-4 gap-3">
+                    <div className="space-y-2">
+                      <Link href={`/event/${eventId}/Projects/${p.id}`} className="block">
+                        <h4 className="font-semibold text-lg line-clamp-1 hover:text-primary transition-colors">
+                          {p.title}
+                        </h4>
+                      </Link>
 
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {role !== "ORGANIZER" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleActionInternal("comment", p.id)}
-                    className="h-9 px-3"
-                    title="แสดงความเห็น"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    คอมเมนต์
-                  </Button>
-                )}
-
-                {(role === "COMMITTEE" || role === "GUEST") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleActionInternal("give_vr", p.id)}
-                    className="h-9 px-3 font-medium text-primary hover:text-primary hover:bg-primary/10 border-primary/20"
-                    title="ให้ VR"
-                  >
-                    <Gift className="w-4 h-4 mr-2" />
-                    VR
-                  </Button>
-                )}
-
-                {role === "COMMITTEE" && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleActionInternal("give_special", p.id)}
-                    className="h-9 px-3 font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                    title="ให้รางวัลพิเศษ"
-                  >
-                    <Award className="w-4 h-4 mr-2" />
-                    Special
-                  </Button>
-                )}
-
-                {(role === "ORGANIZER" || role === "COMMITTEE" || role === "GUEST") && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                        <span className="sr-only">More options</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-52">
-                      {role === "ORGANIZER" && (
-                        <>
-                          <DropdownMenuLabel>จัดการทีม</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
-                            onClick={() => handleActionInternal("delete_team", p.id)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            ลบทีม
-                          </DropdownMenuItem>
-                        </>
+                      {p.desc && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{p.desc}</p>
                       )}
 
+                      {/* Badges */}
                       {(role === "COMMITTEE" || role === "GUEST") && (
-                        <>
-                          <DropdownMenuLabel>การให้คะแนน</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => onAction?.("reset_vr", p.id)}>
-                            <span className="w-4 h-4 mr-2 flex items-center justify-center text-muted-foreground">
-                              ↺
-                            </span>
-                            ขอคืน VR
-                          </DropdownMenuItem>
-                          {role === "COMMITTEE" && (
-                            <DropdownMenuItem onClick={() => onAction?.("reset_special", p.id)}>
-                              <span className="w-4 h-4 mr-2 flex items-center justify-center text-muted-foreground">
-                                ↺
-                              </span>
-                              ขอคืนรางวัลพิเศษ
-                            </DropdownMenuItem>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {isVrGiven && (
+                            <Badge
+                              variant="outline"
+                              className="border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              {t("projectTab.givenVR")}{" "}
+                              {projectRewards[p.id]?.vrGiven?.toLocaleString()} {unitReward}
+                            </Badge>
                           )}
-                        </>
+                          {isSpecialGiven && (
+                            <Badge
+                              variant="outline"
+                              className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <Award className="w-3 h-3 mr-1" />
+                              {t("projectTab.givenSR")}
+                            </Badge>
+                          )}
+                          {isCommented && (
+                            <Badge
+                              variant="outline"
+                              className="border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <MessageSquare className="w-3 h-3 mr-1" />
+                              {t("projectTab.commented")}
+                            </Badge>
+                          )}
+                          {isGraded && (
+                            <Badge
+                              variant="outline"
+                              className="border-purple-500/50 bg-purple-500/10 text-purple-600 dark:text-purple-400 gap-1 pl-1 pr-2 py-0 text-[10px]"
+                            >
+                              <ClipboardCheck className="w-3 h-3 mr-1" />
+                              {t("projectTab.graded")}
+                            </Badge>
+                          )}
+                        </div>
                       )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+
+                      {/* Info Row */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Users className="h-3.5 w-3.5" />
+                          <span>
+                            {p.members?.length ?? 0} {t("projectTab.members")}
+                          </span>
+                        </div>
+
+                        <div className="text-xs font-bold text-primary flex items-center">
+                          {role === "ORGANIZER" || role === "PRESENTER" ? (
+                            <>
+                              <span className="font-normal text-muted-foreground mr-1">
+                                {t("projectTab.total")}{" "}
+                              </span>
+                              {p.totalVr?.toLocaleString() ?? 0} {unitReward}
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-green-600 dark:text-green-400 mr-1">
+                                {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0}
+                              </span>
+                              <span className="text-muted-foreground mx-1">/</span>
+                              <span className="ml-1">
+                                {p.totalVr?.toLocaleString() ?? 0} {unitReward}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-auto pt-2 flex gap-2">
+                      <Link href={`/event/${eventId}/Projects/${p.id}`} className="flex-1">
+                        <Button size="sm" variant="outline" className="w-full">
+                          <Eye className="w-3.5 h-3.5 mr-1.5" /> {t("projectTab.viewProject")}
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+
+            {/* Sentinel for infinite scroll */}
+            {visibleCount < sorted.length && (
+              <div ref={observerTarget} className="py-4 flex justify-center w-full">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm animate-pulse">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  {t("projectTab.loadingMoreProjects")}
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        </Card>
-      ))}
+        )}
       </div>
 
       <Drawer open={commentOpen} onOpenChange={setCommentOpen}>
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
-              <DrawerTitle>แสดงความคิดเห็น {selectedProject ? `- ${selectedProject.title}` : ""}</DrawerTitle>
-              <DrawerDescription>เขียนความคิดเห็นของคุณเกี่ยวกับทีมนี้</DrawerDescription>
+              <DrawerTitle>
+                {t("projectTab.comments")} {selectedProject ? `- ${selectedProject.title}` : ""}
+              </DrawerTitle>
+              <DrawerDescription>{t("projectTab.commentsDesc")}</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0">
               {selectedProject && (
@@ -422,7 +465,7 @@ export default function UnifiedProjectList({
                 onChange={(e) => setCommentText(e.target.value)}
                 className="w-full mb-4"
                 rows={6}
-                placeholder="เขียนความคิดเห็น..."
+                placeholder={t("projectTab.writeCommentPlaceholder")}
               />
             </div>
             <DrawerFooter className="pt-2 pb-8">
@@ -436,7 +479,7 @@ export default function UnifiedProjectList({
                 }}
                 className="h-11 text-base"
               >
-                ส่งความคิดเห็น
+                {t("projectTab.postComment")}
               </Button>
               <DrawerClose asChild>
                 <Button
@@ -447,7 +490,7 @@ export default function UnifiedProjectList({
                   }}
                   className="h-11 text-base"
                 >
-                  ยกเลิก
+                  {t("projectTab.cancel")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>
@@ -460,8 +503,10 @@ export default function UnifiedProjectList({
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
-              <DrawerTitle>ให้ Virtual Reward {selectedProject ? `- ${selectedProject.title}` : ""}</DrawerTitle>
-              <DrawerDescription>ระบุจำนวน VR ที่ต้องการให้</DrawerDescription>
+              <DrawerTitle>
+                {t("projectTab.giveVR")} {selectedProject ? `- ${selectedProject.title}` : ""}
+              </DrawerTitle>
+              <DrawerDescription>{t("projectTab.giveVRDesc")}</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0">
               {selectedProject && (
@@ -493,7 +538,7 @@ export default function UnifiedProjectList({
                 }}
                 className="h-11 text-base"
               >
-                ยืนยัน
+                {t("projectTab.confirm")}
               </Button>
               <DrawerClose asChild>
                 <Button
@@ -504,7 +549,7 @@ export default function UnifiedProjectList({
                   }}
                   className="h-11 text-base"
                 >
-                  ยกเลิก
+                  {t("projectTab.cancel")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>
@@ -517,8 +562,10 @@ export default function UnifiedProjectList({
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
-              <DrawerTitle>ให้รางวัลพิเศษ {selectedProject ? `- ${selectedProject.title}` : ""}</DrawerTitle>
-              <DrawerDescription>เลือกรางวัลพิเศษที่ต้องการมอบให้</DrawerDescription>
+              <DrawerTitle>
+                {t("projectTab.giveSR")} {selectedProject ? `- ${selectedProject.title}` : ""}
+              </DrawerTitle>
+              <DrawerDescription>{t("projectTab.giveSRDesc")}</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0 space-y-3 mb-4">
               {selectedProject && (
@@ -549,7 +596,7 @@ export default function UnifiedProjectList({
                 ))
               ) : (
                 <div className="text-muted-foreground text-sm text-center py-4 bg-muted/30 rounded-lg">
-                  ไม่มีรางวัลที่เหลืออยู่ (ท่านอาจใช้สิทธิ์โหวตไปแล้ว หรือยังไม่มีการตั้งค่ารางวัล)
+                  {t("projectTab.noMoreSR")}
                 </div>
               )}
             </div>
@@ -565,7 +612,7 @@ export default function UnifiedProjectList({
                 }}
                 className="h-11 text-base"
               >
-                ยืนยัน
+                {t("projectTab.confirm")}
               </Button>
               <DrawerClose asChild>
                 <Button
@@ -576,7 +623,7 @@ export default function UnifiedProjectList({
                   }}
                   className="h-11 text-base"
                 >
-                  ยกเลิก
+                  {t("projectTab.cancel")}
                 </Button>
               </DrawerClose>
             </DrawerFooter>
@@ -587,13 +634,15 @@ export default function UnifiedProjectList({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบทีม?</AlertDialogTitle>
+            <AlertDialogTitle>{t("projectTab.confirmDeleteProject")}</AlertDialogTitle>
             <AlertDialogDescription>
-              การกระทำนี้ไม่สามารถย้อนกลับได้ ข้อมูลทีมและสมาชิกทั้งหมดจะถูกลบออกจากกิจกรรมนี้
+              {t("projectTab.confirmDeleteProjectDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setTeamToDelete(null)}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setTeamToDelete(null)}>
+              {t("projectTab.cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (teamToDelete && onDeleteTeam) {
@@ -603,7 +652,7 @@ export default function UnifiedProjectList({
               }}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              ยืนยันการลบ
+              {t("projectTab.deleteProject")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

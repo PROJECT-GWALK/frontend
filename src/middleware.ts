@@ -18,6 +18,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(targetUrl);
   }
 
+  // Allow static files (images, etc) to bypass auth
+  if (/\.(?:svg|png|jpg|jpeg|gif|webp)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   // Auth logic for protected routes
   const sessionToken =
     request.cookies.get("authjs.session-token")?.value ??
@@ -27,6 +32,7 @@ export function middleware(request: NextRequest) {
     pathname === "/" ||
     pathname === "/sign-in" || 
     pathname === "/error" ||
+    pathname === "/event" ||
     pathname.startsWith("/api/auth") ||
     /^\/event\/[^/]+$/.test(pathname) || // Allow /event/:id
     /^\/event\/[^/]+\/NotRole$/.test(pathname); // Allow /event/:id/NotRole

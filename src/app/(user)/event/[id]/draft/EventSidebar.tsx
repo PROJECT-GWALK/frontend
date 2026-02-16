@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LucideIcon, Save } from "lucide-react";
+import { Loader2, LucideIcon, Save } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Section = {
   id: string;
@@ -16,6 +17,7 @@ type EventSidebarProps = {
   eventId?: string;
   onSaveDraft?: () => void;
   completionPercent?: number;
+  isSaving?: boolean;
 };
 
 export function EventSidebar({
@@ -25,7 +27,9 @@ export function EventSidebar({
   eventId,
   onSaveDraft,
   completionPercent,
+  isSaving,
 }: EventSidebarProps) {
+  const { t } = useLanguage();
   const handleSectionClick = (sectionId: string) => {
     onSectionChange(sectionId);
     const element = document.getElementById(sectionId);
@@ -35,12 +39,15 @@ export function EventSidebar({
   };
 
   return (
-    <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:flex flex-col w-72 h-screen bg-background border-r border-border/60 z-30 pt-20 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+    <aside
+      className="hidden lg:fixed lg:left-0 lg:top-40 lg:flex flex-col w-72 bg-background border-r border-border/60 z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]"
+      style={{ height: "calc(100vh - 160px)" }}
+    >
       <div className="px-6 py-6 border-b border-border/60 shrink-0">
-        <h2 className="font-semibold text-lg text-foreground tracking-tight">Edit Event</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Complete details below / กรอกรายละเอียด
-        </p>
+        <h2 className="font-semibold text-lg text-foreground tracking-tight">
+          {t("sidebar.editEvent")}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("sidebar.completeDetails")}</p>
         {typeof completionPercent === "number" && (
           <div className="mt-6 flex items-center gap-4 bg-card rounded-xl p-3 border-none shadow-md">
             <div className="relative h-12 w-12 shrink-0">
@@ -72,8 +79,8 @@ export function EventSidebar({
               </div>
             </div>
             <div className="flex-1">
-              <div className="text-sm font-medium text-foreground">Completion</div>
-              <div className="text-xs text-muted-foreground">Progress so far</div>
+              <div className="text-sm font-medium text-foreground">{t("sidebar.completion")}</div>
+              <div className="text-xs text-muted-foreground">{t("sidebar.progressSoFar")}</div>
             </div>
           </div>
         )}
@@ -91,13 +98,18 @@ export function EventSidebar({
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 group relative overflow-hidden",
                 isActive
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full" />
               )}
-              <Icon className={cn("h-4 w-4 transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+              <Icon
+                className={cn(
+                  "h-4 w-4 transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                )}
+              />
               <span className="truncate">{section.label}</span>
             </button>
           );
@@ -109,8 +121,19 @@ export function EventSidebar({
           variant="default"
           className="w-full h-11 rounded-xl shadow-sm hover:shadow-md transition-all font-medium"
           onClick={() => onSaveDraft?.()}
+          disabled={isSaving}
         >
-          <Save className="mr-2 h-4 w-4" /> Save Draft
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t("sidebar.saving")}
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              {t("sidebar.saveDraft")}
+            </>
+          )}
         </Button>
       </div>
     </aside>

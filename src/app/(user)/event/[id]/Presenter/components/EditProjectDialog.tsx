@@ -21,6 +21,7 @@ import type { EventFileType } from "@/utils/types";
 import { toast } from "sonner";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import Image from "next/image";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   open: boolean;
@@ -28,6 +29,7 @@ type Props = {
   project: PresenterProject;
   onSuccess: () => void;
   eventId: string;
+  isSubmissionActive?: boolean;
 };
 
 export default function EditProjectDialog({
@@ -36,8 +38,10 @@ export default function EditProjectDialog({
   project,
   onSuccess,
   eventId,
+  isSubmissionActive = true,
 }: Props) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [form, setForm] = useState<PresenterProject>(project);
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -107,11 +111,11 @@ export default function EditProjectDialog({
         description: form.desc,
         imageCover,
       });
-      toast.success("Project updated");
+      toast.success(t("toast.projectUpdated"));
       onSuccess();
       onOpenChange(false);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to update project";
+      const msg = e instanceof Error ? e.message : t("toast.projectUpdateFailed");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -122,13 +126,13 @@ export default function EditProjectDialog({
     setLoading(true);
     try {
       await deleteTeam(eventId, project.id);
-      toast.success("Project deleted");
+      toast.success(t("toast.projectDeleted"));
       onSuccess();
       onOpenChange(false);
       setDeleteDialogOpen(false);
       router.push(`/event/${eventId}`);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to delete project";
+      const msg = e instanceof Error ? e.message : t("toast.projectDeleteFailed");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -162,25 +166,27 @@ export default function EditProjectDialog({
           }
           return { ...f, files: newFiles };
         });
-        toast.success("File uploaded");
+        toast.success(t("toast.fileUploaded"));
       }
     } catch (err) {
-      toast.error("Upload failed");
+      toast.error(t("toast.uploadFailed"));
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-[calc(100%-2rem)] rounded-lg flex flex-col max-h-[90vh]">
         <DialogTitle className="flex items-center gap-2">
           <Edit2 className="w-4 h-4" /> Edit Project
         </DialogTitle>
-        <div className="mt-4 space-y-4">
+        <div className="mt-2 space-y-3 flex-1 overflow-hidden flex flex-col">
           <div>
             <Label>Name</Label>
             <Input
               value={form.title || ""}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
+              disabled={!isSubmissionActive}
+              className="h-9"
             />
           </div>
 
@@ -189,10 +195,12 @@ export default function EditProjectDialog({
             <Textarea
               value={form.desc || ""}
               onChange={(e) => setForm({ ...form, desc: e.target.value })}
+              disabled={!isSubmissionActive}
+              className="min-h-15 max-h-25"
             />
           </div>
 
-          <div>
+          <div className="flex-1 min-h-0 flex flex-col">
             <Label>Image Cover</Label>
             <ImageCropDialog
               open={cropOpen}
@@ -210,7 +218,7 @@ export default function EditProjectDialog({
               onConfirm={onCropConfirm}
             />
             {bannerPreview ? (
-              <div className="relative border rounded-lg overflow-hidden aspect-video bg-muted mt-2">
+              <div className="relative border rounded-lg overflow-hidden bg-muted mt-1 flex-1 min-h-[120px]">
                 <Image
                   src={bannerPreview}
                   alt="Project cover preview"
@@ -218,10 +226,10 @@ export default function EditProjectDialog({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={openFilePicker}>
+                  <Button size="sm" variant="secondary" onClick={openFilePicker} disabled={!isSubmissionActive} className="h-7 text-xs">
                     Change
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={onRemoveBanner}>
+                  <Button size="sm" variant="destructive" onClick={onRemoveBanner} disabled={!isSubmissionActive} className="h-7 text-xs">
                     Remove
                   </Button>
                 </div>
@@ -231,66 +239,66 @@ export default function EditProjectDialog({
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={onBannerFileChange}
+                  disabled={!isSubmissionActive}
                 />
               </div>
             ) : (
               <div
-                className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-video flex flex-col items-center justify-center mt-2"
-                onClick={openFilePicker}
+                className={`border-2 border-dashed border-border rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center mt-1 flex-1 min-h-[120px] ${
+                  isSubmissionActive ? "hover:border-primary/50 cursor-pointer" : "opacity-50 cursor-not-allowed"
+                }`}
+                onClick={isSubmissionActive ? openFilePicker : undefined}
               >
-                <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Click to upload</p>
+                <Upload className="h-8 w-8 text-muted-foreground mb-1" />
+                <p className="text-xs text-muted-foreground">Click to upload</p>
                 <input
                   type="file"
                   className="hidden"
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={onBannerFileChange}
+                  disabled={!isSubmissionActive}
                 />
               </div>
             )}
           </div>
 
-
-
           <div>
             <Label>Members</Label>
-            <div className="flex gap-2 flex-wrap mt-2">
+            <div className="flex gap-2 flex-wrap mt-1 max-h-[60px] overflow-y-auto">
               {(form.members || []).length > 0 ? (
                 (form.members || []).map((m) => (
                   <div
                     key={m}
-                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm"
+                    className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-muted text-xs"
                   >
                     <span>{m}</span>
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-muted-foreground">No members yet.</div>
+                <div className="text-xs text-muted-foreground">No members yet.</div>
               )}
             </div>
           </div>
 
-
-
-          <div className="flex justify-between gap-2 mt-4 pt-4 border-t">
+          <div className="flex justify-between gap-2 mt-2 pt-2 border-t">
             {project.isLeader && (
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={() => setDeleteDialogOpen(true)}
-                disabled={loading}
+                disabled={loading || !isSubmissionActive}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete Project
+                Delete
               </Button>
             )}
             <div className={`flex gap-2 ${!project.isLeader ? "w-full justify-end" : ""}`}>
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={loading}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
+              <Button size="sm" onClick={handleSave} disabled={loading || !isSubmissionActive}>
+                {loading ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>

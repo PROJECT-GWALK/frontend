@@ -18,7 +18,7 @@ export const settingsSchema = z.object({
     .max(30, "Username must be at most 30 characters")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores (no spaces)"
+      "Username can only contain letters, numbers, and underscores (no spaces)",
     ),
   name: z.string().min(1, "Name is required").max(30, "Name too long"),
   description: z.string().max(200, "Description too long").optional().or(z.literal("")),
@@ -33,7 +33,7 @@ export const settingsSchema = z.object({
         val?.startsWith("https://") ||
         val?.startsWith("blob:") ||
         val?.startsWith("/"),
-      "Invalid image URL"
+      "Invalid image URL",
     ),
 });
 
@@ -72,6 +72,7 @@ export type EventDetail = {
   fileTypes?: EventFileType[];
 
   hasCommittee?: boolean;
+  unitReward?: string;
   committeeCount?: number;
   committeeReward?: number;
   hasGuestRewards?: boolean;
@@ -85,6 +86,8 @@ export type SpecialReward = {
   name: string;
   description: string;
   image?: string | null;
+  voteCount?: number;
+  teamCount?: number;
 };
 
 export type TeamFile = {
@@ -114,7 +117,9 @@ export type Team = {
   createdAt?: string;
   totalVr?: number;
   myReward?: number;
-  mySpecialReward?: string | null;
+  mySpecialRewards?: string[];
+  myComment?: string;
+  myGraded?: boolean;
 };
 
 export type ProjectMember = {
@@ -136,6 +141,7 @@ export type Candidate = {
 export type DraftEvent = {
   id: string;
   eventName: string;
+  createdAt: string;
   imageCover?: string | null;
   status: "PUBLISHED" | "DRAFT";
   publicView: boolean;
@@ -147,6 +153,9 @@ export type DraftEvent = {
   maxTeamMembers?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
+  vrTeamCapEnabled?: boolean;
+  vrTeamCapGuest?: number;
+  vrTeamCapCommittee?: number;
   hasCommittee?: boolean;
   unitReward?: string;
   locationName?: string;
@@ -166,6 +175,9 @@ export type MyEvent = {
   endView?: string;
   startJoinDate?: string;
   endJoinDate?: string;
+  userRating?: number | null;
+  organizerName?: string | null;
+  organizerImage?: string | null;
 };
 
 export type EventData = {
@@ -175,6 +187,7 @@ export type EventData = {
   imageCover?: string | null;
   status?: "DRAFT" | "PUBLISHED";
   publicView?: boolean;
+  gradingEnabled?: boolean;
   startView?: string;
   endView?: string;
   startJoinDate?: string;
@@ -183,12 +196,16 @@ export type EventData = {
   maxTeamMembers?: number;
   virtualRewardGuest?: number;
   virtualRewardCommittee?: number;
+  vrTeamCapEnabled?: boolean;
+  vrTeamCapGuest?: number;
+  vrTeamCapCommittee?: number;
   hasCommittee?: boolean;
   unitReward?: string;
   locationName?: string;
   location?: string;
   totalParticipants?: number;
   presentersCount?: number;
+  presenterTeams?: number;
   guestsCount?: number;
   committeeCount?: number;
   participantsVirtualTotal?: number;
@@ -198,6 +215,7 @@ export type EventData = {
   committeeVirtualUsed?: number;
   committeeFeedbackCount?: number;
   opinionsGot?: number;
+  myRole?: string | null;
   opinionsPresenter?: number;
   opinionsGuest?: number;
   opinionsCommittee?: number;
@@ -205,7 +223,6 @@ export type EventData = {
   vrUsed?: number;
   awardsUnused?: SpecialReward[];
   specialRewards?: SpecialReward[];
-  presenterTeams?: number;
   specialPrizeUsed?: number;
   specialPrizeCount?: number;
   fileTypes?: EventFileType[];
@@ -262,6 +279,10 @@ export type EventFormState = {
   guestReward?: number;
   hasCommittee?: boolean;
   committeeReward?: number;
+  gradingEnabled?: boolean;
+  vrTeamCapEnabled?: boolean;
+  vrTeamCapGuest?: number;
+  vrTeamCapCommittee?: number;
   unitReward?: string;
   startView?: string;
   endView?: string;

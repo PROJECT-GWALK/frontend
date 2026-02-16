@@ -3,11 +3,11 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
-import { createTeam, getTeams, getEvent, giveVr, resetVr, giveSpecial, resetSpecial } from "@/utils/apievent";
-import { useState, useEffect } from "react";
+import { getTeams, getEvent, giveVr, resetVr, giveSpecial, resetSpecial } from "@/utils/apievent";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, MessageSquare, BadgeCheck, Award } from "lucide-react";
+import { Users, Building, MessageSquare, BadgeCheck, Award, Gift } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -28,6 +28,7 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
 import ResultSection from "../components/ResultSection";
+import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type Props = {
   params?: Promise<{ id: string }>;
@@ -39,7 +40,7 @@ export default function CommitteePage(props: Props) {
   const paramsHook = useParams();
   const idFromParams = paramsHook?.id as string;
   const id = props.id || idFromParams;
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
@@ -54,7 +55,7 @@ export default function CommitteePage(props: Props) {
       if (res.message === "ok") {
         setLocalEvent(res.event);
         if (res.event.awardsUnused) {
-            setAwardsUnused(res.event.awardsUnused);
+          setAwardsUnused(res.event.awardsUnused);
         }
       }
     } catch (error) {
@@ -76,28 +77,16 @@ export default function CommitteePage(props: Props) {
     }
   }, [id, props.event]);
 
-  // Local project (mock) state for presenter
-  type LocalProject = {
-    id: string;
-    title: string;
-    description?: string;
-    img?: string;
-    videoLink?: string;
-    files?: string[];
-    members?: string[];
-    owner?: boolean;
-  };
-
-  const [userProject, setUserProject] = useState<LocalProject | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Committee-specific UI state for project interactions
   const [projectRewards, setProjectRewards] = useState<
-    Record<string, { vrGiven: number; specialGiven: string | null }>
+    Record<string, { vrGiven: number; specialGiven: string | null | string[] }>
   >({});
 
   const fetchTeamsData = async () => {
+    setProjectsLoading(true);
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
@@ -114,9 +103,11 @@ export default function CommitteePage(props: Props) {
               url: f.fileUrl,
               fileTypeId: f.fileTypeId,
             })) || [],
-          members:
-            t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          createdAt: t.createdAt,
           totalVr: t.totalVr,
+          myComment: t.myComment,
+          myGraded: t.myGraded,
         }));
         setProjects(mappedProjects);
 
@@ -126,12 +117,20 @@ export default function CommitteePage(props: Props) {
           teams.forEach((t) => {
             // Update or initialize with fetched myReward
             if (!newState[t.id]) {
-              newState[t.id] = { vrGiven: t.myReward || 0, specialGiven: null };
+              newState[t.id] = {
+                vrGiven: t.myReward || 0,
+                specialGiven:
+                  t.mySpecialRewards && t.mySpecialRewards.length > 0 ? t.mySpecialRewards : null,
+              };
             } else {
               // If re-fetching, update the vrGiven to match server state
               newState[t.id] = {
                 ...newState[t.id],
                 vrGiven: t.myReward || 0,
+                // We trust local state for special rewards unless we want to force sync from server always
+                // For now let's sync from server if we are refetching
+                specialGiven:
+                  t.mySpecialRewards && t.mySpecialRewards.length > 0 ? t.mySpecialRewards : null,
               };
             }
           });
@@ -140,6 +139,8 @@ export default function CommitteePage(props: Props) {
       }
     } catch (error) {
       console.error("Failed to fetch teams:", error);
+    } finally {
+      setProjectsLoading(false);
     }
   };
 
@@ -148,10 +149,6 @@ export default function CommitteePage(props: Props) {
   }, [id]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  // UI state for project viewer/editor
-  const [viewOpen, setViewOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState(false);
-  const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
   const { t } = useLanguage();
 
   const getErrorMessage = (error: unknown, fallback: string) => {
@@ -175,12 +172,17 @@ export default function CommitteePage(props: Props) {
   const handleResetVR = async (projectId: string) => {
     try {
       const res = await resetVr(id, projectId);
-      const refundAmount = res.newBalance - (localEvent?.myVirtualTotal ?? 0);
-      setLocalEvent((prev) => (prev ? {
-        ...prev,
-        myVirtualTotal: res.newBalance,
-        myVirtualUsed: (prev.myVirtualUsed ?? 0) - refundAmount
-      } : prev));
+      // Update local event state with new totals from backend
+      setLocalEvent((prev) =>
+        prev
+          ? {
+              ...prev,
+              myVirtualTotal: res.totalLimit,
+              myVirtualUsed: res.totalUsed,
+            }
+          : prev,
+      );
+
       setProjectRewards((prev) => ({
         ...prev,
         [projectId]: {
@@ -205,7 +207,7 @@ export default function CommitteePage(props: Props) {
           specialGiven: null,
         },
       }));
-      toast.success("คืนรางวัลพิเศษเรียบร้อย");
+      toast.success(t("toast.specialRewardRefunded"));
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to reset special reward"));
     }
@@ -216,11 +218,10 @@ export default function CommitteePage(props: Props) {
       const res = await giveVr(id, projectId, amount);
       setLocalEvent((prev) => {
         if (!prev) return prev;
-        const initialTotal = (prev.myVirtualTotal ?? 0) + (prev.myVirtualUsed ?? 0);
         return {
           ...prev,
-          myVirtualTotal: res.newBalance,
-          myVirtualUsed: initialTotal - res.newBalance,
+          myVirtualTotal: res.totalLimit,
+          myVirtualUsed: res.totalUsed,
         };
       });
       setProjectRewards((prev) => ({
@@ -238,28 +239,49 @@ export default function CommitteePage(props: Props) {
 
   const handleGiveSpecial = async (projectId: string, rewardId: string) => {
     try {
-      await giveSpecial(id, projectId, rewardId);
+      await giveSpecial(id, projectId, [rewardId]);
       fetchData();
-      
-      const rewardName = localEvent?.specialRewards?.find(r => r.id === rewardId)?.name || "Unknown";
 
-      setProjectRewards((prev) => ({
-        ...prev,
-        [projectId]: {
-          ...prev[projectId],
-          specialGiven: rewardName,
-        },
-      }));
-      toast.success("ให้รางวัลพิเศษเรียบร้อย");
+      setProjectRewards((prev) => {
+        const currentSpecial = prev[projectId]?.specialGiven;
+        let newSpecial: string | string[] | null = rewardId;
+
+        // If there were existing rewards, we might want to append (if logic supports multiple)
+        // But the API giveSpecial replaces or adds? The API takes array.
+        // Assuming the UI drawer picks one, we add it to the list if we want to support multiple.
+        // For now, let's just use array of IDs.
+        if (Array.isArray(currentSpecial)) {
+          if (!currentSpecial.includes(rewardId)) {
+            newSpecial = [...currentSpecial, rewardId];
+          } else {
+            newSpecial = currentSpecial;
+          }
+        } else if (currentSpecial && typeof currentSpecial === "string") {
+          // If previously stored as string (shouldn't happen with new logic but for safety)
+          if (currentSpecial !== rewardId) {
+            newSpecial = [currentSpecial, rewardId];
+          } else {
+            newSpecial = [rewardId];
+          }
+        } else {
+          newSpecial = [rewardId];
+        }
+
+        return {
+          ...prev,
+          [projectId]: {
+            ...prev[projectId],
+            specialGiven: newSpecial,
+          },
+        };
+      });
+      toast.success(t("toast.specialRewardGiven"));
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to give special reward"));
     }
   };
 
-  const handleAction = (
-    action: string,
-    projectId: string
-  ) => {
+  const handleAction = (action: string, projectId: string) => {
     if (action === "reset_vr") {
       handleResetVR(projectId);
     } else if (action === "reset_special") {
@@ -267,20 +289,50 @@ export default function CommitteePage(props: Props) {
     }
   };
 
+  const teamsGivenVrCount = useMemo(() => {
+    return Object.values(projectRewards).filter((p) => p.vrGiven > 0).length;
+  }, [projectRewards]);
+
+  const givenSpecialRewardsStats = useMemo(() => {
+    const stats: Record<string, string[]> = {};
+
+    // Initialize with empty arrays
+    localEvent?.specialRewards?.forEach((r) => {
+      stats[r.id] = [];
+    });
+
+    Object.entries(projectRewards).forEach(([projectId, rewardData]) => {
+      const special = rewardData.specialGiven;
+      const team = projects.find((p) => p.id === projectId);
+      if (!team) return;
+
+      if (Array.isArray(special)) {
+        special.forEach((rewardId) => {
+          if (!stats[rewardId]) stats[rewardId] = [];
+          stats[rewardId].push(team.title);
+        });
+      } else if (typeof special === "string") {
+        if (!stats[special]) stats[special] = [];
+        stats[special].push(team.title);
+      }
+    });
+    return stats;
+  }, [projectRewards, projects, localEvent]);
+
   if (loading || !localEvent) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="w-full justify-center flex">
         <div className="w-full">
           {/* Banner Skeleton */}
-          <div className="relative w-full aspect-2/1 md:h-[400px] overflow-hidden">
+          <div className="relative w-full aspect-2/1 md:h-100 overflow-hidden">
             <Skeleton className="w-full h-full" />
           </div>
           <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
             {/* Header Card Skeleton */}
-            <div className="border rounded-xl shadow-md mb-6 p-6 h-[100px] bg-card">
+            <div className="border rounded-xl shadow-md mb-6 p-6 h-25 bg-card">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 h-full">
-                 <Skeleton className="h-8 w-1/3" />
-                 <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-32" />
               </div>
             </div>
 
@@ -306,94 +358,58 @@ export default function CommitteePage(props: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="w-full justify-center flex">
       <div className="w-full">
-        <div
-          className="relative w-full aspect-video md:aspect-2/1 md:h-[400px] overflow-hidden cursor-zoom-in"
-          onClick={() => setBannerOpen(true)}
-        >
-          {localEvent?.imageCover ? (
-            <Image
-              src={localEvent.imageCover}
-              alt={localEvent.eventName || "Event banner"}
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          ) : (
-            <Image
-              src="/banner.png"
-              alt="Default banner"
-              fill
-              sizes="100vw"
-              className="object-cover rounded-xl"
-            />
-          )}
-          <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent pointer-events-none" />
-        </div>
-        <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
-          <DialogContent
-            showCloseButton={false}
-            className="sm:max-w-3xl md:max-w-5xl bg-transparent border-none p-0"
-            aria-label="Event banner"
-          >
-            <DialogTitle className="sr-only">Event banner</DialogTitle>
-            <Image
-              src={localEvent?.imageCover || "/banner.png"}
-              alt={localEvent.eventName || "Event banner"}
-              width={800}
-              height={400}
-              className="w-full h-auto rounded-xl"
-            />
-            <DialogClose
-              aria-label="Close banner"
-              className="absolute top-3 right-3 z-50 rounded-full bg-black/60 text-white hover:bg-black/80 p-2 shadow"
-            >
-              <X className="h-4 w-4" />
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 mt-6">
-          <Card 
-            className="border-none shadow-md mb-6 transition-all hover:shadow-lg relative overflow-hidden"
+        <OrganizerBanner event={localEvent} open={bannerOpen} onOpenChange={setBannerOpen} />
+
+        <div className="max-w-6xl mx-auto mt-6">
+          <div
+            className="bg-card rounded-xl shadow-sm border p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 transition-all hover:shadow-md relative overflow-hidden"
             style={{ borderLeft: "6px solid var(--role-committee)" }}
           >
-            <div 
-              className="absolute inset-0 pointer-events-none" 
-              style={{ background: "linear-gradient(to right, var(--role-committee), transparent)", opacity: 0.05 }} 
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(to right, var(--role-committee), transparent)",
+                opacity: 0.05,
+              }}
             />
-            <CardHeader className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                {/* LEFT SIDE: Title & Status */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <CardTitle 
-                      className="text-2xl lg:text-3xl font-bold"
-                      style={{ color: "var(--role-committee)" }}
-                    >
-                      {localEvent?.eventName || "Event"}
-                    </CardTitle>
-                  </div>
-                </div>
-
-                {/* RIGHT SIDE: Actions */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  {/* Role Label */}
-                  <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-committee) text-white font-medium shadow-md select-none">
-                    <Building className="h-4 w-4" />
-                    <span>Committee</span>
-                  </div>
-                </div>
+            {/* LEFT SIDE: Title & Status */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1
+                  className="text-2xl lg:text-3xl font-bold tracking-tight"
+                  style={{ color: "var(--role-committee)" }}
+                >
+                  {localEvent?.eventName || "Event"}
+                </h1>
               </div>
-            </CardHeader>
-          </Card>
+            </div>
+
+            {/* RIGHT SIDE: Actions */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Role Label */}
+              <div className="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-lg bg-(--role-committee) text-white font-medium shadow-sm select-none">
+                <Building className="h-4 w-4" />
+                <span>Committee</span>
+              </div>
+            </div>
+          </div>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
             <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-[100px]">Dashboard</TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-[100px]">Information</TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-[100px]">Projects</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-[100px]">Result</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="information" className="flex-1 min-w-25">
+                Information
+              </TabsTrigger>
+              <TabsTrigger value="project" className="flex-1 min-w-25">
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="result" className="flex-1 min-w-25">
+                Result
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -401,10 +417,10 @@ export default function CommitteePage(props: Props) {
                 {/* Personal Virtual Rewards summary */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* 1. My Virtual Rewards */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                        <div className="p-2 rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                           <BadgeCheck className="h-5 w-5" />
                         </div>
                         {t("committeeSection.myVirtualRewards")}
@@ -413,39 +429,59 @@ export default function CommitteePage(props: Props) {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-sm text-muted-foreground">{t("committeeSection.used")}</p>
-                          <span className="text-2xl font-bold">
-                            {localEvent?.myVirtualUsed ?? 0}
-                          </span>
+                          <p className="text-sm text-muted-foreground">
+                            {t("committeeSection.used")}
+                          </p>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold">
+                              {localEvent?.myVirtualUsed?.toLocaleString() ?? 0}
+                            </span>
+                            <span className="text-lg text-muted-foreground">
+                              / {localEvent?.myVirtualTotal?.toLocaleString() ?? 0}{" "}
+                              {localEvent?.unitReward ?? "coins"}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("committeeSection.total")} {localEvent?.myVirtualTotal ?? 0}
-                        </span>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">Given to</p>
+                          <div className="flex items-baseline gap-1 justify-end">
+                            <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                              {teamsGivenVrCount}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              / {localEvent?.presenterTeams ?? projects.length} Teams
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                          className="h-full bg-linear-to-r from-amber-500 to-yellow-400 dark:from-amber-600 dark:to-amber-400 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
-                              ((localEvent?.myVirtualUsed ?? 0) /
-                                (localEvent?.myVirtualTotal || 1)) *
-                              100
+                              localEvent?.myVirtualTotal && localEvent.myVirtualTotal > 0
+                                ? ((localEvent.myVirtualUsed ?? 0) / localEvent.myVirtualTotal) *
+                                  100
+                                : 0
                             }%`,
                           }}
                         />
                       </div>
-                      <p className="text-xs text-amber-600 font-medium text-right">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-right">
                         {t("committeeSection.remaining")}{" "}
-                        {(localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)}
+                        {(
+                          (localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)
+                        ).toLocaleString()}{" "}
+                        {localEvent?.unitReward ?? "coins"}
                       </p>
                     </CardContent>
                   </Card>
 
                   {/* 2. จำนวนผู้เข้าร่วมทั้งหมด */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                        <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
                           <Users className="h-5 w-5" />
                         </div>
                         {t("committeeSection.totalParticipants")}
@@ -458,24 +494,24 @@ export default function CommitteePage(props: Props) {
                           (localEvent?.committeeCount ?? 0)}
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs mt-2 text-muted-foreground">
-                        <span className="px-2 py-1 bg-slate-100 rounded">
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                           {t("dashboard.presenterCount")}: {localEvent?.presentersCount ?? 0}
                         </span>
-                        <span className="px-2 py-1 bg-slate-100 rounded">
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                           {t("dashboard.guestCount")}: {localEvent?.guestsCount ?? 0}
                         </span>
-                        <span className="px-2 py-1 bg-slate-100 rounded">
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                           {t("dashboard.committeeCount")}: {localEvent?.committeeCount ?? 0}
                         </span>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* 3. รางวัลพิเศษ (Updated with Progress Bar & List) */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  {/* 4. รางวัลพิเศษ (Updated with List of Voted Teams) */}
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300 md:col-span-2 lg:col-span-1">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">
                           <Award className="h-5 w-5" />
                         </div>
                         {t("committeeSection.specialAwards")}
@@ -484,154 +520,166 @@ export default function CommitteePage(props: Props) {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
                         <span className="text-2xl font-bold">
-                          {localEvent?.specialPrizeUsed ?? 4}{" "}
+                          {localEvent?.specialPrizeUsed ?? 0}{" "}
                           <span className="text-sm font-normal text-muted-foreground">
-                            / {localEvent?.specialPrizeCount ?? 5}
+                            / {localEvent?.specialPrizeCount ?? 0}
                           </span>
                         </span>
-                        <span className="text-sm text-muted-foreground">{t("committeeSection.usedOverTotal")}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("committeeSection.usedOverTotal")}
+                        </span>
                       </div>
-                      <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                          style={{
-                            width: `${
-                              ((localEvent?.specialPrizeUsed ?? 4) /
-                                (localEvent?.specialPrizeCount ?? 5)) *
-                              100
-                            }%`,
-                          }}
-                        />
+
+                      {/* Voted Awards List */}
+                      <div className="grid gap-3 sm:grid-cols-2 mt-4 max-h-100 overflow-y-auto custom-scrollbar pr-2">
+                        {localEvent?.specialRewards?.map((reward) => {
+                          const teams = givenSpecialRewardsStats[reward.id];
+                          const isGiven = teams && teams.length > 0;
+
+                          return (
+                            <div
+                              key={reward.id}
+                              className={`border rounded-lg p-3 space-y-3 transition-all ${
+                                isGiven
+                                  ? "bg-indigo-50/50 border-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-500/30"
+                                  : "bg-background border-dashed border-muted opacity-60 grayscale hover:opacity-100 hover:grayscale-0 hover:border-solid hover:shadow-sm"
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-16 shrink-0">
+                                  {reward.image ? (
+                                    <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
+                                      <Image
+                                        src={reward.image}
+                                        alt={reward.name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="border-2 border-dashed border-border rounded-lg aspect-square bg-muted flex items-center justify-center">
+                                      <Gift className="h-6 w-6 text-muted-foreground/50" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 space-y-1">
+                                  <div
+                                    className="font-semibold text-sm line-clamp-2"
+                                    title={reward.name}
+                                  >
+                                    {reward.name}
+                                  </div>
+
+                                  <div className="pt-2 border-t mt-1 flex justify-between items-end">
+                                    <div className="text-xs text-muted-foreground">Given to</div>
+                                    <div
+                                      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${
+                                        isGiven
+                                          ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
+                                          : "bg-muted text-muted-foreground"
+                                      }`}
+                                    >
+                                      <span className="text-sm font-bold">
+                                        {teams ? teams.length : 0}
+                                      </span>
+                                      <span className="text-[10px]">Teams</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {isGiven && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {teams.map((teamName, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 truncate max-w-full"
+                                    >
+                                      {teamName}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {(!localEvent?.specialRewards ||
+                          localEvent.specialRewards.length === 0) && (
+                          <p className="text-sm text-muted-foreground text-center py-2 col-span-2">
+                            No special rewards available
+                          </p>
+                        )}
                       </div>
-                      {/* <div className="flex flex-wrap gap-2"> */}
-                      {/* Placeholder for remaining rewards */}
-                      {/* {Array.from({
-                          length:
-                            (localEvent?.specialPrizeCount ?? 5) -
-                            (localEvent?.specialPrizeUsed ?? 4),
-                        }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="text-[10px] px-2 py-1 border border-indigo-200 text-indigo-500 rounded bg-indigo-50/50"
-                          >
-                            Available Reward {i + 1}
-                          </div>
-                        ))}
-                      </div> */}
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-indigo-500 uppercase">
-                          {t("committeeSection.waitForVote")} :
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {/* Example of projects that haven't received feedback */}
-                          <div className="text-[10px] px-2 py-1 bg-indigo-50/50 text-indigo-500 rounded border border-indigo-200">
-                            Best Innovatic Project
-                          </div>
-                          <div className="text-[10px] px-2 py-1 bg-indigo-50/50 text-indigo-500 rounded border border-indigo-200">
-                            Best Design Project
+
+                      {/* Unused Awards List (Remaining) */}
+                      {awardsUnused.length > 0 && (
+                        <div className="space-y-1 mt-4 pt-4 border-t border-dashed">
+                          <p className="text-[10px] font-bold text-indigo-400 uppercase">
+                            {t("dashboard.remainingAwards")}:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {awardsUnused.map((award, i) => (
+                              <div
+                                key={award.id || i}
+                                className="text-[10px] px-2 py-1 bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 rounded border border-slate-100 dark:border-slate-800"
+                              >
+                                {award.name}
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
 
-                  {/* 4. Feedback (New Card) */}
-                  <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300">
+                  {/* 5. Feedback (New Card) */}
+                  <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
                     <CardHeader className="pb-2">
                       <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                        <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300">
+                        <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
                           <MessageSquare className="h-5 w-5" />
                         </div>
-                        Feedback Progress
+                        Comment Progress
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-end">
-                        <span className="text-2xl font-bold text-foreground">
-                          {localEvent?.myFeedbackCount ?? 0}{" "}
-                          <span className="text-sm font-normal text-muted-foreground">
-                            / {localEvent?.presenterTeams ?? 10}
-                          </span>
-                        </span>
-                        <span className="text-sm text-muted-foreground">{t("committeeSection.feedbackGiven")}</span>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            {t("committeeSection.feedbackGiven")}
+                          </p>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold text-rose-600 dark:text-rose-400">
+                              {localEvent?.opinionsCommittee ?? 0}
+                            </span>
+                            <span className="text-lg text-muted-foreground">
+                              / {localEvent?.presenterTeams ?? 0} Teams
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-2 w-full bg-rose-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-rose-100 dark:bg-rose-900/30 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-rose-500 rounded-full transition-all duration-1000"
+                          className="h-full bg-linear-to-r from-rose-500 to-pink-400 dark:from-rose-600 dark:to-rose-400 rounded-full transition-all duration-1000"
                           style={{
                             width: `${
-                              ((localEvent?.myFeedbackCount ?? 0) /
-                                (localEvent?.presenterTeams ?? 10)) *
-                              100
+                              localEvent?.presenterTeams && localEvent.presenterTeams > 0
+                                ? ((localEvent.opinionsCommittee ?? 0) /
+                                    localEvent.presenterTeams) *
+                                  100
+                                : 0
                             }%`,
                           }}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-rose-600 uppercase">
-                          Wait for Feedback:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {/* Example of projects that haven't received feedback */}
-                          <div className="text-[10px] px-2 py-1 bg-rose-50 text-rose-600 rounded border border-rose-100">
-                            Project Alpha
-                          </div>
-                          <div className="text-[10px] px-2 py-1 bg-rose-50 text-rose-600 rounded border border-rose-100">
-                            Project Gamma
-                          </div>
-                        </div>
-                      </div>
+                      <p className="text-xs text-rose-600 dark:text-rose-400 font-medium text-right">
+                        {t("committeeSection.remaining")}{" "}
+                        {(localEvent?.presenterTeams ?? 0) - (localEvent?.opinionsCommittee ?? 0)}{" "}
+                        Teams
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
-
-                {/* Projects overview for committee with action buttons
-                <div className="lg:col-span-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3 mt-4">
-                    <h2 className="text-xl font-semibold">Projects</h2>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <Select
-                        value={filterStatus}
-                        onValueChange={(v) =>
-                          setFilterStatus(v as "all" | "scored" | "unscored")
-                        }
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Filter" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Projects</SelectItem>
-                          <SelectItem value="scored">Evaluated</SelectItem>
-                          <SelectItem value="unscored">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        placeholder="Search projects..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="max-w-xs"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-6">
-                    <UnifiedProjectList
-                      projects={projects}
-                      role="COMMITTEE"
-                      eventId={id}
-                      searchQuery={searchQuery}
-                      filterStatus={filterStatus}
-                      projectRewards={projectRewards}
-                      userVrBalance={localEvent?.myVirtualTotal ?? 0}
-                      onAction={handleAction}
-                      onGiveVr={handleGiveVr}
-                      onGiveSpecial={handleGiveSpecial}
-                      unusedAwards={awardsUnused}
-                      onPostComment={() => {
-                        toast.success("ส่งความคิดเห็นเรียบร้อย");
-                      }}
-                    />
-                  </div>
-                </div> */}
               </div>
             </TabsContent>
 
@@ -653,11 +701,9 @@ export default function CommitteePage(props: Props) {
                     <div className="flex gap-2 w-full sm:w-auto">
                       <Select
                         value={filterStatus}
-                        onValueChange={(v) =>
-                          setFilterStatus(v as "all" | "scored" | "unscored")
-                        }
+                        onValueChange={(v) => setFilterStatus(v as "all" | "scored" | "unscored")}
                       >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="w-35">
                           <SelectValue placeholder="Filter" />
                         </SelectTrigger>
                         <SelectContent>
@@ -682,6 +728,7 @@ export default function CommitteePage(props: Props) {
                     searchQuery={searchQuery}
                     filterStatus={filterStatus}
                     projectRewards={projectRewards}
+                    loading={projectsLoading}
                     onAction={handleAction}
                     onGiveVr={handleGiveVr}
                     onGiveSpecial={handleGiveSpecial}
@@ -689,6 +736,8 @@ export default function CommitteePage(props: Props) {
                     onPostComment={() => {
                       toast.success("ส่งความคิดเห็นเรียบร้อย");
                     }}
+                    onRefresh={fetchTeamsData}
+                    unitReward={localEvent?.unitReward ?? "coins"}
                   />
                 </div>
               </div>

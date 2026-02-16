@@ -12,8 +12,9 @@ import { CalendarIcon, MapPinIcon, Users, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDateTime } from "@/utils/function";
+import { formatDateTime, linkify } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
+import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type RoleStr = "presenter" | "committee" | "guest";
 
@@ -32,6 +33,8 @@ export default function InviteConfirmPage() {
   const [event, setEvent] = useState<EventData | null>(null);
   const [joining, setJoining] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [bannerOpen, setBannerOpen] = useState(false);
+  const {t} = useLanguage();
 
   useEffect(() => {
     if (!id) return;
@@ -70,11 +73,12 @@ export default function InviteConfirmPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pb-12">
-        <div className="relative w-full aspect-21/9 md:h-[400px]">
+      <div className="min-h-screen bg-background pb-12 w-full justify-center flex">
+        <div className="w-full">
+        <div className="relative w-full aspect-21/9 md:h-100">
           <Skeleton className="w-full h-full" />
         </div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-20 relative z-10">
+        <div className="max-w-6xl mx-auto -mt-20 relative z-10">
           <Card className="border-none shadow-xl">
             <CardHeader className="p-6 md:p-8 space-y-6">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
@@ -100,6 +104,7 @@ export default function InviteConfirmPage() {
           </Card>
         </div>
       </div>
+      </div>
     );
   }
 
@@ -111,19 +116,19 @@ export default function InviteConfirmPage() {
       if (tokenParam) {
         const resJoin = await joinEventWithToken(id, tokenParam);
         if (resJoin?.message === "ok") {
-          toast.success("เข้าร่วมอีเวนต์สำเร็จ");
+          toast.success(t("toast.joinEventSuccess"));
         } else {
-          toast.error(resJoin?.message || "เข้าร่วมอีเวนต์ไม่สำเร็จ");
+          toast.error(resJoin?.message || t("toast.joinEventFailed"));
         }
       } else {
-         toast.error("ลิงก์เชิญไม่ถูกต้อง");
+         toast.error(t("toast.invalidInviteLink"));
       }
       try {
         await getMyEvents();
       } catch {}
       router.replace(`/event/${id}`);
     } catch (e: unknown) {
-      toast.error("เข้าร่วมอีเวนต์ไม่สำเร็จ");
+      toast.error(t("toast.joinEventFailed"));
     } finally {
       setJoining(false);
     }
@@ -132,18 +137,13 @@ export default function InviteConfirmPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Banner Section */}
-      <div className="relative w-full aspect-video md:aspect-21/9 md:h-[400px] overflow-hidden">
-        <Image 
-          src={event?.imageCover || "/banner.png"} 
-          alt={event?.eventName || "Event banner"} 
-          fill 
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-background/90 via-background/20 to-transparent pointer-events-none" />
-      </div>
+      <OrganizerBanner 
+        event={event} 
+        open={bannerOpen} 
+        onOpenChange={setBannerOpen} 
+      />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 -mt-12 md:-mt-20 relative z-10">
+      <div className="max-w-6xl mx-auto mt-6 relative z-10">
         <Card className="border-none shadow-xl bg-linear-to-br from-background/95 to-muted/20 backdrop-blur-sm overflow-hidden">
           <div className="h-2 bg-linear-to-r from-primary to-primary/60" />
           <CardHeader className="p-6 md:p-8 space-y-6">
@@ -179,19 +179,44 @@ export default function InviteConfirmPage() {
               {inviteRole && (
                 <div className="shrink-0">
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 text-center min-w-40">
-                    <p className="text-sm text-muted-foreground mb-1">บทบาทของคุณ</p>
-                    <p className="text-xl font-bold text-primary capitalize">{inviteRole}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t("inviteSection.your_role")}</p>
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xl font-bold text-white px-3 py-1"
+                      style={{
+                        backgroundColor: `var(--role-${inviteRole.toLowerCase()})`
+                      }}
+                    >
+                      {inviteRole}
+                    </Badge>
                   </div>
                 </div>
               )}
             </div>
+
+            {event?.myRole && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
+                    <p className="text-yellow-800 dark:text-yellow-200">
+                        {t("inviteSection.already_member")}
+                        <Badge 
+                            variant="secondary" 
+                            className="ml-2 text-white"
+                            style={{
+                                backgroundColor: `var(--role-${event.myRole.toLowerCase()})`
+                            }}
+                        >
+                            {event.myRole}
+                        </Badge>
+                    </p>
+                </div>
+            )}
           </CardHeader>
 
           <CardContent className="p-6 md:p-8 pt-0 space-y-8">
             {event?.eventDescription && (
-              <div className="prose dark:prose-invert max-w-none">
-                <p className="text-muted-foreground leading-relaxed">
-                  {event.eventDescription}
+              <div className="prose dark:prose-invert max-w-none max-h-60 overflow-y-auto pr-2">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {linkify(event.eventDescription)}
                 </p>
               </div>
             )}
@@ -202,11 +227,11 @@ export default function InviteConfirmPage() {
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold">ยืนยันการเข้าร่วม</h3>
+                  <h3 className="text-lg font-semibold">{t("inviteSection.confirm_title")}</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
                     {inviteRole 
-                      ? `คุณได้รับเชิญให้เข้าร่วมงานนี้ในฐานะ ${inviteRole} กรุณากดยืนยันเพื่อดำเนินการต่อ`
-                      : "คุณได้รับเชิญให้เข้าร่วมงานนี้ กรุณากดยืนยันเพื่อดำเนินการต่อ"
+                      ? `${t("inviteSection.confirm_description")} ${inviteRole} ${t("inviteSection.confirm_description2")}`
+                      : `${t("inviteSection.confirm_description2")}`
                     }
                   </p>
                 </div>
@@ -215,23 +240,23 @@ export default function InviteConfirmPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => router.replace(`/event/${id}`)}
-                    className="sm:min-w-[140px] gap-2"
+                    className="sm:min-w-35 gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    ยกเลิก
+                    {t("inviteSection.button_cancel")}
                   </Button>
                   <Button 
                     onClick={doJoin} 
                     disabled={joining}
-                    className="sm:min-w-[140px] bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    className="sm:min-w-35 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                   >
                     {joining ? (
                       <>
                         <span className="animate-spin mr-2">⏳</span>
-                        กำลังเข้าร่วม...
+                        {t("inviteSection.ongoing")}
                       </>
                     ) : (
-                      "ยืนยันการเข้าร่วม"
+                      t("inviteSection.button_confirm")
                     )}
                   </Button>
                 </div>
