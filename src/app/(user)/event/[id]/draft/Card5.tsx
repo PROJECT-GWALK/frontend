@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { autoResizeTextarea } from "@/utils/function";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
 
 export type GradingCriteria = {
   id: string;
@@ -38,6 +39,8 @@ export default function Card5(props: Props) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -168,12 +171,15 @@ export default function Card5(props: Props) {
   };
 
   const handleDeleteCriteria = (id: string) => {
-    if (
-      confirm(t("gradingSection.deleteConfirm") || "Are you sure you want to delete this criteria?")
-    ) {
-      setGradingCriteria(gradingCriteria.filter((c) => c.id !== id));
-      toast.success(t("gradingSection.criteriaDeleted") || "Criteria deleted successfully");
-    }
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
+  const handleConfirmDelete = () => {
+    if (!deleteTargetId) return;
+    setGradingCriteria(gradingCriteria.filter((c) => c.id !== deleteTargetId));
+    toast.success(t("gradingSection.criteriaDeleted") || "Criteria deleted successfully");
+    setDeleteDialogOpen(false);
+    setDeleteTargetId(null);
   };
 
   const handleCancel = () => {
@@ -435,6 +441,19 @@ export default function Card5(props: Props) {
                 </div>
               )}
             </div>
+            <DeleteConfirmDialog
+              open={deleteDialogOpen}
+              onOpenChange={(open) => {
+                setDeleteDialogOpen(open);
+                if (!open) setDeleteTargetId(null);
+              }}
+              onConfirm={handleConfirmDelete}
+              title={t("gradingSection.deleteConfirmTitle") || "Delete grading criteria"}
+              description={
+                t("gradingSection.deleteConfirm") ||
+                "Are you sure you want to delete this grading criteria?"
+              }
+            />
           </>
         )}
       </CardContent>

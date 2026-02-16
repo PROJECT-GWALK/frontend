@@ -33,6 +33,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 type Props = {
   eventTitle: string;
   setEventTitle: (v: string) => void;
+  canCheckName: boolean;
   checkingName: boolean;
   nameChecked: boolean | null;
   onCheckName: () => void;
@@ -61,6 +62,7 @@ export default function Card1(props: Props) {
   const {
     eventTitle,
     setEventTitle,
+    canCheckName,
     checkingName,
     nameChecked,
     onCheckName,
@@ -148,16 +150,16 @@ export default function Card1(props: Props) {
               <Button
                 variant="outline"
                 onClick={onCheckName}
-                disabled={checkingName || !eventTitle.trim()}
+                disabled={checkingName || !eventTitle.trim() || !canCheckName}
               >
                 {t("eventInfo.checkName")}
               </Button>
-              {eventTitle && nameChecked === true && (
+              {canCheckName && eventTitle && nameChecked === true && (
                 <div className="flex items-center gap-2 text-xs text-green-600">
                   <Check className="h-4 w-4" />
                 </div>
               )}
-              {eventTitle && nameChecked === false && (
+              {canCheckName && eventTitle && nameChecked === false && (
                 <div className="flex items-center gap-2 text-xs text-destructive">
                   <X className="h-4 w-4" />
                 </div>

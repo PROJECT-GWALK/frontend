@@ -839,6 +839,7 @@
     "descriptionTooLong": "Description must be at most 120 characters",
     "criteriaUpdated": "Criteria updated successfully",
     "criteriaAdded": "Criteria added successfully",
+    "deleteConfirmTitle": "Delete grading criteria?",
     "deleteConfirm": "Are you sure you want to delete this grading criteria?",
     "criteriaDeleted": "Criteria deleted successfully",
     "totalWeight": "Total Weight:",

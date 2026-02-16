@@ -122,6 +122,10 @@ export default function EventDraft() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
+  useEffect(() => {
+    setNameChecked(null);
+  }, [eventTitle]);
+
   // Presenter Details
   const [maxPresenters, setMaxPresenters] = useState("3");
   const [maxGroups, setMaxGroups] = useState("30");
@@ -414,10 +418,15 @@ export default function EventDraft() {
   };
 
   const handleCheckName = async () => {
-    if (!eventTitle.trim()) return;
+    const trimmed = eventTitle.trim();
+    if (!trimmed) return;
+    if (trimmed === originalTitle.trim()) {
+      setNameChecked(null);
+      return;
+    }
     try {
       setCheckingName(true);
-      const res = await checkEventName(eventTitle.trim());
+      const res = await checkEventName(trimmed);
       const ok = Boolean(res?.available);
       setNameChecked(ok);
       toast[ok ? "success" : "error"](
@@ -480,6 +489,8 @@ export default function EventDraft() {
       } else {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
+      setOriginalTitle(eventTitle.trim());
+      setNameChecked(null);
       toast.success(t("messages.draftSaved"));
     } catch (err) {
       console.error(err);
@@ -518,6 +529,8 @@ export default function EventDraft() {
       } else {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
+      setOriginalTitle(eventTitle.trim());
+      setNameChecked(null);
       await publishEvent(id);
       toast.success(t("messages.publishSuccess"));
       window.location.reload();
@@ -992,6 +1005,7 @@ export default function EventDraft() {
                     setEventTitle(v);
                     setNameChecked(null);
                   }}
+                  canCheckName={eventTitle.trim() !== originalTitle.trim()}
                   checkingName={checkingName}
                   nameChecked={nameChecked}
                   onCheckName={handleCheckName}
