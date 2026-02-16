@@ -14,6 +14,7 @@ import {
   updateEvaluationCriteria,
   deleteEvaluationCriteria,
 } from "@/utils/apievaluation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type CriteriaFormData = {
   id?: string;
@@ -252,20 +253,21 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       setLoading(false);
     }
   };
+  const { t } = useLanguage();
 
   return (
     <Card className="w-full">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Evaluation Criteria</CardTitle>
+          <CardTitle>{t("gradingSection.criteria")}</CardTitle>
           <Button onClick={handleAddCriteria} size="sm" disabled={loading}>
             <Plus className="w-4 h-4 mr-2" />
-            Add Criteria
+            {t("gradingSection.addCriteria")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {criteria.length > 0 && (
+        {/* {criteria.length > 0 && (
           <div className="rounded-lg border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-0.5">
@@ -303,15 +305,17 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Weight Warning */}
         {criteria.length > 0 && !isValidWeight && (
           <div className="flex gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold">Weight Total: {totalWeight.toFixed(2)}%</p>
-              <p className="text-sm">Total weight should equal 100%</p>
+              <p className="font-semibold">
+                {t("gradingSection.totalWeight")}: {totalWeight.toFixed(2)}%
+              </p>
+              <p className="text-sm">{t("gradingSection.weightWarning")}</p>
             </div>
           </div>
         )}
@@ -319,7 +323,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         {/* Criteria List */}
         <div className="space-y-3">
           {criteria.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">No criteria added yet</p>
+            <p className="text-center text-muted-foreground py-4">
+              {t("gradingSection.noCriteria")}
+            </p>
           ) : (
             criteria.map((item) => {
               const isEditing = editing.has(item.id!);
@@ -334,17 +340,21 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-sm font-semibold">Name *</label>
+                          <label className="text-sm font-semibold">
+                            {t("gradingSection.criteriaName")}
+                          </label>
                           <Input
                             value={item.name}
                             onChange={(e) => handleUpdateField(item.id!, "name", e.target.value)}
-                            placeholder="e.g., Creativity"
+                            placeholder={t("gradingSection.placeholderCriteriaName")}
                             className="mt-1"
                             disabled={loading}
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-semibold">Max Score *</label>
+                          <label className="text-sm font-semibold">
+                            {t("gradingSection.maxScore")}
+                          </label>
                           <Input
                             type="number"
                             value={item.maxScore}
@@ -357,7 +367,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                                   : 0,
                               )
                             }
-                            placeholder="100"
+                            placeholder={t("gradingSection.placeholderMaxScore")}
                             className="mt-1"
                             disabled={loading}
                           />
@@ -365,20 +375,24 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                       </div>
 
                       <div>
-                        <label className="text-sm font-semibold">Description</label>
+                        <label className="text-sm font-semibold">
+                          {t("gradingSection.criteriaDescription")}
+                        </label>
                         <Textarea
-                          value={item.description}
+                          value={item.description ?? ""}
                           onChange={(e) =>
                             handleUpdateField(item.id!, "description", e.target.value)
                           }
-                          placeholder="Optional description"
+                          placeholder={t("gradingSection.placeholderCriteriaDescription")}
                           className="mt-1 min-h-20"
                           disabled={loading}
                         />
                       </div>
 
                       <div>
-                        <label className="text-sm font-semibold">Weight Percentage (%) *</label>
+                        <label className="text-sm font-semibold">
+                          {t("gradingSection.weight")} %
+                        </label>
                         <Input
                           type="number"
                           value={item.weightPercentage}
@@ -402,7 +416,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
 
                       <div className="flex gap-2">
                         <Button onClick={() => handleSave(item.id!)} disabled={loading} size="sm">
-                          Save
+                          {t("gradingSection.save")}
                         </Button>
                         <Button
                           onClick={() =>
@@ -412,7 +426,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                           disabled={loading}
                           size="sm"
                         >
-                          Cancel
+                          {t("gradingSection.cancel")}
                         </Button>
                       </div>
                     </div>
@@ -422,8 +436,12 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold">{item.name}</h4>
-                          <Badge variant="secondary">{item.weightPercentage}%</Badge>
-                          <Badge variant="outline">Max: {item.maxScore}</Badge>
+                          <Badge variant="secondary" className="bg-blue-500 text-white">
+                            {t("gradingSection.weight")}: {item.weightPercentage}%
+                          </Badge>
+                          <Badge variant="outline" className="bg-green-500 text-white">
+                            {t("gradingSection.maxScore")}: {item.maxScore}
+                          </Badge>
                         </div>
                         {item.description && (
                           <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
@@ -436,7 +454,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                           size="sm"
                           disabled={loading}
                         >
-                          Edit
+                          {t("gradingSection.edit")}
                         </Button>
                         <Button
                           onClick={() => handleDelete(item.id!)}

@@ -823,8 +823,10 @@
     "weight": "Weight",
     "save": "Save Criteria",
     "cancel": "Cancel",
+    "edit": "Edit Criteria",
     "placeholderCriteriaName": "e.g. Creativity",
     "placeholderCriteriaDescription": "Description of this criteria",
+    "placeholderMaxScore": "e.g. 10",
     "noCriteria": "No grading criteria yet",
     "clickToAddCriteria": "Click to add grading criteria",
     "criteriaNameRequired": "Criteria name is required",
@@ -841,5 +843,13 @@
     "criteriaDeleted": "Criteria deleted successfully",
     "totalWeight": "Total Weight:",
     "weightWarning": "Total weight should ideally sum up to 100%"
+  },
+  "gradingDashboard": {
+    "title": "Grading Results",
+    "noGrade": "No grading results available yet",
+    "project": "Projects",
+    "presenter": "Presenter",
+    "totalScore": "Total Score",
+    "max": "Max"
   }
 }

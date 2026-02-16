@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Star, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type GradingResult = {
   teamId: string;
@@ -35,6 +36,7 @@ type Props = {
 };
 
 export default function GradingDashboard({ eventId }: Props) {
+  const { t } = useLanguage();
   const [results, setResults] = useState<GradingResult[]>([]);
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,11 +122,11 @@ export default function GradingDashboard({ eventId }: Props) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Grading Results</CardTitle>
+          <CardTitle>{t("gradingDashboard.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            No grading results available yet
+            {t("gradingDashboard.noGrade")}
           </div>
         </CardContent>
       </Card>
@@ -134,7 +136,7 @@ export default function GradingDashboard({ eventId }: Props) {
   return (
     <Card className="w-full">
       <CardHeader className="flex items-center justify-between">
-        <CardTitle>Grading Results Dashboard</CardTitle>
+        <CardTitle>{t("gradingDashboard.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -148,11 +150,11 @@ export default function GradingDashboard({ eventId }: Props) {
                     onClick={() => handleSort("teamName")}
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                   >
-                    Project Name
+                    {t("gradingDashboard.project")}
                     {getSortIcon("teamName")}
                   </Button>
                 </th>
-                <th className="text-left p-3 font-semibold">Presenter</th>
+                <th className="text-left p-3 font-semibold">{t("gradingDashboard.presenter")}</th>
                 <th className="text-center p-3 font-semibold">
                   <Button
                     variant="ghost"
@@ -160,13 +162,13 @@ export default function GradingDashboard({ eventId }: Props) {
                     onClick={() => handleSort("overallAverage")}
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                   >
-                    Grade
+                    {t("gradingDashboard.totalScore")}
                     {getSortIcon("overallAverage")}
                   </Button>
                 </th>
                 {criteria.map((crit) => (
                   <th key={crit.id} className="text-center p-3 font-semibold text-sm">
-                    {crit.name}
+                    {crit.name} ({t("gradingDashboard.max")}: {crit.maxScore})
                   </th>
                 ))}
               </tr>
@@ -190,11 +192,7 @@ export default function GradingDashboard({ eventId }: Props) {
                       {(() => {
                         const avg = getAverageForCriteria(result.committeeScores, crit.id);
                         if (avg === null) return <span className="text-muted-foreground">-</span>;
-                        return (
-                          <span className="font-semibold">
-                            {avg.toFixed(1)}/{crit.maxScore}
-                          </span>
-                        );
+                        return <span className="font-semibold">{avg.toFixed(1)}</span>;
                       })()}
                     </td>
                   ))}

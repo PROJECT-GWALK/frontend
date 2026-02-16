@@ -820,11 +820,13 @@
     "criteriaName": "ชื่อเกณฑ์",
     "criteriaDescription": "คำอธิบายเกณฑ์",
     "maxScore": "คะแนนสูงสุด",
-    "weight": "น้ำหนัก",
+    "weight": "น้ำหนักเกณฑ์",
     "save": "บันทึกเกณฑ์",
     "cancel": "ยกเลิก",
+    "edit": "แก้ไขเกณฑ์",
     "placeholderCriteriaName": "เช่น ความคิดสร้างสรรค์",
     "placeholderCriteriaDescription": "คำอธิบายเกณฑ์นี้",
+    "placeholderMaxScore": "เช่น 10",
     "noCriteria": "ยังไม่มีเกณฑ์การให้คะแนน",
     "clickToAddCriteria": "คลิกเพื่อเพิ่มเกณฑ์การให้คะแนน",
     "criteriaNameRequired": "กรุณากรอกชื่อเกณฑ์",
@@ -839,7 +841,15 @@
     "criteriaAdded": "เพิ่มเกณฑ์เรียบร้อยแล้ว",
     "deleteConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเกณฑ์การให้คะแนนนี้?",
     "criteriaDeleted": "ลบเกณฑ์เรียบร้อยแล้ว",
-    "totalWeight": "น้ำหนักของเกณฑ์รวม:",
+    "totalWeight": "น้ำหนักของเกณฑ์รวม",
     "weightWarning": "น้ำหนักของเกณฑ์รวมไม่เท่ากับ 100% ซึ่งอาจส่งผลต่อการคำนวณคะแนนโดยรวม"
+  },
+  "gradingDashboard": {
+    "title": "ผลการให้คะแนน",
+    "noGrade": "ยังไม่มีการให้คะแนน",
+    "project": "โครงการ",
+    "presenter": "ผู้นำเสนอ",
+    "totalScore": "คะแนนรวม",
+    "max": "เต็ม"
   }
 }
