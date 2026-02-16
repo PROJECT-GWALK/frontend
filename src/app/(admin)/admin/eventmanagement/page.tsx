@@ -69,6 +69,7 @@ type AdminEventListItem = {
   endJoinDate: string | null;
   publicView: boolean;
   publicJoin: boolean;
+  isHidden: boolean;
   participantsCount: number;
   teamsCount: number;
 };
@@ -118,6 +119,7 @@ type AdminEventDetail = {
   status: AdminEventStatus;
   publicView: boolean;
   publicJoin: boolean;
+  isHidden: boolean;
   participants: AdminParticipant[];
   teams: AdminTeam[];
 };
@@ -451,8 +453,8 @@ export default function AdminEventManagementPage() {
 
                           <div className="flex flex-wrap items-center gap-2 lg:hidden">
                             <Badge variant={statusBadgeVariant(e.status)}>{e.status}</Badge>
-                            <Badge variant={e.publicView ? "default" : "secondary"}>
-                              {e.publicView ? "Public View" : "Hidden"}
+                            <Badge variant={e.isHidden ? "destructive" : e.publicView ? "default" : "secondary"}>
+                              {e.isHidden ? "Hidden by Admin" : e.publicView ? "Public View" : "Hidden"}
                             </Badge>
                             <Badge variant="outline">{e.participantsCount} Participants</Badge>
                             <Badge variant="outline">{e.teamsCount} Teams</Badge>
@@ -462,8 +464,8 @@ export default function AdminEventManagementPage() {
 
                       <TableCell className="hidden lg:table-cell">
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant={e.publicView ? "default" : "secondary"}>
-                            {e.publicView ? "Public View" : "Hidden"}
+                          <Badge variant={e.isHidden ? "destructive" : e.publicView ? "default" : "secondary"}>
+                            {e.isHidden ? "Hidden by Admin" : e.publicView ? "Public View" : "Hidden"}
                           </Badge>
                         </div>
                       </TableCell>
@@ -562,6 +564,41 @@ export default function AdminEventManagementPage() {
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh
                   </Button>
+                  {selectedEvent?.isHidden ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={loadingEvent}
+                      onClick={async () => {
+                        if (!selectedEvent) return;
+                        try {
+                          await updateAdminEvent(selectedEvent.id, { isHidden: false });
+                          await Promise.all([fetchEventDetail(selectedEvent.id), fetchEvents()]);
+                        } catch (err) {
+                          console.error("Failed to unhide event:", err);
+                        }
+                      }}
+                    >
+                      ยกเลิกซ่อน
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={loadingEvent}
+                      onClick={async () => {
+                        if (!selectedEvent) return;
+                        try {
+                          await updateAdminEvent(selectedEvent.id, { isHidden: true });
+                          await Promise.all([fetchEventDetail(selectedEvent.id), fetchEvents()]);
+                        } catch (err) {
+                          console.error("Failed to hide event:", err);
+                        }
+                      }}
+                    >
+                      ซ่อนอีเว้น
+                    </Button>
+                  )}
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>

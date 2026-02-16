@@ -103,6 +103,7 @@ export const updateAdminEvent = async (
     status?: AdminEventStatus;
     publicView?: boolean;
     publicJoin?: boolean;
+    isHidden?: boolean;
   },
 ) => {
   const res = await axios.put(`/backend/api/admindashboard/events/${eventId}`, data, {
