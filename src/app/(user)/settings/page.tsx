@@ -179,9 +179,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAutoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    e.target.style.height = "auto";
-    e.target.style.height = `${e.target.scrollHeight}px`;
+  const handleAutoResize: React.FormEventHandler<HTMLTextAreaElement> = (e) => {
+    const el = e.currentTarget;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
   };
 
   return (
