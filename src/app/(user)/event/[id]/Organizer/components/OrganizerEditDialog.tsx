@@ -461,7 +461,7 @@ export default function OrganizerEditDialog({
                       <div className="space-y-6">
                         <div className="flex items-center gap-2 font-semibold text-lg">
                           <Clock className="h-5 w-5" />
-                          {t("eventInfo.eventTimePeriod")} (Public View)
+                          {t("eventInfo.eventTimePeriod")}
                         </div>
 
                         {/* Event Start */}
@@ -592,7 +592,7 @@ export default function OrganizerEditDialog({
                       <div className="space-y-6">
                         <div className="flex items-center gap-2 font-semibold text-lg">
                           <CalendarIcon className="h-5 w-5" />
-                          {t("eventTime.submissionPeriod")} (For Participants)
+                          {t("eventTime.submissionPeriod")}
                         </div>
 
                         {/* Submission Start */}
@@ -752,7 +752,7 @@ export default function OrganizerEditDialog({
             {section === "description" && (
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label>{t("eventInfo.eventBanner")}</Label>
+                  <Label className="font-semibold text-lg">{t("eventInfo.eventBanner")}</Label>
                   <div className="relative w-full aspect-video rounded-lg overflow-hidden group">
                     {bannerPreview ? (
                       <div className="relative w-full h-full border rounded-lg overflow-hidden">
@@ -815,7 +815,7 @@ export default function OrganizerEditDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("eventInfo.eventDescription")}</Label>
+                  <Label className="font-semibold text-lg">{t("eventInfo.eventDescription")}</Label>
                   <Textarea
                     ref={(el) => autoResizeTextarea(el)}
                     value={form.eventDescription || ""}
@@ -840,21 +840,6 @@ export default function OrganizerEditDialog({
                     placeholder={t("configuration.placeholderUnitReward")}
                   />
                 </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Label>{t("configuration.amountPerGuest")}</Label>
-                  <Input
-                    type="number"
-                    value={form.guestReward ?? ""}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        guestReward: e.target.value ? Number(e.target.value) : undefined,
-                      }))
-                    }
-                    placeholder={t("configuration.placeholderGuestReward")}
-                  />
-                </div>
-
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="hasCommittee"
@@ -880,31 +865,26 @@ export default function OrganizerEditDialog({
                     />
                   </div>
                 )}
-
+                <div className="grid grid-cols-1 gap-2">
+                  <Label>{t("configuration.amountPerGuest")}</Label>
+                  <Input
+                    type="number"
+                    value={form.guestReward ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        guestReward: e.target.value ? Number(e.target.value) : undefined,
+                      }))
+                    }
+                    placeholder={t("configuration.placeholderGuestReward")}
+                  />
+                </div>
                 <div className="space-y-3 rounded-lg border p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="space-y-0.5">
                       <div className="text-sm font-semibold">
-                        {t("configuration.gradingEnabled")}
+                        {t("configuration.vrTeamCapTitle")}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {t("configuration.gradingEnabledSubtitle")}
-                      </div>
-                    </div>
-                    <Checkbox
-                      id="gradingEnabled"
-                      checked={form.gradingEnabled ?? true}
-                      onCheckedChange={(checked) =>
-                        setForm((f) => ({ ...f, gradingEnabled: checked === true }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3 rounded-lg border p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                      <div className="text-sm font-semibold">{t("configuration.vrTeamCapTitle")}</div>
                       <div className="text-xs text-muted-foreground">
                         {t("configuration.vrTeamCapSubtitle")}
                       </div>
@@ -918,7 +898,7 @@ export default function OrganizerEditDialog({
                     />
                   </div>
 
-                  {form.vrTeamCapEnabled ?? true ? (
+                  {(form.vrTeamCapEnabled ?? true) ? (
                     <div className="space-y-3">
                       <div className="grid grid-cols-1 gap-2">
                         <Label>{t("configuration.vrTeamCapGuest")}</Label>
@@ -958,13 +938,34 @@ export default function OrganizerEditDialog({
                     </div>
                   ) : null}
                 </div>
-
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-semibold">
+                        {t("configuration.gradingEnabled")}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {t("configuration.gradingEnabledSubtitle")}
+                      </div>
+                    </div>
+                    <Checkbox
+                      id="gradingEnabled"
+                      checked={form.gradingEnabled ?? true}
+                      onCheckedChange={(checked) =>
+                        setForm((f) => ({ ...f, gradingEnabled: checked === true }))
+                      }
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
             {section === "presenter" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
+                  <h3 className="col-span-2 mb-2 font-semibold text-lg">
+                    {t("configuration.presenterConfig")}
+                  </h3>
                   <div className="space-y-2">
                     <Label>{t("configuration.maxGroups")}</Label>
                     <Input
@@ -1001,7 +1002,9 @@ export default function OrganizerEditDialog({
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <Label className="text-base">{t("configuration.fileRequirements")}</Label>
+                    <Label className="font-semibold text-lg">
+                      {t("configuration.fileRequirements")}
+                    </Label>
                     <Button
                       size="sm"
                       variant="outline"
@@ -1024,7 +1027,7 @@ export default function OrganizerEditDialog({
 
                   {ftList.length === 0 ? (
                     <div className="text-center py-4 text-muted-foreground border border-dashed rounded-lg">
-                      No file requirements added
+                      {t("projectDetail.files.noRequirements")}
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -1141,9 +1144,7 @@ export default function OrganizerEditDialog({
             {section === "rewards" && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    {t("rewardsSection.specialRewards")}
-                  </h3>
+                  <h3 className="font-semibold text-lg">{t("rewardsSection.specialRewards")}</h3>
                   <Button
                     size="sm"
                     variant="outline"

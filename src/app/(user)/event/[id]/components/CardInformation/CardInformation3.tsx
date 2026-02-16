@@ -6,6 +6,7 @@ import { Users, Edit, FileText, Gift, Award } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Separator } from "@/components/ui/separator";
 import type { EventData } from "@/utils/types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   event: EventData;
@@ -23,7 +24,7 @@ const getRewardFontSize = (val: number | undefined | null) => {
 };
 
 export default function CardInformation3({ event, editable, onEdit }: Props) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <Card className="lg:col-span-2 border-none dark:border dark:border-white/10 shadow-md hover:shadow-lg transition-all duration-300 group">
@@ -37,42 +38,33 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
           </CardTitle>
           {editable && onEdit && (
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 rounded-full hover:bg-(--role-presenter)/10 hover:text-(--role-presenter)"
-                title="Edit Presenter Config"
-                onClick={() =>
-                  onEdit("presenter", {
-                    startJoinDate: event?.startJoinDate ?? "",
-                    endJoinDate: event?.endJoinDate ?? "",
-                    maxTeams: event?.maxTeams ?? 0,
-                    maxTeamMembers: event?.maxTeamMembers ?? 0,
-                  })
-                }
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 rounded-full hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
-                title="Edit Rewards"
-                onClick={() =>
-                  onEdit("guest", {
-                    guestReward: event?.virtualRewardGuest ?? 0,
-                    committeeReward: event?.virtualRewardCommittee ?? 0,
-                    unitReward: event?.unitReward ?? "coins",
-                    hasCommittee: event?.hasCommittee ?? false,
-                    gradingEnabled: event?.gradingEnabled ?? true,
-                    vrTeamCapEnabled: event?.vrTeamCapEnabled ?? true,
-                    vrTeamCapGuest: event?.vrTeamCapGuest ?? 10,
-                    vrTeamCapCommittee: event?.vrTeamCapCommittee ?? 20,
-                  })
-                }
-              >
-                <Gift className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 rounded-full hover:bg-(--role-presenter)/10 hover:text-(--role-presenter)"
+                      title="Edit Presenter Config"
+                      onClick={() =>
+                        onEdit("presenter", {
+                          startJoinDate: event?.startJoinDate ?? "",
+                          endJoinDate: event?.endJoinDate ?? "",
+                          maxTeams: event?.maxTeams ?? 0,
+                          maxTeamMembers: event?.maxTeamMembers ?? 0,
+                        })
+                      }
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <p className="text-sm whitespace-pre-line leading-relaxed">
+                      {t("toolTip.participants")}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </div>
@@ -149,10 +141,45 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
 
           {/* Rewards Section */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-1 h-4 rounded-full bg-indigo-500"></span>
-              {t("information.rewardPoints") || "Rewards"}
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-indigo-500"></span>
+                {t("information.rewardPoints") || "Rewards"}
+              </h4>
+              {editable && onEdit && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 rounded-full hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                        title="Edit Rewards"
+                        onClick={() =>
+                          onEdit("guest", {
+                            guestReward: event?.virtualRewardGuest ?? 0,
+                            committeeReward: event?.virtualRewardCommittee ?? 0,
+                            unitReward: event?.unitReward ?? "coins",
+                            hasCommittee: event?.hasCommittee ?? false,
+                            gradingEnabled: event?.gradingEnabled ?? true,
+                            vrTeamCapEnabled: event?.vrTeamCapEnabled ?? true,
+                            vrTeamCapGuest: event?.vrTeamCapGuest ?? 10,
+                            vrTeamCapCommittee: event?.vrTeamCapCommittee ?? 20,
+                          })
+                        }
+                      >
+                        <Gift className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p className="text-sm whitespace-pre-line leading-relaxed">
+                        {t("toolTip.vr")}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <div className="flex flex-col gap-4">
               {event?.hasCommittee && (
                 <div className="relative overflow-hidden flex flex-col justify-between p-5 rounded-3xl bg-linear-to-br from-(--role-committee) via-(--role-committee)/90 to-(--role-committee) text-white shadow-lg transition-all hover:scale-[1.01] hover:shadow-xl min-h-40 group/card border border-white/10">
@@ -167,7 +194,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                     <div className="flex flex-col gap-1">
                       <span
                         className={`${getRewardFontSize(
-                          event?.virtualRewardCommittee
+                          event?.virtualRewardCommittee,
                         )} font-black tracking-tighter drop-shadow-md leading-none break-all`}
                         title={String(event?.virtualRewardCommittee ?? 0)}
                       >
@@ -182,7 +209,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                     </div>
                   </div>
                   <div className="mt-4 flex items-center gap-2 text-xs font-medium opacity-75 relative z-10">
-                    <div className="h-1 w-6 rounded-full bg-white/40"></div>
+                    <div className="h-1 w-4 rounded-full bg-white/40"></div>
                     <span>{t("rewardsCard.basePoints")}</span>
                   </div>
                 </div>
@@ -200,7 +227,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                   <div className="flex flex-col gap-1">
                     <span
                       className={`${getRewardFontSize(
-                        event?.virtualRewardGuest
+                        event?.virtualRewardGuest,
                       )} font-black tracking-tighter drop-shadow-md leading-none break-all`}
                       title={String(event?.virtualRewardGuest ?? 0)}
                     >
@@ -215,12 +242,11 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                   </div>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-xs font-medium opacity-75 relative z-10">
-                  <div className="h-1 w-6 rounded-full bg-white/40"></div>
+                  <div className="h-1 w-4 rounded-full bg-white/40"></div>
                   <span>{t("rewardsCard.basePoints")}</span>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </CardContent>

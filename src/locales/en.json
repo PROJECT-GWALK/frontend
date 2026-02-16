@@ -53,8 +53,8 @@
     "noDescription": "No description provided."
   },
   "eventTime": {
-    "timeConfiguration": "Event Schedule",
-    "submissionPeriod": "Submission Period",
+    "timeConfiguration": "Event Period",
+    "submissionPeriod": "Submission Period for Presenters",
     "submissionStartDate": "Start Date",
     "submissionEndDate": "End Date",
     "selectDate": "Select date"
@@ -221,7 +221,7 @@
     "submissionEnd": "Submission End",
     "maxTeams": "Max Teams",
     "memberPerGroup": "member per Groups",
-    "rewardPoints": "Reward and Points",
+    "rewardPoints": "Virtual Rewards",
     "startin": "Starting in",
     "link": "Link",
     "start": "Start",
@@ -267,8 +267,8 @@
     "candidates": "candidates"
   },
   "eventStatus": {
-    "startsIn": "Starts In",
-    "endsIn": "Ends In",
+    "startsIn": "Event Starts In",
+    "endsIn": "Event Ends In",
     "ongoing": "Ongoing",
     "status": "Status",
     "eventEnded": "Event Ended"
@@ -278,9 +278,9 @@
     "required": "REQUIRED"
   },
   "rewardsCard": {
-    "committeeReward": "Committee Reward",
-    "guestReward": "Guest Reward",
-    "basePoints": "Base points per evaluation"
+    "committeeReward": "Committee Virtual Rewards",
+    "guestReward": "Guest Virtual Rewards",
+    "basePoints": "Per Person"
   },
   "organizers": {
     "title": "Organizers",
@@ -851,5 +851,13 @@
     "presenter": "Presenter",
     "totalScore": "Total Score",
     "max": "Max"
+  },
+  "toolTip": {
+    "eventInfo": "Edit event description and event banner",
+    "eventLocation": "Edit event location and location link",
+    "eventTime": "Edit event time period and submission time period",
+    "participants": "Edit participant configuration and submission requirements",
+    "vr": "Edit virtual rewards, virtual reward limits, and grading",
+    "sr": "Create and edit special rewards"
   }
 }

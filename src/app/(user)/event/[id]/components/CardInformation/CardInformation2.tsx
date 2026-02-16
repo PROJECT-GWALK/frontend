@@ -6,6 +6,7 @@ import { Clock, CalendarIcon, Edit } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateTime, timeUntil } from "@/utils/function";
 import type { EventData } from "@/utils/types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   event: EventData;
@@ -29,14 +30,25 @@ export default function CardInformation2({ event, editable, onEdit, language = "
             {t("eventTime.timeConfiguration") || t("information.eventDuration")}
           </CardTitle>
           {editable && onEdit && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 rounded-full hover:bg-muted"
-              onClick={() => onEdit("time", {})}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-full hover:bg-muted"
+                    onClick={() => onEdit("time", {})}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p className="text-sm whitespace-pre-line leading-relaxed">
+                    {t("toolTip.eventTime")}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </CardHeader>
@@ -120,7 +132,7 @@ export default function CardInformation2({ event, editable, onEdit, language = "
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-muted flex flex-col items-center justify-center text-xs border">

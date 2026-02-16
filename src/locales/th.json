@@ -53,8 +53,8 @@
     "noDescription": "ไม่มีรายละเอียด"
   },
   "eventTime": {
-    "timeConfiguration": "กำหนดการ",
-    "submissionPeriod": "ช่วงเวลาส่งผลงาน",
+    "timeConfiguration": "กำหนดการอีเวนต์",
+    "submissionPeriod": "ช่วงเวลาส่งผลงานสำหรับผู้นำเสนอ",
     "submissionStartDate": "วันที่เริ่มส่ง",
     "submissionEndDate": "วันที่สิ้นสุดส่ง",
     "selectDate": "เลือกวันที่"
@@ -94,7 +94,7 @@
     "placeholderReqName": "เช่น ไฟล์สไลด์นำเสนอ",
     "placeholderReqDesc": "เช่น ไฟล์ PDF เท่านั้น",
     "vrTeamCapTitle": "จำนวน VR สูงสุดที่ให้ได้ต่อทีม",
-    "vrTeamCapSubtitle": "จำกัด VR สูงสุดที่ผู้ใช้ 1 คนให้ทีมหนึ่งทีมได้ (แยก Guest/Committee)",
+    "vrTeamCapSubtitle": "จำกัด VR สูงสุดที่ผู้ใช้ 1 คนให้ทีมหนึ่งทีมได้ (แยกระหว่างกรรมการและผู้เข้าร่วม)",
     "vrTeamCapGuest": "ผู้เข้าร่วม 1 คน ให้ต่อทีมได้สูงสุด",
     "vrTeamCapCommittee": "กรรมการ 1 คน ให้ต่อทีมได้สูงสุด",
     "placeholderVrTeamCapGuest": "เช่น 100",
@@ -221,7 +221,7 @@
     "submissionEnd": "วันที่สิ้นสุดส่งผลงาน",
     "maxTeams": "จำนวนทีมสูงสุด",
     "memberPerGroup": "สมาชิกต่อทีม",
-    "rewardPoints": "รางวัลและคะแนน",
+    "rewardPoints": "รางวัลเสมือน",
     "startin": "เริ่มใน",
     "link": "ลิงก์",
     "start": "เริ่ม",
@@ -267,20 +267,20 @@
     "candidates": "มีโอกาสได้รับรางวัล"
   },
   "eventStatus": {
-    "startsIn": "เริ่มใน",
-    "endsIn": "สิ้นสุดใน",
-    "ongoing": "กำลังดำเนินการ",
+    "startsIn": "อีเวนต์เริ่มใน",
+    "endsIn": "อีเวนต์สิ้นสุดใน",
+    "ongoing": "อีเวนต์กำลังดำเนินการ",
     "status": "สถานะ",
     "eventEnded": "จบกิจกรรมแล้ว"
   },
   "fileRequirements": {
     "title": "ข้อมูลที่ต้องส่ง",
-    "required": "จำเป็น"
+    "required": "จำเป็นต้องส่ง"
   },
   "rewardsCard": {
-    "committeeReward": "รางวัลกรรมการ",
-    "guestReward": "รางวัลผู้เข้าร่วม",
-    "basePoints": "คะแนนพื้นฐานต่อการประเมิน"
+    "committeeReward": "รางวัลเสมือนของกรรมการ",
+    "guestReward": "รางวัลเสมือนของผู้เข้าร่วม",
+    "basePoints": "ต่อคน"
   },
   "organizers": {
     "title": "ผู้จัดงาน",
@@ -519,7 +519,7 @@
       "uploadFile": "อัปโหลดไฟล์",
       "replaceFile": "แทนที่ไฟล์",
       "confirmDelete": "คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?",
-      "required": "จำเป็น",
+      "required": "จำเป็นต้องส่ง",
       "uploaded": "อัปโหลดแล้ว",
       "download": "ดาวน์โหลด",
       "remove": "ลบ",
@@ -684,7 +684,7 @@
   "roles": {
     "presenter": "ผู้นำเสนอ",
     "committee": "กรรมการ",
-    "guest": "ผู้เยี่ยมชม"
+    "guest": "ผู้เข้าร่วม"
   },
   "profileSection": {
     "tab_participated": "อีเว้นท์ที่เคยเข้าร่วม",
@@ -851,5 +851,13 @@
     "presenter": "ผู้นำเสนอ",
     "totalScore": "คะแนนรวม",
     "max": "เต็ม"
+  },
+  "toolTip": {
+    "eventInfo": "แก้ไขรายละเอียดอีเวนต์ และรูปภาพแบนเนอร์",
+    "eventLocation": "แก้ไขสถานที่จัดงาน และลิงก์ตำแหน่งที่ตั้ง",
+    "eventTime": "แก้ไขช่วงเวลาจัดอีเวนต์ และช่วงเวลาส่งผลงาน",
+    "participants": "แก้ไขการตั้งค่าผู้เข้าร่วม และข้อมูลที่ต้องส่ง",
+    "vr": "แก้ไขรางวัลเสมือน ลิมิตการให้รางวัลเสมือน และการให้คะแนน",
+    "sr": "สร้างและแก้ไขรางวัลพิเศษ"
   }
 }

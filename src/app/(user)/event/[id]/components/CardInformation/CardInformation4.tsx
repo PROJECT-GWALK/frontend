@@ -6,6 +6,7 @@ import { Award, Edit, Gift } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import type { EventData } from "@/utils/types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   event: EventData;
@@ -28,14 +29,23 @@ export default function CardInformation4({ event, editable, onEdit }: Props) {
             {t("rewardsSection.specialRewards") || "Special Rewards"}
           </CardTitle>
           {editable && onEdit && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 rounded-full hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900/30 dark:hover:text-amber-300"
-              onClick={() => onEdit("rewards", {})}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-full hover:bg-amber-100 hover:text-amber-700 dark:hover:bg-amber-900/30 dark:hover:text-amber-300"
+                    onClick={() => onEdit("rewards", {})}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p className="text-sm whitespace-pre-line leading-relaxed">{t("toolTip.sr")}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </CardHeader>
