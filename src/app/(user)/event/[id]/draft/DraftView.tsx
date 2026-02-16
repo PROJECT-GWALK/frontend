@@ -12,6 +12,8 @@ import {
   UserCheck,
   Award,
   Save,
+  Loader2,
+  BookOpen,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
@@ -27,16 +29,24 @@ import {
   updateSpecialReward,
   deleteSpecialReward,
 } from "@/utils/apievent";
+import {
+  createEvaluationCriteria,
+  updateEvaluationCriteria,
+  deleteEvaluationCriteria,
+  getEvaluationCriteria,
+} from "@/utils/apievaluation";
 
 import { EventDetail, EventFileType } from "@/utils/types";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import DeleteSuccessDialog from "./DeleteSuccessDialog";
-import SpecialRewardsSection from "./SpecialRewardsSection";
-import EventInfoSection from "./EventInfoSection";
-import PresenterSection from "./PresenterSection";
-import CommitteeSection from "./CommitteeSection";
+import Card1 from "./Card1";
+import Card2 from "./Card2";
+import Card3 from "./Card3";
+import Card4 from "./Card4";
+import Card5, { type GradingCriteria } from "./Card5";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type SpecialReward = {
   id: string;
@@ -63,19 +73,19 @@ type EventUpdatePayload = {
   specialRewards: SpecialReward[];
   unitReward?: string | null;
   fileTypes?: EventFileType[];
+  gradingEnabled: boolean;
+  gradingCriteria: GradingCriteria[];
 };
 
-const BANNER_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const BANNER_MAX_SIZE = 20 * 1024 * 1024; // 20MB
 const BANNER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-const mapEventNameMessage = (message: string) =>
-  message === "Event name already exists" ? "ไม่สามารถใช้ชื่อนี้ได้" : message;
-
 export default function EventDraft() {
+  const { t } = useLanguage();
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState("event-info");
+  const [activeSection, setActiveSection] = useState("card1");
 
   // Event Information
   const [eventTitle, setEventTitle] = useState("");
@@ -109,6 +119,12 @@ export default function EventDraft() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteSuccessOpen, setDeleteSuccessOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  useEffect(() => {
+    setNameChecked(null);
+  }, [eventTitle]);
 
   // Presenter Details
   const [maxPresenters, setMaxPresenters] = useState("3");
@@ -129,6 +145,10 @@ export default function EventDraft() {
 
   // Special Rewards
   const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
+
+  // Grading Configuration
+  const [gradingEnabled, setGradingEnabled] = useState(false);
+  const [gradingCriteria, setGradingCriteria] = useState<GradingCriteria[]>([]);
 
   const handleAddSpecialReward = () => {
     const newReward: SpecialReward = {
@@ -168,12 +188,12 @@ export default function EventDraft() {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!BANNER_TYPES.includes(f.type)) {
-      toast.error("รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP");
+      toast.error(t("validation.fileTypeNotSupported"));
       e.target.value = "";
       return;
     }
     if (f.size > BANNER_MAX_SIZE) {
-      toast.error("ไฟล์ต้องไม่เกิน 5MB");
+      toast.error(t("validation.fileSizeExceeded"));
       e.target.value = "";
       return;
     }
@@ -233,6 +253,8 @@ export default function EventDraft() {
       specialRewards,
       unitReward: unitReward || null,
       fileTypes: fileRequirements,
+      gradingEnabled,
+      gradingCriteria,
     };
   };
   const buildFormData = (payload: EventUpdatePayload, file: File) => {
@@ -269,7 +291,7 @@ export default function EventDraft() {
       if (backendMessage === "Event name already exists") {
         toast.error("ไม่สามารถใช้ชื่อนี้ได้");
       } else {
-        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+        toast.error(t("validation.checkNameFailed"));
       }
       return false;
     } finally {
@@ -281,16 +303,16 @@ export default function EventDraft() {
     if (specialRewards.length) {
       for (const r of specialRewards) {
         if (!r.name || !r.name.trim()) {
-          errors[r.id] = "กรุณากรอกชื่อรางวัล";
+          errors[r.id] = t("validation.rewardNameRequired");
         }
       }
     }
     setRewardErrors(errors);
     if (Object.keys(errors).length) {
-      setActiveSection("rewards");
-      const el = document.getElementById("rewards");
+      setActiveSection("card4");
+      const el = document.getElementById("card4");
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      toast.error("กรุณากรอกชื่อรางวัลให้ครบ");
+      toast.error(t("validation.rewardNameRequired"));
       return false;
     }
     return true;
@@ -299,19 +321,19 @@ export default function EventDraft() {
     const errors: Record<string, string> = {};
 
     if (!eventTitle.trim()) {
-      errors.eventTitle = "กรุณากรอกชื่ออีเว้นต์";
-      toast.error("กรุณากรอกชื่ออีเว้นต์");
-      setActiveSection("event-info");
+      errors.eventTitle = t("validation.eventTitleRequired");
+      toast.error(t("validation.eventTitleRequired"));
+      setActiveSection("card1");
     }
     if (!(startDate && startTime)) {
-      errors.startDateTime = "กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์";
-      toast.error("กรุณากรอกวันที่-เวลาเริ่มของอีเว้นต์");
-      setActiveSection("event-info");
+      errors.startDateTime = t("validation.startDateTimeRequired");
+      toast.error(t("validation.startDateTimeRequired"));
+      setActiveSection("card2");
     }
     if (!(endDate && endTime)) {
-      errors.endDateTime = "กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์";
-      toast.error("กรุณากรอกวันที่-เวลาสิ้นสุดของอีเว้นต์");
-      setActiveSection("event-info");
+      errors.endDateTime = t("validation.endDateTimeRequired");
+      toast.error(t("validation.endDateTimeRequired"));
+      setActiveSection("card2");
     }
 
     const timeErrors = validateEventTime(
@@ -322,26 +344,26 @@ export default function EventDraft() {
       submissionStartDate,
       submissionStartTime,
       submissionEndDate,
-      submissionEndTime
+      submissionEndTime,
     );
     Object.assign(errors, timeErrors);
 
     if (timeErrors.endDateTime) {
       toast.error(timeErrors.endDateTime);
-      setActiveSection("event-info");
+      setActiveSection("card2");
     }
 
     const hasJoinInput = Boolean(
-      submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime
+      submissionStartDate || submissionStartTime || submissionEndDate || submissionEndTime,
     );
     // const sj = toDate(submissionStartDate, submissionStartTime); // Submission Start
     // const ej = toDate(submissionEndDate, submissionEndTime); // Submission End
     if (hasJoinInput) {
       if (!(submissionStartDate && submissionStartTime)) {
-        errors.submissionStart = "กรุณากรอกวันที่-เวลาเริ่มส่งผลงาน";
+        errors.submissionStart = t("validation.submissionStartRequired");
       }
       if (!(submissionEndDate && submissionEndTime)) {
-        errors.submissionEnd = "กรุณากรอกวันที่-เวลาสิ้นสุดส่งผลงาน";
+        errors.submissionEnd = t("validation.submissionEndRequired");
       }
     }
     return errors;
@@ -355,13 +377,13 @@ export default function EventDraft() {
     if (!f) return;
 
     if (!BANNER_TYPES.includes(f.type)) {
-      toast.error("รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP");
+      toast.error(t("validation.fileTypeNotSupported"));
       e.target.value = "";
       return;
     }
 
     if (f.size > BANNER_MAX_SIZE) {
-      toast.error("ไฟล์ต้องไม่เกิน 5MB");
+      toast.error(t("validation.fileSizeExceeded"));
       e.target.value = "";
       return;
     }
@@ -396,13 +418,20 @@ export default function EventDraft() {
   };
 
   const handleCheckName = async () => {
-    if (!eventTitle.trim()) return;
+    const trimmed = eventTitle.trim();
+    if (!trimmed) return;
+    if (trimmed === originalTitle.trim()) {
+      setNameChecked(null);
+      return;
+    }
     try {
       setCheckingName(true);
-      const res = await checkEventName(eventTitle.trim());
+      const res = await checkEventName(trimmed);
       const ok = Boolean(res?.available);
       setNameChecked(ok);
-      toast[ok ? "success" : "error"](ok ? "ชื่อ Event ใช้ได้" : "ชื่อ Event ถูกใช้แล้ว");
+      toast[ok ? "success" : "error"](
+        ok ? t("validation.nameAvailable") : t("validation.nameTaken"),
+      );
     } catch (e) {
       console.error(e);
       setNameChecked(null);
@@ -412,9 +441,9 @@ export default function EventDraft() {
             (e as AxiosError).response?.data?.message
           : null;
       if (backendMessage === "Event name already exists") {
-        toast.error("ไม่สามารถใช้ชื่อนี้ได้");
+        toast.error(t("validation.nameTaken"));
       } else {
-        toast.error("ตรวจสอบชื่อไม่สำเร็จ");
+        toast.error(t("messages.errorLoading"));
       }
     } finally {
       setCheckingName(false);
@@ -426,8 +455,8 @@ export default function EventDraft() {
 
     const okRewards = validateSpecialRewardsDraft();
     if (!okRewards) return;
-    
-    // Validate start/end 
+
+    // Validate start/end
     const timeErrors = validateEventTime(
       startDate,
       startTime,
@@ -436,33 +465,43 @@ export default function EventDraft() {
       submissionStartDate,
       submissionStartTime,
       submissionEndDate,
-      submissionEndTime
+      submissionEndTime,
     );
 
     if (timeErrors.endDateTime) {
       toast.error(timeErrors.endDateTime);
-      setActiveSection("event-info");
+      setActiveSection("card2");
       return;
     }
 
-    toast.info("กำลังบันทึก Draft...");
+    setIsSaving(true);
+    toast.info(t("messages.savingDraft"));
 
     try {
       const ok = await ensureNameAvailable();
       if (!ok) return;
       const payload = buildPayload({ isoDates: false });
       await syncSpecialRewards();
+      await syncGradingCriteria();
       if (eventBanner) {
         const data = buildFormData(payload, eventBanner);
         await updateEvent(id, data);
       } else {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
-      toast.success("บันทึก Draft สำเร็จ");
+      setOriginalTitle(eventTitle.trim());
+      setNameChecked(null);
+      toast.success(t("messages.draftSaved"));
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "บันทึก Draft ไม่สำเร็จ";
-      toast.error(mapEventNameMessage(message));
+      const message = err instanceof Error ? err.message : t("messages.draftFailed");
+      if (message === "Event name already exists") {
+        toast.error(t("validation.nameTaken"));
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -479,22 +518,31 @@ export default function EventDraft() {
     }
     setFieldErrors({});
 
+    setIsPublishing(true);
     try {
       const payload = buildPayload({ isoDates: false });
       await syncSpecialRewards();
+      await syncGradingCriteria();
       if (eventBanner) {
         const data = buildFormData(payload, eventBanner);
         await updateEvent(id, data);
       } else {
         await updateEvent(id, payload, { removeImage: bannerRemoved });
       }
+      setOriginalTitle(eventTitle.trim());
+      setNameChecked(null);
       await publishEvent(id);
-      toast.success("เผยแพร่ Event สำเร็จ");
+      toast.success(t("messages.publishSuccess"));
       window.location.reload();
     } catch (err) {
       console.error(err);
-      const message = err instanceof Error ? err.message : "Error publishing event";
-      toast.error(mapEventNameMessage(message));
+      const message = err instanceof Error ? err.message : t("messages.publishFailed");
+      if (message === "Event name already exists") {
+        toast.error(t("validation.nameTaken"));
+      } else {
+        toast.error(message);
+      }
+      setIsPublishing(false);
     }
   };
 
@@ -503,7 +551,7 @@ export default function EventDraft() {
     if (!event) return;
     const existingIds = new Set((event.specialRewards || []).map((r) => r.id));
     const removed = (event.specialRewards || []).filter(
-      (r) => !specialRewards.some((sr) => sr.id === r.id)
+      (r) => !specialRewards.some((sr) => sr.id === r.id),
     );
     for (const r of removed) {
       try {
@@ -545,8 +593,8 @@ export default function EventDraft() {
                         id: res.reward.id,
                         image: res.reward.image || null,
                       }
-                    : x
-                )
+                    : x,
+                ),
               );
               setSrPreviews((prev) => ({
                 ...prev,
@@ -558,7 +606,9 @@ export default function EventDraft() {
               });
             }
           } else {
-            const payload: { name: string; description?: string; image?: string | null } = { name: r.name };
+            const payload: { name: string; description?: string; image?: string | null } = {
+              name: r.name,
+            };
             if (r.description) payload.description = r.description;
             const res = await createSpecialReward(id, {
               name: r.name,
@@ -574,8 +624,8 @@ export default function EventDraft() {
                         id: res.reward.id,
                         image: res.reward.image || null,
                       }
-                    : x
-                )
+                    : x,
+                ),
               );
             }
           }
@@ -588,22 +638,89 @@ export default function EventDraft() {
 
   const sections = [
     {
-      id: "event-info",
-      label: "Event Information / ข้อมูลอีเวนต์",
+      id: "card1",
+      label: t("eventInfo.eventInformation"),
       icon: Info,
     },
     {
-      id: "presenter",
-      label: "Presenter Details / รายละเอียดผู้นำเสนอ",
-      icon: Users,
+      id: "card2",
+      label: t("eventTime.timeConfiguration"),
+      icon: CalendarIcon,
     },
     {
-      id: "committee",
-      label: "Committee & Guest / คณะกรรมการและผู้เข้าร่วม",
-      icon: UserCheck,
+      id: "card3",
+      label: t("configuration.title"),
+      icon: Users,
     },
-    { id: "rewards", label: "Special Rewards / รางวัลพิเศษ", icon: Award },
+    { id: "card4", label: t("rewardsSection.specialRewards"), icon: Award },
+    { id: "card5", label: t("gradingSection.title") || "Grading", icon: BookOpen },
   ];
+
+  const syncGradingCriteria = async () => {
+    if (!id) return;
+    if (!gradingEnabled) return; // Don't sync if grading is disabled
+
+    // Helper to check if an ID is a valid UUID (from database)
+    const isUUID = (str: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+    // Separate new criteria from existing ones
+    // New criteria either start with "new-" or are not valid UUIDs
+    const newCriteria = gradingCriteria.filter((c) => c.id.startsWith("new-") || !isUUID(c.id));
+    const existingCriteria = gradingCriteria.filter(
+      (c) => !c.id.startsWith("new-") && isUUID(c.id),
+    );
+
+    // Create new criteria
+    const createdCriteria: GradingCriteria[] = [];
+    for (const criteria of newCriteria) {
+      try {
+        const res = await createEvaluationCriteria(id, {
+          name: criteria.name,
+          description: criteria.description,
+          maxScore: criteria.maxScore,
+          weightPercentage: criteria.weightPercentage,
+          sortOrder: criteria.sortOrder,
+        });
+        if (res?.criteria?.id) {
+          createdCriteria.push({
+            id: res.criteria.id,
+            name: res.criteria.name,
+            description: res.criteria.description,
+            maxScore: res.criteria.maxScore,
+            weightPercentage: res.criteria.weightPercentage,
+            sortOrder: res.criteria.sortOrder,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to create criteria", e);
+      }
+    }
+
+    // Update gradingCriteria state with newly created IDs
+    if (createdCriteria.length > 0) {
+      setGradingCriteria((prev) => {
+        // Keep only existing valid UUID criteria (not temporary ones)
+        const validExisting = prev.filter((c) => !c.id.startsWith("new-") && isUUID(c.id));
+        return [...validExisting, ...createdCriteria];
+      });
+    }
+
+    // Update existing criteria
+    for (const criteria of existingCriteria) {
+      try {
+        await updateEvaluationCriteria(id, criteria.id, {
+          name: criteria.name,
+          description: criteria.description,
+          maxScore: criteria.maxScore,
+          weightPercentage: criteria.weightPercentage,
+          sortOrder: criteria.sortOrder,
+        });
+      } catch (e) {
+        console.error("Failed to update criteria", e);
+      }
+    }
+  };
 
   const completionPercent = (() => {
     const list = [
@@ -679,12 +796,12 @@ export default function EventDraft() {
         setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
         setSubmissionStartDate(data.startJoinDate ? data.startJoinDate.split("T")[0] : "");
         setSubmissionStartTime(
-          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01"
+          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01",
         );
         setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
         setSubmissionEndDate(data.endJoinDate ? data.endJoinDate.split("T")[0] : "");
         setSubmissionEndTime(
-          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59"
+          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59",
         );
 
         // ================= COMMITTEE & GUEST =================
@@ -705,6 +822,19 @@ export default function EventDraft() {
           setSpecialRewards([]);
           setSrPreviews({});
         }
+
+        // ================= GRADING =================
+        setGradingEnabled(data.gradingEnabled ?? false);
+
+        // Fetch existing evaluation criteria (always try to load, even if grading disabled)
+        try {
+          const criteriaRes = await getEvaluationCriteria(id);
+          if (criteriaRes?.criteria?.length) {
+            setGradingCriteria(criteriaRes.criteria);
+          }
+        } catch (err) {
+          console.error("Failed to load evaluation criteria:", err);
+        }
       } catch (err) {
         console.error("Failed to load event:", err);
       } finally {
@@ -717,7 +847,7 @@ export default function EventDraft() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex">
+      <div className="flex lg:ml-72">
         {/* Sidebar */}
         <EventSidebar
           sections={sections}
@@ -726,12 +856,13 @@ export default function EventDraft() {
           eventId={id}
           onSaveDraft={handleSaveDraft}
           completionPercent={completionPercent}
+          isSaving={isSaving}
         />
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-80 p-6 lg:p-8 w-full">
+        <main className="flex-1 w-full">
           {loading ? (
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Header Skeleton */}
               <div className="lg:col-span-2 flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
@@ -824,182 +955,220 @@ export default function EventDraft() {
               </div>
             </div>
           ) : event ? (
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Header */}
-              <div className="lg:col-span-2 flex items-center justify-between mb-2">
-                <div className="flex items-center gap-4">
-                  <Link href="/dashboard">
-                    <Button variant="ghost" size="icon">
-                      <ArrowLeft className="h-5 w-5" />
+            <div className="w-full max-w-6xl mx-auto py-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Header */}
+                <div className="lg:col-span-2 flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-4">
+                    <Link href="/home">
+                      <Button variant="ghost" size="icon">
+                        <ArrowLeft className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <div>
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {t("eventDraft.editEvent")}
+                      </h1>
+                      <p className="text-muted-foreground">{t("eventDraft.updateEventDetails")}</p>
+                    </div>
+                  </div>
+                  <div className="space-x-2">
+                    <Button
+                      variant="destructive"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="px-6 hidden lg:inline-flex"
+                      disabled={isPublishing || isSaving}
+                    >
+                      {t("eventDraft.delete")}
                     </Button>
-                  </Link>
-                  <div>
-                    <h1 className="text-2xl font-bold text-foreground">
-                      Edit Event / แก้ไขอีเวนต์
-                    </h1>
-                    <p className="text-muted-foreground">
-                      Update your event details / อัปเดตรายละเอียดอีเวนต์
-                    </p>
+                    <Button
+                      onClick={handlePublish}
+                      className="px-6 hidden lg:inline-flex"
+                      disabled={isPublishing || isSaving}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t("eventDraft.publishing")}
+                        </>
+                      ) : (
+                        t("eventDraft.publish")
+                      )}
+                    </Button>
                   </div>
                 </div>
-                <div className="space-x-2">
+
+                {/* Event Information Section */}
+                <Card1
+                  eventTitle={eventTitle}
+                  setEventTitle={(v) => {
+                    setEventTitle(v);
+                    setNameChecked(null);
+                  }}
+                  canCheckName={eventTitle.trim() !== originalTitle.trim()}
+                  checkingName={checkingName}
+                  nameChecked={nameChecked}
+                  onCheckName={handleCheckName}
+                  eventDescription={eventDescription}
+                  setEventDescription={setEventDescription}
+                  cropOpen={cropOpen}
+                  cropSrc={cropSrc}
+                  pendingFileMeta={pendingFileMeta}
+                  onCropCancel={handleCropCancel}
+                  onCropConfirm={handleCropConfirm}
+                  bannerPreview={bannerPreview}
+                  openFilePicker={openFilePicker}
+                  fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+                  onBannerFileChange={handleBannerFileChange}
+                  onRemoveBanner={handleRemoveBanner}
+                  locationPlace={locationPlace}
+                  setLocationPlace={setLocationPlace}
+                  locationLink={locationLink}
+                  setLocationLink={setLocationLink}
+                  eventVisibility={eventVisibility}
+                  setEventVisibility={setEventVisibility}
+                  fieldErrors={fieldErrors}
+                />
+
+                {/* Time Configuration Section */}
+                <Card2
+                  selectedStart={selectedStart}
+                  setSelectedStart={setSelectedStart}
+                  setStartDate={setStartDate}
+                  startTime={startTime}
+                  setStartTime={setStartTime}
+                  selectedEnd={selectedEnd}
+                  setSelectedEnd={setSelectedEnd}
+                  setEndDate={setEndDate}
+                  endTime={endTime}
+                  setEndTime={setEndTime}
+                  calendarStartMonth={calendarStartMonth}
+                  calendarEndMonth={calendarEndMonth}
+                  fieldErrors={fieldErrors}
+                  selectedSubStart={selectedSubStart}
+                  setSelectedSubStart={setSelectedSubStart}
+                  setSubmissionStartDate={setSubmissionStartDate}
+                  submissionStartTime={submissionStartTime}
+                  setSubmissionStartTime={setSubmissionStartTime}
+                  selectedSubEnd={selectedSubEnd}
+                  setSelectedSubEnd={setSelectedSubEnd}
+                  setSubmissionEndDate={setSubmissionEndDate}
+                  submissionEndTime={submissionEndTime}
+                  setSubmissionEndTime={setSubmissionEndTime}
+                />
+
+                {/* Configuration Section */}
+                <Card3
+                  maxPresenters={maxPresenters}
+                  setMaxPresenters={setMaxPresenters}
+                  maxGroups={maxGroups}
+                  setMaxGroups={setMaxGroups}
+                  fileRequirements={fileRequirements}
+                  setFileRequirements={setFileRequirements}
+                  hasCommittee={hasCommittee}
+                  setHasCommittee={setHasCommittee}
+                  committeeReward={committeeReward}
+                  setCommitteeReward={setCommitteeReward}
+                  guestRewardAmount={guestRewardAmount}
+                  setGuestRewardAmount={setGuestRewardAmount}
+                  unitReward={unitReward}
+                  setUnitReward={setUnitReward}
+                />
+
+                {/* Special Rewards Section */}
+                <Card4
+                  specialRewards={specialRewards}
+                  srPreviews={srPreviews}
+                  openRewardFilePicker={openRewardFilePicker}
+                  rewardFileRefs={rewardFileRefs}
+                  handleRewardFileChange={handleRewardFileChange}
+                  handleRemoveRewardImage={handleRemoveRewardImage}
+                  handleAddSpecialReward={handleAddSpecialReward}
+                  handleRemoveReward={handleRemoveReward}
+                  handleRewardChange={handleRewardChange}
+                  rewardErrors={rewardErrors}
+                  srCropOpen={srCropOpen}
+                  srCropSrc={srCropSrc}
+                  srPendingMeta={srPendingMeta}
+                  onRewardCropCancel={handleRewardCropCancel}
+                  onRewardCropConfirm={handleRewardCropConfirm}
+                />
+
+                {/* Grading Configuration Section */}
+                <Card5
+                  gradingEnabled={gradingEnabled}
+                  setGradingEnabled={setGradingEnabled}
+                  gradingCriteria={gradingCriteria}
+                  setGradingCriteria={setGradingCriteria}
+                />
+
+                <DeleteConfirmDialog
+                  open={deleteConfirmOpen}
+                  onOpenChange={setDeleteConfirmOpen}
+                  onConfirm={async () => {
+                    try {
+                      await deleteEvent(id);
+                      setDeleteConfirmOpen(false);
+                      setDeleteSuccessOpen(true);
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                />
+
+                <DeleteSuccessDialog
+                  open={deleteSuccessOpen}
+                  onOpenChange={(o) => {
+                    setDeleteSuccessOpen(o);
+                    if (!o) router.push("/home");
+                  }}
+                  onGoDashboard={() => router.push("/home")}
+                />
+
+                {/* Save Button (Mobile) */}
+                <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
                   <Button
-                    variant="destructive"
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    className="px-6 hidden lg:inline-block"
-                  >
-                    Delete / ลบ
-                  </Button>
-                  <Button onClick={handlePublish} className="px-6 hidden lg:inline-block">
-                    Publish / เผยแพร่
-                  </Button>
-                </div>
-              </div>
-
-              {/* Event Information Section */}
-              <EventInfoSection
-                eventTitle={eventTitle}
-                setEventTitle={(v) => {
-                  setEventTitle(v);
-                  setNameChecked(null);
-                }}
-                checkingName={checkingName}
-                nameChecked={nameChecked}
-                onCheckName={handleCheckName}
-                eventDescription={eventDescription}
-                setEventDescription={setEventDescription}
-                cropOpen={cropOpen}
-                cropSrc={cropSrc}
-                pendingFileMeta={pendingFileMeta}
-                onCropCancel={handleCropCancel}
-                onCropConfirm={handleCropConfirm}
-                bannerPreview={bannerPreview}
-                openFilePicker={openFilePicker}
-                fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
-                onBannerFileChange={handleBannerFileChange}
-                onRemoveBanner={handleRemoveBanner}
-                selectedStart={selectedStart}
-                setSelectedStart={setSelectedStart}
-                startDate={startDate}
-                setStartDate={setStartDate}
-                startTime={startTime}
-                setStartTime={setStartTime}
-                selectedEnd={selectedEnd}
-                setSelectedEnd={setSelectedEnd}
-                selectedSubEnd={selectedSubEnd}
-                selectedSubStart={selectedSubStart}
-                endDate={endDate}
-                setEndDate={setEndDate}
-                endTime={endTime}
-                setEndTime={setEndTime}
-                calendarStartMonth={calendarStartMonth}
-                calendarEndMonth={calendarEndMonth}
-                eventVisibility={eventVisibility}
-                setEventVisibility={setEventVisibility}
-                fieldErrors={fieldErrors}
-                locationPlace={locationPlace}
-                setLocationPlace={setLocationPlace}
-                locationLink={locationLink}
-                setLocationLink={setLocationLink}
-              />
-
-              {/* Presenter Details Section */}
-              <PresenterSection
-                maxPresenters={maxPresenters}
-                setMaxPresenters={setMaxPresenters}
-                maxGroups={maxGroups}
-                setMaxGroups={setMaxGroups}
-                selectedSubStart={selectedSubStart}
-                setSelectedSubStart={setSelectedSubStart}
-                submissionStartDate={submissionStartDate}
-                setSubmissionStartDate={setSubmissionStartDate}
-                submissionStartTime={submissionStartTime}
-                setSubmissionStartTime={setSubmissionStartTime}
-                selectedSubEnd={selectedSubEnd}
-                setSelectedSubEnd={setSelectedSubEnd}
-                submissionEndDate={submissionEndDate}
-                setSubmissionEndDate={setSubmissionEndDate}
-                submissionEndTime={submissionEndTime}
-                setSubmissionEndTime={setSubmissionEndTime}
-                fieldErrors={fieldErrors}
-                calendarStartMonth={calendarStartMonth}
-                calendarEndMonth={calendarEndMonth}
-                selectedStart={selectedStart}
-                fileRequirements={fileRequirements}
-                setFileRequirements={setFileRequirements}
-              />
-
-              {/* Committee & Guest Section */}
-              <CommitteeSection
-                hasCommittee={hasCommittee}
-                setHasCommittee={setHasCommittee}
-                committeeReward={committeeReward}
-                setCommitteeReward={setCommitteeReward}
-                guestRewardAmount={guestRewardAmount}
-                setGuestRewardAmount={setGuestRewardAmount}
-                unitReward={unitReward}
-                setUnitReward={setUnitReward}
-              />
-
-              {/* Special Rewards Section */}
-              <SpecialRewardsSection
-                specialRewards={specialRewards}
-                srPreviews={srPreviews}
-                openRewardFilePicker={openRewardFilePicker}
-                rewardFileRefs={rewardFileRefs}
-                handleRewardFileChange={handleRewardFileChange}
-                handleRemoveRewardImage={handleRemoveRewardImage}
-                handleAddSpecialReward={handleAddSpecialReward}
-                handleRemoveReward={handleRemoveReward}
-                handleRewardChange={handleRewardChange}
-                rewardErrors={rewardErrors}
-                srCropOpen={srCropOpen}
-                srCropSrc={srCropSrc}
-                srPendingMeta={srPendingMeta}
-                onRewardCropCancel={handleRewardCropCancel}
-                onRewardCropConfirm={handleRewardCropConfirm}
-              />
-
-              <DeleteConfirmDialog
-                open={deleteConfirmOpen}
-                onOpenChange={setDeleteConfirmOpen}
-                onConfirm={async () => {
-                  try {
-                    await deleteEvent(id);
-                    setDeleteConfirmOpen(false);
-                    setDeleteSuccessOpen(true);
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-              />
-
-              <DeleteSuccessDialog
-                open={deleteSuccessOpen}
-                onOpenChange={(o) => {
-                  setDeleteSuccessOpen(o);
-                  if (!o) router.push("/dashboard");
-                }}
-                onGoDashboard={() => router.push("/dashboard")}
-              />
-
-              {/* Save Button (Mobile) */}
-              <div className="lg:col-span-2 lg:hidden flex flex-col gap-3 mt-4 pb-8 border-t pt-6">
-                <Button variant="secondary" onClick={handleSaveDraft} className="w-full h-11 text-base shadow-sm">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save as Draft / บันทึกดราฟต์
-                </Button>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button onClick={handlePublish} className="w-full h-11 text-base shadow-sm">
-                    Publish / เผยแพร่
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setDeleteConfirmOpen(true)}
+                    variant="secondary"
+                    onClick={handleSaveDraft}
                     className="w-full h-11 text-base shadow-sm"
+                    disabled={isSaving || isPublishing}
                   >
-                    Delete / ลบ
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t("sidebar.saving")}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        {t("eventDraft.saveAsDraft")}
+                      </>
+                    )}
                   </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={handlePublish}
+                      className="w-full h-11 text-base shadow-sm"
+                      disabled={isSaving || isPublishing}
+                    >
+                      {isPublishing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t("eventDraft.publishing")}
+                        </>
+                      ) : (
+                        t("eventDraft.publish")
+                      )}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="w-full h-11 text-base shadow-sm"
+                      disabled={isSaving || isPublishing}
+                    >
+                      {t("eventDraft.delete")}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

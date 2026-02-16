@@ -13,14 +13,17 @@ import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import ImageCropDialog from "@/lib/image-crop-dialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  isSubmissionActive?: boolean;
 };
 
-export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: Props) {
+export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isSubmissionActive = true }: Props) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   
@@ -83,7 +86,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto rounded-lg">
         <DialogTitle>Create Project</DialogTitle>
         <div className="mt-4 space-y-3">
           <div>
@@ -181,13 +184,13 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess }: P
             </Button>
             <Button
               size="sm"
-              disabled={loading}
+              disabled={loading || !isSubmissionActive}
               onClick={async () => {
                 if (!name.trim()) return;
                 setLoading(true);
                 try {
                   await createTeam(eventId, name, description, undefined, imageFile || undefined);
-                  toast.success("Project created");
+                  toast.success(t("toast.projectCreated"));
                   resetForm();
                   onOpenChange(false);
                   onSuccess();

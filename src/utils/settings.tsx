@@ -2,10 +2,9 @@ import {
   User as UserIcon,
   Settings,
   Lock,
-  Inbox,
-  Home,
   Users,
   LayoutDashboard,
+  Calendar,
 } from "lucide-react";
 
 export const appBrand = {
@@ -15,19 +14,19 @@ export const appBrand = {
 
 export const menuItems = [
   {
-    label: "Profile",
+    labelKey: "navbar.profile",
     href: "/profile",
     icon: <UserIcon className="w-4 h-4" />,
     role: "user",
   },
   {
-    label: "Settings",
+    labelKey: "navbar.settings",
     href: "/settings",
     icon: <Settings className="w-4 h-4" />,
     role: "user",
   },
   {
-    label: "Admin Panel",
+    labelKey: "navbar.adminPanel",
     href: "/admin",
     icon: <Lock className="w-4 h-4" />,
     role: "admin",
@@ -45,24 +44,29 @@ export const menuItemsAdmin = [
     url: "/admin/usermanagement",
     icon: <Users />,
   },
+  {
+    title: "Event Management",
+    url: "/admin/eventmanagement",
+    icon: <Calendar />,
+  },
 ];
 
 export const navbarItems = [
   {
-    url: "/dashboard",
-    title: "Dashboard",
+    url: "/home",
+    titleKey: "navbar.home",
   },
   {
     url: "/event",
-    title: "Event",
+    titleKey: "navbar.events",
   },
   {
     url: "/users",
-    title: "Users",
+    titleKey: "navbar.users",
   },
 ];
 
-export const signInRedirect = "/dashboard";
+export const signInRedirect = "/home";
 
 const isThai = typeof window !== "undefined" && localStorage.getItem("language") === "th";
 

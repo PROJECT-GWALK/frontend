@@ -1,7 +1,21 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/utils/types";
 import { timeFormat, dateFormat } from "@/utils/settings";
+import Link from "next/link";
 import React from "react";
+import * as QRCode from "qrcode";
+
+export async function generateQrCode(
+  url: string,
+  width: number = 400,
+): Promise<string | null> {
+  try {
+    return await QRCode.toDataURL(url, { width });
+  } catch (err) {
+    console.error("QR Code generation failed:", err);
+    return null;
+  }
+}
 
 export function UserAvatar({
   user,
@@ -12,10 +26,12 @@ export function UserAvatar({
 }) {
   const fallback = user?.name?.trim() || user?.username || user?.email || "??";
   return (
-    <Avatar className={className}>
-      <AvatarImage src={user?.image || ""} />
-      <AvatarFallback>{fallback.slice(0, 2).toUpperCase()}</AvatarFallback>
-    </Avatar>
+    <Link href={`/profile/@${user?.username}`}>
+      <Avatar className={className}>
+        <AvatarImage src={user?.image || ""} />
+        <AvatarFallback>{fallback.slice(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+    </Link>
   );
 }
 
@@ -100,7 +116,11 @@ export function toYYYYMMDD(d: Date) {
 
 export function formatDate(d?: Date, emptyText: string = "-", locale?: string) {
   if (!d) return emptyText;
-  return d.toLocaleDateString(locale || dateFormat, { day: "numeric", month: "long", year: "numeric" });
+  return d.toLocaleDateString(locale || dateFormat, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export const toDate = (date?: string, time?: string) =>
@@ -109,7 +129,7 @@ export const toDate = (date?: string, time?: string) =>
 export const getDateTimeString = (
   date: string,
   time: string,
-  asIso: boolean = false
+  asIso: boolean = false,
 ) => {
   if (!date || !time) return null;
   if (asIso) {
@@ -127,7 +147,7 @@ export const validateEventTime = (
   submissionStartDate: string,
   submissionStartTime: string,
   submissionEndDate: string,
-  submissionEndTime: string
+  submissionEndTime: string,
 ) => {
   const errors: Record<string, string> = {};
   const startPresenter = toDate(submissionStartDate, submissionStartTime);
@@ -169,38 +189,9 @@ export const validateEventTime = (
   return errors;
 };
 
-export function getMapEmbedUrl(locationUrl: string | undefined, locationName: string | undefined): string {
-  let query = locationName || "";
-  
-  if (locationUrl) {
-    try {
-      const urlStr = locationUrl.trim();
-      // Try to extract coordinates from @lat,lng
-      const coordMatch = urlStr.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (coordMatch) {
-        query = `${coordMatch[1]},${coordMatch[2]}`;
-      } else {
-        // Try to parse URL
-        if (urlStr.includes("google.com/maps") || urlStr.includes("maps.google.com")) {
-             const url = new URL(urlStr.startsWith("http") ? urlStr : `https://${urlStr}`);
-             const q = url.searchParams.get("q");
-             if (q) {
-                 query = q;
-             } else if (url.pathname.includes("/place/")) {
-                 const parts = url.pathname.split("/place/");
-                 if (parts[1]) {
-                     query = decodeURIComponent(parts[1].split("/")[0].replace(/\+/g, " "));
-                 }
-             }
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
+export function autoResizeTextarea(textarea: HTMLTextAreaElement | null) {
+  if (textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
   }
-  
-  query = query.trim();
-  if (!query) return "";
-  
-  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&output=embed`;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +62,7 @@ type ParticipantRow = {
   eventGroup: EventGroup;
   isLeader: boolean;
   virtualReward?: number | null;
+  virtualUsed?: number;
   user?: ParticipantUser | null;
   team?: ParticipantTeam;
 };
@@ -68,6 +70,7 @@ type ParticipantRow = {
 type Props = {
   id: string;
   hasCommittee?: boolean;
+  unitReward?: string;
   onRefreshCounts?: (list: ParticipantRow[]) => void;
 };
 
@@ -100,11 +103,12 @@ const groupConfig = {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts }: Props) {
+export default function ParticipantsSection({ id, hasCommittee, unitReward, onRefreshCounts }: Props) {
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { t } = useLanguage();
   const [searchQueries, setSearchQueries] = useState<Record<EventGroup, string>>({
     ORGANIZER: "",
     COMMITTEE: "",
@@ -159,13 +163,13 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
             );
             return next;
           });
-          toast.success("บันทึกสำเร็จ");
+          toast.success(t("toast.saveSuccess"));
         }
       } catch {
-        toast.error("บันทึกไม่สำเร็จ");
+        toast.error(t("toast.saveFailed"));
       }
     },
-    [id]
+    [id, t]
   );
 
   const loadParticipants = useCallback(async () => {
@@ -178,11 +182,11 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
         setParticipants(list);
       }
     } catch {
-      toast.error("โหลดรายชื่อผู้เข้าร่วมไม่สำเร็จ");
+      toast.error(t("toast.loadParticipantsFailed"));
     } finally {
       setLoadingParticipants(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     loadParticipants();
@@ -230,10 +234,10 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-bold">
-                จัดการผู้เข้าร่วม
+                {t("participantSection.management")}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                ทั้งหมด {totalCount} คน
+                {t("participantSection.all")} {totalCount} {t("participantSection.count_unit")}
               </p>
             </div>
             <Button
@@ -248,7 +252,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                   loadingParticipants ? "animate-spin" : ""
                 }`}
               />
-              รีเฟรช
+              {t("participantSection.refresh")}
             </Button>
           </div>
         </CardHeader>
@@ -287,7 +291,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
           ) : !participants || participants.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">ยังไม่มีผู้เข้าร่วม</p>
+              <p className="text-muted-foreground">{t("participantSection.empty")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
@@ -335,7 +339,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                 {config.title}
                               </CardTitle>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {total} คน
+                                {total} {t("participantSection.count_unit")}
                               </p>
                             </div>
                           </div>
@@ -367,8 +371,8 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                       {total === 0 ? (
                         <div className="text-center py-8 text-sm text-muted-foreground">
                           {searchQueries[g]
-                            ? "ไม่พบผู้เข้าร่วมที่ค้นหา"
-                            : "ยังไม่มีผู้เข้าร่วมกลุ่มนี้"}
+                            ? t("participantSection.noSearchResults")
+                            : t("participantSection.noParticipantsInGroup")}
                         </div>
                       ) : (
                         <>
@@ -377,30 +381,30 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                               <thead>
                                 <tr className="bg-muted/50 border-b border-border/50">
                                   <th className="text-left p-3 font-semibold text-sm">
-                                    ผู้ใช้
+                                    {t("participantSection.user")}
                                   </th>
                                   {(g !== "ORGANIZER" || isOrganizerLeader) && (
                                     <th className="text-left p-3 font-semibold text-sm">
-                                      บทบาท
+                                      {t("participantSection.role")}
                                     </th>
                                   )}
                                   {g === "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
-                                      ทีม
+                                      {t("participantSection.team")}
                                     </th>
                                   )}
                                   {g === "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
-                                      หัวหน้าทีม
+                                      {t("participantSection.team_leader")}
                                     </th>
                                   )}
                                   {g !== "ORGANIZER" && g !== "PRESENTER" && (
                                     <th className="text-left p-3 font-semibold text-sm">
-                                      Virtual Reward
+                                      Virtual Reward ({unitReward})
                                     </th>
                                   )}
                                   <th className="text-right p-3 font-semibold text-sm">
-                                    การจัดการ
+                                    {t("participantSection.management")}
                                   </th>
                                 </tr>
                               </thead>
@@ -472,7 +476,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                           }}
                                           disabled={g === "ORGANIZER" && !isOrganizerLeader}
                                         >
-                                          <SelectTrigger className="w-[130px]">
+                                          <SelectTrigger className="w-32.5">
                                             <SelectValue placeholder="เลือกบทบาท" />
                                           </SelectTrigger>
                                           <SelectContent>
@@ -525,7 +529,7 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                           return (
                                             <div className="flex items-center gap-2">
                                               <Crown className="h-4 w-4 text-yellow-500 shrink-0" />
-                                              <span className="text-sm truncate max-w-[150px]">
+                                              <span className="text-sm truncate max-w-37.5">
                                                 {u?.name ||
                                                   u?.username ||
                                                   u?.email ||
@@ -540,41 +544,49 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
 
                                     {g !== "ORGANIZER" && g !== "PRESENTER" && (
                                       <td className="p-3">
-                                        <Input
-                                          type="number"
-                                          min={0}
-                                          step={1}
-                                          value={
-                                            typeof p.virtualReward === "number"
-                                              ? p.virtualReward
-                                              : 0
-                                          }
-                                          onChange={(e) => {
-                                            const raw = Number(e.target.value);
-                                            const val = Number.isFinite(raw)
-                                              ? Math.max(0, raw)
-                                              : 0;
-                                            setParticipants((all) =>
-                                              all.map((it) =>
-                                                it.id === p.id
-                                                  ? {
-                                                      ...it,
-                                                      virtualReward: val,
-                                                    }
-                                                  : it
-                                              )
-                                            );
-                                            const t = vrTimersRef.current[p.id];
-                                            if (t) clearTimeout(t);
-                                            vrTimersRef.current[p.id] =
-                                              setTimeout(() => {
-                                                applyUpdate(p.id, {
-                                                  virtualReward: val,
-                                                });
-                                              }, 500);
-                                          }}
-                                          className="w-24"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                                            {p.virtualUsed || 0} /
+                                          </span>
+                                          <Input
+                                            type="number"
+                                            min={0}
+                                            step={1}
+                                            value={
+                                              typeof p.virtualReward === "number"
+                                                ? p.virtualReward
+                                                : 0
+                                            }
+                                            onChange={(e) => {
+                                              const raw = Number(e.target.value);
+                                              const val = Number.isFinite(raw)
+                                                ? Math.max(0, raw)
+                                                : 0;
+                                              setParticipants((all) =>
+                                                all.map((it) =>
+                                                  it.id === p.id
+                                                    ? {
+                                                        ...it,
+                                                        virtualReward: val,
+                                                      }
+                                                    : it
+                                                )
+                                              );
+                                            }}
+                                            onBlur={() => {
+                                               applyUpdate(p.id, {
+                                                  virtualReward: p.virtualReward || 0,
+                                               });
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.currentTarget.blur();
+                                                }
+                                            }}
+                                            className="w-24"
+                                          />
+                                          <span className="text-sm text-muted-foreground">{unitReward}</span>
+                                        </div>
                                       </td>
                                     )}
                                     <td className="p-3 text-right">
@@ -599,16 +611,15 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
                                             <AlertDialogTitle>
-                                              ลบผู้เข้าร่วม
+                                              {t("removeParticipantModal.title")}
                                             </AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              ต้องการลบผู้เข้าร่วมคนนี้ออกจากงานหรือไม่
-                                              การกระทำนี้ไม่สามารถย้อนกลับได้
+                                              {t("removeParticipantModal.description")}
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
                                             <AlertDialogCancel>
-                                              ยกเลิก
+                                              {t("removeParticipantModal.cancel_button")}
                                             </AlertDialogCancel>
                                             <AlertDialogAction
                                               onClick={async () => {
@@ -625,16 +636,16 @@ export default function ParticipantsSection({ id, hasCommittee, onRefreshCounts 
                                                     );
                                                     return next;
                                                   });
-                                                  toast.success("ลบแล้ว");
+                                                  toast.success(t("toast.participantDeleted"));
                                                 } catch {
-                                                  toast.error("ลบไม่สำเร็จ");
+                                                  toast.error(t("toast.participantDeleteFailed"));
                                                 } finally {
                                                   setDeleteTarget(null);
                                                 }
                                               }}
                                               className="bg-destructive hover:bg-destructive/90"
                                             >
-                                              ลบ
+                                              {t("removeParticipantModal.confirm_button")}
                                             </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
