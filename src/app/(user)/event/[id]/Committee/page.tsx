@@ -26,17 +26,30 @@ import type { PresenterProject } from "../Presenter/components/types";
 import React from "react";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ResultSection from "../components/ResultSection";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
+import { useSession } from "next-auth/react";
+
+export default function CommitteePage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id as string | undefined;
+
+  if (id) router.replace(`/event/${id}`);
+
+  return null;
+}
 
 type Props = {
-  params?: Promise<{ id: string }>;
-  id?: string;
-  event?: EventData;
+  id: string;
+  event: EventData;
 };
 
-export default function CommitteePage(props: Props) {
+export function CommitteeView(props: Props) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
   const paramsHook = useParams();
   const idFromParams = paramsHook?.id as string;
   const id = props.id || idFromParams;
@@ -104,6 +117,7 @@ export default function CommitteePage(props: Props) {
               fileTypeId: f.fileTypeId,
             })) || [],
           members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          memberUserIds: t.participants?.map((p) => p.userId) || [],
           createdAt: t.createdAt,
           totalVr: t.totalVr,
           myComment: t.myComment,
@@ -725,6 +739,8 @@ export default function CommitteePage(props: Props) {
                     projects={projects}
                     role="COMMITTEE"
                     eventId={id}
+                    currentUserId={userId}
+                    eventStartView={localEvent?.startView ?? null}
                     searchQuery={searchQuery}
                     filterStatus={filterStatus}
                     projectRewards={projectRewards}

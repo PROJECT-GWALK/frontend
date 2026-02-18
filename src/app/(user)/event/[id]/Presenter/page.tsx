@@ -23,13 +23,24 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
 import CommentSection from "./components/Comment";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
+import { useParams, useRouter } from "next/navigation";
+
+export default function PresenterPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id as string | undefined;
+
+  if (id) router.replace(`/event/${id}`);
+
+  return null;
+}
 
 type Props = {
   id: string;
   event: EventData;
 };
 
-export default function PresenterView({ id, event }: Props) {
+export function PresenterView({ id, event }: Props) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
@@ -93,6 +104,7 @@ export default function PresenterView({ id, event }: Props) {
               fileTypeId: f.fileTypeId,
             })) || [],
           members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          memberUserIds: t.participants?.map((p) => p.userId) || [],
         }));
         setProjects(mappedProjects);
 
@@ -488,6 +500,8 @@ export default function PresenterView({ id, event }: Props) {
                     searchQuery={searchQuery}
                     eventId={event.id}
                     role="PRESENTER"
+                    currentUserId={userId}
+                    eventStartView={localEvent?.startView ?? null}
                     loading={projectsLoading}
                     onRefresh={fetchTeamsData}
                     unitReward={localEvent?.unitReward ?? "coins"}

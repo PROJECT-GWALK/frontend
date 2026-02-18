@@ -827,6 +827,7 @@
     "maxScore": "Maximum Score",
     "weight": "Weight",
     "save": "Save Criteria",
+    "saveChanges": "Save Changes",
     "cancel": "Cancel",
     "edit": "Edit Criteria",
     "placeholderCriteriaName": "e.g. Creativity",
@@ -841,6 +842,7 @@
     "maxScoreMustBePositive": "Maximum score must be greater than 0",
     "weightRequired": "Weight is required",
     "weightPercentageMustBeBetween": "Weight percentage must be between 0 and 100",
+    "weightError": "Total weight must be exactly 100%",
     "descriptionTooLong": "Description must be at most 120 characters",
     "criteriaUpdated": "Criteria updated successfully",
     "criteriaAdded": "Criteria added successfully",
@@ -850,6 +852,7 @@
     "totalWeight": "Total Weight:",
     "weightWarning": "Total weight should ideally sum up to 100%",
     "weightTotalMustBe100": "Warning: Total weight of all criteria is not 100%",
+    "saveCriteriaFirst": "Please save your grading criteria changes first",
     "failedToSaveCriteria": "Failed to save criteria",
     "failedToDeleteCriteria": "Failed to delete criteria"
   },
@@ -860,7 +863,7 @@
     "presenter": "Presenter",
     "totalScore": "Total Score",
     "max": "Max",
-    "committeeDetail": "Committee Score Details"
+    "committeeDetail": "Committee"
   },
   "toolTip": {
     "eventInfo": "Edit event description and event banner",

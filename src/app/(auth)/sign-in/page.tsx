@@ -4,9 +4,13 @@ import { signInRedirect } from "@/utils/settings";
 import { redirect } from "next/navigation";
 import SignInClient from "./client";
 
-export default async function SignIn({ searchParams }: { searchParams?: { redirectTo?: string } }) {
+export default async function SignIn({
+  searchParams,
+}: {
+  searchParams?: Promise<{ redirectTo?: string }>;
+}) {
   const session = await auth();
-  const fromParam = searchParams?.redirectTo;
+  const fromParam = (await searchParams)?.redirectTo;
 
   if (session) {
     redirect(fromParam || signInRedirect);

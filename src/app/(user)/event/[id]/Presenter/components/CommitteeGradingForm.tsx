@@ -119,6 +119,20 @@ export default function CommitteeGradingForm({
     }
   };
 
+  const totalWeight = criteria.reduce((sum, c) => sum + c.weightPercentage, 0);
+  const finalScore =
+    grades.size === criteria.length && criteria.length > 0
+      ? (() => {
+          if (totalWeight <= 0) return 0;
+          const weightedSum = criteria.reduce((sum, c) => {
+            const score = grades.get(c.id) || 0;
+            const normalized = c.maxScore > 0 ? (score / c.maxScore) * 100 : 0;
+            return sum + (normalized * c.weightPercentage) / 100;
+          }, 0);
+          return weightedSum / (totalWeight / 100);
+        })()
+      : null;
+
   if (loading) {
     return (
       <Card>
@@ -150,130 +164,106 @@ export default function CommitteeGradingForm({
   return (
     <Card className="w-full">
       <CardHeader>
-        {/* 1. เพิ่ม gap-4 เพื่อบังคับให้มีช่องว่างระหว่างฝั่งซ้ายและขวาเสมอ */}
         <div className="flex items-start sm:items-center justify-between gap-4">
-          {/* 2. เพิ่ม flex-1 และ min-w-0 ให้กล่องข้อความ เพื่อให้มันขยายจนสุดแต่ไม่ล้นไปทับคนอื่น */}
           <div className="flex-1 min-w-0">
             <CardTitle className="text-lg flex items-start sm:items-center gap-2 text-foreground">
-              {/* 3. ใส่ shrink-0 ให้ไอคอน เพื่อไม่ให้ไอคอนเบี้ยวเวลาข้อความยาว */}
               <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
-              {/* 4. ใส่ break-words หรือ truncate ให้ข้อความ (ในที่นี้แนะนำ break-words ให้ตัดขึ้นบรรทัดใหม่) */}
               <span className="break-words">
                 {t("committeeGrade.title")} {teamName}
               </span>
             </CardTitle>
           </div>
 
-          {/* 5. ใส่ shrink-0 ให้ฝั่งปุ่ม เพื่อรับประกันว่าปุ่มจะไม่ถูกบีบหรือโดนทับเด็ดขาด */}
-          {submitted && !isEditing && (
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                disabled={disabled}
-                className="bg-red-500 hover:bg-red-600 text-white"
-              >
-                <Edit2 className="w-4 h-4 mr-1" />
-                {t("homePage.actionButton.edit")}
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {submitted && !isEditing && (
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2 text-green-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="text-sm font-semibold">{t("committeeGrade.gradeSummitted")}</span>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  disabled={disabled}
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                >
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  {t("homePage.actionButton.edit")}
+                </Button>
+              </div>
+            )}
 
-          {isEditing && (
-            <div className="flex items-center gap-2 text-red-700 shrink-0">
-              <Edit2 className="w-4 h-4 shrink-0" />
-              <span className="text-sm font-semibold whitespace-nowrap">
-                {t("homePage.actionButton.editing")}
-              </span>
-            </div>
-          )}
+            {isEditing && (
+              <div className="flex items-center gap-2 text-red-700">
+                <Edit2 className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-semibold whitespace-nowrap">
+                  {t("homePage.actionButton.editing")}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {criteria.map((c) => (
-          <div key={c.id} className="border rounded-lg p-4 bg-card/50">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <h3 className="font-semibold">{c.name}</h3>
-                {c.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{c.description}</p>
-                )}
+        <div className="border rounded-lg divide-y overflow-hidden">
+          {criteria.map((c) => {
+            const score = grades.get(c.id) ?? null;
 
-                <div className="text-xs text-muted-foreground mt-2">
-                  {t("gradingSection.weight")}: {c.weightPercentage}% |{" "}
-                  {t("gradingSection.maxScore")}: {c.maxScore}
+            return (
+              <div key={c.id} className="p-4 bg-card/50">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold break-words leading-snug">
+                      {c.name}
+                      <span className="font-light"> ({c.weightPercentage}%)</span>
+                      {c.description ? (
+                        <span className="text-sm text-muted-foreground font-normal">
+                          {" "}
+                          - {c.description}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 shrink-0">
+                    <Input
+                      type="number"
+                      min="0"
+                      max={c.maxScore}
+                      step="0.1"
+                      value={score === 0 ? "" : (score ?? "")}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          handleScoreChange(c.id, "");
+                        } else {
+                          handleScoreChange(c.id, val);
+                        }
+                      }}
+                      placeholder="0"
+                      disabled={disabled || (submitted && !isEditing)}
+                      className="w-24 text-center"
+                    />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      / {c.maxScore}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* ส่วน Input และ ผลลัพธ์ (Result) อยู่บรรทัดเดียวกัน */}
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min="0"
-                max={c.maxScore}
-                step="0.1"
-                value={grades.get(c.id) === 0 ? "" : (grades.get(c.id) ?? "")}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === "") {
-                    handleScoreChange(c.id, "");
-                  } else {
-                    handleScoreChange(c.id, val);
-                  }
-                }}
-                placeholder={`0-${c.maxScore}`}
-                disabled={disabled || (submitted && !isEditing)}
-                className="w-20 text-center" // ขยายความกว้างนิดหน่อยเพื่อให้ตัวเลขดูไม่อึดอัด
-              />
-              <span className="text-sm text-muted-foreground">/ {c.maxScore}</span>
-
-              {/* แสดงผลลัพธ์ต่อท้ายตรงนี้ */}
-              {grades.has(c.id) && (
-                <span className="text-sm text-blue-600 ml-2 font-medium">
-                  ({t("committeeGrade.score")}:{" "}
-                  {(((grades.get(c.id) || 0) / c.maxScore) * 100).toFixed(1)}%)
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
+            );
+          })}
+        </div>
 
         {/* Summary */}
         {grades.size > 0 && (
           <div className="bg-muted/50 p-4 rounded-lg">
-            {/* <h4 className="font-semibold mb-3">Grade Summary</h4>
-            <div className="space-y-2 text-sm">
-              {criteria.map((c) => {
-                const score = grades.get(c.id) ?? 0;
-                const percentage = ((score / c.maxScore) * 100).toFixed(1);
-                return (
-                  <div key={c.id} className="flex items-center justify-between">
-                    <span className="text-muted-foreground">{c.name}</span>
-                    <span className="font-semibold">
-                      {score}/{c.maxScore} ({percentage}%)
-                    </span>
-                  </div>
-                );
-              })}
-            </div> */}
-
-            {/* Calculate weighted average */}
-            {grades.size === criteria.length && (
+            {finalScore !== null && (
               <div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">{t("committeeGrade.finalScore")}:</span>
                   <span className="text-lg font-bold">
-                    {(
-                      criteria.reduce((sum, c) => {
-                        const score = grades.get(c.id) || 0;
-                        const normalized = (score / c.maxScore) * 100;
-                        return sum + (normalized * c.weightPercentage) / 100;
-                      }, 0) /
-                      (criteria.reduce((sum, c) => sum + c.weightPercentage, 0) / 100)
-                    ).toFixed(2)}
-                    %
+                    {finalScore.toFixed(2)}%
                   </span>
                 </div>
               </div>

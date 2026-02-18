@@ -60,6 +60,8 @@ type Props = {
   projects: PresenterProject[];
   role: "COMMITTEE" | "ORGANIZER" | "GUEST" | "PRESENTER";
   eventId: string;
+  currentUserId?: string;
+  eventStartView?: string | null;
   searchQuery?: string;
   filterStatus?: "all" | "scored" | "unscored";
   projectRewards?: ProjectRewardsState; // For Committee local state
@@ -91,6 +93,8 @@ export default function UnifiedProjectList({
   projects,
   role,
   eventId,
+  currentUserId,
+  eventStartView,
   searchQuery = "",
   filterStatus = "all",
   projectRewards = {},
@@ -153,6 +157,18 @@ export default function UnifiedProjectList({
   const sorted = React.useMemo(() => {
     let result = [...projects];
 
+    const startViewMs = eventStartView ? new Date(eventStartView).getTime() : null;
+    const eventStarted =
+      startViewMs === null || Number.isNaN(startViewMs) ? true : Date.now() >= startViewMs;
+
+    if (role !== "ORGANIZER" && !eventStarted) {
+      if (!currentUserId) {
+        result = [];
+      } else {
+        result = result.filter((p) => p.memberUserIds?.includes(currentUserId));
+      }
+    }
+
     if (searchQuery) {
       const lower = searchQuery.toLowerCase();
       result = result.filter(
@@ -174,7 +190,7 @@ export default function UnifiedProjectList({
     });
 
     return result;
-  }, [projects, searchQuery, filterStatus, projectRewards]);
+  }, [projects, role, currentUserId, eventStartView, searchQuery, filterStatus, projectRewards]);
 
   // Infinite Scroll Effect
   React.useEffect(() => {

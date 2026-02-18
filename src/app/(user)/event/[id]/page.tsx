@@ -10,17 +10,17 @@ import type { EventData } from "@/utils/types";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import DraftView from "./draft/DraftView";
-import OrganizerView from "./Organizer/page";
-import PresenterView from "./Presenter/page";
-import NotRoleView from "./NotRole/page";
+import { OrganizerView } from "./Organizer/page";
+import { PresenterView } from "./Presenter/page";
+import { NotRoleView } from "./NotRole/page";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import CommitteeView from "./Committee/page";
-import GuestView from "./Guest/page";
+import { CommitteeView } from "./Committee/page";
+import { GuestView } from "./Guest/page";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type Role = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST" | null;
@@ -36,7 +36,9 @@ export default function EventDetail() {
   const [role, setRole] = useState<Role>(null);
   const [inviteProcessed, setInviteProcessed] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [inviteRole, setInviteRole] = useState<"presenter" | "committee" | "guest" | null>(null);
+  const [inviteRole, setInviteRole] = useState<
+    "presenter" | "committee" | "guest" | "organizer" | null
+  >(null);
   const [joining, setJoining] = useState(false);
   const {t} = useLanguage();
 
@@ -60,12 +62,12 @@ export default function EventDetail() {
           if (tokenParam) {
             const res = await previewInvite(id, { token: tokenParam });
             if (res?.message === "ok" && res?.role) {
-              setInviteRole(res.role as "presenter" | "committee" | "guest");
+              setInviteRole(res.role as "presenter" | "committee" | "guest" | "organizer");
             } else {
               setInviteRole(null);
             }
-          } else if (roleParam && ["presenter", "committee", "guest"].includes(roleParam)) {
-            setInviteRole(roleParam as "presenter" | "committee" | "guest");
+          } else if (roleParam && ["presenter", "committee", "guest", "organizer"].includes(roleParam)) {
+            setInviteRole(roleParam as "presenter" | "committee" | "guest" | "organizer");
           } else {
             setInviteRole(null);
           }
@@ -188,6 +190,8 @@ export default function EventDetail() {
                         ? t("roles.presenter")
                         : inviteRole === "committee"
                           ? t("roles.committee")
+                          : inviteRole === "organizer"
+                            ? t("roles.organizer")
                           : t("roles.guest")
                     } ${t("inviteSection.joinQuestionSuffix")}`
                   : `${t("inviteSection.joinQuestionPrefix")} ${t("inviteSection.joinQuestionSuffix")}`}

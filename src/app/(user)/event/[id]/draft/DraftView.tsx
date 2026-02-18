@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
 
-import { validateEventTime, toDate, getDateTimeString } from "@/utils/function";
+import { validateEventTime, toDate, getDateTimeString, toLocalDatetimeValue } from "@/utils/function";
 import {
   getEvent,
   publishEvent,
@@ -149,6 +149,7 @@ export default function EventDraft() {
   // Grading Configuration
   const [gradingEnabled, setGradingEnabled] = useState(false);
   const [gradingCriteria, setGradingCriteria] = useState<GradingCriteria[]>([]);
+  const [isGradingEditing, setIsGradingEditing] = useState(false);
 
   const handleAddSpecialReward = () => {
     const newReward: SpecialReward = {
@@ -453,6 +454,15 @@ export default function EventDraft() {
   const handleSaveDraft = async () => {
     if (!id) return;
 
+    if (gradingEnabled && isGradingEditing) {
+      toast.error(
+        t("gradingSection.saveCriteriaFirst") || "Please save your grading criteria changes first",
+      );
+      setActiveSection("card5");
+      document.getElementById("card5")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
     const okRewards = validateSpecialRewardsDraft();
     if (!okRewards) return;
 
@@ -507,6 +517,15 @@ export default function EventDraft() {
 
   const handlePublish = async () => {
     if (!id) return;
+
+    if (gradingEnabled && isGradingEditing) {
+      toast.error(
+        t("gradingSection.saveCriteriaFirst") || "Please save your grading criteria changes first",
+      );
+      setActiveSection("card5");
+      document.getElementById("card5")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
 
     const ok = await ensureNameAvailable();
     if (!ok) return;
@@ -779,12 +798,15 @@ export default function EventDraft() {
         setLocationPlace(data.locationName || "");
         setLocationLink(data.location || "");
         // Dates
+        const startLocal = data.startView ? toLocalDatetimeValue(data.startView) : "";
         setSelectedStart(data.startView ? new Date(data.startView) : undefined);
-        setStartDate(data.startView ? data.startView.split("T")[0] : "");
-        setStartTime(data.startView ? data.startView.split("T")[1]?.slice(0, 5) : "00:01");
+        setStartDate(startLocal ? startLocal.split("T")[0] : "");
+        setStartTime(startLocal ? startLocal.split("T")[1] : "00:01");
+
+        const endLocal = data.endView ? toLocalDatetimeValue(data.endView) : "";
         setSelectedEnd(data.endView ? new Date(data.endView) : undefined);
-        setEndDate(data.endView ? data.endView.split("T")[0] : "");
-        setEndTime(data.endView ? data.endView.split("T")[1]?.slice(0, 5) : "23:59");
+        setEndDate(endLocal ? endLocal.split("T")[0] : "");
+        setEndTime(endLocal ? endLocal.split("T")[1] : "23:59");
         // Visibility
         setEventVisibility(data.publicView ? "public" : "private");
 
@@ -793,15 +815,22 @@ export default function EventDraft() {
         setMaxGroups(data.maxTeams?.toString() || "30");
 
         // ================= SUBMISSION PERIOD =================
-        setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
-        setSubmissionStartDate(data.startJoinDate ? data.startJoinDate.split("T")[0] : "");
-        setSubmissionStartTime(
-          data.startJoinDate ? data.startJoinDate.split("T")[1]?.slice(0, 5) : "00:01",
+        const subStartLocal = data.startJoinDate
+          ? toLocalDatetimeValue(data.startJoinDate)
+          : "";
+        setSelectedSubStart(
+          data.startJoinDate ? new Date(data.startJoinDate) : undefined,
         );
+        setSubmissionStartDate(subStartLocal ? subStartLocal.split("T")[0] : "");
+        setSubmissionStartTime(
+          subStartLocal ? subStartLocal.split("T")[1] : "00:01",
+        );
+
+        const subEndLocal = data.endJoinDate ? toLocalDatetimeValue(data.endJoinDate) : "";
         setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
-        setSubmissionEndDate(data.endJoinDate ? data.endJoinDate.split("T")[0] : "");
+        setSubmissionEndDate(subEndLocal ? subEndLocal.split("T")[0] : "");
         setSubmissionEndTime(
-          data.endJoinDate ? data.endJoinDate.split("T")[1]?.slice(0, 5) : "23:59",
+          subEndLocal ? subEndLocal.split("T")[1] : "23:59",
         );
 
         // ================= COMMITTEE & GUEST =================
@@ -1100,6 +1129,7 @@ export default function EventDraft() {
                   setGradingEnabled={setGradingEnabled}
                   gradingCriteria={gradingCriteria}
                   setGradingCriteria={setGradingCriteria}
+                  onEditingChange={setIsGradingEditing}
                 />
 
                 <DeleteConfirmDialog
