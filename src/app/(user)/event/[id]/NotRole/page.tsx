@@ -6,9 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import InformationSection from "../components/InformationSection";
 import type { EventData } from "@/utils/types";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+export default function NotRolePage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id as string | undefined;
+
+  useEffect(() => {
+    if (!id) return;
+    router.replace(`/event/${id}`);
+  }, [id, router]);
+
+  return null;
+}
 
 type Props = {
   id: string;
@@ -16,7 +29,7 @@ type Props = {
   isAuthenticated?: boolean;
 };
 
-export default function NotRoleView({ id, event, isAuthenticated }: Props) {
+export function NotRoleView({ id, event, isAuthenticated }: Props) {
   const router = useRouter();
   const [bannerOpen, setBannerOpen] = useState(false);
 

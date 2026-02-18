@@ -30,7 +30,7 @@ import {
   getEvent,
 } from "@/utils/apievent";
 import ImageCropDialog from "@/lib/image-crop-dialog";
-import { autoResizeTextarea, toYYYYMMDD, formatDate } from "@/utils/function";
+import { autoResizeTextarea, toYYYYMMDD, formatDate, toLocalDatetimeValue } from "@/utils/function";
 import type {
   EventData,
   EventEditSection,
@@ -387,7 +387,7 @@ export default function OrganizerEditDialog({
           }
         }}
       >
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg">
           <DialogTitle>{t("eventDraft.editEvent")}</DialogTitle>
           <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
             {section === "location" && (
@@ -433,8 +433,14 @@ export default function OrganizerEditDialog({
                   const selectedSubEnd = form.endJoinDate ? new Date(form.endJoinDate) : undefined;
 
                   // Helpers
-                  const getTime = (val: string | undefined | null) =>
-                    val ? val.split("T")[1]?.substring(0, 5) || "00:00" : "00:00";
+                  const getTime = (val: string | undefined | null) => {
+                    if (!val) return "00:00";
+                    const date = new Date(val);
+                    if (isNaN(date.getTime())) return "00:00";
+                    const hours = date.getHours().toString().padStart(2, "0");
+                    const minutes = date.getMinutes().toString().padStart(2, "0");
+                    return `${hours}:${minutes}`;
+                  };
 
                   const updateDate = (
                     field: keyof EventFormState,

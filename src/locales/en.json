@@ -380,6 +380,7 @@
     },
     "actionButton": {
       "edit": "Edit",
+      "editing": "Editing",
       "open": "Open"
     },
     "stats": {
@@ -449,9 +450,10 @@
     "viewDetailsFor": "View details and works for",
     "defaultEventName": "Event Project",
     "noDescription": "No description provided.",
-    "roles": {
-      "leader": "Leader"
-    },
+    "noWorks": "No works uploaded yet.",
+    "projectMembers": "Project Members",
+    "leader": "Owner",
+
     "buttons": {
       "share": "Share",
       "leaveTeam": "Leave Team",
@@ -474,7 +476,8 @@
     "sections": {
       "description": "Project Description",
       "teamMembers": "Team Members",
-      "evaluation": "Evaluation",
+      "evaluation": "Rewards",
+      "grade": "Grade",
       "projectVideo": "Project Video",
       "projectWorks": "Project Works"
     },
@@ -522,6 +525,8 @@
       "required": "Required",
       "uploaded": "Uploaded",
       "download": "Download",
+      "downloadImage": "Download Image",
+      "downloadPDF": "Download PDF",
       "remove": "Remove",
       "open": "Open",
       "noRequirements": "No specific submission requirements for this event."
@@ -535,15 +540,16 @@
       "remaining": "Remaining:",
       "save": "Save",
       "saving": "Saving...",
-      "budgetUsage": "Budget Usage",
+      "budgetUsage": "Your Budget",
       "coins": "coins",
-      "left": "left",
-      "vrTeamCapTitle": "Per-team cap (me → this team)",
+      "used": "Used",
+      "left": "Left",
+      "vrTeamCapTitle": "Limit Given to Each Project",
       "vrTeamCapLimit": "Limit",
       "vrTeamCapNoLimit": "No limit",
-      "vrTeamCapCurrent": "Given (me → this team)",
-      "vrTeamCapRemaining": "Remaining (me → this team)",
-      "vrTeamCapExceeded": "Over my per-team limit",
+      "vrTeamCapCurrent": "Already given",
+      "vrTeamCapRemaining": "Remaining",
+      "vrTeamCapExceeded": "Over per-project limit",
       "selectSpecialRewards": "Select Special Rewards",
       "selectRewardsPlaceholder": "Select rewards...",
       "availableRewards": "Available Rewards",
@@ -588,8 +594,7 @@
     "imagePreview": {
       "title": "Image Preview",
       "alt": "Preview"
-    },
-    "noDescription": "No description provided."
+    }
   },
   "guest": {
     "dashboard": "Dashboard",
@@ -653,7 +658,7 @@
     "user": "User",
     "role": "Role",
     "team": "Team",
-    "team_leader": "Team Leader",
+    "team_leader": "Project Owner",
     "management": "Management",
     "count_unit": "person",
     "all": "total",
@@ -801,7 +806,7 @@
     "seeMore": "See More",
     "noProjectDesc": "No description provided.",
     "member": "Members",
-    "leader": "Leader of project",
+    "leader": "Owner of project",
     "allMembers": "All Members",
     "noMembers": "No members found.",
     "noProjectDetail": "No project detail found.",
@@ -822,6 +827,7 @@
     "maxScore": "Maximum Score",
     "weight": "Weight",
     "save": "Save Criteria",
+    "saveChanges": "Save Changes",
     "cancel": "Cancel",
     "edit": "Edit Criteria",
     "placeholderCriteriaName": "e.g. Creativity",
@@ -836,6 +842,7 @@
     "maxScoreMustBePositive": "Maximum score must be greater than 0",
     "weightRequired": "Weight is required",
     "weightPercentageMustBeBetween": "Weight percentage must be between 0 and 100",
+    "weightError": "Total weight must be exactly 100%",
     "descriptionTooLong": "Description must be at most 120 characters",
     "criteriaUpdated": "Criteria updated successfully",
     "criteriaAdded": "Criteria added successfully",
@@ -843,7 +850,11 @@
     "deleteConfirm": "Are you sure you want to delete this grading criteria?",
     "criteriaDeleted": "Criteria deleted successfully",
     "totalWeight": "Total Weight:",
-    "weightWarning": "Total weight should ideally sum up to 100%"
+    "weightWarning": "Total weight should ideally sum up to 100%",
+    "weightTotalMustBe100": "Warning: Total weight of all criteria is not 100%",
+    "saveCriteriaFirst": "Please save your grading criteria changes first",
+    "failedToSaveCriteria": "Failed to save criteria",
+    "failedToDeleteCriteria": "Failed to delete criteria"
   },
   "gradingDashboard": {
     "title": "Grading Results",
@@ -851,7 +862,8 @@
     "project": "Projects",
     "presenter": "Presenter",
     "totalScore": "Total Score",
-    "max": "Max"
+    "max": "Max",
+    "committeeDetail": "Committee"
   },
   "toolTip": {
     "eventInfo": "Edit event description and event banner",
@@ -860,5 +872,48 @@
     "participants": "Edit participant configuration and submission requirements",
     "vr": "Edit virtual rewards, virtual reward limits, and grading",
     "sr": "Create and edit special rewards"
+  },
+  "committeeGrade": {
+    "title": "Grade Project: ",
+    "score": "Grade",
+    "finalScore": "Final Score",
+    "gradeSummitted": "Grades Submitted",
+    "updateGrade": "Update Grades",
+    "submitGrade": "Submit Grades",
+    "submitGradeSuccess": "Grades submitted successfully",
+    "submitGradeFailed": "Failed to submit grades",
+    "failedLoadGrade": "Failed to load grading form",
+    "provideAllGrades": "Please provide scores for all criteria",
+    "invalidScore": "Please provide valid scores within the maximum score for each criteria"
+  },
+  "feedbackEvent": {
+    "back": "Back to Home",
+    "rateEvent": "Rate Event",
+    "howExperience": "How was your experience with",
+    "addComment": "Add a comment about this event (optional)",
+    "submit": "Submit Feedback Rating",
+    "submitting": "Submitting Feedback Rating...",
+    "share": "Share your thoughts about this event..."
+  },
+  "presenterDashboard": {
+    "title": "My Project Overview",
+    "rank": "Current Ranking & Virtual Rewards",
+    "project": "projects",
+    "score": "Total Virtual Rewards",
+    "commentRe": "Comments Received",
+    "comment": "comments",
+    "guest": "Guest",
+    "committee": "Committee",
+    "committeeVote": "Committee Votes",
+    "voteSR": "Special Reward Votes",
+    "noVote": "No votes yet"
+  },
+  "myProject": {
+    "project": "Project",
+    "noProject": "You don&apos;t have any project yet. Create or join a group to appear here.",
+    "createProject": "Create Project",
+    "noProjectDesc": "No project description provided",
+    "editProject": "Edit Project",
+    "searchPlaceholder": "Search projects by name..."
   }
 }
