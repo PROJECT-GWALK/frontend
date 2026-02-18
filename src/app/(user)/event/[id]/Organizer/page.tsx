@@ -43,10 +43,10 @@ export default function OrganizerView({ id, event }: Props) {
     {
       id?: string;
       name: string;
-      description: string;
+      description?: string;
       maxScore: number;
       weightPercentage: number;
-      sortOrder: number;
+      sortOrder?: number;
     }[]
   >([]);
 
