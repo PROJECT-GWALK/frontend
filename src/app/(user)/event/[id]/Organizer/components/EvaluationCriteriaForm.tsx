@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, AlertCircle } from "lucide-react";
+import { Trash2, Plus, AlertCircle, BookOpen, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   createEvaluationCriteria,
@@ -15,14 +15,15 @@ import {
   deleteEvaluationCriteria,
 } from "@/utils/apievaluation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import DeleteConfirmDialog from "../../draft/DeleteConfirmDialog";
 
 type CriteriaFormData = {
   id?: string;
   name: string;
-  description: string;
   maxScore: number;
   weightPercentage: number;
-  sortOrder: number;
+  description?: string;
+  sortOrder?: number;
 };
 
 type Props = {
@@ -52,6 +53,8 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
     }
     return fallback;
   };
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     setCriteria(initialCriteria);
@@ -155,10 +158,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
     const newCriteria: CriteriaFormData = {
       id: `new-${Date.now()}`,
       name: "",
-      description: "",
       maxScore: 100,
       weightPercentage: 0,
-      sortOrder: criteria.length,
+      // description and sortOrder are optional
     };
     setCriteria([...criteria, newCriteria]);
     setEditing(new Set([...editing, newCriteria.id!]));
@@ -197,14 +199,23 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         return;
       }
 
+      // Clean undefined fields from payload
+      const cleanPayload = (obj: Record<string, any>) => {
+        const result: Record<string, any> = {};
+        Object.entries(obj).forEach(([k, v]) => {
+          if (v !== undefined) result[k] = v;
+        });
+        return result;
+      };
+
       if (id.startsWith("new-")) {
         // Create new criteria
         const res = await createEvaluationCriteria(eventId, {
           name: item.name,
-          description: item.description || undefined,
           maxScore: item.maxScore,
           weightPercentage: item.weightPercentage,
-          sortOrder: item.sortOrder,
+          ...(item.description ? { description: item.description } : {}),
+          ...(item.sortOrder !== undefined ? { sortOrder: item.sortOrder } : {}),
         });
 
         const nextCriteria = criteria.map((c) => (c.id === id ? { ...c, id: res.criteria.id } : c));
@@ -213,13 +224,17 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         toast.success("Criteria created");
       } else {
         // Update existing criteria
-        await updateEvaluationCriteria(eventId, id, {
-          name: item.name,
-          description: item.description,
-          maxScore: item.maxScore,
-          weightPercentage: item.weightPercentage,
-          sortOrder: item.sortOrder,
-        });
+        await updateEvaluationCriteria(
+          eventId,
+          id,
+          cleanPayload({
+            name: item.name,
+            maxScore: item.maxScore,
+            weightPercentage: item.weightPercentage,
+            ...(item.description ? { description: item.description } : {}),
+            ...(item.sortOrder !== undefined ? { sortOrder: item.sortOrder } : {}),
+          }),
+        );
         onUpdate(criteria);
         toast.success("Criteria updated");
       }
@@ -234,8 +249,6 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this criteria?")) return;
-
     try {
       setLoading(true);
       if (!id.startsWith("new-")) {
@@ -253,6 +266,14 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       setLoading(false);
     }
   };
+
+  const handleConfirmDelete = async () => {
+    if (deleteTargetId) {
+      await handleDelete(deleteTargetId);
+      setDeleteDialogOpen(false);
+      setDeleteTargetId(null);
+    }
+  };
   const { t } = useLanguage();
 
   return (
@@ -266,80 +287,61 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* {criteria.length > 0 && (
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <div className="text-sm font-semibold">Weight Summary</div>
-                <div className="text-xs text-muted-foreground">
-                  {remainingWeight >= 0
-                    ? `Remaining: ${remainingWeight.toFixed(2)}%`
-                    : `Over: ${Math.abs(remainingWeight).toFixed(2)}%`}
-                </div>
-              </div>
-              <Button onClick={handleAutoBalance} size="sm" variant="outline" disabled={loading}>
-                Equalize &amp; save
-              </Button>
+      <CardContent className="space-y-6">
+        {/* Weight Summary */}
+        {criteria.length > 0 && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-blue-900 dark:text-blue-100">
+                {t("gradingSection.totalWeight") || "Total Weight"}
+              </span>
+              <span
+                className={`font-bold ${
+                  totalWeight === 100
+                    ? "text-green-600 dark:text-green-400"
+                    : totalWeight > 100
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-orange-600 dark:text-orange-400"
+                }`}
+              >
+                {totalWeight}%
+              </span>
             </div>
-            <div className="mt-3">
-              <div className="h-2 w-full rounded bg-muted">
-                <div
-                  className={`h-full rounded ${
-                    isValidWeight
-                      ? "bg-green-600"
-                      : totalWeight > 100
-                        ? "bg-red-600"
-                        : "bg-orange-600"
-                  }`}
-                  style={{ width: `${Math.max(0, Math.min(100, totalWeight))}%` }}
-                />
-              </div>
-              <div className="mt-2 flex items-center justify-between text-sm">
-                <span className="font-semibold">Total</span>
-                <span
-                  className={`font-bold ${isValidWeight ? "text-green-600" : "text-orange-600"}`}
-                >
-                  {totalWeight.toFixed(2)}%
-                </span>
-              </div>
-            </div>
-          </div>
-        )} */}
-
-        {/* Weight Warning */}
-        {criteria.length > 0 && !isValidWeight && (
-          <div className="flex gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">
-                {t("gradingSection.totalWeight")}: {totalWeight.toFixed(2)}%
+            {totalWeight !== 100 && (
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                {t("gradingSection.weightWarning") ||
+                  "Total weight should equal 100% for balanced grading"}
               </p>
-              <p className="text-sm">{t("gradingSection.weightWarning")}</p>
-            </div>
+            )}
           </div>
         )}
 
         {/* Criteria List */}
         <div className="space-y-3">
           {criteria.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              {t("gradingSection.noCriteria")}
-            </p>
+            <div className="text-center py-8 text-muted-foreground">
+              <BookOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>{t("gradingSection.noCriteria") || "No criteria added yet"}</p>
+              <p className="text-sm">
+                {t("gradingSection.clickToAddCriteria") ||
+                  "Click the button above to add grading criteria"}
+              </p>
+            </div>
           ) : (
-            criteria.map((item) => {
-              const isEditing = editing.has(item.id!);
+            <div className="space-y-3">
+              {criteria.map((item) => {
+                const isEditing = editing.has(item.id!);
 
-              return (
-                <div
-                  key={item.id}
-                  className="p-4 border rounded-lg bg-card hover:bg-muted/30 transition-colors"
-                >
-                  {isEditing ? (
-                    // Edit Mode
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
+                return (
+                  <div
+                    key={item.id}
+                    className="p-4 border rounded-lg bg-card hover:bg-muted/30 transition-colors"
+                  >
+                    {isEditing ? (
+                      // Edit Mode
+                      <div className="space-y-3">
+                        {/* Evaluation Name Field */}
+                        <div className="space-y-2">
                           <label className="text-sm font-semibold">
                             {t("gradingSection.criteriaName")}
                           </label>
@@ -351,125 +353,150 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                             disabled={loading}
                           />
                         </div>
-                        <div>
-                          <label className="text-sm font-semibold">
-                            {t("gradingSection.maxScore")}
-                          </label>
-                          <Input
-                            type="number"
-                            value={item.maxScore}
+                        {/* Description Field */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <label className="text-sm font-semibold">
+                              {t("gradingSection.criteriaDescription")}
+                            </label>
+                            <span className="text-xs text-muted-foreground">
+                              {(item.description || "").length}/120
+                            </span>
+                          </div>
+                          <Textarea
+                            value={item.description ?? ""}
                             onChange={(e) =>
-                              handleUpdateField(
-                                item.id!,
-                                "maxScore",
-                                Number.isFinite(parseFloat(e.target.value))
-                                  ? parseFloat(e.target.value)
-                                  : 0,
-                              )
+                              handleUpdateField(item.id!, "description", e.target.value)
                             }
-                            placeholder={t("gradingSection.placeholderMaxScore")}
-                            className="mt-1"
+                            placeholder={t("gradingSection.placeholderCriteriaDescription")}
+                            className="mt-1 min-h-20"
                             disabled={loading}
                           />
                         </div>
-                      </div>
+                        {/* Max Score Field */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-semibold">
+                              {t("gradingSection.maxScore")}
+                            </label>
+                            <Input
+                              type="number"
+                              value={item.maxScore}
+                              onChange={(e) =>
+                                handleUpdateField(
+                                  item.id!,
+                                  "maxScore",
+                                  Number.isFinite(parseFloat(e.target.value))
+                                    ? parseFloat(e.target.value)
+                                    : 0,
+                                )
+                              }
+                              placeholder={t("gradingSection.placeholderMaxScore")}
+                              className="mt-1"
+                              disabled={loading}
+                            />
+                          </div>
 
-                      <div>
-                        <label className="text-sm font-semibold">
-                          {t("gradingSection.criteriaDescription")}
-                        </label>
-                        <Textarea
-                          value={item.description ?? ""}
-                          onChange={(e) =>
-                            handleUpdateField(item.id!, "description", e.target.value)
-                          }
-                          placeholder={t("gradingSection.placeholderCriteriaDescription")}
-                          className="mt-1 min-h-20"
-                          disabled={loading}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold">
-                          {t("gradingSection.weight")} %
-                        </label>
-                        <Input
-                          type="number"
-                          value={item.weightPercentage}
-                          onChange={(e) =>
-                            handleUpdateField(
-                              item.id!,
-                              "weightPercentage",
-                              Number.isFinite(parseFloat(e.target.value))
-                                ? parseFloat(e.target.value)
-                                : 0,
-                            )
-                          }
-                          placeholder="0-100"
-                          className="mt-1"
-                          disabled={loading}
-                          min="0"
-                          max="100"
-                          step="0.1"
-                        />
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button onClick={() => handleSave(item.id!)} disabled={loading} size="sm">
-                          {t("gradingSection.save")}
-                        </Button>
-                        <Button
-                          onClick={() =>
-                            setEditing(new Set([...editing].filter((e) => e !== item.id)))
-                          }
-                          variant="outline"
-                          disabled={loading}
-                          size="sm"
-                        >
-                          {t("gradingSection.cancel")}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    // View Mode
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">{item.name}</h4>
-                          <Badge variant="secondary" className="bg-blue-500 text-white">
-                            {t("gradingSection.weight")}: {item.weightPercentage}%
-                          </Badge>
-                          <Badge variant="outline" className="bg-green-500 text-white">
-                            {t("gradingSection.maxScore")}: {item.maxScore}
-                          </Badge>
+                          {/* Weight Field */}
+                          <div>
+                            <label className="text-sm font-semibold">
+                              {t("gradingSection.weight")} %
+                            </label>
+                            <Input
+                              type="number"
+                              value={item.weightPercentage}
+                              onChange={(e) =>
+                                handleUpdateField(
+                                  item.id!,
+                                  "weightPercentage",
+                                  Number.isFinite(parseFloat(e.target.value))
+                                    ? parseFloat(e.target.value)
+                                    : 0,
+                                )
+                              }
+                              placeholder="0-100"
+                              className="mt-1"
+                              disabled={loading}
+                              min="0"
+                              max="100"
+                              step="0.1"
+                            />
+                          </div>
                         </div>
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                        )}
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleSave(item.id!)} disabled={loading} size="sm">
+                            {t("gradingSection.save")}
+                          </Button>
+                          <Button
+                            onClick={() =>
+                              setEditing(new Set([...editing].filter((e) => e !== item.id)))
+                            }
+                            variant="outline"
+                            disabled={loading}
+                            size="sm"
+                          >
+                            {t("gradingSection.cancel")}
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          onClick={() => setEditing(new Set([...editing, item.id!]))}
-                          variant="outline"
-                          size="sm"
-                          disabled={loading}
-                        >
-                          {t("gradingSection.edit")}
-                        </Button>
-                        <Button
-                          onClick={() => handleDelete(item.id!)}
-                          variant="destructive"
-                          size="sm"
-                          disabled={loading}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                    ) : (
+                      // View Mode
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold">{item.name}</h4>
+                            <Badge variant="secondary" className="bg-blue-500 text-white">
+                              {t("gradingSection.weight")}: {item.weightPercentage}%
+                            </Badge>
+                            <Badge variant="outline" className="bg-green-500 text-white">
+                              {t("gradingSection.maxScore")}: {item.maxScore}
+                            </Badge>
+                          </div>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setEditing(new Set([...editing, item.id!]))}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setDeleteTargetId(item.id!);
+                              setDeleteDialogOpen(true);
+                            }}
+                            variant="destructive"
+                            size="sm"
+                            disabled={loading}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })
+                    )}
+                  </div>
+                );
+              })}
+
+              <DeleteConfirmDialog
+                open={deleteDialogOpen}
+                onOpenChange={(open) => {
+                  setDeleteDialogOpen(open);
+                  if (!open) setDeleteTargetId(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                title={t("gradingSection.deleteConfirmTitle") || "Delete grading criteria"}
+                description={
+                  t("gradingSection.deleteConfirm") ||
+                  "Are you sure you want to delete this grading criteria?"
+                }
+              />
+            </div>
           )}
         </div>
       </CardContent>

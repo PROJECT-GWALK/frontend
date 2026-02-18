@@ -33,6 +33,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "database" },
 
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      const configuredBaseUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
+      const effectiveBaseUrl = configuredBaseUrl ?? baseUrl;
+
+      if (url.startsWith("/")) {
+        return new URL(url, effectiveBaseUrl).toString();
+      }
+
+      try {
+        const target = new URL(url);
+        const base = new URL(effectiveBaseUrl);
+        if (target.origin === base.origin) return url;
+      } catch {}
+
+      return effectiveBaseUrl;
+    },
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
