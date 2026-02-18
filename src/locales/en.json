@@ -380,6 +380,7 @@
     },
     "actionButton": {
       "edit": "Edit",
+      "editing": "Editing",
       "open": "Open"
     },
     "stats": {
@@ -868,7 +869,17 @@
     "vr": "Edit virtual rewards, virtual reward limits, and grading",
     "sr": "Create and edit special rewards"
   },
-  "CommitteeGrade": {
-    "title": "Grade Project: "
+  "committeeGrade": {
+    "title": "Grade Project: ",
+    "score": "Grade",
+    "finalScore": "Final Score",
+    "gradeSummitted": "Grades Submitted",
+    "updateGrade": "Update Grades",
+    "submitGrade": "Submit Grades",
+    "submitGradeSuccess": "Grades submitted successfully",
+    "submitGradeFailed": "Failed to submit grades",
+    "failedLoadGrade": "Failed to load grading form",
+    "provideAllGrades": "Please provide scores for all criteria",
+    "invalidScore": "Please provide valid scores within the maximum score for each criteria"
   }
 }
