@@ -894,5 +894,26 @@
     "submit": "Submit Feedback Rating",
     "submitting": "Submitting Feedback Rating...",
     "share": "Share your thoughts about this event..."
+  },
+  "presenterDashboard": {
+    "title": "My Project Overview",
+    "rank": "Current Ranking & Virtual Rewards",
+    "project": "projects",
+    "score": "Total Virtual Rewards",
+    "commentRe": "Comments Received",
+    "comment": "comments",
+    "guest": "Guest",
+    "committee": "Committee",
+    "committeeVote": "Committee Votes",
+    "voteSR": "Special Reward Votes",
+    "noVote": "No votes yet"
+  },
+  "myProject": {
+    "project": "Project",
+    "noProject": "You don&apos;t have any project yet. Create or join a group to appear here.",
+    "createProject": "Create Project",
+    "noProjectDesc": "No project description provided",
+    "editProject": "Edit Project",
+    "searchPlaceholder": "Search projects by name..."
   }
 }

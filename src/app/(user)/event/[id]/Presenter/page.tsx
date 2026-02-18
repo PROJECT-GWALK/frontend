@@ -252,25 +252,25 @@ export function PresenterView({ id, event }: Props) {
                 <div className="mt-6 mb-8 space-y-4">
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-500" />
-                    My Team Performance
+                    {t("presenterDashboard.title")}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Rank & Score */}
                     <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-all">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Current Rank & Score
+                          {t("presenterDashboard.rank")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-bold">#{myStats.rank}</span>
                           <span className="text-sm text-muted-foreground">
-                            / {projects.length} Teams
+                            / {projects.length} {t("presenterDashboard.project")}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Total Score:{" "}
+                          {t("presenterDashboard.score")}:{" "}
                           <span className="font-semibold text-foreground">{myStats.score}</span>{" "}
                           {localEvent?.unitReward ?? "coins"}
                         </p>
@@ -281,23 +281,25 @@ export function PresenterView({ id, event }: Props) {
                     <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Feedback Received
+                          {t("presenterDashboard.commentRe")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-bold">{myStats.comments.total}</span>
-                          <span className="text-sm text-muted-foreground">Comments</span>
+                          <span className="text-sm text-muted-foreground">
+                            {t("presenterDashboard.comment")}
+                          </span>
                         </div>
                         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                           <div className="flex justify-between">
-                            <span>Guest:</span>
+                            <span>{t("presenterDashboard.guest")}:</span>
                             <span className="font-medium text-foreground">
                               {myStats.comments.guest}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Committee:</span>
+                            <span>{t("presenterDashboard.committee")}:</span>
                             <span className="font-medium text-foreground">
                               {myStats.comments.committee}
                             </span>
@@ -310,7 +312,7 @@ export function PresenterView({ id, event }: Props) {
                     <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all md:col-span-2">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Special Reward Votes
+                          {t("presenterDashboard.voteSR")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -352,7 +354,7 @@ export function PresenterView({ id, event }: Props) {
 
                                     <div className="pt-2 border-t mt-1 flex justify-between items-end">
                                       <div className="text-xs text-muted-foreground">
-                                        Committee Votes
+                                        {t("presenterDashboard.committeeVote")}
                                       </div>
                                       <div
                                         className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md ${
@@ -373,7 +375,7 @@ export function PresenterView({ id, event }: Props) {
                         ) : (
                           <div className="flex flex-col items-center justify-center h-15 text-muted-foreground text-sm">
                             <Star className="h-5 w-5 mb-1 opacity-20" />
-                            No votes yet
+                            {t("presenterDashboard.noVote")}
                           </div>
                         )}
                       </CardContent>
@@ -405,14 +407,14 @@ export function PresenterView({ id, event }: Props) {
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-lg font-semibold">{t("guest.myProjects")}</h2>
                     <span className="text-sm text-muted-foreground">
-                      Teams: {projects.length} / {localEvent?.maxTeams || "-"}
+                      {t("myProject.project")}: {projects.length} / {localEvent?.maxTeams || "-"}
                     </span>
                   </div>
 
                   {!userProject ? (
                     <Card className="p-6 rounded-xl">
                       <div className="text-sm text-muted-foreground">
-                        You don&apos;t have any project yet. Create or join a group to appear here.
+                        {t("myProject.noProject")}
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -423,7 +425,7 @@ export function PresenterView({ id, event }: Props) {
                             !!localEvent?.maxTeams && projects.length >= localEvent.maxTeams
                           }
                         >
-                          Create Project
+                          {t("myProject.createProject")}
                         </Button>
                       </div>
                     </Card>
@@ -449,7 +451,7 @@ export function PresenterView({ id, event }: Props) {
                               {userProject.title}
                             </div>
                             <div className="text-sm text-muted-foreground line-clamp-1">
-                              {userProject.description || "No description provided"}
+                              {userProject.description || t("myProject.noProjectDesc")}
                             </div>
                           </div>
 
@@ -467,7 +469,7 @@ export function PresenterView({ id, event }: Props) {
 
                         <div className="shrink-0 flex items-center gap-2 mt-2 md:mt-0">
                           <Link href={`/event/${id}/Projects/${userProject.id}`} target="_blank">
-                            <Button variant="outline">Edit</Button>
+                            <Button variant="outline">{t("myProject.editProject")}</Button>
                           </Link>
                         </div>
                       </div>
@@ -488,7 +490,7 @@ export function PresenterView({ id, event }: Props) {
                   <div className="flex items-center justify-between gap-4 mb-3">
                     <h2 className="text-lg font-semibold">{t("guest.allProjects")}</h2>
                     <Input
-                      placeholder="Search projects by name..."
+                      placeholder={t("myProject.searchPlaceholder")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="max-w-sm"
