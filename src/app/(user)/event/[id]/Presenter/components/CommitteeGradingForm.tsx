@@ -214,7 +214,7 @@ export default function CommitteeGradingForm({
                 min="0"
                 max={c.maxScore}
                 step="0.1"
-                value={grades.get(c.id) === 0 ? "" : grades.get(c.id) ?? ""}
+                value={grades.get(c.id) === 0 ? "" : (grades.get(c.id) ?? "")}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === "") {

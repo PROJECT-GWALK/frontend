@@ -859,7 +859,8 @@
     "project": "Projects",
     "presenter": "Presenter",
     "totalScore": "Total Score",
-    "max": "Max"
+    "max": "Max",
+    "committeeDetail": "Committee Score Details"
   },
   "toolTip": {
     "eventInfo": "Edit event description and event banner",
