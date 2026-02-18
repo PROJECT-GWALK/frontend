@@ -318,14 +318,15 @@ export default function Card5(props: Props) {
                                   min="1"
                                   step="1"
                                   placeholder="100"
-                                  value={criteria.maxScore}
-                                  onChange={(e) =>
-                                    handleUpdateField(
-                                      criteria.id,
-                                      "maxScore",
-                                      Number(e.target.value),
-                                    )
-                                  }
+                                  value={criteria.maxScore === 0 ? "" : criteria.maxScore}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val === "") {
+                                      handleUpdateField(criteria.id, "maxScore", 0);
+                                    } else {
+                                      handleUpdateField(criteria.id, "maxScore", Number(val));
+                                    }
+                                  }}
                                 />
                               </div>
                               {/* Weight Field */}
@@ -340,14 +341,21 @@ export default function Card5(props: Props) {
                                   max="100"
                                   step="1"
                                   placeholder="25"
-                                  value={criteria.weightPercentage}
-                                  onChange={(e) =>
-                                    handleUpdateField(
-                                      criteria.id,
-                                      "weightPercentage",
-                                      Number(e.target.value),
-                                    )
+                                  value={
+                                    criteria.weightPercentage === 0 ? "" : criteria.weightPercentage
                                   }
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val === "") {
+                                      handleUpdateField(criteria.id, "weightPercentage", 0);
+                                    } else {
+                                      handleUpdateField(
+                                        criteria.id,
+                                        "weightPercentage",
+                                        Number(val),
+                                      );
+                                    }
+                                  }}
                                 />
                               </div>
                             </div>

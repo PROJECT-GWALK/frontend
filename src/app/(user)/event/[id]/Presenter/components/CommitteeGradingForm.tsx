@@ -5,8 +5,9 @@ import { getEvaluationCriteria, getTeamGrades, submitGrade } from "@/utils/apiev
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, CheckCircle2, Edit2 } from "lucide-react";
+import { Loader2, CheckCircle2, Edit2, BookCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Criteria = {
   id: string;
@@ -41,7 +42,7 @@ export default function CommitteeGradingForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
+  const { t } = useLanguage();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -134,7 +135,10 @@ export default function CommitteeGradingForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Grading Form</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+            <BookCheck className="w-5 h-5 text-green-600" />
+            {t("CommitteeGrade.title")} {teamName}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
@@ -148,38 +152,44 @@ export default function CommitteeGradingForm({
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Grade Project: {teamName}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Please rate this project based on the following criteria
-            </p>
+        {/* 1. เพิ่ม gap-4 เพื่อบังคับให้มีช่องว่างระหว่างฝั่งซ้ายและขวาเสมอ */}
+        <div className="flex items-start sm:items-center justify-between gap-4">
+          {/* 2. เพิ่ม flex-1 และ min-w-0 ให้กล่องข้อความ เพื่อให้มันขยายจนสุดแต่ไม่ล้นไปทับคนอื่น */}
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg flex items-start sm:items-center gap-2 text-foreground">
+              {/* 3. ใส่ shrink-0 ให้ไอคอน เพื่อไม่ให้ไอคอนเบี้ยวเวลาข้อความยาว */}
+              <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
+              {/* 4. ใส่ break-words หรือ truncate ให้ข้อความ (ในที่นี้แนะนำ break-words ให้ตัดขึ้นบรรทัดใหม่) */}
+              <span className="break-words">
+                {t("CommitteeGrade.title")} {teamName}
+              </span>
+            </CardTitle>
           </div>
+
+          {/* 5. ใส่ shrink-0 ให้ฝั่งปุ่ม เพื่อรับประกันว่าปุ่มจะไม่ถูกบีบหรือโดนทับเด็ดขาด */}
           {submitted && !isEditing && (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="text-sm font-semibold">Submitted</span>
-              </div>
+            <div className="flex items-center gap-1 shrink-0">
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => setIsEditing(true)}
                 disabled={disabled}
+                className="bg-red-500 hover:bg-red-600 text-white"
               >
                 <Edit2 className="w-4 h-4 mr-1" />
                 Edit
               </Button>
             </div>
           )}
+
           {isEditing && (
-            <div className="flex items-center gap-2 text-amber-600">
-              <Edit2 className="w-4 h-4" />
-              <span className="text-sm font-semibold">Editing</span>
+            <div className="flex items-center gap-2 text-red-700 shrink-0">
+              <Edit2 className="w-4 h-4 shrink-0" />
+              <span className="text-sm font-semibold whitespace-nowrap">Editing</span>
             </div>
           )}
         </div>
       </CardHeader>
+
       <CardContent className="space-y-6">
         {criteria.map((c) => (
           <div key={c.id} className="border rounded-lg p-4 bg-card/50">
@@ -189,9 +199,19 @@ export default function CommitteeGradingForm({
                 {c.description && (
                   <p className="text-sm text-muted-foreground mt-1">{c.description}</p>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">
+
+                {/* ปรับเป็น div แทน p เพื่อความถูกต้องของ HTML และจัดให้อยู่บรรทัดเดียวกัน */}
+                <div className="text-xs text-muted-foreground mt-2">
                   Weight: {c.weightPercentage}% | Max Score: {c.maxScore}
-                </p>
+                  {grades.has(c.id) && (
+                    <span className="ml-1">
+                      | Score:{" "}
+                      <span className="font-bold">
+                        {(((grades.get(c.id) || 0) / c.maxScore) * 100).toFixed(1)}%
+                      </span>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -205,26 +225,17 @@ export default function CommitteeGradingForm({
                 onChange={(e) => handleScoreChange(c.id, e.target.value)}
                 placeholder={`0 - ${c.maxScore}`}
                 disabled={disabled || (submitted && !isEditing)}
-                className="w-32"
+                className="w-16"
               />
               <span className="text-sm text-muted-foreground">/ {c.maxScore}</span>
             </div>
-
-            {grades.has(c.id) && (
-              <div className="mt-2 text-xs">
-                <span className="text-muted-foreground">Score: </span>
-                <span className="font-semibold">
-                  {(((grades.get(c.id) || 0) / c.maxScore) * 100).toFixed(1)}%
-                </span>
-              </div>
-            )}
           </div>
         ))}
 
         {/* Summary */}
         {grades.size > 0 && (
           <div className="bg-muted/50 p-4 rounded-lg">
-            <h4 className="font-semibold mb-3">Grade Summary</h4>
+            {/* <h4 className="font-semibold mb-3">Grade Summary</h4>
             <div className="space-y-2 text-sm">
               {criteria.map((c) => {
                 const score = grades.get(c.id) ?? 0;
@@ -238,13 +249,13 @@ export default function CommitteeGradingForm({
                   </div>
                 );
               })}
-            </div>
+            </div> */}
 
             {/* Calculate weighted average */}
             {grades.size === criteria.length && (
-              <div className="mt-4 pt-4 border-t">
+              <div>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">Weighted Average Score:</span>
+                  <span className="font-semibold">Final Score:</span>
                   <span className="text-lg font-bold">
                     {(
                       criteria.reduce((sum, c) => {
@@ -263,7 +274,7 @@ export default function CommitteeGradingForm({
         )}
 
         {/* Submit Button */}
-        <div className="flex gap-2 pt-4">
+        <div className="flex gap-2">
           {isEditing && (
             <Button
               variant="outline"
@@ -279,7 +290,7 @@ export default function CommitteeGradingForm({
             disabled={
               submitting || grades.size !== criteria.length || disabled || (submitted && !isEditing)
             }
-            className="flex-1"
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white"
           >
             {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             {submitted && !isEditing

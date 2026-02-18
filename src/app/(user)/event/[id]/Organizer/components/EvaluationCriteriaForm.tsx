@@ -92,11 +92,11 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       const isNew = item.id.startsWith("new-");
       if (isNew) {
         if (!item.name.trim()) {
-          toast.error("Criteria name is required");
+          toast.error(t("gradingSection.criteriaNameRequired"));
           return;
         }
         if (!Number.isFinite(item.maxScore) || item.maxScore <= 0) {
-          toast.error("Max score must be greater than 0");
+          toast.error(t("gradingSection.maxScoreMustBePositive"));
           return;
         }
       }
@@ -181,12 +181,12 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       if (!item) return;
 
       if (!item.name.trim()) {
-        toast.error("Criteria name is required");
+        toast.error(t("gradingSection.criteriaNameRequired"));
         return;
       }
 
       if (!Number.isFinite(item.maxScore) || item.maxScore <= 0) {
-        toast.error("Max score must be greater than 0");
+        toast.error(t("gradingSection.maxScoreMustBePositive"));
         return;
       }
 
@@ -195,7 +195,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         item.weightPercentage < 0 ||
         item.weightPercentage > 100
       ) {
-        toast.error("Weight percentage must be between 0 and 100");
+        toast.error(t("gradingSection.weightPercentageMustBeBetween"));
         return;
       }
 
@@ -221,7 +221,6 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         const nextCriteria = criteria.map((c) => (c.id === id ? { ...c, id: res.criteria.id } : c));
         setCriteria(nextCriteria);
         onUpdate(nextCriteria);
-        toast.success("Criteria created");
       } else {
         // Update existing criteria
         await updateEvaluationCriteria(
@@ -236,12 +235,12 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           }),
         );
         onUpdate(criteria);
-        toast.success("Criteria updated");
+        toast.success(t("gradingSection.criteriaUpdated"));
       }
 
       setEditing(new Set([...editing].filter((e) => e !== id)));
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Failed to save criteria"));
+      toast.error(getApiErrorMessage(error, t("gradingSection.failedToSaveCriteria")));
       console.error(error);
     } finally {
       setLoading(false);
@@ -258,9 +257,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       setCriteria(nextCriteria);
       setEditing(new Set([...editing].filter((e) => e !== id)));
       onUpdate(nextCriteria);
-      toast.success("Criteria deleted");
+      toast.success(t("gradingSection.criteriaDeleted"));
     } catch (error) {
-      toast.error("Failed to delete criteria");
+      toast.error(t("gradingSection.failedToDeleteCriteria"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -381,16 +380,15 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                             </label>
                             <Input
                               type="number"
-                              value={item.maxScore}
-                              onChange={(e) =>
-                                handleUpdateField(
-                                  item.id!,
-                                  "maxScore",
-                                  Number.isFinite(parseFloat(e.target.value))
-                                    ? parseFloat(e.target.value)
-                                    : 0,
-                                )
-                              }
+                              value={item.maxScore === 0 ? "" : item.maxScore}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "") {
+                                  handleUpdateField(item.id!, "maxScore", 0);
+                                } else {
+                                  handleUpdateField(item.id!, "maxScore", Number(val));
+                                }
+                              }}
                               placeholder={t("gradingSection.placeholderMaxScore")}
                               className="mt-1"
                               disabled={loading}
@@ -404,16 +402,15 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                             </label>
                             <Input
                               type="number"
-                              value={item.weightPercentage}
-                              onChange={(e) =>
-                                handleUpdateField(
-                                  item.id!,
-                                  "weightPercentage",
-                                  Number.isFinite(parseFloat(e.target.value))
-                                    ? parseFloat(e.target.value)
-                                    : 0,
-                                )
-                              }
+                              value={item.weightPercentage === 0 ? "" : item.weightPercentage}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "") {
+                                  handleUpdateField(item.id!, "weightPercentage", 0);
+                                } else {
+                                  handleUpdateField(item.id!, "weightPercentage", Number(val));
+                                }
+                              }}
                               placeholder="0-100"
                               className="mt-1"
                               disabled={loading}

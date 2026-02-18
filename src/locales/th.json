@@ -448,10 +448,10 @@
     "title": "รายละเอียดโครงการ",
     "viewDetailsFor": "ดูรายละเอียดและผลงานของ",
     "defaultEventName": "โครงการอีเวนต์",
-    "noDescription": "ไม่มีรายละเอียด",
-    "roles": {
-      "leader": "หัวหน้าทีม"
-    },
+    "noDescription": "ยังไม่มีรายละเอียด",
+    "noWorks": "ยังไม่มีผลงานที่อัปโหลดสำหรับโครงการนี้",
+    "projectMembers": "สมาชิกโครงการ",
+    "leader": "เจ้าของโครงการ",
     "buttons": {
       "share": "แชร์",
       "leaveTeam": "ออกจากทีม",
@@ -472,9 +472,10 @@
       "max": "สูงสุด"
     },
     "sections": {
-      "description": "รายละเอียดโปรเจกต์",
+      "description": "รายละเอียดโครงการ",
       "teamMembers": "สมาชิกทีม",
-      "evaluation": "การประเมิน",
+      "evaluation": "รางวัล",
+      "grade": "คะแนน",
       "projectVideo": "วิดีโอโครงการ",
       "projectWorks": "ผลงานโครงการ"
     },
@@ -511,7 +512,7 @@
       "noWorks": "ยังไม่มีผลงานที่อัปโหลด",
       "noMembers": "ยังไม่มีสมาชิก",
       "eventEnded": "งานจบแล้วหรือไม่อยู่ในช่วงเวลาที่กำหนด ไม่สามารถดำเนินการได้",
-      "submissionEnded": "หมดช่วงส่งผลงานแล้ว คุณไม่สามารถสร้างหรือแก้ไขโปรเจกต์ได้"
+      "submissionEnded": "หมดช่วงส่งผลงานแล้ว คุณไม่สามารถสร้างหรือแก้ไขโครงการได้"
     },
     "files": {
       "defaultFileName": "ไฟล์",
@@ -522,6 +523,8 @@
       "required": "จำเป็นต้องส่ง",
       "uploaded": "อัปโหลดแล้ว",
       "download": "ดาวน์โหลด",
+      "downloadImage": "ดาวน์โหลดรูปภาพ",
+      "downloadPDF": "ดาวน์โหลด PDF",
       "remove": "ลบ",
       "open": "เปิด",
       "noRequirements": "ไม่มีข้อมูลที่ต้องส่งสำหรับอีเวนต์นี้"
@@ -535,15 +538,16 @@
       "remaining": "คงเหลือ:",
       "save": "บันทึก",
       "saving": "กำลังบันทึก...",
-      "budgetUsage": "งบประมาณที่ใช้",
+      "budgetUsage": "งบประมาณของคุณ",
       "coins": "เหรียญ",
+      "used": "ใช้ไป",
       "left": "คงเหลือ",
-      "vrTeamCapTitle": "เพดาน VR ต่อทีม (ของฉัน)",
+      "vrTeamCapTitle": "ลิมิตการมอบต่อโครงการ",
       "vrTeamCapLimit": "ไม่เกิน",
       "vrTeamCapNoLimit": "ไม่จำกัด",
-      "vrTeamCapCurrent": "ให้ทีมนี้แล้ว (ของฉัน)",
-      "vrTeamCapRemaining": "ฉันยังให้ทีมนี้ได้อีก",
-      "vrTeamCapExceeded": "เกินเพดานที่ฉันให้ทีมนี้ได้",
+      "vrTeamCapCurrent": "มอบให้ไปแล้ว",
+      "vrTeamCapRemaining": "มอบให้ได้อีกสูงสุด",
+      "vrTeamCapExceeded": "เกินลิมิตที่ฉันให้โครงการนี้ได้",
       "selectSpecialRewards": "เลือกรางวัลพิเศษ",
       "selectRewardsPlaceholder": "เลือกรางวัล...",
       "availableRewards": "รางวัลที่มีอยู่",
@@ -588,8 +592,7 @@
     "imagePreview": {
       "title": "ดูรูปภาพ",
       "alt": "ตัวอย่าง"
-    },
-    "noDescription": "ไม่มีคำอธิบาย"
+    }
   },
   "guest": {
     "dashboard": "แดชบอร์ด",
@@ -632,11 +635,11 @@
     "joinEventSuccess": "เข้าร่วมอีเวนต์สำเร็จ",
     "joinEventFailed": "เข้าร่วมอีเวนต์ไม่สำเร็จ",
     "invalidInviteLink": "ลิงก์เชิญไม่ถูกต้อง",
-    "projectCreated": "สร้างโปรเจกต์เรียบร้อย",
-    "projectUpdated": "อัปเดตโปรเจกต์เรียบร้อย",
-    "projectUpdateFailed": "อัปเดตโปรเจกต์ไม่สำเร็จ",
-    "projectDeleted": "ลบโปรเจกต์เรียบร้อย",
-    "projectDeleteFailed": "ลบโปรเจกต์ไม่สำเร็จ",
+    "projectCreated": "สร้างโครงการเรียบร้อย",
+    "projectUpdated": "อัปเดตโครงการเรียบร้อย",
+    "projectUpdateFailed": "อัปเดตโครงการไม่สำเร็จ",
+    "projectDeleted": "ลบโครงการเรียบร้อย",
+    "projectDeleteFailed": "ลบโครงการไม่สำเร็จ",
     "fileUploaded": "อัปโหลดไฟล์เรียบร้อย",
     "uploadFailed": "อัปโหลดไม่สำเร็จ",
     "loadEventDataFailed": "โหลดข้อมูลงานไม่สำเร็จ",
@@ -653,7 +656,7 @@
     "user": "ผู้ใช้",
     "role": "บทบาท",
     "team": "ทีม",
-    "team_leader": "หัวหน้าทีม",
+    "team_leader": "เจ้าของโครงการ",
     "management": "การจัดการ",
     "count_unit": "คน",
     "all": "ทั้งหมด",
@@ -843,7 +846,10 @@
     "deleteConfirm": "คุณแน่ใจหรือไม่ว่าต้องการลบเกณฑ์การให้คะแนนนี้?",
     "criteriaDeleted": "ลบเกณฑ์เรียบร้อยแล้ว",
     "totalWeight": "น้ำหนักของเกณฑ์รวม:",
-    "weightWarning": "น้ำหนักของเกณฑ์รวมไม่เท่ากับ 100% ซึ่งอาจส่งผลต่อการคำนวณคะแนนโดยรวม"
+    "weightWarning": "น้ำหนักของเกณฑ์รวมไม่เท่ากับ 100% ซึ่งอาจส่งผลต่อการคำนวณคะแนนโดยรวม",
+    "weightTotalMustBe100": "คำเตือน: น้ำหนักของเกณฑ์รวมไม่เท่ากับ 100%",
+    "failedToSaveCriteria": "ไม่สามารถบันทึกเกณฑ์ได้",
+    "failedToDeleteCriteria": "ไม่สามารถลบเกณฑ์ได้"
   },
   "gradingDashboard": {
     "title": "ผลการให้คะแนน",
@@ -860,5 +866,8 @@
     "participants": "แก้ไขการตั้งค่าผู้เข้าร่วม และข้อมูลที่ต้องส่ง",
     "vr": "แก้ไขรางวัลเสมือน ลิมิตการให้รางวัลเสมือน และการให้คะแนน",
     "sr": "สร้างและแก้ไขรางวัลพิเศษ"
+  },
+  "CommitteeGrade": {
+    "title": "ให้คะแนนโครงการ: "
   }
 }

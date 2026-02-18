@@ -57,13 +57,7 @@ import {
 } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -126,9 +120,7 @@ export default function ProjectDetailPage({ params }: Props) {
 
   // Evaluation State
   const [virtualReward, setVirtualReward] = useState<number>(0);
-  const [selectedSpecialRewards, setSelectedSpecialRewards] = useState<
-    string[]
-  >([]);
+  const [selectedSpecialRewards, setSelectedSpecialRewards] = useState<string[]>([]);
   const [savingVr, setSavingVr] = useState(false);
   const [savingSpecial, setSavingSpecial] = useState(false);
 
@@ -142,16 +134,15 @@ export default function ProjectDetailPage({ params }: Props) {
     : false;
 
   const isSubmissionActive = eventData
-    ? (!eventData.startJoinDate ||
-        new Date() >= new Date(eventData.startJoinDate)) &&
+    ? (!eventData.startJoinDate || new Date() >= new Date(eventData.startJoinDate)) &&
       (!eventData.endJoinDate || new Date() <= new Date(eventData.endJoinDate))
     : true;
 
   const vrTeamCapEnabled = eventData?.vrTeamCapEnabled ?? true;
   const vrTeamCap =
     eventData?.myRole === "COMMITTEE"
-      ? eventData?.vrTeamCapCommittee ?? 20
-      : eventData?.vrTeamCapGuest ?? 10;
+      ? (eventData?.vrTeamCapCommittee ?? 20)
+      : (eventData?.vrTeamCapGuest ?? 10);
   const totalVrForThisTeam = Math.max(0, Number(virtualReward || 0));
   const isVrOverTeamCap =
     (eventData?.myRole === "COMMITTEE" || eventData?.myRole === "GUEST") &&
@@ -162,11 +153,7 @@ export default function ProjectDetailPage({ params }: Props) {
     if (!eventData || !project) return;
     try {
       setSavingVr(true);
-      const res = await giveVr(
-        id,
-        projectId,
-        Number(virtualReward),
-      );
+      const res = await giveVr(id, projectId, Number(virtualReward));
 
       // Update local state directly from response
       setEventData((prev) =>
@@ -241,7 +228,6 @@ export default function ProjectDetailPage({ params }: Props) {
   })();
 
   const isRewardDisabled = (rewardId: string) => {
-
     const isUnused = eventData?.awardsUnused?.some((r) => r.id === rewardId);
 
     const currentlySelected = selectedSpecialRewards.includes(rewardId);
@@ -256,13 +242,12 @@ export default function ProjectDetailPage({ params }: Props) {
 
   const fetchData = async () => {
     try {
-      const [teamRes, eventRes, myEventsRes, currentUserRes] =
-        await Promise.all([
-          getTeamById(id, projectId),
-          getEvent(id),
-          getMyEvents(),
-          getCurrentUser(),
-        ]);
+      const [teamRes, eventRes, myEventsRes, currentUserRes] = await Promise.all([
+        getTeamById(id, projectId),
+        getEvent(id),
+        getMyEvents(),
+        getCurrentUser(),
+      ]);
 
       if (teamRes.message === "not_found") {
         router.push(`/event/${id}`);
@@ -279,8 +264,7 @@ export default function ProjectDetailPage({ params }: Props) {
         if (currentUserRes.message === "ok") {
           const currentUser = currentUserRes.user;
           setCurrentUserId(currentUser.id);
-          isUserMember =
-            t.participants?.some((p) => p.user.id === currentUser.id) || false;
+          isUserMember = t.participants?.some((p) => p.user.id === currentUser.id) || false;
           setIsMember(isUserMember);
         }
 
@@ -294,9 +278,7 @@ export default function ProjectDetailPage({ params }: Props) {
         let isTeamLeader = false;
         if (currentUserRes.message === "ok") {
           const currentUser = currentUserRes.user;
-          const userInTeam = t.participants?.find(
-            (p) => p.user.id === currentUser.id,
-          );
+          const userInTeam = t.participants?.find((p) => p.user.id === currentUser.id);
           if (userInTeam && userInTeam.isLeader) {
             isTeamLeader = true;
           }
@@ -440,16 +422,12 @@ export default function ProjectDetailPage({ params }: Props) {
       if (res.message === "ok") {
         const newUrl = res.teamFile.fileUrl;
         const name =
-          fileOrUrl instanceof File
-            ? fileOrUrl.name
-            : t("projectDetail.files.defaultLinkName");
+          fileOrUrl instanceof File ? fileOrUrl.name : t("projectDetail.files.defaultLinkName");
 
         setProject((prev) => {
           if (!prev) return null;
           const newFiles = [...(prev.files || [])];
-          const existingIdx = newFiles.findIndex(
-            (x) => x.fileTypeId === fileTypeId,
-          );
+          const existingIdx = newFiles.findIndex((x) => x.fileTypeId === fileTypeId);
           if (existingIdx >= 0) {
             newFiles[existingIdx] = { name, url: newUrl, fileTypeId };
           } else {
@@ -467,23 +445,18 @@ export default function ProjectDetailPage({ params }: Props) {
   };
 
   const handleDeleteFile = async (fileTypeId: string) => {
-    if (!project || !confirm(t("projectDetail.messages.confirmDeleteFile")))
-      return;
+    if (!project || !confirm(t("projectDetail.messages.confirmDeleteFile"))) return;
     try {
       const res = await deleteTeamFile(id, project.id, fileTypeId);
       if (res.message === "ok") {
         setProject((prev) => {
           if (!prev) return null;
-          const newFiles = (prev.files || []).filter(
-            (f) => f.fileTypeId !== fileTypeId,
-          );
+          const newFiles = (prev.files || []).filter((f) => f.fileTypeId !== fileTypeId);
           return { ...prev, files: newFiles };
         });
 
         // Clear input if exists (for URL type)
-        const input = document.getElementById(
-          `url-input-${fileTypeId}`,
-        ) as HTMLInputElement;
+        const input = document.getElementById(`url-input-${fileTypeId}`) as HTMLInputElement;
         if (input) input.value = "";
 
         toast.success(t("projectDetail.messages.fileDeleted"));
@@ -581,11 +554,7 @@ export default function ProjectDetailPage({ params }: Props) {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link href={`/event/${id}`}>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0"
-              >
+              <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
@@ -623,8 +592,7 @@ export default function ProjectDetailPage({ params }: Props) {
             className="relative w-full aspect-21/9 md:h-100 bg-muted cursor-pointer"
             onClick={() => setBannerOpen(true)}
           >
-            {project.img &&
-            !project.img.startsWith("data:image/png;base64src") ? (
+            {project.img && !project.img.startsWith("data:image/png;base64src") ? (
               <Image
                 src={project.img}
                 alt={project.title}
@@ -651,10 +619,7 @@ export default function ProjectDetailPage({ params }: Props) {
           {/* Action Bar */}
           <div className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between bg-card border-t">
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Badge
-                variant="outline"
-                className="px-3 py-1 text-sm font-normal border-border"
-              >
+              <Badge variant="outline" className="px-3 py-1 text-sm font-normal border-border">
                 {eventData?.eventName || t("projectDetail.defaultEventName")}
               </Badge>
             </div>
@@ -710,10 +675,7 @@ export default function ProjectDetailPage({ params }: Props) {
                   <FileText className="w-4 h-4 mr-2" />
                   {t("projectDetail.buttons.manageFiles")}
                   {project.files && project.files.length > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-2 h-5 min-w-5 px-1"
-                    >
+                    <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1">
                       {project.files.length}
                     </Badge>
                   )}
@@ -743,8 +705,7 @@ export default function ProjectDetailPage({ params }: Props) {
               <CardHeader className="border-b px-6 py-4">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <FileText className="w-5 h-5 text-primary" />
-                  {t("projectDetail.sections.description") ||
-                    "Project Description"}
+                  {t("projectDetail.sections.description") || "Project Description"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -816,15 +777,10 @@ export default function ProjectDetailPage({ params }: Props) {
                 <div className="grid grid-cols-1 gap-8">
                   {project.files && project.files.length > 0 ? (
                     project.files.map((file, idx) => {
-                      const ft = eventData?.fileTypes?.find(
-                        (t) => t.id === file.fileTypeId,
-                      );
+                      const ft = eventData?.fileTypes?.find((t) => t.id === file.fileTypeId);
                       const isPdf = file.url.toLowerCase().endsWith(".pdf");
-                      const isImage =
-                        file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
-                      const isUrlType = ft?.allowedFileTypes?.includes(
-                        FileType.url,
-                      );
+                      const isImage = file.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null;
+                      const isUrlType = ft?.allowedFileTypes?.includes(FileType.url);
                       const isUploading = ft?.id ? uploading[ft.id] : false;
 
                       // YouTube check
@@ -878,7 +834,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <Download className="w-4 h-4" />
-                                      Download Image
+                                      {t("projectDetail.files.downloadImage")}
                                     </a>
                                   </Button>
                                 </div>
@@ -900,7 +856,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                       className="flex items-center gap-2"
                                     >
                                       <Download className="w-4 h-4" />
-                                      Download PDF
+                                      {t("projectDetail.files.downloadPDF")}
                                     </a>
                                   </Button>
                                 </div>
@@ -930,21 +886,13 @@ export default function ProjectDetailPage({ params }: Props) {
                                 )}
                                 <div className="p-4 flex items-center justify-between bg-muted/50">
                                   <div className="truncate flex-1 mr-4 text-primary underline">
-                                    <a
-                                      href={file.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
+                                    <a href={file.url} target="_blank" rel="noreferrer">
                                       {file.url}
                                     </a>
                                   </div>
                                   <Button variant="outline" size="sm" asChild>
-                                    <a
-                                      href={file.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
-                                      Open Link
+                                    <a href={file.url} target="_blank" rel="noreferrer">
+                                      {t("projectDetail.buttons.openLink")}
                                     </a>
                                   </Button>
                                 </div>
@@ -957,7 +905,7 @@ export default function ProjectDetailPage({ params }: Props) {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-muted-foreground bg-muted/50 rounded-xl border border-dashed">
                       <FileText className="w-12 h-12 mb-3 opacity-20" />
-                      <p>No works uploaded yet.</p>
+                      <p>{t("projectDetail.noWorks")}</p>
                     </div>
                   )}
                 </div>
@@ -971,7 +919,7 @@ export default function ProjectDetailPage({ params }: Props) {
               <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <Users className="w-5 h-5 text-primary" />
-                  Team Members
+                  {t("projectDetail.projectMembers")}
                 </CardTitle>
                 <Badge variant="secondary" className="font-normal">
                   {membersData.length} / {eventData?.maxTeamMembers || "-"}
@@ -989,9 +937,7 @@ export default function ProjectDetailPage({ params }: Props) {
                         className="w-10 h-10 border-2 border-background shadow-sm"
                       />
                       <div className="overflow-hidden flex-1">
-                        <div className="font-medium truncate text-foreground">
-                          {m.name}
-                        </div>
+                        <div className="font-medium truncate text-foreground">{m.name}</div>
                         <div className="text-xs text-muted-foreground truncate">
                           @{m.username || "user"}
                         </div>
@@ -1000,7 +946,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             variant="secondary"
                             className="mt-1 text-[10px] h-5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800/50"
                           >
-                            Leader
+                            {t("projectDetail.leader")}
                           </Badge>
                         )}
                       </div>
@@ -1044,8 +990,7 @@ export default function ProjectDetailPage({ params }: Props) {
             </Card>
 
             {/* Evaluation Section (Committee/Guest only) */}
-            {(eventData?.myRole === "COMMITTEE" ||
-              eventData?.myRole === "GUEST") && (
+            {(eventData?.myRole === "COMMITTEE" || eventData?.myRole === "GUEST") && (
               <>
                 {!isEventActive && (
                   <Card className="border-l-4 border-l-destructive bg-destructive/10 mb-6">
@@ -1058,6 +1003,7 @@ export default function ProjectDetailPage({ params }: Props) {
                     </CardContent>
                   </Card>
                 )}
+                {/* Reward Section (Committee/Guest) */}
                 <Card className="border-none shadow-md bg-card">
                   <CardHeader className="border-b px-6 py-4">
                     <CardTitle className="text-lg flex items-center gap-2 text-foreground">
@@ -1068,24 +1014,14 @@ export default function ProjectDetailPage({ params }: Props) {
                   <CardContent className="p-6">
                     <Tabs defaultValue="virtual" className="w-full">
                       <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-muted border rounded-lg mb-6">
-                        <TabsTrigger
-                          value="virtual"
-                          className="flex items-center gap-2 py-2"
-                        >
+                        <TabsTrigger value="virtual" className="flex items-center gap-2 py-2">
                           <Gift className="w-4 h-4" />
-                          <span>
-                            {t("projectDetail.evaluation.virtualReward")}
-                          </span>
+                          <span>{t("projectDetail.evaluation.virtualReward")}</span>
                         </TabsTrigger>
                         {eventData?.myRole === "COMMITTEE" && (
-                          <TabsTrigger
-                            value="special"
-                            className="flex items-center gap-2 py-2"
-                          >
+                          <TabsTrigger value="special" className="flex items-center gap-2 py-2">
                             <Trophy className="w-4 h-4" />
-                            <span>
-                              {t("projectDetail.evaluation.specialReward")}
-                            </span>
+                            <span>{t("projectDetail.evaluation.specialReward")}</span>
                           </TabsTrigger>
                         )}
                       </TabsList>
@@ -1093,14 +1029,12 @@ export default function ProjectDetailPage({ params }: Props) {
                       <TabsContent value="virtual" className="space-y-6 mt-0">
                         <div className="space-y-3">
                           <div className="flex justify-between items-end">
-                            <p className="text-sm font-medium text-muted-foreground">
+                            <p className="text-sm font-bold">
                               {t("projectDetail.evaluation.budgetUsage")}
                             </p>
-                            <span className="text-sm font-bold text-foreground">
-                              {myVirtualTotal - myVirtualUsed}{" "}
-                              {eventData?.unitReward ??
-                                t("projectDetail.evaluation.coins")}{" "}
-                              {t("projectDetail.evaluation.left")}
+                            <span className="text-sm font-medium text-foreground">
+                              {myVirtualTotal}{" "}
+                              {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
                             </span>
                           </div>
                           <div className="relative h-3 w-full bg-muted rounded-full overflow-hidden">
@@ -1110,6 +1044,14 @@ export default function ProjectDetailPage({ params }: Props) {
                                 width: `${Math.min(100, (myVirtualUsed / (myVirtualTotal || 1)) * 100)}%`,
                               }}
                             />
+                          </div>
+                          <div className="flex justify-between items-end">
+                            <p className="text-sm font-medium text-foreground">
+                              {myVirtualUsed} {t("projectDetail.evaluation.used")}
+                            </p>
+                            <span className="text-sm font-medium text-foreground">
+                              {myVirtualTotal - myVirtualUsed} {t("projectDetail.evaluation.left")}
+                            </span>
                           </div>
                         </div>
 
@@ -1121,11 +1063,9 @@ export default function ProjectDetailPage({ params }: Props) {
                           <div className="flex items-center justify-between gap-3">
                             <div className="text-sm font-semibold">
                               {t("projectDetail.evaluation.vrTeamCapTitle")}
-                            </div>
-                            <div className="text-sm font-bold">
                               {vrTeamCapEnabled ? (
                                 <>
-                                  {t("projectDetail.evaluation.vrTeamCapLimit")}: {vrTeamCap}{" "}
+                                  : {vrTeamCap}{" "}
                                   {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
                                 </>
                               ) : (
@@ -1135,16 +1075,15 @@ export default function ProjectDetailPage({ params }: Props) {
                           </div>
                           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             <span>
-                              {t("projectDetail.evaluation.vrTeamCapCurrent")}: {totalVrForThisTeam}{" "}
-                              {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
+                              {t("projectDetail.evaluation.vrTeamCapCurrent")}: {totalVrForThisTeam}
+                              {" | "}
+                              {vrTeamCapEnabled ? (
+                                <span>
+                                  {t("projectDetail.evaluation.vrTeamCapRemaining")}:{" "}
+                                  {Math.max(0, vrTeamCap - totalVrForThisTeam)}
+                                </span>
+                              ) : null}
                             </span>
-                            {vrTeamCapEnabled ? (
-                              <span>
-                                {t("projectDetail.evaluation.vrTeamCapRemaining")}:{" "}
-                                {Math.max(0, vrTeamCap - totalVrForThisTeam)}{" "}
-                                {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
-                              </span>
-                            ) : null}
                           </div>
                           {isVrOverTeamCap ? (
                             <div className="text-xs font-medium text-destructive mt-1">
@@ -1153,7 +1092,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           ) : null}
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           <div className="flex flex-wrap gap-2">
                             {[100, 500, 1000].map((amount) => (
                               <Button
@@ -1213,54 +1152,31 @@ export default function ProjectDetailPage({ params }: Props) {
                       {eventData?.myRole === "COMMITTEE" && (
                         <TabsContent value="special" className="space-y-4 mt-0">
                           <div className="space-y-2">
-                            <Label>
-                              {t(
-                                "projectDetail.evaluation.selectSpecialRewards",
-                              )}
-                            </Label>
+                            <Label>{t("projectDetail.evaluation.selectSpecialRewards")}</Label>
                             <DropdownMenu>
-                              <DropdownMenuTrigger
-                                asChild
-                                disabled={!isEventActive}
-                              >
-                                <Button
-                                  variant="outline"
-                                  className="w-full justify-between px-3"
-                                >
+                              <DropdownMenuTrigger asChild disabled={!isEventActive}>
+                                <Button variant="outline" className="w-full justify-between px-3">
                                   <span className="truncate text-sm">
                                     {selectedSpecialRewards.length > 0
                                       ? `${selectedSpecialRewardsSummary} (${selectedSpecialRewards.length} ${t("projectDetail.evaluation.selected")})`
-                                      : t(
-                                          "projectDetail.evaluation.selectRewardsPlaceholder",
-                                        )}
+                                      : t("projectDetail.evaluation.selectRewardsPlaceholder")}
                                   </span>
                                   <Trophy className="ml-2 h-4 w-4 opacity-50 shrink-0" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                className="w-70"
-                                align="start"
-                              >
+                              <DropdownMenuContent className="w-70" align="start">
                                 <DropdownMenuLabel>
-                                  {t(
-                                    "projectDetail.evaluation.availableRewards",
-                                  )}
+                                  {t("projectDetail.evaluation.availableRewards")}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <div className="max-h-50 overflow-y-auto custom-scrollbar">
                                   {eventData.specialRewards?.map((reward) => {
-                                    const disabled = isRewardDisabled(
-                                      reward.id,
-                                    );
+                                    const disabled = isRewardDisabled(reward.id);
                                     return (
                                       <DropdownMenuCheckboxItem
                                         key={reward.id}
-                                        checked={selectedSpecialRewards.includes(
-                                          reward.id,
-                                        )}
-                                        onCheckedChange={() =>
-                                          toggleSpecialReward(reward.id)
-                                        }
+                                        checked={selectedSpecialRewards.includes(reward.id)}
+                                        onCheckedChange={() => toggleSpecialReward(reward.id)}
                                         disabled={disabled}
                                       >
                                         <span
@@ -1286,17 +1202,13 @@ export default function ProjectDetailPage({ params }: Props) {
                                     variant="secondary"
                                     className="flex items-center gap-1"
                                   >
-                                    <span className="max-w-[240px] truncate">
-                                      {reward.name}
-                                    </span>
+                                    <span className="max-w-[240px] truncate">{reward.name}</span>
                                     <Button
                                       type="button"
                                       variant="ghost"
                                       size="sm"
                                       className="h-5 w-5 p-0"
-                                      onClick={() =>
-                                        toggleSpecialReward(reward.id)
-                                      }
+                                      onClick={() => toggleSpecialReward(reward.id)}
                                       disabled={!isEventActive}
                                     >
                                       <X className="h-3 w-3" />
@@ -1324,6 +1236,8 @@ export default function ProjectDetailPage({ params }: Props) {
                 </Card>
               </>
             )}
+
+            {/* Grading Section (Committee only) */}
             {eventData?.myRole === "COMMITTEE" && (eventData?.gradingEnabled ?? true) && (
               <CommitteeGradingForm
                 eventId={id}
@@ -1332,6 +1246,8 @@ export default function ProjectDetailPage({ params }: Props) {
                 disabled={!isEventActive}
               />
             )}
+
+            {/* Comment Section */}
             <CommentSection
               eventId={id}
               projectId={projectId}
@@ -1344,14 +1260,11 @@ export default function ProjectDetailPage({ params }: Props) {
         {/* Banner Dialog */}
         <Dialog open={bannerOpen} onOpenChange={setBannerOpen}>
           <DialogContent className="max-w-5xl p-0 overflow-hidden bg-transparent border-none shadow-none">
-            <DialogTitle className="sr-only">
-              {t("projectDetail.banner.title")}
-            </DialogTitle>
+            <DialogTitle className="sr-only">{t("projectDetail.banner.title")}</DialogTitle>
             <div className="relative w-full aspect-video">
               <Image
                 src={
-                  project?.img &&
-                  !project.img.startsWith("data:image/png;base64src")
+                  project?.img && !project.img.startsWith("data:image/png;base64src")
                     ? project.img
                     : "/banner.png"
                 }
@@ -1367,14 +1280,9 @@ export default function ProjectDetailPage({ params }: Props) {
         </Dialog>
 
         {/* Image Preview Dialog */}
-        <Dialog
-          open={!!previewImage}
-          onOpenChange={(open) => !open && setPreviewImage(null)}
-        >
+        <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
           <DialogContent className="max-w-[90vw] h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
-            <DialogTitle className="sr-only">
-              {t("projectDetail.imagePreview.title")}
-            </DialogTitle>
+            <DialogTitle className="sr-only">{t("projectDetail.imagePreview.title")}</DialogTitle>
             <div className="relative w-full h-full">
               {previewImage && (
                 <Image
@@ -1399,16 +1307,12 @@ export default function ProjectDetailPage({ params }: Props) {
               <DialogTitle className="text-xl">
                 {t("projectDetail.dialogs.manageFilesTitle")}
               </DialogTitle>
-              <DialogDescription>
-                {t("projectDetail.dialogs.manageFilesDesc")}
-              </DialogDescription>
+              <DialogDescription>{t("projectDetail.dialogs.manageFilesDesc")}</DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4">
               {(eventData?.fileTypes || []).map((ft) => {
-                const uploaded = project.files?.find(
-                  (f) => f.fileTypeId === ft.id,
-                );
+                const uploaded = project.files?.find((f) => f.fileTypeId === ft.id);
                 const isUrlType = ft.allowedFileTypes.includes(FileType.url);
                 const isUploading = ft.id ? uploading[ft.id] : false;
 
@@ -1420,14 +1324,9 @@ export default function ProjectDetailPage({ params }: Props) {
                     {/* Info Section */}
                     <div className="flex-1 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm md:text-base">
-                          {ft.name}
-                        </span>
+                        <span className="font-semibold text-sm md:text-base">{ft.name}</span>
                         {ft.isRequired && (
-                          <Badge
-                            variant="destructive"
-                            className="text-[10px] px-1.5 h-5"
-                          >
+                          <Badge variant="destructive" className="text-[10px] px-1.5 h-5">
                             {t("projectDetail.files.required")}
                           </Badge>
                         )}
@@ -1463,18 +1362,11 @@ export default function ProjectDetailPage({ params }: Props) {
                               className="h-9 text-sm bg-background"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                  handleFileUpload(
-                                    null,
-                                    ft.id,
-                                    e.currentTarget.value,
-                                  );
+                                  handleFileUpload(null, ft.id, e.currentTarget.value);
                                 }
                               }}
                               onBlur={(e) => {
-                                if (
-                                  e.target.value &&
-                                  e.target.value !== uploaded?.url
-                                ) {
+                                if (e.target.value && e.target.value !== uploaded?.url) {
                                   handleFileUpload(null, ft.id, e.target.value);
                                 }
                               }}
@@ -1504,20 +1396,14 @@ export default function ProjectDetailPage({ params }: Props) {
                           <div className="flex justify-end gap-2">
                             {uploaded && (
                               <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs"
-                                  asChild
-                                >
+                                <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
                                   <a
                                     href={uploaded.url}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="flex items-center gap-1.5"
                                   >
-                                    <Share2 className="w-3 h-3" />{" "}
-                                    {t("projectDetail.files.open")}
+                                    <Share2 className="w-3 h-3" /> {t("projectDetail.files.open")}
                                   </a>
                                 </Button>
                                 <Button
@@ -1527,8 +1413,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                   onClick={() => handleDeleteFile(ft.id!)}
                                   disabled={!isSubmissionActive}
                                 >
-                                  <X className="w-3 h-3 mr-1" />{" "}
-                                  {t("projectDetail.files.remove")}
+                                  <X className="w-3 h-3 mr-1" /> {t("projectDetail.files.remove")}
                                 </Button>
                               </>
                             )}
@@ -1540,9 +1425,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             type="file"
                             id={`file-${ft.id}`}
                             className="hidden"
-                            accept={ft.allowedFileTypes
-                              .map((t) => "." + t)
-                              .join(",")}
+                            accept={ft.allowedFileTypes.map((t) => "." + t).join(",")}
                             onChange={(e) => handleFileUpload(e, ft.id)}
                             disabled={isUploading || !isSubmissionActive}
                           />
@@ -1552,11 +1435,7 @@ export default function ProjectDetailPage({ params }: Props) {
                               size="sm"
                               className="w-full h-9"
                               disabled={isUploading || !isSubmissionActive}
-                              onClick={() =>
-                                document
-                                  .getElementById(`file-${ft.id}`)
-                                  ?.click()
-                              }
+                              onClick={() => document.getElementById(`file-${ft.id}`)?.click()}
                             >
                               {isUploading ? (
                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -1571,12 +1450,7 @@ export default function ProjectDetailPage({ params }: Props) {
 
                           {uploaded && (
                             <div className="flex gap-2 justify-end w-full">
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="h-7 text-xs"
-                                asChild
-                              >
+                              <Button size="sm" variant="secondary" className="h-7 text-xs" asChild>
                                 <a
                                   href={uploaded.url}
                                   target="_blank"
@@ -1594,8 +1468,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                 onClick={() => ft.id && handleDeleteFile(ft.id)}
                                 disabled={!isSubmissionActive}
                               >
-                                <X className="w-3 h-3 mr-1" />{" "}
-                                {t("projectDetail.files.remove")}
+                                <X className="w-3 h-3 mr-1" /> {t("projectDetail.files.remove")}
                               </Button>
                             </div>
                           )}
@@ -1625,12 +1498,8 @@ export default function ProjectDetailPage({ params }: Props) {
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
             <DialogHeader className="p-4 pb-2 border-b bg-muted/50">
-              <DialogTitle>
-                {t("projectDetail.dialogs.addMemberTitle")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("projectDetail.dialogs.addMemberDesc")}
-              </DialogDescription>
+              <DialogTitle>{t("projectDetail.dialogs.addMemberTitle")}</DialogTitle>
+              <DialogDescription>{t("projectDetail.dialogs.addMemberDesc")}</DialogDescription>
             </DialogHeader>
 
             <div className="p-4 space-y-4">
@@ -1649,9 +1518,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 {isSearching ? (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                     <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
-                    <span className="text-xs">
-                      {t("projectDetail.member.searching")}
-                    </span>
+                    <span className="text-xs">{t("projectDetail.member.searching")}</span>
                   </div>
                 ) : candidates.length > 0 ? (
                   <div className="space-y-1">
@@ -1661,10 +1528,7 @@ export default function ProjectDetailPage({ params }: Props) {
                         className="flex items-center justify-between p-2 hover:bg-card hover:shadow-sm rounded-lg transition-all group border border-transparent hover:border-border"
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <UserAvatar
-                            user={c}
-                            className="w-9 h-9 border bg-card"
-                          />
+                          <UserAvatar user={c} className="w-9 h-9 border bg-card" />
                           <div className="min-w-0">
                             <div className="text-sm font-medium truncate text-foreground">
                               {c.name}
@@ -1689,26 +1553,18 @@ export default function ProjectDetailPage({ params }: Props) {
                 ) : searchQuery.length >= 2 ? (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
                     <Users className="w-8 h-8" />
-                    <span className="text-sm">
-                      {t("projectDetail.member.noUsers")}
-                    </span>
+                    <span className="text-sm">{t("projectDetail.member.noUsers")}</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
                     <Search className="w-8 h-8" />
-                    <span className="text-sm">
-                      {t("projectDetail.member.typeToSearch")}
-                    </span>
+                    <span className="text-sm">{t("projectDetail.member.typeToSearch")}</span>
                   </div>
                 )}
               </div>
             </div>
             <div className="p-3 bg-muted border-t flex justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setInviteOpen(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
                 {t("projectDetail.buttons.cancel")}
               </Button>
             </div>
@@ -1719,18 +1575,11 @@ export default function ProjectDetailPage({ params }: Props) {
         <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
-                {t("projectDetail.dialogs.leaveTeamTitle")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("projectDetail.dialogs.leaveTeamDesc")}
-              </DialogDescription>
+              <DialogTitle>{t("projectDetail.dialogs.leaveTeamTitle")}</DialogTitle>
+              <DialogDescription>{t("projectDetail.dialogs.leaveTeamDesc")}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setLeaveDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setLeaveDialogOpen(false)}>
                 {t("projectDetail.buttons.cancel")}
               </Button>
               <Button variant="destructive" onClick={handleLeaveTeam}>
@@ -1753,12 +1602,8 @@ export default function ProjectDetailPage({ params }: Props) {
         <Dialog open={shareOpen} onOpenChange={setShareOpen}>
           <DialogContent className="max-w-md w-[calc(100%-2rem)] rounded-lg">
             <DialogHeader>
-              <DialogTitle>
-                {t("projectDetail.dialogs.shareProjectTitle")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("projectDetail.dialogs.shareProjectDesc")}
-              </DialogDescription>
+              <DialogTitle>{t("projectDetail.dialogs.shareProjectTitle")}</DialogTitle>
+              <DialogDescription>{t("projectDetail.dialogs.shareProjectDesc")}</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-6 py-4">
               {shareQrSrc ? (
@@ -1787,9 +1632,7 @@ export default function ProjectDetailPage({ params }: Props) {
                   size="icon"
                   variant="outline"
                   onClick={() =>
-                    copyToClipboard(
-                      `${window.location.origin}/event/${id}/Projects/${projectId}`,
-                    )
+                    copyToClipboard(`${window.location.origin}/event/${id}/Projects/${projectId}`)
                   }
                 >
                   <ClipboardCopy className="w-4 h-4" />
