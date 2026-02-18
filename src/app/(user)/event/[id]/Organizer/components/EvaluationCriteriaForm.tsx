@@ -199,10 +199,10 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         return;
       }
 
-      // Clean undefined fields from payload
-      const cleanPayload = (obj: Record<string, any>) => {
-        const result: Record<string, any> = {};
-        Object.entries(obj).forEach(([k, v]) => {
+      const cleanPayload = <T extends Record<string, unknown>>(obj: T) => {
+        const result: Partial<T> = {};
+        (Object.keys(obj) as Array<keyof T>).forEach((k) => {
+          const v = obj[k];
           if (v !== undefined) result[k] = v;
         });
         return result;
