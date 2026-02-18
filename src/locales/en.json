@@ -882,5 +882,14 @@
     "failedLoadGrade": "Failed to load grading form",
     "provideAllGrades": "Please provide scores for all criteria",
     "invalidScore": "Please provide valid scores within the maximum score for each criteria"
+  },
+  "feedbackEvent": {
+    "back": "Back to Home",
+    "rateEvent": "Rate Event",
+    "howExperience": "How was your experience with",
+    "addComment": "Add a comment about this event (optional)",
+    "submit": "Submit Feedback Rating",
+    "submitting": "Submitting Feedback Rating...",
+    "share": "Share your thoughts about this event..."
   }
 }

@@ -1149,6 +1149,7 @@ export default function ProjectDetailPage({ params }: Props) {
                         </div>
                       </TabsContent>
 
+                      {/* Special Rewards Tab (Committee only) */}
                       {eventData?.myRole === "COMMITTEE" && (
                         <TabsContent value="special" className="space-y-4 mt-0">
                           <div className="space-y-2">
