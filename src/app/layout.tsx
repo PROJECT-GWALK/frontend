@@ -29,9 +29,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 
   const description =
-    "Gwalk คือแพลตฟอร์มสำหรับสร้างและจัดการอีเวนต์ เข้าร่วมกิจกรรม และสำรวจผลงานโปรเจกต์ในชุมชน";
+    "Create your own events and join the events that interest you. Discover new experiences, meet like-minded people, and build lasting connections in your community.";
 
-  const imageUrl = new URL("/banner.png", origin).toString();
+  const imageUrl = new URL("/og-image.png", origin).toString();
 
   return {
     title,
