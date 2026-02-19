@@ -490,7 +490,7 @@ export default function EventDraft() {
     try {
       const ok = await ensureNameAvailable();
       if (!ok) return;
-      const payload = buildPayload({ isoDates: false });
+      const payload = buildPayload({ isoDates: true });
       await syncSpecialRewards();
       await syncGradingCriteria();
       if (eventBanner) {
@@ -539,7 +539,7 @@ export default function EventDraft() {
 
     setIsPublishing(true);
     try {
-      const payload = buildPayload({ isoDates: false });
+      const payload = buildPayload({ isoDates: true });
       await syncSpecialRewards();
       await syncGradingCriteria();
       if (eventBanner) {
