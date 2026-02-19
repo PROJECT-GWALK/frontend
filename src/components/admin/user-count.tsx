@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getCountUser } from "@/utils/apiadmin";
 import { User2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 
 export default function AdminUserCount() {
   const [countUser, setCountUser] = useState<number>(0);

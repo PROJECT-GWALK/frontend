@@ -58,6 +58,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { RefreshCw, Trash2, Pencil, Search, Crown } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import ParticipantsSection from "@/app/(user)/event/[id]/Organizer/components/ParticipantsSection";
 
 type AdminEventListItem = {
   id: string;
@@ -145,6 +147,7 @@ export default function AdminEventManagementPage() {
 
   const [eventNameDraft, setEventNameDraft] = useState("");
   const [eventPublicViewDraft, setEventPublicViewDraft] = useState(false);
+  
   const eventDirty = useMemo(() => {
     if (!selectedEvent) return false;
     return (
@@ -165,6 +168,7 @@ export default function AdminEventManagementPage() {
   const [editingTeam, setEditingTeam] = useState<AdminTeam | null>(null);
   const [teamNameDraft, setTeamNameDraft] = useState("");
   const [teamDescriptionDraft, setTeamDescriptionDraft] = useState("");
+  const { t } = useLanguage();
 
   const fetchEvents = async (opts?: { page?: number }) => {
     setLoadingEvents(true);
@@ -354,7 +358,7 @@ export default function AdminEventManagementPage() {
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Event Management</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t("adminSection.eventManagement")}</h2>
         <div className="flex items-center space-x-2">
             <Button
               variant="outline"
@@ -362,15 +366,15 @@ export default function AdminEventManagementPage() {
               disabled={loadingEvents}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+              {t("adminSection.refresh")}
             </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Events</CardTitle>
-          <CardDescription>Manage your events here.</CardDescription>
+          <CardTitle>{t("adminSection.events")}</CardTitle>
+          <CardDescription>{t("adminSection.manageYourEventsHere")}</CardDescription>
           <div className="flex flex-col gap-3 pt-4 md:flex-row md:items-center md:justify-between">
             <div className="flex w-full items-center gap-2">
               <Input
@@ -405,7 +409,7 @@ export default function AdminEventManagementPage() {
                 disabled={loadingEvents}
                 className="shrink-0"
               >
-                Apply
+                {t("adminSection.apply")}
               </Button>
             </div>
           </div>
@@ -416,25 +420,25 @@ export default function AdminEventManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Event</TableHead>
-                  <TableHead className="hidden lg:table-cell">Visibility</TableHead>
-                  <TableHead className="hidden lg:table-cell text-right">Participants</TableHead>
-                  <TableHead className="hidden lg:table-cell text-right">Teams</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>{t("adminSection.event")}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t("adminSection.visibility")}</TableHead>
+                  <TableHead className="hidden lg:table-cell text-right">{t("adminSection.participants")}</TableHead>
+                  <TableHead className="hidden lg:table-cell text-right">{t("adminSection.teams")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("adminSection.status")}</TableHead>
+                  <TableHead className="text-right">{t("adminSection.action")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loadingEvents ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      Loading...
+                      {t("homePage.loadingInline")}
                     </TableCell>
                   </TableRow>
                 ) : events.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      No events found.
+                      {t("noEvents.title")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -490,7 +494,7 @@ export default function AdminEventManagementPage() {
                             openEventSheet(e.id);
                           }}
                         >
-                          Manage
+                          {t("adminSection.manage")}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -536,7 +540,7 @@ export default function AdminEventManagementPage() {
               )}
             </SheetTitle>
             <SheetDescription>
-              View and edit event details, participants, and teams in one place.
+              {t("adminSection.viewAndEdit")}
             </SheetDescription>
           </SheetHeader>
 
@@ -562,7 +566,7 @@ export default function AdminEventManagementPage() {
                     onClick={() => fetchEventDetail(selectedEventId!)}
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh
+                    {t("adminSection.refresh")}
                   </Button>
                   {selectedEvent?.isHidden ? (
                     <Button
@@ -596,7 +600,7 @@ export default function AdminEventManagementPage() {
                         }
                       }}
                     >
-                      ซ่อนอีเว้น
+                    {t("adminSection.hideEvent")}
                     </Button>
                   )}
 
@@ -604,7 +608,7 @@ export default function AdminEventManagementPage() {
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm" disabled={loadingEvent}>
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        {t("dialog.delete")}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -615,9 +619,9 @@ export default function AdminEventManagementPage() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
                         <AlertDialogAction onClick={onDeleteEvent}>
-                          Delete
+                          {t("dialog.delete")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -628,7 +632,7 @@ export default function AdminEventManagementPage() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Event Name
+                        {t("adminSection.eventName")}
                       </label>
                       <Input
                         value={eventNameDraft}
@@ -637,7 +641,7 @@ export default function AdminEventManagementPage() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Public View
+                        {t("adminSection.publicView")}
                       </label>
                       <Select
                         value={eventPublicViewDraft ? "true" : "false"}
@@ -647,8 +651,8 @@ export default function AdminEventManagementPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="true">Visible</SelectItem>
-                          <SelectItem value="false">Hidden</SelectItem>
+                          <SelectItem value="true">{t("adminSection.visible")}</SelectItem>
+                          <SelectItem value="false">{t("adminSection.hidden")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -661,31 +665,31 @@ export default function AdminEventManagementPage() {
 
                   <div className="flex justify-end">
                     <Button onClick={onSaveEvent} disabled={!eventDirty || loadingEvent}>
-                      Save Changes
+                      {t("adminSection.saveChanges")}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Participants</h3>
+                    <h3 className="text-lg font-semibold">{t("adminSection.participants")}</h3>
                     <Badge variant="secondary">{selectedEvent.participants?.length || 0}</Badge>
                   </div>
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Team</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead>{t("participantSection.user")}</TableHead>
+                          <TableHead>{t("participantSection.role")}</TableHead>
+                          <TableHead>{t("participantSection.team")}</TableHead>
+                          <TableHead className="text-right">{t("adminSection.action")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {selectedEvent.participants.length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={4} className="h-24 text-center">
-                              No participants
+                              {t("adminSection.noParticipants")}
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -765,16 +769,16 @@ export default function AdminEventManagementPage() {
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
-                                            <AlertDialogTitle>Remove from team?</AlertDialogTitle>
+                                            <AlertDialogTitle>{t("adminSection.removeFromTeamTitle")}</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              Are you sure you want to remove {p.user?.name} from team{" "}
+                                              {t("adminSection.removeFromTeamDescription1")} {p.user?.name} {t("adminSection.removeFromTeamDescription2")} {p.team?.teamName}
                                               {p.team?.teamName}?
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
                                             <AlertDialogAction onClick={() => onClearParticipantTeam(p.id)}>
-                                              Remove
+                                              {t("eventInfo.remove")}
                                             </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -791,7 +795,7 @@ export default function AdminEventManagementPage() {
                                       onClick={() => onSaveParticipant(p)}
                                       disabled={Object.keys(participantEditFor(p.id)).length === 0}
                                     >
-                                      Save
+                                      {t("dialog.save")}
                                     </Button>
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
@@ -801,15 +805,15 @@ export default function AdminEventManagementPage() {
                                       </AlertDialogTrigger>
                                       <AlertDialogContent>
                                         <AlertDialogHeader>
-                                          <AlertDialogTitle>Remove participant?</AlertDialogTitle>
+                                          <AlertDialogTitle>{t("adminSection.removeParticipantTitle")}</AlertDialogTitle>
                                           <AlertDialogDescription>
-                                            This will remove the user from this event.
+                                            {t("adminSection.removeParticipantDescription")}
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
                                           <AlertDialogAction onClick={() => onRemoveParticipant(p.id)}>
-                                            Remove
+                                            {t("eventInfo.remove")}
                                           </AlertDialogAction>
                                         </AlertDialogFooter>
                                       </AlertDialogContent>
@@ -827,37 +831,37 @@ export default function AdminEventManagementPage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Teams</h3>
+                    <h3 className="text-lg font-semibold">{t("adminSection.teams")}</h3>
                     <Badge variant="secondary">{selectedEvent.teams?.length || 0}</Badge>
                   </div>
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Team</TableHead>
-                          <TableHead className="text-right">Members</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead>{t("adminSection.teams")}</TableHead>
+                          <TableHead className="text-right">{t("adminSection.member")}</TableHead>
+                          <TableHead className="text-right">{t("adminSection.action")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {selectedEvent.teams.length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={3} className="h-24 text-center">
-                              No teams
+                              {t("adminSection.noTeams")}
                             </TableCell>
                           </TableRow>
                         ) : (
-                          selectedEvent.teams.map((t) => (
-                            <TableRow key={t.id}>
-                              <TableCell className="font-medium">{t.teamName}</TableCell>
-                              <TableCell className="text-right">{t.participants?.length || 0}</TableCell>
+                          selectedEvent.teams.map((o) => (
+                            <TableRow key={o.id}>
+                              <TableCell className="font-medium">{o.teamName}</TableCell>
+                              <TableCell className="text-right">{o.participants?.length || 0}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-1">
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     className="h-8 w-8 p-0"
-                                    onClick={() => openEditTeam(t)}
+                                    onClick={() => openEditTeam(o)}
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
@@ -873,15 +877,15 @@ export default function AdminEventManagementPage() {
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                       <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete this team?</AlertDialogTitle>
+                                        <AlertDialogTitle>{t("adminSection.deleteTeamTitle")}</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                          Participants will be unlinked from this team.
+                                          {t("adminSection.deleteTeamDescription")}
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onDeleteTeam(t.id)}>
-                                          Delete
+                                        <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => onDeleteTeam(o.id)}>
+                                          {t("dialog.delete")}
                                         </AlertDialogAction>
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
@@ -904,15 +908,15 @@ export default function AdminEventManagementPage() {
       <Dialog open={teamDialogOpen} onOpenChange={setTeamDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Team</DialogTitle>
+            <DialogTitle>{t("adminSection.editTeamTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">Team Name</label>
+              <label className="text-sm font-medium leading-none">{t("adminSection.teamName")}</label>
               <Input value={teamNameDraft} onChange={(e) => setTeamNameDraft(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">Description</label>
+              <label className="text-sm font-medium leading-none">{t("settingSection.label_description")}</label>
               <Input
                 value={teamDescriptionDraft}
                 onChange={(e) => setTeamDescriptionDraft(e.target.value)}
@@ -921,10 +925,10 @@ export default function AdminEventManagementPage() {
           </div>
           <div className="flex justify-end gap-2">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t("dialog.cancel")}</Button>
             </DialogClose>
             <Button onClick={onSaveTeam} disabled={!editingTeam}>
-              Save
+              {t("dialog.save")}
             </Button>
           </div>
         </DialogContent>

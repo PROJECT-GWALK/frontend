@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getCountEvent } from "@/utils/apiadmin";
 import { CalendarDays } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AdminEventCount() {
   const [countEvent, setCountEvent] = useState<number>(0);
-
+  const { t } = useLanguage();
   const fetchData = async () => {
     try {
       const data = await getCountEvent();
