@@ -1227,7 +1227,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                     variant="secondary"
                                     className="flex items-center gap-1"
                                   >
-                                    <span className="max-w-[240px] truncate">
+                                    <span className="max-w-60 truncate">
                                       {reward.name}
                                     </span>
                                     <Button
@@ -1285,8 +1285,7 @@ export default function ProjectDetailPage({ params }: Props) {
               disabled={!isEventActive}
             />
 
-            
-<Card className="border-none shadow-md bg-card">
+            <Card className="border-none shadow-md bg-card">
               <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <Users className="w-5 h-5 text-primary" />

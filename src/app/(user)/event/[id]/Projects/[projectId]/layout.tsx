@@ -14,7 +14,7 @@ export async function generateMetadata({
   const origin = `${proto}://${host}`;
 
   const fallbackTitle = "Gwalk";
-  const fallbackImage = new URL("/banner.png", origin).toString();
+  const fallbackImage = new URL("/og-image.png", origin).toString();
 
   try {
     const [eventRes, teamRes] = await Promise.all([
