@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CommitteeView } from "./Committee/page";
 import { GuestView } from "./Guest/page";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { AlertCircle } from "lucide-react";
 
 type Role = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST" | null;
 
@@ -33,6 +34,7 @@ export default function EventDetail() {
   const router = useRouter();
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [inviteProcessed, setInviteProcessed] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -78,13 +80,21 @@ export default function EventDetail() {
     }
 
     const fetchData = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoadError(t("toast.loadEventDataFailed"));
+        setLoading(false);
+        return;
+      }
       try {
         const res = await getEvent(id);
-        if (res.message === "ok") {
+        if (res?.message === "ok" && res?.event) {
           setEvent(res.event);
+          setLoadError(null);
           const evRole = (res.event as { role?: Role })?.role ?? null;
           if (evRole) setRole(evRole as Role);
+        } else {
+          setEvent(null);
+          setLoadError(typeof res?.message === "string" ? res.message : t("toast.loadEventDataFailed"));
         }
         try {
           const my = await getMyEvents();
@@ -94,7 +104,15 @@ export default function EventDetail() {
           if (meEvent?.role) setRole(meEvent.role as Role);
         } catch {}
       } catch (error) {
-        console.error(error);
+        const fallback = t("toast.loadEventDataFailed");
+        let message = fallback;
+        if (error instanceof AxiosError) {
+          message = error.response?.data?.message || fallback;
+        } else if (error instanceof Error && error.message) {
+          message = error.message;
+        }
+        setEvent(null);
+        setLoadError(message);
       } finally {
         setLoading(false);
       }
@@ -129,6 +147,28 @@ export default function EventDetail() {
                 <Skeleton className="h-40 w-full rounded-xl" />
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center">
+          <div className="mx-auto w-fit rounded-full bg-muted/30 p-5 mb-6">
+            <AlertCircle className="h-12 w-12 text-muted-foreground/60" />
+          </div>
+          <div className="text-2xl font-semibold">{t("eventsPage.noEvents.title")}</div>
+          <div className="text-muted-foreground mt-2">
+            {loadError || t("toast.loadEventDataFailed")}
+          </div>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="secondary" onClick={() => router.push("/event")}>
+              กลับไปหน้าอีเวนต์
+            </Button>
+            <Button onClick={() => router.refresh()}>ลองใหม่</Button>
           </div>
         </div>
       </div>
