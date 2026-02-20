@@ -533,6 +533,7 @@
     "evaluation": {
       "virtualReward": "รางวัลเสมือน",
       "specialReward": "รางวัลพิเศษ",
+      "grading": "การให้คะแนน",
       "vrCategories": "หมวดหมู่ VR",
       "total": "รวม",
       "totalToGive": "รางวัลเสมือนทั้งหมดที่จะมอบให้",
@@ -686,6 +687,7 @@
     "joinQuestionSuffix": "หรือไม่?"
   },
   "roles": {
+    "organizer": "ผู้จัดงาน",
     "presenter": "ผู้นำเสนอ",
     "committee": "กรรมการ",
     "guest": "ผู้เข้าร่วม"
@@ -975,6 +977,11 @@
     "allEventsInSystem": "อีเวนต์ทั้งหมดในระบบ",
     "userActiveChart": "กราฟผู้ใช้งาน",
     "showingActiveUsersFor": "กำลังแสดงผู้ใช้งานสำหรับ ",
+    "activeUsersLabel": "ผู้ใช้งาน",
+    "selectYearToViewData": "เลือกปีเพื่อดูข้อมูล",
+    "year": "ปี",
+    "month": "เดือน",
+    "allMonths": "ทุกเดือน",
     "banUser": "แบนผู้ใช้",
   "banReasonPrompt": "กรุณาระบุเหตุผลในการแบนผู้ใช้นี้",
   "unbanUserConfirm": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแบนผู้ใช้นี้?",

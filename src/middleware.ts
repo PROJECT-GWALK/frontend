@@ -3,6 +3,21 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const ua = request.headers.get("user-agent")?.toLowerCase() ?? "";
+  const isCrawler =
+    ua.includes("facebookexternalhit") ||
+    ua.includes("facebot") ||
+    ua.includes("twitterbot") ||
+    ua.includes("slackbot") ||
+    ua.includes("discordbot") ||
+    ua.includes("telegrambot") ||
+    ua.includes("whatsapp") ||
+    ua.includes("linkedinbot") ||
+    ua.includes("skypeuripreview") ||
+    ua.includes("line") ||
+    ua.includes("googlebot");
+  const isOgEligiblePath =
+    /^\/event\/[^/]+\/Projects\/[^/]+(\/Scores)?$/.test(pathname);
 
   // Proxy /backend requests to the actual backend
   if (pathname.startsWith("/backend")) {
@@ -35,9 +50,13 @@ export function middleware(request: NextRequest) {
     pathname === "/event" ||
     pathname.startsWith("/api/auth") ||
     /^\/event\/[^/]+$/.test(pathname) || // Allow /event/:id
+    /^\/event\/[^/]+\/invite$/.test(pathname) || // Allow /event/:id/invite
     /^\/event\/[^/]+\/NotRole$/.test(pathname); // Allow /event/:id/NotRole
 
   if (!isPublicPath && !sessionToken) {
+    if (isCrawler && isOgEligiblePath) {
+      return NextResponse.next();
+    }
     const url = new URL("/sign-in", request.url);
     url.searchParams.set("redirectTo", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);

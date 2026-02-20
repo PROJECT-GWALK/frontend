@@ -29,7 +29,9 @@ export async function generateMetadata({
       : {};
 
     const teamData = teamRes.ok
-      ? ((await teamRes.json()) as { team?: { teamName?: string; imageCover?: string | null; description?: string | null } })
+      ? ((await teamRes.json()) as {
+          team?: { teamName: string; imageCover: string | null; description: string | null };
+        })
       : {};
 
     const eventName = eventData.event?.eventName?.trim() || fallbackTitle;
@@ -52,7 +54,7 @@ export async function generateMetadata({
       openGraph: {
         title,
         description,
-        url: `/event/${id}/Projects/${projectId}`,
+        url: new URL(`/event/${id}/Projects/${projectId}`, origin).toString(),
         images: [imageUrl],
       },
       twitter: {

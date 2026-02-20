@@ -534,6 +534,7 @@
     "evaluation": {
       "virtualReward": "Virtual Reward",
       "specialReward": "Special Reward",
+      "grading": "Grading",
       "vrCategories": "VR Categories",
       "total": "Total",
       "totalToGive": "Total Virtual Rewards to Give",
@@ -687,6 +688,7 @@
     "joinQuestionSuffix": "?"
   },
   "roles": {
+    "organizer": "Organizer",
     "presenter": "Presenter",
     "committee": "Committee",
     "guest": "Guest"
@@ -975,7 +977,12 @@
     "totalEvents": "Total Events",
     "allEventsInSystem": "All events in the system",
     "userActiveChart": "User Active Chart",
-    "showingActiveUsersFor": "Showing active users for",
+    "activeUsersLabel": "Active Users",
+    "showingActiveUsersFor": "Showing active users for ",
+    "selectYearToViewData": "Select a year to view data",
+    "year": "Year",
+    "month": "Month",
+    "allMonths": "All Months",
     "banUser": "Ban User",
   "banReasonPrompt": "Please provide a reason for banning this user.",
   "unbanUserConfirm": "Are you sure you want to unban this user?",
