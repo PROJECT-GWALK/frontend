@@ -920,7 +920,7 @@
   },
   "myProject": {
     "project": "Project",
-    "noProject": "You don&apos;t have any project yet. Create or join a group to appear here.",
+    "noProject": "You don't have any project yet. Create or join a group to appear here.",
     "createProject": "Create Project",
     "noProjectDesc": "No project description provided",
     "editProject": "Edit Project",
