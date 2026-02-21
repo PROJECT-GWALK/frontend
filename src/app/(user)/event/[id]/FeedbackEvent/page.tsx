@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getUserRating, submitRating, getEvent } from "@/utils/apievent";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Star, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -36,7 +30,6 @@ export default function FeedbackEventPage() {
   const [submitting, setSubmitting] = useState(false);
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [bannerOpen, setBannerOpen] = useState(false);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -99,30 +92,23 @@ export default function FeedbackEventPage() {
   return (
     <div className="min-h-screen bg-muted/20 pb-12">
       {/* Banner Image */}
-      <OrganizerBanner 
-        event={eventData} 
-        open={bannerOpen} 
-        onOpenChange={setBannerOpen} 
-      />
+      <OrganizerBanner event={eventData} open={bannerOpen} onOpenChange={setBannerOpen} />
 
       <div className="max-w-6xl mx-auto -mt-6 relative z-10 space-y-6">
         {/* Rating Card */}
         <div className="absolute top-0 left-4 -mt-14 z-20">
           <Button variant="secondary" size="sm" asChild className="shadow-md">
             <Link href="/home" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" /> Back to Home
+              <ArrowLeft className="h-4 w-4" /> {t("feedbackEvent.back")}
             </Link>
           </Button>
         </div>
         <Card className="shadow-lg border-border/60">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl font-bold">Rate Event</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t("feedbackEvent.rateEvent")}</CardTitle>
             <CardDescription>
-              How was your experience with{" "}
-              <span className="font-semibold text-foreground">
-                {eventData.eventName}
-              </span>
-              ?
+              {t("feedbackEvent.howExperience")}{" "}
+              <span className="font-semibold text-foreground">{eventData.eventName}</span> ?
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -148,10 +134,10 @@ export default function FeedbackEventPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="comment">Additional Comments (Optional)</Label>
+              <Label htmlFor="comment">{t("feedbackEvent.addComment")}</Label>
               <Textarea
                 id="comment"
-                placeholder="Share your thoughts about this event..."
+                placeholder={t("feedbackEvent.share")}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="resize-none min-h-25"
@@ -168,10 +154,10 @@ export default function FeedbackEventPage() {
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    {t("feedbackEvent.submitting")}
                   </>
                 ) : (
-                  "Submit Rating"
+                  t("feedbackEvent.submit")
                 )}
               </Button>
             </div>

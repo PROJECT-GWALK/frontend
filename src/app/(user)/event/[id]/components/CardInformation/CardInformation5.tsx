@@ -30,16 +30,19 @@ export default function CardInformation5({ event, editable }: Props) {
     presenter?: string;
     guest?: string;
     committee?: string;
+    organizer?: string;
   }>({});
   const [qrThumbs, setQrThumbs] = useState<{
     presenter?: string;
     guest?: string;
     committee?: string;
+    organizer?: string;
   }>({});
   const [qrLarge, setQrLarge] = useState<{
     presenter?: string;
     guest?: string;
     committee?: string;
+    organizer?: string;
   }>({});
 
   const [eventQrThumb, setEventQrThumb] = useState<string>("");
@@ -50,7 +53,9 @@ export default function CardInformation5({ event, editable }: Props) {
   const [qrSrc, setQrSrc] = useState<string>("");
   const [qrTitle, setQrTitle] = useState<string>("");
 
-  const [refreshRole, setRefreshRole] = useState<"presenter" | "guest" | "committee" | null>(null);
+  const [refreshRole, setRefreshRole] = useState<
+    "presenter" | "guest" | "committee" | "organizer" | null
+  >(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -64,15 +69,16 @@ export default function CardInformation5({ event, editable }: Props) {
     const loadTokens = async () => {
       if (!editable) return;
       try {
-        const roles: Array<"presenter" | "guest" | "committee"> = [
+        const roles: Array<"presenter" | "guest" | "committee" | "organizer"> = [
+          "organizer",
+          "committee",
           "presenter",
           "guest",
-          "committee",
         ];
         const results = await Promise.all(
           roles.map((r) => getInviteToken(id, r).catch(() => null)),
         );
-        const map: { presenter?: string; guest?: string; committee?: string } = {};
+        const map: { presenter?: string; guest?: string; committee?: string; organizer?: string } = {};
         results.forEach((res, i) => {
           const role = roles[i];
           if (res?.message === "ok" && res?.token) {
@@ -90,16 +96,23 @@ export default function CardInformation5({ event, editable }: Props) {
   useEffect(() => {
     const genQrs = async () => {
       const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const roles: Array<"committee" | "presenter" | "guest"> = ["committee", "presenter", "guest"];
+      const roles: Array<"committee" | "presenter" | "guest" | "organizer"> = [
+        "organizer",
+        "committee",
+        "presenter",
+        "guest",
+      ];
       const thumbMap: {
         presenter?: string;
         guest?: string;
         committee?: string;
+        organizer?: string;
       } = {};
       const largeMap: {
         presenter?: string;
         guest?: string;
         committee?: string;
+        organizer?: string;
       } = {};
       for (const r of roles) {
         const token = tokens[r];
@@ -307,7 +320,7 @@ export default function CardInformation5({ event, editable }: Props) {
             </div>
 
             {editable &&
-              (["committee", "presenter", "guest"] as const).map((role) => {
+              (["organizer", "committee", "presenter", "guest"] as const).map((role) => {
                 if (role === "committee" && !event.hasCommittee) return null;
 
                 const token = tokens[role];
@@ -332,13 +345,17 @@ export default function CardInformation5({ event, editable }: Props) {
                             ? "bg-(--role-presenter)/10 text-(--role-presenter)"
                             : role === "committee"
                               ? "bg-(--role-committee)/10 text-(--role-committee)"
-                              : "bg-(--role-guest)/10 text-(--role-guest)"
+                              : role === "organizer"
+                                ? "bg-(--role-organizer)/10 text-(--role-organizer)"
+                                : "bg-(--role-guest)/10 text-(--role-guest)"
                         }`}
                       >
                         {role === "presenter" ? (
                           <Users className="h-4 w-4" />
                         ) : role === "committee" ? (
                           <Award className="h-4 w-4" />
+                        ) : role === "organizer" ? (
+                          <Users className="h-4 w-4" />
                         ) : (
                           <Users className="h-4 w-4" />
                         )}
@@ -349,6 +366,8 @@ export default function CardInformation5({ event, editable }: Props) {
                           ? t("roles.presenter")
                           : role === "committee"
                             ? t("roles.committee")
+                            : role === "organizer"
+                              ? t("roles.organizer")
                             : t("roles.guest")}
                       </span>
                     </div>

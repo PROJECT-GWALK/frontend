@@ -11,17 +11,17 @@ services:
       - "3000:3000"
     environment:
       - BACKEND_URL=${BACKEND_URL}
+      - AUTH_URL=${AUTH_URL}
       - AUTH_TRUST_HOST=true
       - AUTH_SECRET=${AUTH_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - DATABASE_URL=${DATABASE_URL}
     networks:
       - project-net
     # volumes:
     #   - .:/app
     #   - /app/node_modules
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
 networks:
   project-net:
     external: true

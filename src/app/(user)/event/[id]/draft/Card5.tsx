@@ -1,18 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, BookOpen, Edit2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, BookOpen, Edit2, AlertCircle, Save } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { autoResizeTextarea } from "@/utils/function";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export type GradingCriteria = {
   id: string;
@@ -29,179 +38,157 @@ type Props = {
   gradingCriteria: GradingCriteria[];
   setGradingCriteria: (v: GradingCriteria[]) => void;
   gradingErrors?: Record<string, string>;
+  onEditingChange?: (isEditing: boolean) => void;
 };
 
 export default function Card5(props: Props) {
-  const { gradingEnabled, setGradingEnabled, gradingCriteria, setGradingCriteria, gradingErrors } =
-    props;
+  const {
+    gradingEnabled,
+    setGradingEnabled,
+    gradingCriteria,
+    setGradingCriteria,
+    gradingErrors,
+    onEditingChange,
+  } = props;
 
   const { t } = useLanguage();
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<{
-    name: string;
-    description: string;
-    maxScore: string;
-    weightPercentage: string;
-  }>({
-    name: "",
-    description: "",
-    maxScore: "100",
-    weightPercentage: "0",
-  });
 
-  const totalWeight = gradingCriteria.reduce((sum, c) => sum + c.weightPercentage, 0);
+  const [localCriteria, setLocalCriteria] = useState<GradingCriteria[]>(gradingCriteria);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalCriteria(gradingCriteria);
+    }
+    onEditingChange?.(isEditing);
+  }, [gradingCriteria, isEditing, onEditingChange]);
+
+  const totalWeight = localCriteria.reduce((sum, c) => sum + c.weightPercentage, 0);
+
+  const handleAutoBalance = () => {
+    if (localCriteria.length === 0) return;
+
+    const sorted = localCriteria.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const n = sorted.length;
+    const base = Math.floor(10000 / n) / 100;
+    let remainder = Number((100 - base * n).toFixed(2));
+
+    const nextSorted = sorted.map((c) => {
+      let nextWeight = base;
+      if (remainder > 0) {
+        nextWeight = Number((nextWeight + 0.01).toFixed(2));
+        remainder = Number((remainder - 0.01).toFixed(2));
+      }
+      return { ...c, weightPercentage: nextWeight };
+    });
+
+    const nextCriteria = localCriteria.map((c) => nextSorted.find((s) => s.id === c.id) ?? c);
+    setLocalCriteria(nextCriteria);
+    toast.info("Weights auto-balanced. Click Save to apply.");
+  };
 
   const handleAddCriteria = () => {
-    setEditingId(null);
-    setFormData({
+    const newCriteria: GradingCriteria = {
+      id: `new-${Date.now()}`,
       name: "",
-      description: "",
-      maxScore: "100",
-      weightPercentage: "0",
-    });
-    setFormOpen(true);
+      maxScore: 100,
+      weightPercentage: 0,
+      // description and sortOrder are optional
+    };
+    setLocalCriteria([...localCriteria, newCriteria]);
+    if (!isEditing) setIsEditing(true);
   };
 
-  const handleEditCriteria = (criteria: GradingCriteria) => {
-    setEditingId(criteria.id);
-    setFormData({
-      name: criteria.name,
-      description: criteria.description || "",
-      maxScore: criteria.maxScore.toString(),
-      weightPercentage: criteria.weightPercentage.toString(),
-    });
-    setFormOpen(true);
-  };
-
-  const handleSaveCriteria = () => {
-    // Validate name
-    if (!formData.name || !formData.name.trim()) {
-      toast.error(t("gradingSection.criteriaNameRequired") || "Criteria name is required");
-      return;
-    }
-
-    if (formData.name.trim().length < 2) {
-      toast.error(
-        t("gradingSection.criteriaNameTooShort") || "Criteria name must be at least 2 characters",
-      );
-      return;
-    }
-
-    if (formData.name.trim().length > 100) {
-      toast.error(
-        t("gradingSection.criteriaNameTooLong") || "Criteria name must be at most 100 characters",
-      );
-      return;
-    }
-
-    // Validate max score
-    const maxScore = Number(formData.maxScore);
-    if (!formData.maxScore || isNaN(maxScore)) {
-      toast.error(t("gradingSection.maxScoreRequired") || "Max score is required");
-      return;
-    }
-
-    if (maxScore <= 0) {
-      toast.error(t("gradingSection.maxScoreMustBePositive") || "Max score must be greater than 0");
-      return;
-    }
-
-    // Validate weight percentage
-    const weight = Number(formData.weightPercentage);
-    if (!formData.weightPercentage || isNaN(weight)) {
-      toast.error(t("gradingSection.weightRequired") || "Weight percentage is required");
-      return;
-    }
-
-    if (weight < 0 || weight > 100) {
-      toast.error(
-        t("gradingSection.weightPercentageMustBeBetween") ||
-          "Weight percentage must be between 0 and 100",
-      );
-      return;
-    }
-
-    // Validate description length
-    if (formData.description && formData.description.length > 120) {
-      toast.error(
-        t("gradingSection.descriptionTooLong") || "Description must be at most 120 characters",
-      );
-      return;
-    }
-
-    if (editingId) {
-      setGradingCriteria(
-        gradingCriteria.map((c) =>
-          c.id === editingId
-            ? {
-                ...c,
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                maxScore,
-                weightPercentage: weight,
-              }
-            : c,
-        ),
-      );
-      toast.success(t("gradingSection.criteriaUpdated") || "Criteria updated successfully");
-    } else {
-      const newCriteria: GradingCriteria = {
-        id: `new-${Date.now()}`,
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        maxScore,
-        weightPercentage: weight,
-        sortOrder: gradingCriteria.length,
-      };
-      setGradingCriteria([...gradingCriteria, newCriteria]);
-      toast.success(t("gradingSection.criteriaAdded") || "Criteria added successfully");
-    }
-
-    setFormOpen(false);
-    setFormData({
-      name: "",
-      description: "",
-      maxScore: "100",
-      weightPercentage: "0",
-    });
+  const handleUpdateField = (
+    id: string,
+    field: keyof GradingCriteria,
+    value: GradingCriteria[keyof GradingCriteria],
+  ) => {
+    setLocalCriteria(localCriteria.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
   const handleDeleteCriteria = (id: string) => {
     setDeleteTargetId(id);
     setDeleteDialogOpen(true);
   };
+
   const handleConfirmDelete = () => {
     if (!deleteTargetId) return;
-    setGradingCriteria(gradingCriteria.filter((c) => c.id !== deleteTargetId));
+    setLocalCriteria(localCriteria.filter((c) => c.id !== deleteTargetId));
     toast.success(t("gradingSection.criteriaDeleted") || "Criteria deleted successfully");
     setDeleteDialogOpen(false);
     setDeleteTargetId(null);
   };
 
+  const handleSave = () => {
+    // Validation
+    for (const item of localCriteria) {
+      if (!item.name.trim()) {
+        toast.error(t("gradingSection.criteriaNameRequired") || "Criteria name is required");
+        return;
+      }
+      if (!Number.isFinite(item.maxScore) || item.maxScore <= 0) {
+        toast.error(t("gradingSection.maxScoreMustBePositive") || "Max score must be greater than 0");
+        return;
+      }
+      if (item.weightPercentage < 0 || item.weightPercentage > 100) {
+        toast.error(t("gradingSection.weightPercentageMustBeBetween") || "Weight must be between 0 and 100");
+        return;
+      }
+    }
+
+    if (Math.abs(totalWeight - 100) > 0.01 && localCriteria.length > 0) {
+      toast.error(t("gradingSection.weightError") || "Total weight must be exactly 100%");
+      return;
+    }
+
+    setGradingCriteria(localCriteria);
+    setIsEditing(false);
+    toast.success(t("gradingSection.criteriaUpdated") || "Criteria updated successfully");
+  };
+
   const handleCancel = () => {
-    setFormOpen(false);
-    setEditingId(null);
-    setFormData({
-      name: "",
-      description: "",
-      maxScore: "100",
-      weightPercentage: "0",
-    });
+    setLocalCriteria(gradingCriteria);
+    setIsEditing(false);
   };
 
   return (
     <Card id="card5" className="lg:col-span-2 scroll-mt-6 border-none shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-          <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-            <BookOpen className="h-5 w-5" />
+        <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+              <div className="p-2 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <span>{t("gradingSection.title") || "Grading Configuration"}</span>
+            </CardTitle>
+            {gradingEnabled && (
+              <div className="flex gap-2">
+                {!isEditing ? (
+                  <Button onClick={() => setIsEditing(true)} size="sm" variant="outline">
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    {t("gradingSection.edit") || "Edit Criteria"}
+                  </Button>
+                ) : (
+                  <>
+                    <Button onClick={handleAutoBalance} size="sm" variant="secondary">
+                      Auto-Balance
+                    </Button>
+                    <Button onClick={handleCancel} size="sm" variant="ghost">
+                      {t("gradingSection.cancel") || "Cancel"}
+                    </Button>
+                    <Button onClick={handleSave} size="sm">
+                      <Save className="w-4 h-4 mr-2" />
+                      {t("gradingSection.saveChanges") || t("gradingSection.save") || "Save Changes"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-          <span>{t("gradingSection.title") || "Grading Configuration"}</span>
-        </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -235,14 +222,10 @@ export default function Card5(props: Props) {
                     {t("gradingSection.criteria") || "Grading Criteria"}
                   </span>
                 </div>
-                <Button onClick={handleAddCriteria} size="sm" variant="outline" disabled={formOpen}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  {t("gradingSection.addCriteria") || "Add Criteria"}
-                </Button>
               </div>
 
               {/* Weight Summary */}
-              {gradingCriteria.length > 0 && (
+              {localCriteria.length > 0 && (
                 <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-blue-900 dark:text-blue-100">
@@ -250,18 +233,19 @@ export default function Card5(props: Props) {
                     </span>
                     <span
                       className={`font-bold ${
-                        totalWeight === 100
+                        Math.abs(totalWeight - 100) < 0.01
                           ? "text-green-600 dark:text-green-400"
                           : totalWeight > 100
                             ? "text-red-600 dark:text-red-400"
                             : "text-orange-600 dark:text-orange-400"
                       }`}
                     >
-                      {totalWeight}%
+                      {totalWeight.toFixed(2)}%
                     </span>
                   </div>
-                  {totalWeight !== 100 && (
-                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                  {Math.abs(totalWeight - 100) >= 0.01 && (
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
                       {t("gradingSection.weightWarning") ||
                         "Total weight should equal 100% for balanced grading"}
                     </p>
@@ -269,178 +253,132 @@ export default function Card5(props: Props) {
                 </div>
               )}
 
-              {/* Add/Edit Form */}
-              {formOpen && (
-                <div className="border rounded-lg p-4 space-y-4 bg-muted/30 animate-in fade-in slide-in-from-top-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="criteriaName">
-                      {t("gradingSection.criteriaName") || "Criteria Name"}
-                    </Label>
-                    <Input
-                      id="criteriaName"
-                      placeholder={
-                        t("gradingSection.placeholderCriteriaName") ||
-                        "e.g., Presentation, Innovation, Technical"
-                      }
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="criteriaDescription">
+              {/* Criteria Table */}
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[30%]">
+                        {t("gradingSection.criteriaName") || "Criteria Name"}
+                      </TableHead>
+                      <TableHead className="w-[35%]">
                         {t("gradingSection.criteriaDescription") || "Description"}
-                      </Label>
-                      <span className="text-xs text-muted-foreground">
-                        {(formData.description || "").length}/120
-                      </span>
-                    </div>
-                    <Textarea
-                      id="criteriaDescription"
-                      ref={(el) => autoResizeTextarea(el)}
-                      placeholder={
-                        t("gradingSection.placeholderCriteriaDescription") ||
-                        "Describe what this criteria evaluates..."
-                      }
-                      maxLength={120}
-                      value={formData.description}
-                      onChange={(e) => {
-                        autoResizeTextarea(e.target);
-                        setFormData({
-                          ...formData,
-                          description: e.target.value,
-                        });
-                      }}
-                      className="resize-none overflow-hidden"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="maxScore">
+                      </TableHead>
+                      <TableHead className="w-[15%] text-center">
                         {t("gradingSection.maxScore") || "Max Score"}
-                      </Label>
-                      <Input
-                        id="maxScore"
-                        type="number"
-                        min="1"
-                        step="1"
-                        placeholder="100"
-                        value={formData.maxScore}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setFormData({
-                            ...formData,
-                            maxScore: v,
-                          });
-                        }}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="weightPercentage">
-                        {t("gradingSection.weight") || "Weight %"}
-                      </Label>
-                      <Input
-                        id="weightPercentage"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        placeholder="25"
-                        value={formData.weightPercentage}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setFormData({
-                            ...formData,
-                            weightPercentage: v,
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 justify-end pt-2">
-                    <Button variant="outline" size="sm" onClick={handleCancel}>
-                      {t("gradingSection.cancel") || "Cancel"}
-                    </Button>
-                    <Button size="sm" onClick={handleSaveCriteria}>
-                      {t("gradingSection.save") || "Save"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Criteria List */}
-              {gradingCriteria.length === 0 && !formOpen ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <BookOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>{t("gradingSection.noCriteria") || "No criteria added yet"}</p>
-                  <p className="text-sm">
-                    {t("gradingSection.clickToAddCriteria") ||
-                      "Click the button above to add grading criteria"}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {gradingCriteria.map((criteria, index) => (
-                    <div key={criteria.id} className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-muted-foreground">
-                              #{index + 1}
-                            </span>
-                            <h3 className="text-base font-semibold truncate">{criteria.name}</h3>
-                          </div>
-                          {criteria.description && (
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {criteria.description}
-                            </p>
+                      </TableHead>
+                      <TableHead className="w-[15%] text-center">
+                        {t("gradingSection.weight") || "Weight"} %
+                      </TableHead>
+                      {isEditing && <TableHead className="w-[5%]"></TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {localCriteria.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={isEditing ? 5 : 4} className="h-24 text-center text-muted-foreground">
+                          {t("gradingSection.noCriteria") || "No criteria added yet"}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      localCriteria.map((criteria) => (
+                        <TableRow key={criteria.id}>
+                          <TableCell>
+                            {isEditing ? (
+                              <Input
+                                placeholder={
+                                  t("gradingSection.placeholderCriteriaName") || "Criteria Name"
+                                }
+                                value={criteria.name}
+                                onChange={(e) =>
+                                  handleUpdateField(criteria.id, "name", e.target.value)
+                                }
+                              />
+                            ) : (
+                              <span className="font-medium">{criteria.name}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Input
+                                placeholder={
+                                  t("gradingSection.placeholderCriteriaDescription") || "Description"
+                                }
+                                value={criteria.description || ""}
+                                onChange={(e) =>
+                                  handleUpdateField(criteria.id, "description", e.target.value)
+                                }
+                              />
+                            ) : (
+                              <span className="text-muted-foreground text-sm">{criteria.description}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {isEditing ? (
+                              <Input
+                                type="number"
+                                min="1"
+                                className="text-center"
+                                value={criteria.maxScore}
+                                onChange={(e) =>
+                                  handleUpdateField(
+                                    criteria.id,
+                                    "maxScore",
+                                    Number(e.target.value) || 0,
+                                  )
+                                }
+                              />
+                            ) : (
+                              criteria.maxScore
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {isEditing ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                className="text-center"
+                                value={criteria.weightPercentage}
+                                onChange={(e) =>
+                                  handleUpdateField(
+                                    criteria.id,
+                                    "weightPercentage",
+                                    Number(e.target.value) || 0,
+                                  )
+                                }
+                              />
+                            ) : (
+                              `${criteria.weightPercentage}%`
+                            )}
+                          </TableCell>
+                          {isEditing && (
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteCriteria(criteria.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
                           )}
-                        </div>
-                        <div className="flex gap-1 ml-2 flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleEditCriteria(criteria)}
-                            title={t("common.edit") || "Edit"}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteCriteria(criteria.id)}
-                            title={t("common.delete") || "Delete"}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                        <div>
-                          <span className="text-xs text-muted-foreground">
-                            {t("gradingSection.maxScore") || "Max Score"}
-                          </span>
-                          <p className="font-semibold text-sm">{criteria.maxScore}</p>
-                        </div>
-                        <div>
-                          <span className="text-xs text-muted-foreground">
-                            {t("gradingSection.weight") || "Weight"}
-                          </span>
-                          <p className="font-semibold text-sm">{criteria.weightPercentage}%</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {isEditing && (
+                <Button onClick={handleAddCriteria} className="w-full" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("gradingSection.addCriteria") || "Add Criteria"}
+                </Button>
               )}
             </div>
+
             <DeleteConfirmDialog
               open={deleteDialogOpen}
               onOpenChange={(open) => {

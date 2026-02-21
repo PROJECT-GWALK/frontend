@@ -27,13 +27,28 @@ import type { PresenterProject } from "../Presenter/components/types";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
+import { useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+
+export default function GuestPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id as string | undefined;
+
+  if (id) router.replace(`/event/${id}`);
+
+  return null;
+}
 
 type Props = {
   id: string;
   event: EventData;
 };
 
-export default function GuestView({ id, event }: Props) {
+export function GuestView({ id, event }: Props) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
@@ -150,6 +165,7 @@ export default function GuestView({ id, event }: Props) {
             })) || [],
           members:
             t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          memberUserIds: t.participants?.map((p) => p.userId) || [],
           createdAt: t.createdAt,
           totalVr: t.totalVr,
           myComment: t.myComment,
@@ -419,6 +435,8 @@ export default function GuestView({ id, event }: Props) {
                     projects={projects}
                     role="GUEST"
                     eventId={id}
+                    currentUserId={userId}
+                    eventStartView={localEvent?.startView ?? null}
                     searchQuery={searchQuery}
                     filterStatus={filterStatus}
                     projectRewards={projectRewards}

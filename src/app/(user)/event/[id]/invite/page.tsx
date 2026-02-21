@@ -16,7 +16,7 @@ import { formatDateTime, linkify } from "@/utils/function";
 import { useLanguage } from "@/contexts/LanguageContext";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
-type RoleStr = "presenter" | "committee" | "guest";
+type RoleStr = "presenter" | "committee" | "guest" | "organizer";
 
 export default function InviteConfirmPage() {
   const { timeFormat } = useLanguage();

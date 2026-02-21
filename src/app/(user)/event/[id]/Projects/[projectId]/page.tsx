@@ -150,8 +150,8 @@ export default function ProjectDetailPage({ params }: Props) {
   const vrTeamCapEnabled = eventData?.vrTeamCapEnabled ?? true;
   const vrTeamCap =
     eventData?.myRole === "COMMITTEE"
-      ? eventData?.vrTeamCapCommittee ?? 20
-      : eventData?.vrTeamCapGuest ?? 10;
+      ? (eventData?.vrTeamCapCommittee ?? 20)
+      : (eventData?.vrTeamCapGuest ?? 10);
   const totalVrForThisTeam = Math.max(0, Number(virtualReward || 0));
   const isVrOverTeamCap =
     (eventData?.myRole === "COMMITTEE" || eventData?.myRole === "GUEST") &&
@@ -162,11 +162,7 @@ export default function ProjectDetailPage({ params }: Props) {
     if (!eventData || !project) return;
     try {
       setSavingVr(true);
-      const res = await giveVr(
-        id,
-        projectId,
-        Number(virtualReward),
-      );
+      const res = await giveVr(id, projectId, Number(virtualReward));
 
       // Update local state directly from response
       setEventData((prev) =>
@@ -241,7 +237,6 @@ export default function ProjectDetailPage({ params }: Props) {
   })();
 
   const isRewardDisabled = (rewardId: string) => {
-
     const isUnused = eventData?.awardsUnused?.some((r) => r.id === rewardId);
 
     const currentlySelected = selectedSpecialRewards.includes(rewardId);
@@ -629,14 +624,14 @@ export default function ProjectDetailPage({ params }: Props) {
                 src={project.img}
                 alt={project.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
+                className="object-cover transition-transform duration-700 opacity-90"
               />
             ) : (
               <Image
                 src="/banner.png"
                 alt={project.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
+                className="object-cover transition-transform duration-700 opacity-90"
               />
             )}
             <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
@@ -754,9 +749,11 @@ export default function ProjectDetailPage({ params }: Props) {
                   }`}
                 >
                   {linkify(project.desc || t("projectDetail.noDescription"))}
-                  {!isDescExpanded && project.desc && project.desc.length > 300 && (
-                    <div className="absolute bottom-0 left-0 w-full h-12 bg-linear-to-t from-card to-transparent" />
-                  )}
+                  {!isDescExpanded &&
+                    project.desc &&
+                    project.desc.length > 300 && (
+                      <div className="absolute bottom-0 left-0 w-full h-12 bg-linear-to-t from-card to-transparent" />
+                    )}
                 </div>
                 {project.desc && project.desc.length > 300 && (
                   <Button
@@ -857,7 +854,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                   src={file.url}
                                   alt={file.name}
                                   fill
-                                  className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]"
+                                  className="object-contain p-2 transition-transform duration-300"
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                                   <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
@@ -878,7 +875,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <Download className="w-4 h-4" />
-                                      Download Image
+                                      {t("projectDetail.files.downloadImage")}
                                     </a>
                                   </Button>
                                 </div>
@@ -900,7 +897,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                       className="flex items-center gap-2"
                                     >
                                       <Download className="w-4 h-4" />
-                                      Download PDF
+                                      {t("projectDetail.files.downloadPDF")}
                                     </a>
                                   </Button>
                                 </div>
@@ -944,7 +941,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                       target="_blank"
                                       rel="noreferrer"
                                     >
-                                      Open Link
+                                      {t("projectDetail.buttons.openLink")}
                                     </a>
                                   </Button>
                                 </div>
@@ -957,7 +954,7 @@ export default function ProjectDetailPage({ params }: Props) {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-muted-foreground bg-muted/50 rounded-xl border border-dashed">
                       <FileText className="w-12 h-12 mb-3 opacity-20" />
-                      <p>No works uploaded yet.</p>
+                      <p>{t("projectDetail.noWorks")}</p>
                     </div>
                   )}
                 </div>
@@ -965,84 +962,8 @@ export default function ProjectDetailPage({ params }: Props) {
             </Card>
           </div>
 
-          {/* Right Column: Members */}
+          {/* Right Column */}
           <div className="space-y-8">
-            <Card className="border-none shadow-md bg-card">
-              <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
-                  <Users className="w-5 h-5 text-primary" />
-                  Team Members
-                </CardTitle>
-                <Badge variant="secondary" className="font-normal">
-                  {membersData.length} / {eventData?.maxTeamMembers || "-"}
-                </Badge>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {membersData.map((m) => (
-                    <div
-                      key={m.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors shadow-sm relative group"
-                    >
-                      <UserAvatar
-                        user={m}
-                        className="w-10 h-10 border-2 border-background shadow-sm"
-                      />
-                      <div className="overflow-hidden flex-1">
-                        <div className="font-medium truncate text-foreground">
-                          {m.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          @{m.username || "user"}
-                        </div>
-                        {m.isLeader && (
-                          <Badge
-                            variant="secondary"
-                            className="mt-1 text-[10px] h-5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800/50"
-                          >
-                            Leader
-                          </Badge>
-                        )}
-                      </div>
-                      {project.isLeader && !m.isLeader && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                          onClick={() => handleRemoveMember(m.id)}
-                          disabled={!isSubmissionActive}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {membersData.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      {t("projectDetail.messages.noMembers")}
-                    </div>
-                  )}
-
-                  {project.isLeader && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2 border-dashed border-2 hover:border-primary hover:text-primary"
-                      onClick={() => setInviteOpen(true)}
-                      disabled={
-                        (!!eventData?.maxTeamMembers &&
-                          membersData.length >= eventData.maxTeamMembers) ||
-                        !isSubmissionActive
-                      }
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t("projectDetail.buttons.addMember")}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Evaluation Section (Committee/Guest only) */}
             {(eventData?.myRole === "COMMITTEE" ||
               eventData?.myRole === "GUEST") && (
@@ -1058,6 +979,7 @@ export default function ProjectDetailPage({ params }: Props) {
                     </CardContent>
                   </Card>
                 )}
+                {/* Reward Section (Committee/Guest) */}
                 <Card className="border-none shadow-md bg-card">
                   <CardHeader className="border-b px-6 py-4">
                     <CardTitle className="text-lg flex items-center gap-2 text-foreground">
@@ -1093,14 +1015,13 @@ export default function ProjectDetailPage({ params }: Props) {
                       <TabsContent value="virtual" className="space-y-6 mt-0">
                         <div className="space-y-3">
                           <div className="flex justify-between items-end">
-                            <p className="text-sm font-medium text-muted-foreground">
+                            <p className="text-sm font-bold">
                               {t("projectDetail.evaluation.budgetUsage")}
                             </p>
-                            <span className="text-sm font-bold text-foreground">
-                              {myVirtualTotal - myVirtualUsed}{" "}
+                            <span className="text-sm font-medium text-foreground">
+                              {myVirtualTotal}{" "}
                               {eventData?.unitReward ??
-                                t("projectDetail.evaluation.coins")}{" "}
-                              {t("projectDetail.evaluation.left")}
+                                t("projectDetail.evaluation.coins")}
                             </span>
                           </div>
                           <div className="relative h-3 w-full bg-muted rounded-full overflow-hidden">
@@ -1111,22 +1032,33 @@ export default function ProjectDetailPage({ params }: Props) {
                               }}
                             />
                           </div>
+                          <div className="flex justify-between items-end">
+                            <p className="text-sm font-medium text-foreground">
+                              {myVirtualUsed}{" "}
+                              {t("projectDetail.evaluation.used")}
+                            </p>
+                            <span className="text-sm font-medium text-foreground">
+                              {myVirtualTotal - myVirtualUsed}{" "}
+                              {t("projectDetail.evaluation.left")}
+                            </span>
+                          </div>
                         </div>
 
                         <div
                           className={`rounded-lg border p-3 ${
-                            isVrOverTeamCap ? "border-destructive bg-destructive/5" : ""
+                            isVrOverTeamCap
+                              ? "border-destructive bg-destructive/5"
+                              : ""
                           }`}
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="text-sm font-semibold">
                               {t("projectDetail.evaluation.vrTeamCapTitle")}
-                            </div>
-                            <div className="text-sm font-bold">
                               {vrTeamCapEnabled ? (
                                 <>
-                                  {t("projectDetail.evaluation.vrTeamCapLimit")}: {vrTeamCap}{" "}
-                                  {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
+                                  : {vrTeamCap}{" "}
+                                  {eventData?.unitReward ??
+                                    t("projectDetail.evaluation.coins")}
                                 </>
                               ) : (
                                 t("projectDetail.evaluation.vrTeamCapNoLimit")
@@ -1135,16 +1067,19 @@ export default function ProjectDetailPage({ params }: Props) {
                           </div>
                           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             <span>
-                              {t("projectDetail.evaluation.vrTeamCapCurrent")}: {totalVrForThisTeam}{" "}
-                              {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
+                              {t("projectDetail.evaluation.vrTeamCapCurrent")}:{" "}
+                              {totalVrForThisTeam}
+                              {" | "}
+                              {vrTeamCapEnabled ? (
+                                <span>
+                                  {t(
+                                    "projectDetail.evaluation.vrTeamCapRemaining",
+                                  )}
+                                  :{" "}
+                                  {Math.max(0, vrTeamCap - totalVrForThisTeam)}
+                                </span>
+                              ) : null}
                             </span>
-                            {vrTeamCapEnabled ? (
-                              <span>
-                                {t("projectDetail.evaluation.vrTeamCapRemaining")}:{" "}
-                                {Math.max(0, vrTeamCap - totalVrForThisTeam)}{" "}
-                                {eventData?.unitReward ?? t("projectDetail.evaluation.coins")}
-                              </span>
-                            ) : null}
                           </div>
                           {isVrOverTeamCap ? (
                             <div className="text-xs font-medium text-destructive mt-1">
@@ -1153,7 +1088,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           ) : null}
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           <div className="flex flex-wrap gap-2">
                             {[100, 500, 1000].map((amount) => (
                               <Button
@@ -1174,7 +1109,9 @@ export default function ProjectDetailPage({ params }: Props) {
                                 setVirtualReward(
                                   Math.min(
                                     myVirtualTotal - myVirtualUsed,
-                                    vrTeamCapEnabled ? vrTeamCap : myVirtualTotal - myVirtualUsed,
+                                    vrTeamCapEnabled
+                                      ? vrTeamCap
+                                      : myVirtualTotal - myVirtualUsed,
                                   ),
                                 )
                               }
@@ -1191,13 +1128,17 @@ export default function ProjectDetailPage({ params }: Props) {
                               placeholder="0"
                               min="0"
                               value={virtualReward}
-                              onChange={(e) => setVirtualReward(Number(e.target.value))}
+                              onChange={(e) =>
+                                setVirtualReward(Number(e.target.value))
+                              }
                               className="h-10"
                               disabled={!isEventActive}
                             />
                             <Button
                               onClick={handleSaveVr}
-                              disabled={savingVr || !isEventActive || isVrOverTeamCap}
+                              disabled={
+                                savingVr || !isEventActive || isVrOverTeamCap
+                              }
                               className="bg-purple-600 hover:bg-purple-700 text-white"
                             >
                               {savingVr ? (
@@ -1286,7 +1227,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                     variant="secondary"
                                     className="flex items-center gap-1"
                                   >
-                                    <span className="max-w-[240px] truncate">
+                                    <span className="max-w-60 truncate">
                                       {reward.name}
                                     </span>
                                     <Button
@@ -1324,20 +1265,101 @@ export default function ProjectDetailPage({ params }: Props) {
                 </Card>
               </>
             )}
-            {eventData?.myRole === "COMMITTEE" && (eventData?.gradingEnabled ?? true) && (
-              <CommitteeGradingForm
-                eventId={id}
-                teamId={projectId}
-                teamName={project.title}
-                disabled={!isEventActive}
-              />
-            )}
+
+            {/* Grading Section (Committee only) */}
+            {eventData?.myRole === "COMMITTEE" &&
+              (eventData?.gradingEnabled ?? true) && (
+                <CommitteeGradingForm
+                  eventId={id}
+                  teamId={projectId}
+                  teamName={project.title}
+                  disabled={!isEventActive}
+                />
+              )}
+
+            {/* Comment Section */}
             <CommentSection
               eventId={id}
               projectId={projectId}
               myRole={eventData?.myRole}
               disabled={!isEventActive}
             />
+
+            <Card className="border-none shadow-md bg-card">
+              <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+                  <Users className="w-5 h-5 text-primary" />
+                  {t("projectDetail.projectMembers")}
+                </CardTitle>
+                <Badge variant="secondary" className="font-normal">
+                  {membersData.length} / {eventData?.maxTeamMembers || "-"}
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {membersData.map((m) => (
+                    <div
+                      key={m.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors shadow-sm relative group"
+                    >
+                      <UserAvatar
+                        user={m}
+                        className="w-10 h-10 border-2 border-background shadow-sm"
+                      />
+                      <div className="overflow-hidden flex-1">
+                        <div className="font-medium truncate text-foreground">
+                          {m.name}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          @{m.username || "user"}
+                        </div>
+                        {m.isLeader && (
+                          <Badge
+                            variant="secondary"
+                            className="mt-1 text-[10px] h-5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800/50"
+                          >
+                            {t("projectDetail.leader")}
+                          </Badge>
+                        )}
+                      </div>
+                      {project.isLeader && !m.isLeader && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          onClick={() => handleRemoveMember(m.id)}
+                          disabled={!isSubmissionActive}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {membersData.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      {t("projectDetail.messages.noMembers")}
+                    </div>
+                  )}
+
+                  {project.isLeader && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2 border-dashed border-2 hover:border-primary hover:text-primary"
+                      onClick={() => setInviteOpen(true)}
+                      disabled={
+                        (!!eventData?.maxTeamMembers &&
+                          membersData.length >= eventData.maxTeamMembers) ||
+                        !isSubmissionActive
+                      }
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t("projectDetail.buttons.addMember")}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 

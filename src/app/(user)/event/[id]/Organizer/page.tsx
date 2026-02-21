@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ResultSection from "../components/ResultSection";
 import FeedbackList from "./components/FeedbackList";
 import { getEvaluationCriteria } from "@/utils/apievaluation";
+import { useParams, useRouter } from "next/navigation";
 
 import OrganizerHeader from "./components/OrganizerHeader";
 import OrganizerBanner from "./components/OrganizerBanner";
@@ -22,12 +23,22 @@ import OrganizerEditDialog from "./components/OrganizerEditDialog";
 import EvaluationCriteriaForm from "./components/EvaluationCriteriaForm";
 import GradingDashboard from "./components/GradingDashboard";
 
+export default function OrganizerPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params?.id as string | undefined;
+
+  if (id) router.replace(`/event/${id}`);
+
+  return null;
+}
+
 type Props = {
   id: string;
   event: EventData;
 };
 
-export default function OrganizerView({ id, event }: Props) {
+export function OrganizerView({ id, event }: Props) {
   const [tab, setTab] = useState<
     "dashboard" | "information" | "Participants" | "project" | "result" | "grading"
   >("dashboard");
@@ -43,10 +54,10 @@ export default function OrganizerView({ id, event }: Props) {
     {
       id?: string;
       name: string;
-      description: string;
+      description?: string;
       maxScore: number;
       weightPercentage: number;
-      sortOrder: number;
+      sortOrder?: number;
     }[]
   >([]);
 
@@ -82,6 +93,7 @@ export default function OrganizerView({ id, event }: Props) {
               fileTypeId: f.fileTypeId,
             })) || [],
           members: t.participants?.map((p) => p.user?.name || "Unknown") || [],
+          memberUserIds: t.participants?.map((p) => p.userId) || [],
           createdAt: t.createdAt,
           totalVr: t.totalVr,
         }));

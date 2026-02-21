@@ -1,10 +1,13 @@
 import axios from "axios";
 
+const normalizeEventName = (name: string) => name.normalize("NFKC").trim().replace(/\s+/g, " ");
+
 // ====================== CREATE EVENT ======================
 export const createEvent = async (eventName: string) => {
+  const normalizedName = normalizeEventName(eventName);
   const res = await axios.post(
     "/backend/api/events",
-    { eventName },
+    { eventName: normalizedName },
     {
       withCredentials: true,
       headers: {
@@ -114,8 +117,9 @@ export const getUserHistoryByUsername = async (username: string) => {
 
 // ====================== CHECK EVENT NAME ======================
 export const checkEventName = async (eventName: string) => {
+  const normalizedName = normalizeEventName(eventName);
   const res = await axios.get("/backend/api/events/check-name", {
-    params: { eventName },
+    params: { eventName: normalizedName },
     withCredentials: true,
   });
   return res.data; // { message, available }

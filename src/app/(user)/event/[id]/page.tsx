@@ -10,18 +10,19 @@ import type { EventData } from "@/utils/types";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import DraftView from "./draft/DraftView";
-import OrganizerView from "./Organizer/page";
-import PresenterView from "./Presenter/page";
-import NotRoleView from "./NotRole/page";
+import { OrganizerView } from "./Organizer/page";
+import { PresenterView } from "./Presenter/page";
+import { NotRoleView } from "./NotRole/page";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import CommitteeView from "./Committee/page";
-import GuestView from "./Guest/page";
+import { CommitteeView } from "./Committee/page";
+import { GuestView } from "./Guest/page";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { AlertCircle } from "lucide-react";
 
 type Role = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST" | null;
 
@@ -33,10 +34,13 @@ export default function EventDetail() {
   const router = useRouter();
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [inviteProcessed, setInviteProcessed] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [inviteRole, setInviteRole] = useState<"presenter" | "committee" | "guest" | null>(null);
+  const [inviteRole, setInviteRole] = useState<
+    "presenter" | "committee" | "guest" | "organizer" | null
+  >(null);
   const [joining, setJoining] = useState(false);
   const {t} = useLanguage();
 
@@ -60,12 +64,12 @@ export default function EventDetail() {
           if (tokenParam) {
             const res = await previewInvite(id, { token: tokenParam });
             if (res?.message === "ok" && res?.role) {
-              setInviteRole(res.role as "presenter" | "committee" | "guest");
+              setInviteRole(res.role as "presenter" | "committee" | "guest" | "organizer");
             } else {
               setInviteRole(null);
             }
-          } else if (roleParam && ["presenter", "committee", "guest"].includes(roleParam)) {
-            setInviteRole(roleParam as "presenter" | "committee" | "guest");
+          } else if (roleParam && ["presenter", "committee", "guest", "organizer"].includes(roleParam)) {
+            setInviteRole(roleParam as "presenter" | "committee" | "guest" | "organizer");
           } else {
             setInviteRole(null);
           }
@@ -76,13 +80,21 @@ export default function EventDetail() {
     }
 
     const fetchData = async () => {
-      if (!id) return;
+      if (!id) {
+        setLoadError(t("toast.loadEventDataFailed"));
+        setLoading(false);
+        return;
+      }
       try {
         const res = await getEvent(id);
-        if (res.message === "ok") {
+        if (res?.message === "ok" && res?.event) {
           setEvent(res.event);
+          setLoadError(null);
           const evRole = (res.event as { role?: Role })?.role ?? null;
           if (evRole) setRole(evRole as Role);
+        } else {
+          setEvent(null);
+          setLoadError(typeof res?.message === "string" ? res.message : t("toast.loadEventDataFailed"));
         }
         try {
           const my = await getMyEvents();
@@ -92,7 +104,15 @@ export default function EventDetail() {
           if (meEvent?.role) setRole(meEvent.role as Role);
         } catch {}
       } catch (error) {
-        console.error(error);
+        const fallback = t("toast.loadEventDataFailed");
+        let message = fallback;
+        if (error instanceof AxiosError) {
+          message = error.response?.data?.message || fallback;
+        } else if (error instanceof Error && error.message) {
+          message = error.message;
+        }
+        setEvent(null);
+        setLoadError(message);
       } finally {
         setLoading(false);
       }
@@ -127,6 +147,28 @@ export default function EventDetail() {
                 <Skeleton className="h-40 w-full rounded-xl" />
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center">
+          <div className="mx-auto w-fit rounded-full bg-muted/30 p-5 mb-6">
+            <AlertCircle className="h-12 w-12 text-muted-foreground/60" />
+          </div>
+          <div className="text-2xl font-semibold">{t("eventsPage.noEvents.title")}</div>
+          <div className="text-muted-foreground mt-2">
+            {loadError || t("toast.loadEventDataFailed")}
+          </div>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button variant="secondary" onClick={() => router.push("/event")}>
+              กลับไปหน้าอีเวนต์
+            </Button>
+            <Button onClick={() => router.refresh()}>ลองใหม่</Button>
           </div>
         </div>
       </div>
@@ -188,6 +230,8 @@ export default function EventDetail() {
                         ? t("roles.presenter")
                         : inviteRole === "committee"
                           ? t("roles.committee")
+                          : inviteRole === "organizer"
+                            ? t("roles.organizer")
                           : t("roles.guest")
                     } ${t("inviteSection.joinQuestionSuffix")}`
                   : `${t("inviteSection.joinQuestionPrefix")} ${t("inviteSection.joinQuestionSuffix")}`}

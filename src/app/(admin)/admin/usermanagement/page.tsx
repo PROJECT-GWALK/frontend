@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import { useEffect, useState } from "react";
 import {
@@ -58,6 +59,7 @@ export default function UserManagementPage() {
   const [search, setSearch] = useState("");
   const [banReason, setBanReason] = useState("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { t } = useLanguage();
 
   const [page, setPage] = useState(1);
   const perPage = 10;
@@ -169,7 +171,7 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t("adminSection.userManagement")}</h2>
       </div>
 
       <div className="flex items-center justify-between space-y-2">
@@ -203,12 +205,12 @@ export default function UserManagementPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead>{t("adminSection.name")}</TableHead>
+              <TableHead>{t("adminSection.username")}</TableHead>
+              <TableHead>{t("adminSection.email")}</TableHead>
+              <TableHead>{t("adminSection.role")}</TableHead>
+              <TableHead>{t("adminSection.status")}</TableHead>
+              <TableHead className="text-center">{t("adminSection.action")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -221,7 +223,7 @@ export default function UserManagementPage() {
             ) : paginatedUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
-                  No users found.
+                  {t("memberSection.noUsers")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -231,7 +233,7 @@ export default function UserManagementPage() {
                     <div className="font-medium">{u.name ?? "—"}</div>
                     {currentUser?.id === u.id && (
                       <span className="text-xs text-muted-foreground">
-                        (You)
+                        {t("adminSection.you")}
                       </span>
                     )}
                   </TableCell>
@@ -271,13 +273,13 @@ export default function UserManagementPage() {
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Change Role</AlertDialogTitle>
+                                  <AlertDialogTitle>{t("adminSection.changeRole")}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to change role of <b>{u.name}</b> to <b>{u.role === "ADMIN" ? "USER" : "ADMIN"}</b>?
+                                    {t("adminSection.changeRoleConfirm1")} <b>{u.name}</b> {t("adminSection.changeRoleConfirm2")} <b>{u.role === "ADMIN" ? "USER" : "ADMIN"}</b>?
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() =>
                                       handleRoleChange(
@@ -286,7 +288,7 @@ export default function UserManagementPage() {
                                       )
                                     }
                                   >
-                                    Confirm
+                                    {t("projectTab.confirm")}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -305,18 +307,18 @@ export default function UserManagementPage() {
                                 ) : (
                                   <Ban className="h-4 w-4 text-orange-500" />
                                 )}
-                                <span className="sr-only">Ban/Unban</span>
+                                <span className="sr-only">{t("adminSection.banUnban")}</span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>
-                                  {u.banned ? "Unban User" : "Ban User"}
+                                  {u.banned ? t("adminSection.unbanUser") : t("adminSection.banUser")}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
                                   {u.banned
-                                    ? "Are you sure you want to unban this user?"
-                                    : "Please provide a reason for banning this user."}
+                                    ? t("adminSection.unbanUserConfirm")
+                                    : t("adminSection.banReasonPrompt")}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               {!u.banned && (
@@ -334,7 +336,7 @@ export default function UserManagementPage() {
                                 </div>
                               )}
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() =>
                                     u.banned
@@ -353,23 +355,23 @@ export default function UserManagementPage() {
                             <AlertDialogTrigger asChild>
                               <Button size="icon" variant="ghost" className="h-8 w-8">
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                                <span className="sr-only">Delete</span>
+                                <span className="sr-only">{t("dialog.delete")}</span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                <AlertDialogTitle>{t("adminSection.deleteUser")}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete <b>{u.name}</b>? This action cannot be undone.
+                                  {t("adminSection.deleteUserConfirm1")} <b>{u.name}</b>? {t("adminSection.deleteUserConfirm2")}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDelete(u.id)}
                                   className="bg-destructive hover:bg-destructive/90"
                                 >
-                                  Delete
+                                  {t("dialog.delete")}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

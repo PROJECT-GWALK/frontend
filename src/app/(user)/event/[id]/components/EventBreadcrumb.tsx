@@ -31,17 +31,20 @@ export default function EventBreadcrumb() {
             setEventName(res.event.eventName);
           }
         })
+        .catch(() => {})
         .finally(() => setLoading(false));
     }
   }, [id]);
 
   useEffect(() => {
     if (id && projectId) {
-      getTeamById(id, projectId).then((res) => {
-        if (res.message === "ok" && res.team) {
-          setProjectName(res.team.teamName);
-        }
-      });
+      getTeamById(id, projectId)
+        .then((res) => {
+          if (res.message === "ok" && res.team) {
+            setProjectName(res.team.teamName);
+          }
+        })
+        .catch(() => {});
     } else {
       setProjectName(null);
     }
