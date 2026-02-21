@@ -51,7 +51,7 @@ export default function ImageCropDialog({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [minZoom, setMinZoom] = useState(1);
-  const [maxZoom, setMaxZoom] = useState(8);
+  const [maxZoom, setMaxZoom] = useState(10);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   const onCropComplete = (_: Area, pixels: Area) => {
@@ -62,11 +62,11 @@ export default function ImageCropDialog({
     const { naturalWidth, naturalHeight } = mediaSize;
     if (!naturalWidth || !naturalHeight) {
       setMinZoom(1);
-      setMaxZoom(8);
+      setMaxZoom(10);
       return;
     }
     setMinZoom(1);
-    setMaxZoom(8);
+    setMaxZoom(10);
     setZoom(1);
     setRotation(0);
   }, []);
@@ -196,7 +196,7 @@ export default function ImageCropDialog({
               onRotationChange={setRotation}
               onCropComplete={onCropComplete}
               onMediaLoaded={handleMediaLoaded}
-              restrictPosition={false}
+              restrictPosition={true}
               showGrid
               cropShape="rect"
               zoomWithScroll
@@ -213,7 +213,7 @@ export default function ImageCropDialog({
                 type="range"
                 min={minZoom}
                 max={maxZoom}
-                step={0.1}
+                step={1}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="flex-1 h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"

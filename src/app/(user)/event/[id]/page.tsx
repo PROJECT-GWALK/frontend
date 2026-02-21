@@ -161,14 +161,11 @@ export default function EventDetail() {
             <AlertCircle className="h-12 w-12 text-muted-foreground/60" />
           </div>
           <div className="text-2xl font-semibold">{t("eventsPage.noEvents.title")}</div>
-          <div className="text-muted-foreground mt-2">
-            {loadError || t("toast.loadEventDataFailed")}
-          </div>
           <div className="mt-6 flex justify-center gap-3">
             <Button variant="secondary" onClick={() => router.push("/event")}>
-              กลับไปหน้าอีเวนต์
+              {t("eventsPage.noEvents.backToEvents")}
             </Button>
-            <Button onClick={() => router.refresh()}>ลองใหม่</Button>
+            <Button onClick={() => router.refresh()}>{t("eventsPage.noEvents.retry")}</Button>
           </div>
         </div>
       </div>

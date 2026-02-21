@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import type { PresenterProject } from "./types";
 import { createTeam } from "@/utils/apievent";
@@ -101,11 +102,12 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
           
           <div>
             <Label>Description</Label>
-            <Input 
+            <Textarea 
               value={description} 
               onChange={(e) => setDescription(e.target.value)} 
               disabled={loading} 
               placeholder="Enter description"
+              className="min-h-15 max-h-25"
             />
           </div>
 

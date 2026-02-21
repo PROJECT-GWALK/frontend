@@ -14,7 +14,6 @@ export async function generateMetadata({
   const origin = `${proto}://${host}`;
 
   const fallbackTitle = "Gwalk";
-  const fallbackImage = new URL("/og-image.png", origin).toString();
 
   try {
     const [eventRes, teamRes] = await Promise.all([
@@ -24,51 +23,26 @@ export async function generateMetadata({
 
     const eventData = eventRes.ok
       ? ((await eventRes.json()) as {
-          event?: { eventName?: string; imageCover?: string | null; eventDescription?: string | null };
+          event?: { eventName?: string };
         })
       : {};
 
     const teamData = teamRes.ok
       ? ((await teamRes.json()) as {
-          team?: { teamName: string; imageCover: string | null; description: string | null };
+          team?: { teamName: string };
         })
       : {};
 
     const eventName = eventData.event?.eventName?.trim() || fallbackTitle;
     const projectName = teamData.team?.teamName?.trim() || "Project";
     const title = `${projectName} - ${eventName}`;
-    const description =
-      teamData.team?.description?.trim() || eventData.event?.eventDescription?.trim() || undefined;
-
-    const rawImage = teamData.team?.imageCover || eventData.event?.imageCover || "";
-    const imageUrl = rawImage
-      ? rawImage.startsWith("http")
-        ? rawImage
-        : new URL(rawImage.startsWith("/") ? rawImage : `/${rawImage}`, origin).toString()
-      : fallbackImage;
 
     return {
       title,
-      description,
-      metadataBase: new URL(origin),
-      openGraph: {
-        title,
-        description,
-        url: new URL(`/event/${id}/Projects/${projectId}`, origin).toString(),
-        images: [imageUrl],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        images: [imageUrl],
-      },
     };
   } catch {
     return {
       title: fallbackTitle,
-      openGraph: { title: fallbackTitle, images: [fallbackImage] },
-      twitter: { card: "summary_large_image", title: fallbackTitle, images: [fallbackImage] },
     };
   }
 }

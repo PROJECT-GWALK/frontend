@@ -78,7 +78,7 @@ export default function SelectTeam({ className }: { className?: string }) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-[250px] justify-between", className)}
+          className={cn("w-62.5 justify-between", className)}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <span className="truncate">
@@ -107,7 +107,7 @@ export default function SelectTeam({ className }: { className?: string }) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[250px] p-0">
+      <PopoverContent className="w-62.5 p-0">
         <div className="flex flex-col">
             <div className="flex items-center border-b px-3">
                 <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -118,7 +118,7 @@ export default function SelectTeam({ className }: { className?: string }) {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
-            <div className="max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
+            <div className="max-h-75 overflow-y-auto p-1 custom-scrollbar">
                 {loading ? (
                     <div className="py-6 text-center text-sm text-muted-foreground">Loading...</div>
                 ) : filteredTeams.length === 0 ? (
@@ -128,7 +128,7 @@ export default function SelectTeam({ className }: { className?: string }) {
                         <div
                             key={team.id}
                             className={cn(
-                                "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                                "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
                                 team.id === currentProjectId && "bg-accent text-accent-foreground"
                             )}
                             onClick={() => onSelect(team.id)}

@@ -242,10 +242,11 @@ export default function OrganizerEditDialog({
         payload.locationName = form.locationName;
         payload.location = form.location;
       } else if (section === "time") {
-        payload.startView = form.startView;
-        payload.endView = form.endView;
-        payload.startJoinDate = form.startJoinDate;
-        payload.endJoinDate = form.endJoinDate;
+        const toISO = (d?: string) => (d ? new Date(d).toISOString() : undefined);
+        payload.startView = toISO(form.startView);
+        payload.endView = toISO(form.endView);
+        payload.startJoinDate = toISO(form.startJoinDate);
+        payload.endJoinDate = toISO(form.endJoinDate);
       } else if (section === "presenter") {
         payload.maxTeams = form.maxTeams;
         payload.maxTeamMembers = form.maxTeamMembers;
