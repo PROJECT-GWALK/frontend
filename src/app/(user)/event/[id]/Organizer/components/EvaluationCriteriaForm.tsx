@@ -303,7 +303,7 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
               ) : (
                 criteria.map((item) => (
                   <TableRow key={item.id || `temp-${Math.random()}`}>
-                    <TableCell className="whitespace-normal break-words p-1 sm:p-2 align-top">
+                    <TableCell className="whitespace-normal wrap-break-word p-1 sm:p-2 align-top">
                       {isEditing ? (
                         <div className="space-y-1">
                           <Input
@@ -327,13 +327,13 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                       ) : (
                         <div>
                           <div className="font-medium">{item.name}</div>
-                          <div className="sm:hidden mt-1 text-[11px] text-muted-foreground whitespace-normal break-words">
+                          <div className="sm:hidden mt-1 text-[11px] text-muted-foreground whitespace-normal wrap-break-word">
                             {item.description || "-"}
                           </div>
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell whitespace-normal break-words">
+                    <TableCell className="hidden sm:table-cell whitespace-normal wrap-break-word">
                       {isEditing ? (
                         <Input
                           value={item.description || ""}

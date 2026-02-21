@@ -456,16 +456,7 @@ export function GuestView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="result">
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t("guest.ranking")}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground">{t("guest.noRanking")}</div>
-                  </CardContent>
-                </Card>
-              </div>
+              <ResultSection eventId={id} role="GUEST" eventStartView={localEvent?.startView} />
             </TabsContent>
           </Tabs>
         </div>
