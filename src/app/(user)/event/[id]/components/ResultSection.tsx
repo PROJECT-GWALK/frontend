@@ -63,6 +63,7 @@ type SpecialReward = {
 type Props = {
   eventId: string;
   role: "COMMITTEE" | "ORGANIZER" | "GUEST" | "PRESENTER";
+  eventStartView?: string | null;
 };
 
 type ChartEntry = {
@@ -71,7 +72,7 @@ type ChartEntry = {
   totalReward: number;
 };
 
-export default function ResultSection({ eventId, role }: Props) {
+export default function ResultSection({ eventId, role, eventStartView }: Props) {
   const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [rankings, setRankings] = useState<Ranking[]>([]);
@@ -83,6 +84,19 @@ export default function ResultSection({ eventId, role }: Props) {
   const [topN, setTopN] = useState("5");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [eventInfo, setEventInfo] = useState<EventDetail | null>(null);
+
+  const now = new Date();
+  const eventStarted = !eventStartView || now >= new Date(eventStartView);
+
+  if (!eventStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Trophy className="h-16 w-16 mb-4 opacity-20" />
+        <h3 className="text-xl font-semibold mb-2">{t("resultsTab.notStartedTitle") || "Event Not Started"}</h3>
+        <p className="text-sm">{t("resultsTab.notStartedDesc") || "Rankings will be available once the event starts."}</p>
+      </div>
+    );
+  }
 
   const chartConfig = useMemo(
     () => ({

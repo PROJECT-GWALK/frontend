@@ -558,13 +558,22 @@ export default function ProjectDetailPage({ params }: Props) {
 
   if (!project) {
     return (
-      <div className="bg-background min-h-screen">
-        <Link href={`../`} className="text-sm text-primary underline">
-          {t("projectDetail.buttons.backToProjects")}
-        </Link>
-        <div className="mt-4 text-muted-foreground">
-          {t("projectDetail.messages.projectNotFound")}
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+          <Search className="w-10 h-10 text-muted-foreground" />
         </div>
+        <h2 className="text-2xl font-bold tracking-tight mb-3">
+          {t("projectDetail.messages.projectNotFound")}
+        </h2>
+        <p className="text-muted-foreground mb-8 max-w-md">
+          {t("projectDetail.messages.projectNotFoundDetail") || t("projectDetail.messages.ProjectNotFoundDesc")}
+        </p>
+        <Link href={`/event/${id}`}>
+          <Button variant="default" size="lg">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("projectDetail.buttons.backToProjects")}
+          </Button>
+        </Link>
       </div>
     );
   }

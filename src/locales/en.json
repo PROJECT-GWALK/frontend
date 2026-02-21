@@ -296,7 +296,7 @@
     "title": "Events",
     "subtitle": "List of currently open events",
     "searchPlaceholder": "Search by event name...",
-    "noEvents": "No published events yet",
+    "noEvents": "No events found",
     "joinedEvent": "Joined Event",
     "joinAsPresenter": "Join as Presenter",
     "joinAsGuest": "Join as Guest",
@@ -318,6 +318,11 @@
       "joinError": "Cannot join event",
       "joinSuccess": "Joined event successfully",
       "joinFail": "Failed to join event"
+    },
+    "noEvents": {
+      "title": "Event Not Found",
+      "backToEvents": "Back to Events",
+      "retry": "Try Again"
     }
   },
   "homePage": {
@@ -506,6 +511,7 @@
       "leftTeam": "You have left the team",
       "leaveTeamFailed": "Failed to leave team",
       "projectNotFound": "Project not found.",
+      "projectNotFoundDetail": "The project you are looking for might have been removed or is temporarily unavailable.",
       "ProjectNotFoundDesc": "Try searching with different keywords or no projects have been created with this name yet.",
       "vrSaved": "Virtual Reward saved",
       "vrSaveFailed": "Failed to save VR",

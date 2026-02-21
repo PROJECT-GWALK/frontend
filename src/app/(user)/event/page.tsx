@@ -228,7 +228,7 @@ export default function EventsPage() {
         .filter((e) => {
           if (filter === "all") return true;
           return getEventStatus(e) === filter;
-        }).length === 0 && <p className="text-muted-foreground">{t.eventsPage.noEvents}</p>}
+        }).length === 0 && <p className="text-muted-foreground">{t.eventsPage.noEvents.title}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {events

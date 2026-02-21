@@ -80,6 +80,8 @@ export function PresenterView({ id, event }: Props) {
   const { t } = useLanguage();
 
   const now = new Date();
+  const eventStarted = !localEvent.startView || now >= new Date(localEvent.startView);
+
   const isSubmissionActive = localEvent
     ? (!localEvent.startJoinDate || now >= new Date(localEvent.startJoinDate)) &&
       (!localEvent.endJoinDate || now <= new Date(localEvent.endJoinDate))
@@ -248,7 +250,14 @@ export function PresenterView({ id, event }: Props) {
             </TabsList>
 
             <TabsContent value="dashboard">
-              {myStats && (
+              {!eventStarted ? (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                  <Trophy className="h-16 w-16 mb-4 opacity-20" />
+                  <h3 className="text-xl font-semibold mb-2">{t("resultsTab.notStartedTitle") || "Event Not Started"}</h3>
+                  <p className="text-sm">{t("resultsTab.notStartedDesc") || "Rankings will be available once the event starts."}</p>
+                </div>
+              ) : (
+                myStats && (
                 <div className="mt-6 mb-8 space-y-4">
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-500" />
@@ -382,7 +391,7 @@ export function PresenterView({ id, event }: Props) {
                     </Card>
                   </div>
                 </div>
-              )}
+              ))}
               <div className="mt-6">{/* Removed General Stats Cards as requested */}</div>
 
               {/* Comments Section */}
@@ -513,7 +522,7 @@ export function PresenterView({ id, event }: Props) {
             </TabsContent>
 
             <TabsContent value="result">
-              <ResultSection eventId={id} role="PRESENTER" />
+              <ResultSection eventId={id} role="PRESENTER" eventStartView={localEvent.startView} />
             </TabsContent>
           </Tabs>
         </div>
