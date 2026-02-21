@@ -415,9 +415,6 @@ export function PresenterView({ id, event }: Props) {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-lg font-semibold">{t("guest.myProjects")}</h2>
-                    <span className="text-sm text-muted-foreground">
-                      {t("myProject.project")}: {projects.length} / {localEvent?.maxTeams || "-"}
-                    </span>
                   </div>
 
                   {!userProject ? (

@@ -823,7 +823,9 @@
     "noOARanking": "No overall ranking available yet",
     "rank": "Rank",
     "project": "Project",
-    "VR": "Virtual Rewards"
+    "VR": "Virtual Rewards",
+    "notStartedTitle": "Event Not Started",
+    "notStartedDesc": "Rankings will be available once the event starts."
   },
   "gradingSection": {
     "title": "Grading",
