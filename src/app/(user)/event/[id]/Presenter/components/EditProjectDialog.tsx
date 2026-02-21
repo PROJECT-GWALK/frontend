@@ -218,7 +218,7 @@ export default function EditProjectDialog({
               onConfirm={onCropConfirm}
             />
             {bannerPreview ? (
-              <div className="relative border rounded-lg overflow-hidden bg-muted mt-1 flex-1 min-h-[120px]">
+              <div className="relative border rounded-lg overflow-hidden bg-muted mt-1 flex-1 min-h-30">
                 <Image
                   src={bannerPreview}
                   alt="Project cover preview"
@@ -244,7 +244,7 @@ export default function EditProjectDialog({
               </div>
             ) : (
               <div
-                className={`border-2 border-dashed border-border rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center mt-1 flex-1 min-h-[120px] ${
+                className={`border-2 border-dashed border-border rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center mt-1 flex-1 min-h-30 ${
                   isSubmissionActive ? "hover:border-primary/50 cursor-pointer" : "opacity-50 cursor-not-allowed"
                 }`}
                 onClick={isSubmissionActive ? openFilePicker : undefined}
@@ -265,7 +265,7 @@ export default function EditProjectDialog({
 
           <div>
             <Label>Members</Label>
-            <div className="flex gap-2 flex-wrap mt-1 max-h-[60px] overflow-y-auto">
+            <div className="flex gap-2 flex-wrap mt-1 max-h-15 overflow-y-auto">
               {(form.members || []).length > 0 ? (
                 (form.members || []).map((m) => (
                   <div
