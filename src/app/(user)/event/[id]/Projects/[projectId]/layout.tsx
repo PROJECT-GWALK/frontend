@@ -39,6 +39,12 @@ export async function generateMetadata({
 
     return {
       title,
+      openGraph: {
+        title,
+      },
+      twitter: {
+        title,
+      },
     };
   } catch {
     return {

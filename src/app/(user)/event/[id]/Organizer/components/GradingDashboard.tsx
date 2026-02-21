@@ -65,7 +65,15 @@ export default function GradingDashboard({ eventId }: Props) {
       .filter(Boolean);
 
     if (names.length <= 1) return presenterName;
-    return names.map((name, idx) => `${idx + 1}.${name}`).join(" ");
+    return (
+      <div className="flex flex-col gap-1">
+        {names.map((name, idx) => (
+          <span key={idx} className="whitespace-nowrap">
+            {idx + 1}. {name}
+          </span>
+        ))}
+      </div>
+    );
   };
 
   const handleSort = (field: SortField) => {

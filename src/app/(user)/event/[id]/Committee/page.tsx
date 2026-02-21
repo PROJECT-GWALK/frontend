@@ -760,7 +760,7 @@ export function CommitteeView(props: Props) {
             </TabsContent>
 
             <TabsContent value="result">
-              <ResultSection eventId={id} role="COMMITTEE" />
+              <ResultSection eventId={id} role="COMMITTEE" eventStartView={localEvent?.startView} />
             </TabsContent>
           </Tabs>
         </div>
