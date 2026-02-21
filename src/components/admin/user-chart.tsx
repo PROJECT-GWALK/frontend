@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -23,13 +22,6 @@ import { UserActiveChartData } from "@/utils/types";
 import { ChartBar } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const chartConfig = {
-  active: {
-    label: "Active Users",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfig;
-
 const generateMonths = (locale: string) =>
   Array.from({ length: 12 }, (_, i) => ({
     label: new Date(2000, i).toLocaleString(locale, { month: "long" }),
@@ -45,9 +37,16 @@ const generateDays = (year: number, month: number) => {
 };
 
 export default function AdminUserChart() {
-  const { timeFormat } = useLanguage();
+  const { timeFormat, t } = useLanguage();
   const now = new Date();
   const currentYear = now.getFullYear() + 543;
+
+  const chartConfig = {
+    active: {
+      label: t("adminSection.activeUsersLabel"),
+      color: "var(--chart-1)",
+    },
+  } satisfies ChartConfig;
 
   const [year, setYear] = useState<number | undefined>(undefined);
   const [month, setMonth] = useState<number | undefined>(undefined);
@@ -122,18 +121,14 @@ export default function AdminUserChart() {
             <div className="space-y-1">
                 <CardTitle className="flex items-center gap-2">
                     <ChartBar className="h-4 w-4 text-muted-foreground"/>
-                    User Active Chart
+                    {t("adminSection.userActiveChart")}
                 </CardTitle>
                 <CardDescription>
                     {year
-                    ? `Showing active users for ${year}${
-                        month
-                            ? ` - ${
-                                monthOptions.find((m) => m.value === month)?.label
-                            }`
-                            : ""
-                        }`
-                    : `Select a year to view data`}
+                    ? `${t("adminSection.showingActiveUsersFor")}${year}${
+                        month ? ` - ${monthOptions.find((m) => m.value === month)?.label}` : ""
+                      }`
+                    : t("adminSection.selectYearToViewData")}
                 </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -142,7 +137,7 @@ export default function AdminUserChart() {
                     value={year?.toString()}
                 >
                     <SelectTrigger className="w-[100px]">
-                        <SelectValue placeholder="Year" />
+                        <SelectValue placeholder={t("adminSection.year")} />
                     </SelectTrigger>
                     <SelectContent>
                         {yearOptions.map((y) => (
@@ -161,10 +156,10 @@ export default function AdminUserChart() {
                     disabled={!year}
                 >
                     <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Month" />
+                        <SelectValue placeholder={t("adminSection.month")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Months</SelectItem>
+                        <SelectItem value="all">{t("adminSection.allMonths")}</SelectItem>
                         {monthOptions.map((m) => (
                             <SelectItem key={m.value} value={m.value.toString()}>
                                 {m.label}
