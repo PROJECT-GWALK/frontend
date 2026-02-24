@@ -78,25 +78,13 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
   const [rankings, setRankings] = useState<Ranking[]>([]);
   const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [topN, setTopN] = useState("5");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [eventInfo, setEventInfo] = useState<EventDetail | null>(null);
 
   const now = new Date();
   const eventStarted = !eventStartView || now >= new Date(eventStartView);
-
-  if (!eventStarted) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-        <Trophy className="h-16 w-16 mb-4 opacity-20" />
-        <h3 className="text-xl font-semibold mb-2">{t("resultsTab.notStartedTitle") || "Event Not Started"}</h3>
-        <p className="text-sm">{t("resultsTab.notStartedDesc") || "Rankings will be available once the event starts."}</p>
-      </div>
-    );
-  }
 
   const chartConfig = useMemo(
     () => ({
@@ -183,8 +171,9 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
         if (isUserScrollingRef.current && !document.fullscreenElement) {
           return;
         }
-        setRefreshing(true);
-      } else setLoading(true);
+      } else {
+        setLoading(true);
+      }
       setErrorMessage(null);
       try {
         const res = await getEventRankings(eventId);
@@ -203,13 +192,11 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
 
         setRankings(combinedRankings);
         setSpecialRewards(res.specialRewards);
-        setLastUpdatedAt(Date.now());
       } catch (error) {
         console.error("Failed to fetch rankings", error);
         setErrorMessage(t("resultsTab.loadFailed"));
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [eventId, t],
@@ -296,6 +283,21 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
     "#90be6d", // Green
     "#277da1", // Teal
   ];
+
+  if (!eventStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Trophy className="h-16 w-16 mb-4 opacity-20" />
+        <h3 className="text-xl font-semibold mb-2">
+          {t("resultsTab.notStartedTitle") || "Event Not Started"}
+        </h3>
+        <p className="text-sm">
+          {t("resultsTab.notStartedDesc") ||
+            "Rankings will be available once the event starts."}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -782,7 +784,6 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                               const maxVisible = 8;
                               const visible = selectedTeam.participants.slice(0, maxVisible);
                               const hidden = selectedTeam.participants.slice(maxVisible);
-                              const leader = selectedTeam.participants.find((p) => p.isLeader);
 
                               return (
                                 <div className="mt-2 flex flex-wrap gap-1.5">

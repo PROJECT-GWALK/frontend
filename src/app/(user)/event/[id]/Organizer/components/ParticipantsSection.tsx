@@ -133,9 +133,6 @@ export default function ParticipantsSection({
   const onRefreshCountsRef = useRef<typeof onRefreshCounts | undefined>(
     onRefreshCounts,
   );
-  const vrTimersRef = useRef<
-    Record<string, ReturnType<typeof setTimeout> | undefined>
-  >({});
 
   useEffect(() => {
     onRefreshCountsRef.current = onRefreshCounts;

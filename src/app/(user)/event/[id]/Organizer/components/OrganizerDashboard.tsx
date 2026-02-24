@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Coins, Trophy, Gift, MessageSquare } from "lucide-react";
+import { Users, Coins, Trophy, Gift } from "lucide-react";
 import { EventData } from "@/utils/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import Image from "next/image";
 
 type Props = {
   event: EventData | null;
@@ -298,10 +299,13 @@ export default function OrganizerDashboard({ event }: Props) {
                       {/* Badge Image */}
                       <div className="relative w-10 h-10 shrink-0 rounded-md overflow-hidden bg-card border border-border shadow-sm">
                         {reward.image ? (
-                          <img
+                          <Image
                             src={reward.image}
                             alt={reward.name}
-                            className="w-full h-full object-cover"
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="flex items-center justify-center w-full h-full text-muted-foreground">

@@ -9,13 +9,7 @@ import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/u
 import {
   Upload,
   Trash2,
-  Trophy,
   Plus,
-  ChevronUp,
-  ChevronDown,
-  FileText,
-  Check,
-  X,
   HelpCircle,
   Calendar as CalendarIcon,
   Clock,
@@ -30,7 +24,7 @@ import {
   getEvent,
 } from "@/utils/apievent";
 import ImageCropDialog from "@/lib/image-crop-dialog";
-import { autoResizeTextarea, toYYYYMMDD, formatDate, toLocalDatetimeValue } from "@/utils/function";
+import { autoResizeTextarea, toYYYYMMDD, formatDate } from "@/utils/function";
 import type {
   EventData,
   EventEditSection,
@@ -67,7 +61,7 @@ export default function OrganizerEditDialog({
   event,
   onEventUpdate,
 }: Props) {
-  const { t, dateFormat, language } = useLanguage();
+  const { t, dateFormat } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [showCommitteeInput, setShowCommitteeInput] = useState(false);
 
@@ -1224,7 +1218,7 @@ export default function OrganizerEditDialog({
                     {t("rewardsSection.noRewards")}
                   </div>
                 ) : (
-                  srList.map((reward, idx) => (
+                  srList.map((reward) => (
                     <div
                       key={reward.id}
                       className="relative p-4 rounded-lg border bg-card space-y-4"

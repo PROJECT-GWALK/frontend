@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTeams, deleteTeam } from "@/utils/apievent";
@@ -74,7 +74,7 @@ export function OrganizerView({ id, event }: Props) {
     }
   };
 
-  const fetchTeamsData = async () => {
+  const fetchTeamsData = useCallback(async () => {
     setProjectsLoading(true);
     try {
       const res = await getTeams(id);
@@ -104,7 +104,7 @@ export function OrganizerView({ id, event }: Props) {
     } finally {
       setProjectsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (event) {
@@ -121,7 +121,7 @@ export function OrganizerView({ id, event }: Props) {
 
   useEffect(() => {
     fetchTeamsData();
-  }, [id]);
+  }, [fetchTeamsData]);
 
   useEffect(() => {
     const fetchCriteria = async () => {
@@ -213,7 +213,7 @@ export function OrganizerView({ id, event }: Props) {
                   searchQuery={searchQuery}
                   loading={projectsLoading}
                   onDeleteTeam={handleDeleteTeam}
-                  onPostComment={(_projectId, _text) => {
+                  onPostComment={() => {
                     toast.success(t("projectDetail.comments.posted"));
                   }}
                   onRefresh={fetchTeamsData}

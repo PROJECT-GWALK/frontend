@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getEvaluationCriteria, getTeamGrades, submitGrade } from "@/utils/apievaluation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,35 +43,36 @@ export default function CommitteeGradingForm({
   const [submitted, setSubmitted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { t } = useLanguage();
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Fetch criteria
+      const criteriaRes = await getEvaluationCriteria(eventId);
+      setCriteria(criteriaRes.criteria || []);
+
+      // Fetch existing grades
+      const gradesRes = await getTeamGrades(eventId, teamId);
+      const gradeMap = new Map<string, number>();
+      gradesRes.grades?.forEach((g: Grade) => {
+        gradeMap.set(g.criteriaId, g.score);
+      });
+      setGrades(gradeMap);
+      setSubmitted(
+        gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) &&
+          (criteriaRes.criteria?.length || 0) > 0,
+      );
+    } catch {
+      toast.error(t("committeeGrade.failedLoadGrade"));
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId, teamId, t]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch criteria
-        const criteriaRes = await getEvaluationCriteria(eventId);
-        setCriteria(criteriaRes.criteria || []);
-
-        // Fetch existing grades
-        const gradesRes = await getTeamGrades(eventId, teamId);
-        const gradeMap = new Map<string, number>();
-        gradesRes.grades?.forEach((g: Grade) => {
-          gradeMap.set(g.criteriaId, g.score);
-        });
-        setGrades(gradeMap);
-        setSubmitted(
-          gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) &&
-            (criteriaRes.criteria?.length || 0) > 0,
-        );
-      } catch (error) {
-        toast.error(t("committeeGrade.failedLoadGrade"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-  }, [eventId, teamId]);
+  }, [fetchData]);
 
   const handleScoreChange = (criteriaId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
@@ -112,7 +113,7 @@ export default function CommitteeGradingForm({
       setSubmitted(true);
       setIsEditing(false);
       toast.success(t("committeeGrade.submitGradeSuccess"));
-    } catch (error) {
+    } catch {
       toast.error(t("committeeGrade.submitGradeFailed"));
     } finally {
       setSubmitting(false);

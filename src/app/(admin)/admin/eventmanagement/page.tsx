@@ -59,7 +59,6 @@ import {
 } from "@/components/ui/sheet";
 import { RefreshCw, Trash2, Pencil, Search, Crown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ParticipantsSection from "@/app/(user)/event/[id]/Organizer/components/ParticipantsSection";
 
 type AdminEventListItem = {
   id: string;

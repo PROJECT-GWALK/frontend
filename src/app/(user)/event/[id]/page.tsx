@@ -27,16 +27,14 @@ import { AlertCircle } from "lucide-react";
 type Role = "ORGANIZER" | "PRESENTER" | "COMMITTEE" | "GUEST" | null;
 
 export default function EventDetail() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const searchParams = useSearchParams();
   const router = useRouter();
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [role, setRole] = useState<Role>(null);
-  const [inviteProcessed, setInviteProcessed] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [inviteRole, setInviteRole] = useState<
     "presenter" | "committee" | "guest" | "organizer" | null
@@ -81,7 +79,6 @@ export default function EventDetail() {
 
     const fetchData = async () => {
       if (!id) {
-        setLoadError(t("toast.loadEventDataFailed"));
         setLoading(false);
         return;
       }
@@ -89,12 +86,10 @@ export default function EventDetail() {
         const res = await getEvent(id);
         if (res?.message === "ok" && res?.event) {
           setEvent(res.event);
-          setLoadError(null);
           const evRole = (res.event as { role?: Role })?.role ?? null;
           if (evRole) setRole(evRole as Role);
         } else {
           setEvent(null);
-          setLoadError(typeof res?.message === "string" ? res.message : t("toast.loadEventDataFailed"));
         }
         try {
           const my = await getMyEvents();
@@ -103,22 +98,14 @@ export default function EventDetail() {
           );
           if (meEvent?.role) setRole(meEvent.role as Role);
         } catch {}
-      } catch (error) {
-        const fallback = t("toast.loadEventDataFailed");
-        let message = fallback;
-        if (error instanceof AxiosError) {
-          message = error.response?.data?.message || fallback;
-        } else if (error instanceof Error && error.message) {
-          message = error.message;
-        }
+    } catch {
         setEvent(null);
-        setLoadError(message);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [id, status, searchParams, confirmOpen]);
+  }, [id, status, searchParams, confirmOpen, router, t]);
 
   if (loading) {
     return (
@@ -176,7 +163,6 @@ export default function EventDetail() {
     if (!id || !event || event.status !== "PUBLISHED") return;
     const inviteFlag = searchParams.get("invite");
     const tokenParam = searchParams.get("token");
-    const roleParam = searchParams.get("role");
     if (inviteFlag !== "1") return;
     if (status !== "authenticated") return;
     setJoining(true);
@@ -207,7 +193,6 @@ export default function EventDetail() {
     } finally {
       setJoining(false);
       setConfirmOpen(false);
-      setInviteProcessed(true);
       router.replace(`/event/${id}`);
     }
   };

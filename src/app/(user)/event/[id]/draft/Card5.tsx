@@ -4,15 +4,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, BookOpen, Edit2, AlertCircle, Save } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { autoResizeTextarea } from "@/utils/function";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import {
   Table,
@@ -47,7 +44,6 @@ export default function Card5(props: Props) {
     setGradingEnabled,
     gradingCriteria,
     setGradingCriteria,
-    gradingErrors,
     onEditingChange,
   } = props;
 

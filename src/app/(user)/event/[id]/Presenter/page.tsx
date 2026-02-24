@@ -5,18 +5,14 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, Trophy, MessageSquare, Star, Gift, AlertCircle } from "lucide-react";
+import { Users, Building, Trophy, Star, Gift, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { X } from "lucide-react";
-import { toast } from "sonner";
 import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import CreateProjectDialog from "./components/CreateProjectDialog";
-import EditProjectDialog from "./components/EditProjectDialog";
 import type { PresenterProject } from "./components/types";
-import { createTeam, getTeams, getPresenterStats } from "@/utils/apievent";
+import { getTeams, getPresenterStats } from "@/utils/apievent";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import UnifiedProjectList from "../components/UnifiedProjectList";
@@ -46,7 +42,7 @@ export function PresenterView({ id, event }: Props) {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
-  const [localEvent, setLocalEvent] = useState<EventData>(event);
+  const localEvent = event;
   const [bannerOpen, setBannerOpen] = useState(false);
 
   // Presenter Stats
@@ -87,7 +83,7 @@ export function PresenterView({ id, event }: Props) {
       (!localEvent.endJoinDate || now <= new Date(localEvent.endJoinDate))
     : true;
 
-  const fetchTeamsData = async () => {
+  const fetchTeamsData = useCallback(async () => {
     setProjectsLoading(true);
     try {
       const res = await getTeams(id);
@@ -140,7 +136,7 @@ export function PresenterView({ id, event }: Props) {
     } finally {
       setProjectsLoading(false);
     }
-  };
+  }, [id, userId]);
 
   const fetchMyStats = useCallback(async () => {
     try {
@@ -155,7 +151,7 @@ export function PresenterView({ id, event }: Props) {
 
   useEffect(() => {
     fetchTeamsData();
-  }, [id, userId]);
+  }, [fetchTeamsData]);
 
   useEffect(() => {
     if (userProject) {
@@ -171,11 +167,6 @@ export function PresenterView({ id, event }: Props) {
   }, [projectsLoading, userProject, tab]);
 
   const [createOpen, setCreateOpen] = useState(false);
-
-  // UI state for project viewer/editor
-  const [viewOpen, setViewOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState(false);
-  const [projectForm, setProjectForm] = useState<PresenterProject | null>(null);
 
   return (
     <div className="min-h-screen bg-background w-full justify-center flex">
@@ -523,17 +514,6 @@ export function PresenterView({ id, event }: Props) {
             </TabsContent>
           </Tabs>
         </div>
-        {/* Edit Dialog */}
-        {projectForm && (
-          <EditProjectDialog
-            open={viewOpen}
-            onOpenChange={setViewOpen}
-            project={projectForm}
-            eventId={id}
-            onSuccess={fetchTeamsData}
-            isSubmissionActive={isSubmissionActive}
-          />
-        )}
       </div>
     </div>
   );

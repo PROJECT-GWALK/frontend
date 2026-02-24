@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar, Users, Eye, User as UserIcon, Building } from "lucide-react";
+import { Search, Calendar, Users, Eye, Building } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -13,7 +13,6 @@ import { getPublishedEvents, getInviteToken, joinEventWithToken } from "@/utils/
 import { formatDateTime } from "@/utils/function";
 import type { MyEvent } from "@/utils/types";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -75,7 +74,7 @@ export default function EventsPage() {
       }
     };
     load();
-  }, []);
+  }, [t]);
 
   const handleJoin = async (eventId: string, role: "presenter" | "committee" | "guest") => {
     if (sessionStatus !== "authenticated") {

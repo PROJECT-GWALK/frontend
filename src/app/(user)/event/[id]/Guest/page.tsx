@@ -3,9 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTeams, giveVr, resetVr } from "@/utils/apievent";
 
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, BadgeCheck, MessageSquare, Gift } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,12 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
-import CreateProjectDialog from "../Presenter/components/CreateProjectDialog";
 import type { PresenterProject } from "../Presenter/components/types";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
@@ -55,21 +50,7 @@ export function GuestView({ id, event }: Props) {
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
 
-  // Local project (mock) state for presenter
-  type LocalProject = {
-    id: string;
-    title: string;
-    description?: string;
-    img?: string;
-    videoLink?: string;
-    files?: string[];
-    members?: string[];
-    owner?: boolean;
-  };
   const { t } = useLanguage();
-
-  const [userProject, setUserProject] = useState<LocalProject | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
 
   // Guest-specific UI state for project interactions
@@ -146,7 +127,7 @@ export function GuestView({ id, event }: Props) {
     }
   };
 
-  const fetchTeamsData = async () => {
+  const fetchTeamsData = useCallback(async () => {
     try {
       const res = await getTeams(id);
       if (res.message === "ok") {
@@ -193,11 +174,11 @@ export function GuestView({ id, event }: Props) {
     } catch (error) {
       console.error("Failed to fetch teams:", error);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchTeamsData();
-  }, [id]);
+  }, [fetchTeamsData]);
 
   return (
     <div className="min-h-screen bg-background w-full justify-center flex">
@@ -396,7 +377,6 @@ export function GuestView({ id, event }: Props) {
                 id={id}
                 event={localEvent as EventData}
                 editable={false}
-                linkLabel={t("information.link")}
               />
             </TabsContent>
 

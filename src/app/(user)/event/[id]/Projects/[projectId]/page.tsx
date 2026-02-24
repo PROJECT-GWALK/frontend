@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import * as QRCode from "qrcode";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
@@ -16,12 +15,10 @@ import {
   Edit3,
   Loader2,
   X,
-  ChevronLeft,
   ChevronDown,
   ChevronUp,
   LogOut,
   Download,
-  Award,
   ClipboardCopy,
   ArrowLeft,
   Gift,
@@ -34,10 +31,8 @@ import {
   uploadTeamFile,
   searchCandidates,
   addTeamMember,
-  getMyEvents,
   removeTeamMember,
   deleteTeamFile,
-  getPresenterStats,
   giveVr,
   giveSpecial,
 } from "@/utils/apievent";
@@ -52,8 +47,6 @@ import {
   type ProjectMember,
   type Candidate,
   type Team,
-  type DraftEvent,
-  type MyEvent,
 } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -62,14 +55,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
   DialogFooter,
   DialogClose,
@@ -78,7 +69,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { linkify, UserAvatar, generateQrCode } from "@/utils/function";
 import SelectTeam from "../../components/selectTeam";
-import { useSession } from "next-auth/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import {
@@ -243,21 +233,19 @@ export default function ProjectDetailPage({ params }: Props) {
     return !isUnused && !currentlySelected;
   };
 
-  const [qrThumb, setQrThumb] = useState<string | null>(null);
-  const [qrThumbCommittee, setQrThumbCommittee] = useState<string | null>(null);
-
   const [shareOpen, setShareOpen] = useState(false);
   const [shareQrSrc, setShareQrSrc] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const [teamRes, eventRes, myEventsRes, currentUserRes] =
-        await Promise.all([
-          getTeamById(id, projectId),
-          getEvent(id),
-          getMyEvents(),
-          getCurrentUser(),
-        ]);
+      const [teamRes, eventRes] = await Promise.all([
+        getTeamById(id, projectId),
+        getEvent(id),
+      ]);
+      let currentUserRes: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
+      try {
+        currentUserRes = await getCurrentUser();
+      } catch {}
 
       if (teamRes.message === "not_found") {
         router.push(`/event/${id}`);
@@ -271,7 +259,7 @@ export default function ProjectDetailPage({ params }: Props) {
         let isUserMember = false;
 
         // Check if current user is member of the team
-        if (currentUserRes.message === "ok") {
+        if (currentUserRes?.message === "ok") {
           const currentUser = currentUserRes.user;
           setCurrentUserId(currentUser.id);
           isUserMember =
@@ -279,15 +267,9 @@ export default function ProjectDetailPage({ params }: Props) {
           setIsMember(isUserMember);
         }
 
-        // Check if current user is leader based on getMyEvents (for Organizer check)
-        const myEvent =
-          myEventsRes.message === "ok"
-            ? (myEventsRes.events as MyEvent[]).find((e) => e.id === id)
-            : null;
-
         // Check if user is leader of THIS team
         let isTeamLeader = false;
-        if (currentUserRes.message === "ok") {
+        if (currentUserRes?.message === "ok") {
           const currentUser = currentUserRes.user;
           const userInTeam = t.participants?.find(
             (p) => p.user.id === currentUser.id,
@@ -334,27 +316,11 @@ export default function ProjectDetailPage({ params }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, projectId, router]);
 
   useEffect(() => {
     fetchData();
-  }, [id, projectId]);
-
-  useEffect(() => {
-    const gen = async () => {
-      const link = `${location.origin}/event/${id}/Projects/${projectId}`;
-      const committeeLink = `${location.origin}/event/${id}/Projects/${projectId}?role=committee`;
-      try {
-        const thumb = await QRCode.toDataURL(link, { width: 240 });
-        setQrThumb(thumb);
-        const thumb2 = await QRCode.toDataURL(committeeLink, { width: 240 });
-        setQrThumbCommittee(thumb2);
-      } catch (e) {
-        // ignore
-      }
-    };
-    gen();
-  }, [id, projectId]);
+  }, [fetchData]);
 
   // Search Candidates
   useEffect(() => {
@@ -454,7 +420,7 @@ export default function ProjectDetailPage({ params }: Props) {
         });
         toast.success(t("projectDetail.messages.fileUploaded"));
       }
-    } catch (err) {
+    } catch {
       toast.error(t("projectDetail.messages.uploadFailed"));
     } finally {
       setUploading((prev) => ({ ...prev, [fileTypeId]: false }));
@@ -483,7 +449,7 @@ export default function ProjectDetailPage({ params }: Props) {
 
         toast.success(t("projectDetail.messages.fileDeleted"));
       }
-    } catch (e) {
+    } catch {
       toast.error(t("projectDetail.messages.deleteFileFailed"));
     }
   };
@@ -831,7 +797,6 @@ export default function ProjectDetailPage({ params }: Props) {
                       const isUrlType = ft?.allowedFileTypes?.includes(
                         FileType.url,
                       );
-                      const isUploading = ft?.id ? uploading[ft.id] : false;
 
                       // YouTube check
                       const youtubeMatch = file.url.match(

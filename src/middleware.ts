@@ -48,6 +48,8 @@ export function middleware(request: NextRequest) {
     pathname === "/sign-in" || 
     pathname === "/error" ||
     pathname === "/event" ||
+    pathname.startsWith("/profile/") ||
+    /^\/event\/[^/]+\/Projects\/[^/]+(\/Scores)?$/.test(pathname) ||
     pathname.startsWith("/api/auth") ||
     /^\/event\/[^/]+$/.test(pathname) || // Allow /event/:id
     /^\/event\/[^/]+\/invite$/.test(pathname) || // Allow /event/:id/invite

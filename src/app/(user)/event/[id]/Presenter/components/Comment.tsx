@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export default function CommentSection({ eventId, projectId, myRole, disabled }:
 
   const canComment = myRole === "COMMITTEE" || myRole === "GUEST";
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getComments(eventId, projectId);
@@ -59,7 +59,6 @@ export default function CommentSection({ eventId, projectId, myRole, disabled }:
           // or all comments if I am in team (but then I can't comment),
           // Wait, if I am Committee AND in Team (rare), I might see all.
           // But standard flow: Committee sees own comment.
-          const myExisting = res.comments.find((c: CommentType) => c.user.role === myRole); 
           // Actually backend returns my comment with my user id.
           // Since I don't have my user ID easily here without context, 
           // I rely on the fact that for Committee/Guest, the list usually contains ONLY their comment (implemented in backend).
@@ -74,11 +73,11 @@ export default function CommentSection({ eventId, projectId, myRole, disabled }:
     } finally {
       setLoading(false);
     }
-  };
+  }, [canComment, eventId, projectId]);
 
   useEffect(() => {
     fetchData();
-  }, [eventId, projectId]);
+  }, [fetchData]);
 
   const handleSubmit = async () => {
     if (!myComment.trim()) return;
@@ -87,7 +86,7 @@ export default function CommentSection({ eventId, projectId, myRole, disabled }:
       await giveComment(eventId, projectId, myComment);
       toast.success(t("projectDetail.comments.posted"));
       fetchData(); // Refresh to show updated timestamp/content
-    } catch (error) {
+    } catch {
       toast.error(t("projectDetail.comments.postFailed"));
     } finally {
       setSubmitting(false);

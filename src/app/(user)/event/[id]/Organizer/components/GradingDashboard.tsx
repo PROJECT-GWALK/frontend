@@ -252,21 +252,24 @@ export default function GradingDashboard({ eventId }: Props) {
           open={!!selectedResult}
           onOpenChange={(open) => !open && setSelectedResult(null)}
         >
-          <DialogContent className="w-[98vw] sm:w-[95vw] max-w-7xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {t("gradingDashboard.project")}: {selectedResult?.teamName}
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground">
-                {t("gradingDashboard.presenter")}:{" "}
-                {selectedResult
-                  ? formatPresenterNames(selectedResult.presenterName)
-                  : ""}
-              </p>
-            </DialogHeader>
+          <DialogContent className="w-[98vw] sm:max-w-[95vw] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <div className="p-6 pb-4 border-b flex-shrink-0">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 pr-8">
+                  {t("gradingDashboard.project")}: {selectedResult?.teamName}
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  {t("gradingDashboard.presenter")}:{" "}
+                  {selectedResult
+                    ? formatPresenterNames(selectedResult.presenterName)
+                    : ""}
+                </p>
+              </DialogHeader>
+            </div>
 
-            {selectedResult && (
-              <div className="space-y-4 mt-2">
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              {selectedResult && (
+                <div className="space-y-4">
                 {/* Overall Score */}
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <span className="font-semibold">
@@ -361,68 +364,9 @@ export default function GradingDashboard({ eventId }: Props) {
                   )}
                 </div>
 
-                {/* Average per Criteria */}
-                {selectedResult.committeeScores.length > 1 && (
-                  <div className="border rounded-lg p-4 space-y-3 bg-blue-50 dark:bg-blue-950">
-                    <h4 className="font-semibold text-sm">
-                      {t("gradingDashboard.avgPerCriteria") ||
-                        "Average per Criteria"}
-                    </h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b bg-white/50 dark:bg-black/10">
-                            <th className="text-left p-3 font-semibold text-sm">
-                              {t("gradingSection.criteriaName") || "Criteria"}
-                            </th>
-                            <th className="text-center p-3 font-semibold text-sm whitespace-nowrap">
-                              {t("gradingDashboard.totalScore") || "Avg"}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {criteria.map((crit, idx) => {
-                            const avg = getAverageForCriteria(
-                              selectedResult.committeeScores,
-                              crit.id,
-                            );
-                            return (
-                              <tr
-                                key={crit.id}
-                                className={`border-b ${idx % 2 === 0 ? "bg-transparent" : "bg-white/30 dark:bg-black/10"}`}
-                              >
-                                <td className="p-3 text-sm">
-                                  <span className="text-muted-foreground">
-                                    {crit.name}{" "}
-                                    <span className="text-xs">
-                                      ({crit.weightPercentage}%)
-                                    </span>
-                                  </span>
-                                </td>
-                                <td className="p-3 text-center text-sm">
-                                  {avg !== null ? (
-                                    <span className="font-semibold">
-                                      {avg.toFixed(1)}{" "}
-                                      <span className="text-muted-foreground">
-                                        / {crit.maxScore}
-                                      </span>
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground">
-                                      -
-                                    </span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </CardContent>

@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CalendarIcon, MapPinIcon, Users, ArrowLeft } from "lucide-react";
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime, linkify } from "@/utils/function";
@@ -20,14 +19,13 @@ type RoleStr = "presenter" | "committee" | "guest" | "organizer";
 
 export default function InviteConfirmPage() {
   const { timeFormat } = useLanguage();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const tokenParam = searchParams.get("token") || "";
-  const roleParam = searchParams.get("role") as RoleStr | null;
 
   const [inviteRole, setInviteRole] = useState<RoleStr | null>(null);
   const [event, setEvent] = useState<EventData | null>(null);
@@ -127,7 +125,7 @@ export default function InviteConfirmPage() {
         await getMyEvents();
       } catch {}
       router.replace(`/event/${id}`);
-    } catch (e: unknown) {
+    } catch {
       toast.error(t("toast.joinEventFailed"));
     } finally {
       setJoining(false);

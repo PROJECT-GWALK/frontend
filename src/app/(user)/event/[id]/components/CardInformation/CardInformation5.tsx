@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link, ClipboardCopy, RefreshCcw, Users, Award, Download, Share2 } from "lucide-react";
+import { Link, ClipboardCopy, RefreshCcw, Users, Award, Download } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import * as QRCode from "qrcode";
@@ -11,6 +11,7 @@ import { getInviteToken, refreshInviteToken } from "@/utils/apievent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EventData } from "@/utils/types";
 import { UserAvatar } from "@/utils/function";
+import Image from "next/image";
 
 type Props = {
   event: EventData;
@@ -269,10 +270,13 @@ export default function CardInformation5({ event, editable }: Props) {
                       showQr(eventQrLarge || eventQrThumb, t("invite.eventPage") || "Event Page")
                     }
                   >
-                    <img
+                    <Image
                       src={eventQrThumb}
                       alt="Event Page QR"
-                      className="w-16 h-16 rounded-lg border-2 border-white shadow-sm transition-transform group-hover:scale-105"
+                      width={64}
+                      height={64}
+                      className="rounded-lg border-2 border-white shadow-sm transition-transform group-hover:scale-105"
+                      unoptimized
                     />
                   </div>
                 )}
@@ -379,10 +383,13 @@ export default function CardInformation5({ event, editable }: Props) {
                             className="relative group cursor-pointer shrink-0"
                             onClick={() => showQr(large || thumb, `${role} QR`)}
                           >
-                            <img
+                            <Image
                               src={thumb}
                               alt={`${role} QR`}
-                              className="w-16 h-16 rounded-lg border-2 border-white shadow-sm transition-transform group-hover:scale-105"
+                              width={64}
+                              height={64}
+                              className="rounded-lg border-2 border-white shadow-sm transition-transform group-hover:scale-105"
+                              unoptimized
                             />
                           </div>
                         )}
@@ -437,7 +444,16 @@ export default function CardInformation5({ event, editable }: Props) {
             <DialogTitle className="text-center capitalize">{qrTitle}</DialogTitle>
           </DialogHeader>
           <div className="p-4 bg-white rounded-xl shadow-inner">
-            {qrSrc && <img src={qrSrc} alt="Large QR" className="w-64 h-64 object-contain" />}
+            {qrSrc && (
+              <Image
+                src={qrSrc}
+                alt="Large QR"
+                width={256}
+                height={256}
+                className="object-contain"
+                unoptimized
+              />
+            )}
           </div>
           <Button
             className="w-full mt-4"
