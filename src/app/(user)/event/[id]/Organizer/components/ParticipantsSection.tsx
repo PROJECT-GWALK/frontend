@@ -83,7 +83,8 @@ const groupConfig = {
   },
   COMMITTEE: {
     title: "👥 Committee",
-    badge: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    badge:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
     icon: Users,
     roleVar: "var(--role-committee)",
   },
@@ -95,7 +96,8 @@ const groupConfig = {
   },
   GUEST: {
     title: "✨ Guests",
-    badge: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+    badge:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
     icon: Users,
     roleVar: "var(--role-guest)",
   },
@@ -103,13 +105,20 @@ const groupConfig = {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function ParticipantsSection({ id, hasCommittee, unitReward, onRefreshCounts }: Props) {
+export default function ParticipantsSection({
+  id,
+  hasCommittee,
+  unitReward,
+  onRefreshCounts,
+}: Props) {
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { t } = useLanguage();
-  const [searchQueries, setSearchQueries] = useState<Record<EventGroup, string>>({
+  const [searchQueries, setSearchQueries] = useState<
+    Record<EventGroup, string>
+  >({
     ORGANIZER: "",
     COMMITTEE: "",
     PRESENTER: "",
@@ -122,7 +131,7 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
     GUEST: 1,
   });
   const onRefreshCountsRef = useRef<typeof onRefreshCounts | undefined>(
-    onRefreshCounts
+    onRefreshCounts,
   );
   const vrTimersRef = useRef<
     Record<string, ReturnType<typeof setTimeout> | undefined>
@@ -141,7 +150,7 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
       (p) =>
         p.eventGroup === "ORGANIZER" &&
         p.user?.id === currentUserId &&
-        Boolean(p.isLeader)
+        Boolean(p.isLeader),
     ) || false;
 
   const applyUpdate = useCallback(
@@ -152,14 +161,14 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
         isLeader?: boolean;
         virtualReward?: number;
         teamId?: string | null;
-      }
+      },
     ) => {
       try {
         const res = await updateParticipant(id, pid, data);
         if (res?.participant) {
           setParticipants((all) => {
             const next = all.map((it) =>
-              it.id === pid ? res.participant : it
+              it.id === pid ? res.participant : it,
             );
             return next;
           });
@@ -169,7 +178,7 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
         toast.error(t("toast.saveFailed"));
       }
     },
-    [id, t]
+    [id, t],
   );
 
   const loadParticipants = useCallback(async () => {
@@ -204,7 +213,7 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
           p.user?.username?.toLowerCase().includes(query) ||
           p.user?.email?.toLowerCase().includes(query) ||
           p.team?.name?.toLowerCase().includes(query) ||
-          p.team?.teamName?.toLowerCase().includes(query))
+          p.team?.teamName?.toLowerCase().includes(query)),
     );
   };
 
@@ -237,7 +246,8 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
                 {t("participantSection.management")}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {t("participantSection.all")} {totalCount} {t("participantSection.count_unit")}
+                {t("participantSection.all")} {totalCount}{" "}
+                {t("participantSection.count_unit")}
               </p>
             </div>
             <Button
@@ -258,13 +268,11 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
         </CardHeader>
 
         <CardContent>
-          {loadingParticipants && (!participants || participants.length === 0) ? (
+          {loadingParticipants &&
+          (!participants || participants.length === 0) ? (
             <div className="grid grid-cols-1 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <Card
-                  key={i}
-                  className="overflow-hidden border-none shadow-md"
-                >
+                <Card key={i} className="overflow-hidden border-none shadow-md">
                   <Skeleton className="h-2 w-full" />
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -291,7 +299,9 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
           ) : !participants || participants.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">{t("participantSection.empty")}</p>
+              <p className="text-muted-foreground">
+                {t("participantSection.empty")}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
@@ -300,399 +310,457 @@ export default function ParticipantsSection({ id, hasCommittee, unitReward, onRe
               )
                 .filter((g) => hasCommittee || g !== "COMMITTEE")
                 .map((g) => {
-                const config = groupConfig[g];
-                const { items, total, totalPages, currentPage } =
-                  getPaginatedList(g);
-                const Icon = config.icon;
+                  const config = groupConfig[g];
+                  const { items, total, totalPages, currentPage } =
+                    getPaginatedList(g);
+                  const Icon = config.icon;
 
-                return (
-                  <Card
-                    key={g}
-                    className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 relative group"
-                  >
-                    {/* Left Border Strip */}
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1.5"
-                      style={{ backgroundColor: config.roleVar }}
-                    />
+                  return (
+                    <Card
+                      key={g}
+                      className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 relative group"
+                    >
+                      {/* Left Border Strip */}
+                      <div
+                        className="absolute left-0 top-0 bottom-0 w-1.5"
+                        style={{ backgroundColor: config.roleVar }}
+                      />
 
-                    {/* Background Gradient Tint */}
-                    <div
-                      className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.05]"
-                      style={{
-                        background: `linear-gradient(to right, ${config.roleVar}, transparent)`,
-                      }}
-                    />
+                      {/* Background Gradient Tint */}
+                      <div
+                        className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.05]"
+                        style={{
+                          background: `linear-gradient(to right, ${config.roleVar}, transparent)`,
+                        }}
+                      />
 
-                    <CardHeader className="pb-3 pl-6">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${config.badge}`}>
-                              <Icon className="h-5 w-5" />
+                      <CardHeader className="pb-3 pl-6">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${config.badge}`}>
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <CardTitle
+                                  className="text-lg font-semibold"
+                                  style={{ color: config.roleVar }}
+                                >
+                                  {config.title}
+                                </CardTitle>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {total} {t("participantSection.count_unit")}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <CardTitle
-                                className="text-lg font-semibold"
-                                style={{ color: config.roleVar }}
-                              >
-                                {config.title}
-                              </CardTitle>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {total} {t("participantSection.count_unit")}
-                              </p>
-                            </div>
+                            <Badge
+                              variant="secondary"
+                              className={`${config.badge} border-none`}
+                            >
+                              {total}
+                            </Badge>
                           </div>
-                          <Badge
-                            variant="secondary"
-                            className={`${config.badge} border-none`}
-                          >
-                            {total}
-                          </Badge>
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder={`ค้นหาใน ${config.title}...`}
+                              value={searchQueries[g]}
+                              onChange={(e) =>
+                                setSearchQueries((prev) => ({
+                                  ...prev,
+                                  [g]: e.target.value,
+                                }))
+                              }
+                              className="pl-10 bg-background/50 border-muted-foreground/20 h-9"
+                            />
+                          </div>
                         </div>
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder={`ค้นหาใน ${config.title}...`}
-                            value={searchQueries[g]}
-                            onChange={(e) =>
-                              setSearchQueries((prev) => ({
-                                ...prev,
-                                [g]: e.target.value,
-                              }))
-                            }
-                            className="pl-10 bg-background/50 border-muted-foreground/20 h-9"
-                          />
-                        </div>
-                      </div>
-                    </CardHeader>
+                      </CardHeader>
 
-                    <CardContent>
-                      {total === 0 ? (
-                        <div className="text-center py-8 text-sm text-muted-foreground">
-                          {searchQueries[g]
-                            ? t("participantSection.noSearchResults")
-                            : t("participantSection.noParticipantsInGroup")}
-                        </div>
-                      ) : (
-                        <>
-                          <div className="rounded-lg border border-border/50 overflow-x-auto">
-                            <table className="w-full">
-                              <thead>
-                                <tr className="bg-muted/50 border-b border-border/50">
-                                  <th className="text-left p-3 font-semibold text-sm">
-                                    {t("participantSection.user")}
-                                  </th>
-                                  {(g !== "ORGANIZER" || isOrganizerLeader) && (
+                      <CardContent>
+                        {total === 0 ? (
+                          <div className="text-center py-8 text-sm text-muted-foreground">
+                            {searchQueries[g]
+                              ? t("participantSection.noSearchResults")
+                              : t("participantSection.noParticipantsInGroup")}
+                          </div>
+                        ) : (
+                          <>
+                            <div className="rounded-lg border border-border/50 overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="bg-muted/50 border-b border-border/50">
                                     <th className="text-left p-3 font-semibold text-sm">
-                                      {t("participantSection.role")}
+                                      {t("participantSection.user")}
                                     </th>
-                                  )}
-                                  {g === "PRESENTER" && (
-                                    <th className="text-left p-3 font-semibold text-sm">
-                                      {t("participantSection.team")}
-                                    </th>
-                                  )}
-                                  {g === "PRESENTER" && (
-                                    <th className="text-left p-3 font-semibold text-sm">
-                                      {t("participantSection.team_leader")}
-                                    </th>
-                                  )}
-                                  {g !== "ORGANIZER" && g !== "PRESENTER" && (
-                                    <th className="text-left p-3 font-semibold text-sm">
-                                      Virtual Reward ({unitReward})
-                                    </th>
-                                  )}
-                                  <th className="text-right p-3 font-semibold text-sm">
-                                    {t("participantSection.management")}
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {items.map((p) => (
-                                  <tr
-                                    key={p.id}
-                                    className="border-b border-border/30 hover:bg-muted/30 transition-colors"
-                                  >
-                                    <td className="p-3">
-                                      <div className="flex items-center gap-3">
-                                        <div className="relative shrink-0">
-                                          {p.user?.image ? (
-                                            <Image
-                                              src={p.user.image}
-                                              alt={
-                                                p.user?.name ||
-                                                p.user?.username ||
-                                                "user"
-                                              }
-                                              width={40}
-                                              height={40}
-                                              className="rounded-full ring-2 ring-background shadow-sm"
-                                            />
-                                          ) : (
-                                            <div className="h-10 w-10 rounded-full flex items-center justify-center ring-2 ring-background">
-                                              <Users className="h-5 w-5 text-primary" />
-                                            </div>
-                                          )}
-                                          {p.isLeader && (
-                                            <div className="absolute -top-1 -right-1 bg-yellow-500 rounded-full p-1">
-                                              <Crown className="h-3 w-3 text-white" />
-                                            </div>
-                                          )}
-                                        </div>
-                                        <div className="min-w-0">
-                                          <div className="font-medium text-sm truncate">
-                                            {p.user?.name ||
-                                              p.user?.username ||
-                                              p.user?.email ||
-                                              p.user?.id}
-                                          </div>
-                                          {p.user?.email && p.user?.name && (
-                                            <div className="text-xs text-muted-foreground truncate">
-                                              {p.user.email}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    {(g !== "ORGANIZER" || isOrganizerLeader) && (
-                                      <td className="p-3">
-                                        <Select
-                                          value={p.eventGroup}
-                                          onValueChange={(v) => {
-                                            setParticipants((all) =>
-                                              all.map((it) =>
-                                                it.id === p.id
-                                                  ? {
-                                                      ...it,
-                                                      eventGroup: v as EventGroup,
-                                                    }
-                                                  : it
-                                              )
-                                            );
-                                            applyUpdate(p.id, {
-                                              eventGroup: v as EventGroup,
-                                            });
-                                          }}
-                                          disabled={g === "ORGANIZER" && !isOrganizerLeader}
-                                        >
-                                          <SelectTrigger className="w-32.5">
-                                            <SelectValue placeholder="เลือกบทบาท" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {isOrganizerLeader && (
-                                              <SelectItem value="ORGANIZER">
-                                                Organizer
-                                              </SelectItem>
-                                            )}
-                                            {hasCommittee && (
-                                              <SelectItem value="COMMITTEE">
-                                                Committee
-                                              </SelectItem>
-                                            )}
-                                            <SelectItem value="PRESENTER">
-                                              Presenter
-                                            </SelectItem>
-                                            <SelectItem value="GUEST">
-                                              Guest
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </td>
+                                    {(g !== "ORGANIZER" ||
+                                      isOrganizerLeader) && (
+                                      <th className="text-left p-3 font-semibold text-sm">
+                                        {t("participantSection.role")}
+                                      </th>
                                     )}
                                     {g === "PRESENTER" && (
-                                      <td className="p-3">
-                                        <Badge
-                                          variant="outline"
-                                          className="font-normal"
-                                        >
-                                          {p.team?.name || p.team?.teamName || "-"}
-                                        </Badge>
-                                      </td>
+                                      <th className="text-left p-3 font-semibold text-sm">
+                                        {t("participantSection.team")}
+                                      </th>
                                     )}
                                     {g === "PRESENTER" && (
-                                      <td className="p-3">
-                                        {(() => {
-                                          if (!p.team?.id)
-                                            return (
-                                              <span className="text-muted-foreground text-sm">
-                                                -
-                                              </span>
-                                            );
-                                          const leader = participants.find(
-                                            (it) =>
-                                              it.eventGroup === "PRESENTER" &&
-                                              it.team?.id === p.team?.id &&
-                                              Boolean(it.isLeader)
-                                          );
-                                          const u = leader?.user;
-                                          return (
-                                            <div className="flex items-center gap-2">
-                                              <Crown className="h-4 w-4 text-yellow-500 shrink-0" />
-                                              <span className="text-sm truncate max-w-37.5">
-                                                {u?.name ||
-                                                  u?.username ||
-                                                  u?.email ||
-                                                  leader?.id ||
-                                                  "-"}
-                                              </span>
-                                            </div>
-                                          );
-                                        })()}
-                                      </td>
+                                      <th className="text-left p-3 font-semibold text-sm">
+                                        {t("participantSection.team_leader")}
+                                      </th>
                                     )}
-
                                     {g !== "ORGANIZER" && g !== "PRESENTER" && (
+                                      <th className="text-left p-3 font-semibold text-sm">
+                                        Virtual Reward ({unitReward})
+                                      </th>
+                                    )}
+                                    <th className="text-right p-3 font-semibold text-sm">
+                                      {t("participantSection.management")}
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {items.map((p) => (
+                                    <tr
+                                      key={p.id}
+                                      className="border-b border-border/30 hover:bg-muted/30 transition-colors"
+                                    >
                                       <td className="p-3">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                                            {p.virtualUsed || 0} /
-                                          </span>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            step={1}
-                                            value={
-                                              typeof p.virtualReward === "number"
-                                                ? p.virtualReward
-                                                : 0
-                                            }
-                                            onChange={(e) => {
-                                              const raw = Number(e.target.value);
-                                              const val = Number.isFinite(raw)
-                                                ? Math.max(0, raw)
-                                                : 0;
+                                        <div className="flex items-center gap-3">
+                                          <div className="relative shrink-0">
+                                            {p.user?.image ? (
+                                              <Image
+                                                src={p.user.image}
+                                                alt={
+                                                  p.user?.name ||
+                                                  p.user?.username ||
+                                                  "user"
+                                                }
+                                                width={40}
+                                                height={40}
+                                                className="rounded-full ring-2 ring-background shadow-sm"
+                                              />
+                                            ) : (
+                                              <div className="h-10 w-10 rounded-full flex items-center justify-center ring-2 ring-background">
+                                                <Users className="h-5 w-5 text-primary" />
+                                              </div>
+                                            )}
+                                            {p.isLeader && (
+                                              <div className="absolute -top-1 -right-1 bg-yellow-500 rounded-full p-1">
+                                                <Crown className="h-3 w-3 text-white" />
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="min-w-0">
+                                            <div className="font-medium text-sm truncate">
+                                              {p.user?.name ||
+                                                p.user?.username ||
+                                                p.user?.email ||
+                                                p.user?.id}
+                                            </div>
+                                            {p.user?.email && p.user?.name && (
+                                              <div className="text-xs text-muted-foreground truncate">
+                                                {p.user.email}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </td>
+                                      {(g !== "ORGANIZER" ||
+                                        isOrganizerLeader) && (
+                                        <td className="p-3">
+                                          <Select
+                                            value={p.eventGroup}
+                                            onValueChange={(v) => {
                                               setParticipants((all) =>
                                                 all.map((it) =>
                                                   it.id === p.id
                                                     ? {
                                                         ...it,
-                                                        virtualReward: val,
+                                                        eventGroup:
+                                                          v as EventGroup,
                                                       }
-                                                    : it
-                                                )
+                                                    : it,
+                                                ),
                                               );
+                                              applyUpdate(p.id, {
+                                                eventGroup: v as EventGroup,
+                                              });
                                             }}
-                                            onBlur={() => {
-                                               applyUpdate(p.id, {
-                                                  virtualReward: p.virtualReward || 0,
-                                               });
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.currentTarget.blur();
-                                                }
-                                            }}
-                                            className="w-24"
-                                          />
-                                          <span className="text-sm text-muted-foreground">{unitReward}</span>
-                                        </div>
-                                      </td>
-                                    )}
-                                    <td className="p-3 text-right">
-                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                              setDeleteTarget(p.id)
-                                            }
                                             disabled={
                                               g === "ORGANIZER" &&
-                                              (!isOrganizerLeader ||
-                                                p.user?.id === currentUserId)
+                                              !isOrganizerLeader
                                             }
-                                            className="hover:bg-destructive/10 hover:text-destructive transition-colors"
                                           >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                          <AlertDialogHeader>
-                                            <AlertDialogTitle>
-                                              {t("removeParticipantModal.title")}
-                                            </AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                              {t("removeParticipantModal.description")}
-                                            </AlertDialogDescription>
-                                          </AlertDialogHeader>
-                                          <AlertDialogFooter>
-                                            <AlertDialogCancel>
-                                              {t("removeParticipantModal.cancel_button")}
-                                            </AlertDialogCancel>
-                                            <AlertDialogAction
-                                              onClick={async () => {
-                                                const pid = deleteTarget;
-                                                if (!pid) return;
-                                                try {
-                                                  await deleteParticipant(
-                                                    id,
-                                                    pid
-                                                  );
-                                                  setParticipants((all) => {
-                                                    const next = all.filter(
-                                                      (it) => it.id !== pid
-                                                    );
-                                                    return next;
-                                                  });
-                                                  toast.success(t("toast.participantDeleted"));
-                                                } catch {
-                                                  toast.error(t("toast.participantDeleteFailed"));
-                                                } finally {
-                                                  setDeleteTarget(null);
-                                                }
-                                              }}
-                                              className="bg-destructive hover:bg-destructive/90"
-                                            >
-                                              {t("removeParticipantModal.confirm_button")}
-                                            </AlertDialogAction>
-                                          </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                      </AlertDialog>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                                            <SelectTrigger className="w-32.5">
+                                              <SelectValue placeholder="เลือกบทบาท" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {isOrganizerLeader && (
+                                                <SelectItem value="ORGANIZER">
+                                                  Organizer
+                                                </SelectItem>
+                                              )}
+                                              {hasCommittee && (
+                                                <SelectItem value="COMMITTEE">
+                                                  Committee
+                                                </SelectItem>
+                                              )}
+                                              <SelectItem value="PRESENTER">
+                                                Presenter
+                                              </SelectItem>
+                                              <SelectItem value="GUEST">
+                                                Guest
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </td>
+                                      )}
+                                      {g === "PRESENTER" && (
+                                        <td className="p-3">
+                                          <Badge
+                                            variant="outline"
+                                            className="font-normal"
+                                          >
+                                            {p.team?.name ||
+                                              p.team?.teamName ||
+                                              "-"}
+                                          </Badge>
+                                        </td>
+                                      )}
+                                      {g === "PRESENTER" && (
+                                        <td className="p-3">
+                                          {(() => {
+                                            if (!p.team?.id)
+                                              return (
+                                                <span className="text-muted-foreground text-sm">
+                                                  -
+                                                </span>
+                                              );
+                                            const leader = participants.find(
+                                              (it) =>
+                                                it.eventGroup === "PRESENTER" &&
+                                                it.team?.id === p.team?.id &&
+                                                Boolean(it.isLeader),
+                                            );
+                                            const u = leader?.user;
+                                            return (
+                                              <div className="flex items-center gap-2">
+                                                <Crown className="h-4 w-4 text-yellow-500 shrink-0" />
+                                                <span className="text-sm truncate max-w-37.5">
+                                                  {u?.name ||
+                                                    u?.username ||
+                                                    u?.email ||
+                                                    leader?.id ||
+                                                    "-"}
+                                                </span>
+                                              </div>
+                                            );
+                                          })()}
+                                        </td>
+                                      )}
 
-                          {total >= 10 && totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-4">
-                              <div className="text-sm text-muted-foreground">
-                                แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
-                                {Math.min(currentPage * ITEMS_PER_PAGE, total)}{" "}
-                                จาก {total} คน
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => changePage(g, currentPage - 1)}
-                                  disabled={currentPage === 1}
-                                >
-                                  <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <div className="text-sm font-medium px-2">
-                                  หน้า {currentPage} / {totalPages}
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => changePage(g, currentPage + 1)}
-                                  disabled={currentPage === totalPages}
-                                >
-                                  <ChevronRight className="h-4 w-4" />
-                                </Button>
-                              </div>
+                                      {g !== "ORGANIZER" &&
+                                        g !== "PRESENTER" && (
+                                          <td className="p-3">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                                                {p.virtualUsed || 0} /
+                                              </span>
+                                              <Input
+                                                type="number"
+                                                min={0}
+                                                step={1}
+                                                value={
+                                                  typeof p.virtualReward ===
+                                                  "number"
+                                                    ? p.virtualReward === 0
+                                                      ? ""
+                                                      : p.virtualReward
+                                                    : ""
+                                                }
+                                                onChange={(e) => {
+                                                  const rawValue =
+                                                    e.target.value;
+                                                  if (
+                                                    rawValue.includes("e") ||
+                                                    rawValue.includes("E") ||
+                                                    rawValue.includes("-")
+                                                  ) {
+                                                    return;
+                                                  }
+                                                  const raw = Number(rawValue);
+                                                  const val =
+                                                    rawValue === ""
+                                                      ? 0
+                                                      : Number.isFinite(raw)
+                                                        ? Math.max(0, raw)
+                                                        : 0;
+                                                  setParticipants((all) =>
+                                                    all.map((it) =>
+                                                      it.id === p.id
+                                                        ? {
+                                                            ...it,
+                                                            virtualReward: val,
+                                                          }
+                                                        : it,
+                                                    ),
+                                                  );
+                                                }}
+                                                onBlur={() => {
+                                                  applyUpdate(p.id, {
+                                                    virtualReward:
+                                                      p.virtualReward || 0,
+                                                  });
+                                                }}
+                                                onKeyDown={(e) => {
+                                                  if (e.key === "Enter") {
+                                                    e.currentTarget.blur();
+                                                  }
+                                                  if (
+                                                    e.key === "e" ||
+                                                    e.key === "E" ||
+                                                    e.key === "-"
+                                                  ) {
+                                                    e.preventDefault();
+                                                  }
+                                                }}
+                                                className="w-24"
+                                              />
+                                              <span className="text-sm text-muted-foreground">
+                                                {unitReward}
+                                              </span>
+                                            </div>
+                                          </td>
+                                        )}
+                                      <td className="p-3 text-right">
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() =>
+                                                setDeleteTarget(p.id)
+                                              }
+                                              disabled={
+                                                g === "ORGANIZER" &&
+                                                (!isOrganizerLeader ||
+                                                  p.user?.id === currentUserId)
+                                              }
+                                              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>
+                                                {t(
+                                                  "removeParticipantModal.title",
+                                                )}
+                                              </AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                {t(
+                                                  "removeParticipantModal.description",
+                                                )}
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>
+                                                {t(
+                                                  "removeParticipantModal.cancel_button",
+                                                )}
+                                              </AlertDialogCancel>
+                                              <AlertDialogAction
+                                                onClick={async () => {
+                                                  const pid = deleteTarget;
+                                                  if (!pid) return;
+                                                  try {
+                                                    await deleteParticipant(
+                                                      id,
+                                                      pid,
+                                                    );
+                                                    setParticipants((all) => {
+                                                      const next = all.filter(
+                                                        (it) => it.id !== pid,
+                                                      );
+                                                      return next;
+                                                    });
+                                                    toast.success(
+                                                      t(
+                                                        "toast.participantDeleted",
+                                                      ),
+                                                    );
+                                                  } catch {
+                                                    toast.error(
+                                                      t(
+                                                        "toast.participantDeleteFailed",
+                                                      ),
+                                                    );
+                                                  } finally {
+                                                    setDeleteTarget(null);
+                                                  }
+                                                }}
+                                                className="bg-destructive hover:bg-destructive/90"
+                                              >
+                                                {t(
+                                                  "removeParticipantModal.confirm_button",
+                                                )}
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             </div>
-                          )}
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+
+                            {total >= 10 && totalPages > 1 && (
+                              <div className="flex items-center justify-between mt-4">
+                                <div className="text-sm text-muted-foreground">
+                                  แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1}{" "}
+                                  -{" "}
+                                  {Math.min(
+                                    currentPage * ITEMS_PER_PAGE,
+                                    total,
+                                  )}{" "}
+                                  จาก {total} คน
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      changePage(g, currentPage - 1)
+                                    }
+                                    disabled={currentPage === 1}
+                                  >
+                                    <ChevronLeft className="h-4 w-4" />
+                                  </Button>
+                                  <div className="text-sm font-medium px-2">
+                                    หน้า {currentPage} / {totalPages}
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      changePage(g, currentPage + 1)
+                                    }
+                                    disabled={currentPage === totalPages}
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
             </div>
           )}
         </CardContent>

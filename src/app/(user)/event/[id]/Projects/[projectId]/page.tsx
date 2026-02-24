@@ -1136,10 +1136,19 @@ export default function ProjectDetailPage({ params }: Props) {
                               type="number"
                               placeholder="0"
                               min="0"
-                              value={virtualReward}
-                              onChange={(e) =>
-                                setVirtualReward(Number(e.target.value))
-                              }
+                              value={virtualReward === 0 ? "" : virtualReward}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                                  return;
+                                }
+                                setVirtualReward(val === "" ? 0 : Number(val));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "e" || e.key === "E" || e.key === "-") {
+                                  e.preventDefault();
+                                }
+                              }}
                               className="h-10"
                               disabled={!isEventActive}
                             />

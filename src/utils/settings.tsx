@@ -60,10 +60,6 @@ export const navbarItems = [
     url: "/event",
     titleKey: "navbar.events",
   },
-  {
-    url: "/users",
-    titleKey: "navbar.users",
-  },
 ];
 
 export const signInRedirect = "/home";

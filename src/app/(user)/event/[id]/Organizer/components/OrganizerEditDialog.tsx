@@ -862,12 +862,21 @@ export default function OrganizerEditDialog({
                     <Input
                       type="number"
                       value={form.committeeReward ?? ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                          return;
+                        }
                         setForm((f) => ({
                           ...f,
-                          committeeReward: e.target.value ? Number(e.target.value) : undefined,
-                        }))
-                      }
+                          committeeReward: val ? Number(val) : undefined,
+                        }));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "e" || e.key === "E" || e.key === "-") {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder={t("configuration.placeholderCommitteeReward")}
                     />
                   </div>
@@ -877,12 +886,21 @@ export default function OrganizerEditDialog({
                   <Input
                     type="number"
                     value={form.guestReward ?? ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                        return;
+                      }
                       setForm((f) => ({
                         ...f,
-                        guestReward: e.target.value ? Number(e.target.value) : undefined,
-                      }))
-                    }
+                        guestReward: val ? Number(val) : undefined,
+                      }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "e" || e.key === "E" || e.key === "-") {
+                        e.preventDefault();
+                      }
+                    }}
                     placeholder={t("configuration.placeholderGuestReward")}
                   />
                 </div>
@@ -913,12 +931,21 @@ export default function OrganizerEditDialog({
                           type="number"
                           min={0}
                           value={form.vrTeamCapGuest ?? ""}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                              return;
+                            }
                             setForm((f) => ({
                               ...f,
-                              vrTeamCapGuest: e.target.value ? Number(e.target.value) : undefined,
-                            }))
-                          }
+                              vrTeamCapGuest: val ? Number(val) : undefined,
+                            }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "e" || e.key === "E" || e.key === "-") {
+                              e.preventDefault();
+                            }
+                          }}
                           placeholder={t("configuration.placeholderVrTeamCapGuest")}
                         />
                       </div>
@@ -930,14 +957,21 @@ export default function OrganizerEditDialog({
                             type="number"
                             min={0}
                             value={form.vrTeamCapCommittee ?? ""}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                                return;
+                              }
                               setForm((f) => ({
                                 ...f,
-                                vrTeamCapCommittee: e.target.value
-                                  ? Number(e.target.value)
-                                  : undefined,
-                              }))
-                            }
+                                vrTeamCapCommittee: val ? Number(val) : undefined,
+                              }));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "e" || e.key === "E" || e.key === "-") {
+                                e.preventDefault();
+                              }
+                            }}
                             placeholder={t("configuration.placeholderVrTeamCapCommittee")}
                           />
                         </div>
@@ -979,12 +1013,21 @@ export default function OrganizerEditDialog({
                       type="number"
                       min={0}
                       value={form.maxTeams ?? ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                          return;
+                        }
                         setForm((f) => ({
                           ...f,
-                          maxTeams: e.target.value ? Number(e.target.value) : undefined,
-                        }))
-                      }
+                          maxTeams: val ? Number(val) : undefined,
+                        }));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "e" || e.key === "E" || e.key === "-") {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder={t("configuration.placeholderMaxGroups")}
                     />
                   </div>
@@ -994,12 +1037,21 @@ export default function OrganizerEditDialog({
                       type="number"
                       min={1}
                       value={form.maxTeamMembers ?? ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                          return;
+                        }
                         setForm((f) => ({
                           ...f,
-                          maxTeamMembers: e.target.value ? Number(e.target.value) : undefined,
-                        }))
-                      }
+                          maxTeamMembers: val ? Number(val) : undefined,
+                        }));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "e" || e.key === "E" || e.key === "-") {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder={t("configuration.placeholderMaxPresenters")}
                     />
                   </div>

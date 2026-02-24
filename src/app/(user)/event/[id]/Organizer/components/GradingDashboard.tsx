@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { getGradingResults } from "@/utils/apievaluation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,7 +49,9 @@ export default function GradingDashboard({ eventId }: Props) {
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [selectedResult, setSelectedResult] = useState<GradingResult | null>(null);
+  const [selectedResult, setSelectedResult] = useState<GradingResult | null>(
+    null,
+  );
 
   const getAverageForCriteria = (
     committeeScores: GradingResult["committeeScores"],
@@ -190,7 +197,10 @@ export default function GradingDashboard({ eventId }: Props) {
                   </Button>
                 </th>
                 {criteria.map((crit) => (
-                  <th key={crit.id} className="text-center p-3 font-semibold text-sm">
+                  <th
+                    key={crit.id}
+                    className="text-center p-3 font-semibold text-sm"
+                  >
                     {crit.name} ({crit.maxScore})
                   </th>
                 ))}
@@ -208,14 +218,26 @@ export default function GradingDashboard({ eventId }: Props) {
                     {formatPresenterNames(result.presenterName)}
                   </td>
                   <td className="p-3 text-center">
-                    <span className="font-bold text-lg">{result.overallAverage.toFixed(2)}</span>
+                    <span className="font-bold text-lg">
+                      {result.overallAverage.toFixed(2)}
+                    </span>
                   </td>
                   {criteria.map((crit) => (
                     <td key={crit.id} className="p-3 text-center text-sm">
                       {(() => {
-                        const avg = getAverageForCriteria(result.committeeScores, crit.id);
-                        if (avg === null) return <span className="text-muted-foreground">-</span>;
-                        return <span className="font-semibold">{avg.toFixed(1)}</span>;
+                        const avg = getAverageForCriteria(
+                          result.committeeScores,
+                          crit.id,
+                        );
+                        if (avg === null)
+                          return (
+                            <span className="text-muted-foreground">-</span>
+                          );
+                        return (
+                          <span className="font-semibold">
+                            {avg.toFixed(1)}
+                          </span>
+                        );
                       })()}
                     </td>
                   ))}
@@ -226,15 +248,20 @@ export default function GradingDashboard({ eventId }: Props) {
         </div>
 
         {/* Committee Detail Dialog */}
-        <Dialog open={!!selectedResult} onOpenChange={(open) => !open && setSelectedResult(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <Dialog
+          open={!!selectedResult}
+          onOpenChange={(open) => !open && setSelectedResult(null)}
+        >
+          <DialogContent className="w-[98vw] sm:w-[95vw] max-w-7xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {t("gradingDashboard.project")}: {selectedResult?.teamName}
               </DialogTitle>
               <p className="text-sm text-muted-foreground">
                 {t("gradingDashboard.presenter")}:{" "}
-                {selectedResult ? formatPresenterNames(selectedResult.presenterName) : ""}
+                {selectedResult
+                  ? formatPresenterNames(selectedResult.presenterName)
+                  : ""}
               </p>
             </DialogHeader>
 
@@ -242,7 +269,9 @@ export default function GradingDashboard({ eventId }: Props) {
               <div className="space-y-4 mt-2">
                 {/* Overall Score */}
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="font-semibold">{t("gradingDashboard.totalScore")}</span>
+                  <span className="font-semibold">
+                    {t("gradingDashboard.totalScore")}
+                  </span>
                   <span className="text-xl font-bold">
                     {selectedResult.overallAverage.toFixed(2)}%
                   </span>
@@ -251,7 +280,8 @@ export default function GradingDashboard({ eventId }: Props) {
                 {/* Per Committee Breakdown */}
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                    {t("gradingDashboard.committeeDetail") || "Committee Score Details"}
+                    {t("gradingDashboard.committeeDetail") ||
+                      "Committee Score Details"}
                   </h4>
 
                   {selectedResult.committeeScores.length === 0 ? (
@@ -265,10 +295,12 @@ export default function GradingDashboard({ eventId }: Props) {
                           <thead>
                             <tr className="border-b bg-muted/50">
                               <th className="text-left p-3 font-semibold">
-                                {t("gradingDashboard.committeeDetail") || "Committee"}
+                                {t("gradingDashboard.committeeDetail") ||
+                                  "Committee"}
                               </th>
                               <th className="text-center p-3 font-semibold whitespace-nowrap">
-                                {t("gradingDashboard.totalScore") || "Total Score"}
+                                {t("gradingDashboard.totalScore") ||
+                                  "Total Score"}
                               </th>
                               {criteria.map((crit) => (
                                 <th
@@ -286,16 +318,24 @@ export default function GradingDashboard({ eventId }: Props) {
                                 key={cs.committeeId}
                                 className={`border-b ${idx % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
                               >
-                                <td className="p-3 font-semibold">{cs.committeeName}</td>
+                                <td className="p-3 font-semibold">
+                                  {cs.committeeName}
+                                </td>
                                 <td className="p-3 text-center">
-                                  <Badge variant="secondary">{cs.avgScore.toFixed(2)}</Badge>
+                                  <Badge variant="secondary">
+                                    {cs.avgScore.toFixed(2)}
+                                  </Badge>
                                 </td>
                                 {criteria.map((crit) => {
                                   const score = cs.scores[crit.id];
                                   const hasScore =
-                                    typeof score === "number" && Number.isFinite(score);
+                                    typeof score === "number" &&
+                                    Number.isFinite(score);
                                   return (
-                                    <td key={crit.id} className="p-3 text-center text-sm">
+                                    <td
+                                      key={crit.id}
+                                      className="p-3 text-center text-sm"
+                                    >
                                       {hasScore ? (
                                         <span className="font-medium">
                                           {score.toFixed(1)}
@@ -305,7 +345,9 @@ export default function GradingDashboard({ eventId }: Props) {
                                           </span>
                                         </span>
                                       ) : (
-                                        <span className="text-muted-foreground">-</span>
+                                        <span className="text-muted-foreground">
+                                          -
+                                        </span>
                                       )}
                                     </td>
                                   );
@@ -323,7 +365,8 @@ export default function GradingDashboard({ eventId }: Props) {
                 {selectedResult.committeeScores.length > 1 && (
                   <div className="border rounded-lg p-4 space-y-3 bg-blue-50 dark:bg-blue-950">
                     <h4 className="font-semibold text-sm">
-                      {t("gradingDashboard.avgPerCriteria") || "Average per Criteria"}
+                      {t("gradingDashboard.avgPerCriteria") ||
+                        "Average per Criteria"}
                     </h4>
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
@@ -339,7 +382,10 @@ export default function GradingDashboard({ eventId }: Props) {
                         </thead>
                         <tbody>
                           {criteria.map((crit, idx) => {
-                            const avg = getAverageForCriteria(selectedResult.committeeScores, crit.id);
+                            const avg = getAverageForCriteria(
+                              selectedResult.committeeScores,
+                              crit.id,
+                            );
                             return (
                               <tr
                                 key={crit.id}
@@ -347,17 +393,24 @@ export default function GradingDashboard({ eventId }: Props) {
                               >
                                 <td className="p-3 text-sm">
                                   <span className="text-muted-foreground">
-                                    {crit.name} <span className="text-xs">({crit.weightPercentage}%)</span>
+                                    {crit.name}{" "}
+                                    <span className="text-xs">
+                                      ({crit.weightPercentage}%)
+                                    </span>
                                   </span>
                                 </td>
                                 <td className="p-3 text-center text-sm">
                                   {avg !== null ? (
                                     <span className="font-semibold">
                                       {avg.toFixed(1)}{" "}
-                                      <span className="text-muted-foreground">/ {crit.maxScore}</span>
+                                      <span className="text-muted-foreground">
+                                        / {crit.maxScore}
+                                      </span>
                                     </span>
                                   ) : (
-                                    <span className="text-muted-foreground">-</span>
+                                    <span className="text-muted-foreground">
+                                      -
+                                    </span>
                                   )}
                                 </td>
                               </tr>

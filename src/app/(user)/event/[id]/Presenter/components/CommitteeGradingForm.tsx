@@ -235,10 +235,18 @@ export default function CommitteeGradingForm({
                       value={score === 0 ? "" : (score ?? "")}
                       onChange={(e) => {
                         const val = e.target.value;
+                        if (val.includes("e") || val.includes("E") || val.includes("-")) {
+                          return;
+                        }
                         if (val === "") {
                           handleScoreChange(c.id, "");
                         } else {
                           handleScoreChange(c.id, val);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "e" || e.key === "E" || e.key === "-") {
+                          e.preventDefault();
                         }
                       }}
                       placeholder="0"

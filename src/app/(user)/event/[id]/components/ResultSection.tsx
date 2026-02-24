@@ -449,6 +449,9 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                     value={topN}
                     onChange={(e) => {
                       const value = e.target.value;
+                      if (value.includes("e") || value.includes("E") || value.includes("-")) {
+                        return;
+                      }
                       if (value === "") {
                         setTopN("");
                         return;
@@ -460,6 +463,11 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                         } else {
                           setTopN(value);
                         }
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "e" || e.key === "E" || e.key === "-") {
+                        e.preventDefault();
                       }
                     }}
                     className="w-20"
