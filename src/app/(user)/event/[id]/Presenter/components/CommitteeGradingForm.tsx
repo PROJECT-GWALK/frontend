@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { getEvaluationCriteria, getTeamGrades, submitGrade } from "@/utils/apievaluation";
+import { useEffect, useState } from "react";
+import {
+  getEvaluationCriteria,
+  getTeamGrades,
+  submitGrade,
+} from "@/utils/apievaluation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,36 +47,35 @@ export default function CommitteeGradingForm({
   const [submitted, setSubmitted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { t } = useLanguage();
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      // Fetch criteria
-      const criteriaRes = await getEvaluationCriteria(eventId);
-      setCriteria(criteriaRes.criteria || []);
-
-      // Fetch existing grades
-      const gradesRes = await getTeamGrades(eventId, teamId);
-      const gradeMap = new Map<string, number>();
-      gradesRes.grades?.forEach((g: Grade) => {
-        gradeMap.set(g.criteriaId, g.score);
-      });
-      setGrades(gradeMap);
-      setSubmitted(
-        gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) &&
-          (criteriaRes.criteria?.length || 0) > 0,
-      );
-    } catch {
-      toast.error(t("committeeGrade.failedLoadGrade"));
-    } finally {
-      setLoading(false);
-    }
-  }, [eventId, teamId, t]);
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch criteria
+        const criteriaRes = await getEvaluationCriteria(eventId);
+        setCriteria(criteriaRes.criteria || []);
+
+        // Fetch existing grades
+        const gradesRes = await getTeamGrades(eventId, teamId);
+        const gradeMap = new Map<string, number>();
+        gradesRes.grades?.forEach((g: Grade) => {
+          gradeMap.set(g.criteriaId, g.score);
+        });
+        setGrades(gradeMap);
+        setSubmitted(
+          gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) &&
+            (criteriaRes.criteria?.length || 0) > 0,
+        );
+      } catch (error) {
+        toast.error(t("committeeGrade.failedLoadGrade"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
-  }, [fetchData]);
+  }, [eventId, teamId]);
 
   const handleScoreChange = (criteriaId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
@@ -113,7 +116,7 @@ export default function CommitteeGradingForm({
       setSubmitted(true);
       setIsEditing(false);
       toast.success(t("committeeGrade.submitGradeSuccess"));
-    } catch {
+    } catch (error) {
       toast.error(t("committeeGrade.submitGradeFailed"));
     } finally {
       setSubmitting(false);
@@ -148,9 +151,16 @@ export default function CommitteeGradingForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2 text-foreground">
-            <BookCheck className="w-5 h-5 text-green-600" />
-            {t("committeeGrade.title")} {teamName}
+          <CardTitle className="text-lg flex items-start gap-2 text-foreground">
+            <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <span className="block whitespace-normal break-words">
+                ให้คะแนนโครงงาน:
+              </span>
+              <span className="block whitespace-normal break-words">
+                {teamName}
+              </span>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -167,21 +177,30 @@ export default function CommitteeGradingForm({
       <CardHeader>
         <div className="flex items-start sm:items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg flex items-start sm:items-center gap-2 text-foreground">
+            <CardTitle className="text-lg flex items-start gap-2 text-foreground">
               <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
-              <span className="wrap-break-word">
-                {t("committeeGrade.title")} {teamName}
-              </span>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <span className="block whitespace-normal break-words">
+                  ให้คะแนนโครงงาน:
+                </span>
+                <span className="block whitespace-normal break-words">
+                  {teamName}
+                </span>
+              </div>
             </CardTitle>
+            {submitted && !isEditing && (
+              <div className="flex items-center gap-2 text-green-600 mt-2 pl-7">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-semibold">
+                  {t("committeeGrade.gradeSummitted")}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 flex-none">
             {submitted && !isEditing && (
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2 text-green-600">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="text-sm font-semibold">{t("committeeGrade.gradeSummitted")}</span>
-                </div>
                 <Button
                   size="sm"
                   onClick={() => setIsEditing(true)}
@@ -215,9 +234,12 @@ export default function CommitteeGradingForm({
               <div key={c.id} className="p-4 bg-card/50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold wrap-break-word leading-snug">
+                    <div className="font-semibold break-words leading-snug">
                       {c.name}
-                      <span className="font-light"> ({c.weightPercentage}%)</span>
+                      <span className="font-light">
+                        {" "}
+                        ({c.weightPercentage}%)
+                      </span>
                       {c.description ? (
                         <span className="text-sm text-muted-foreground font-normal">
                           {" "}
@@ -238,16 +260,13 @@ export default function CommitteeGradingForm({
                         const val = e.target.value;
                         if (val === "") {
                           handleScoreChange(c.id, "");
-                          return;
-                        }
-                        const num = parseFloat(val);
-                        if (!isNaN(num)) {
+                        } else {
                           handleScoreChange(c.id, val);
                         }
                       }}
                       placeholder="0"
                       disabled={disabled || (submitted && !isEditing)}
-                      className="w-24 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-24 text-center"
                     />
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
                       / {c.maxScore}
@@ -265,7 +284,9 @@ export default function CommitteeGradingForm({
             {finalScore !== null && (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">{t("committeeGrade.finalScore")}:</span>
+                  <span className="font-semibold">
+                    {t("committeeGrade.finalScore")}:
+                  </span>
                   <span className="text-lg font-bold">
                     {finalScore.toFixed(2)}%
                   </span>
@@ -290,11 +311,16 @@ export default function CommitteeGradingForm({
           <Button
             onClick={handleSubmit}
             disabled={
-              submitting || grades.size !== criteria.length || disabled || (submitted && !isEditing)
+              submitting ||
+              grades.size !== criteria.length ||
+              disabled ||
+              (submitted && !isEditing)
             }
             className="flex-1 bg-green-500 hover:bg-green-600 text-white"
           >
-            {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            {submitting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : null}
             {submitted && !isEditing
               ? t("committeeGrade.gradeSummitted")
               : isEditing
