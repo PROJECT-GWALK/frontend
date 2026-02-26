@@ -175,7 +175,7 @@ export default function CommitteeGradingForm({
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <CardTitle className="text-lg flex items-start gap-2 text-foreground">
               <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
