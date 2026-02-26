@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
@@ -16,6 +16,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
@@ -37,16 +44,28 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     metadataBase: new URL(origin),
+    applicationName: "Gwalk",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Gwalk",
+    },
+    formatDetection: {
+      telephone: false,
+    },
     openGraph: {
       title,
       description,
       images: [imageUrl],
+      siteName: "Gwalk",
+      type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
       images: [imageUrl],
+      creator: "@gwalk",
     },
   };
 }
