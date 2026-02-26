@@ -88,7 +88,7 @@ export default function ProfileView({
         setCopied(true);
         toast.success(t("toast.profileLinkCopied"));
         setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
+      } catch {
         toast.error(t("toast.profileLinkCopyFailed"));
       }
     }

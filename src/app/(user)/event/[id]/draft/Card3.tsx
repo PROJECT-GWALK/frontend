@@ -86,6 +86,7 @@ export default function Card3(props: Props) {
                   const n = Number(v);
                   setMaxPresenters(!v ? v : n < 0 ? "0" : v);
                 }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -103,6 +104,7 @@ export default function Card3(props: Props) {
                   const n = Number(v);
                   setMaxGroups(!v ? v : n < 0 ? "0" : v);
                 }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>

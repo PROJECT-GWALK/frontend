@@ -6,8 +6,6 @@ import th from "@/locales/th.json";
 
 type Language = "en" | "th";
 
-type TranslationValue = string | { [key: string]: TranslationValue };
-
 // Define the shape of the translation object based on en.json
 type TranslationObject = typeof en;
 
@@ -31,7 +29,6 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Load saved language from localStorage
@@ -39,7 +36,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (savedLanguage && (savedLanguage === "en" || savedLanguage === "th")) {
       setLanguageState(savedLanguage);
     }
-    setMounted(true);
   }, []);
 
   const setLanguage = (lang: Language) => {

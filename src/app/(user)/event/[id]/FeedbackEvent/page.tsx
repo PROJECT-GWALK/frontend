@@ -10,8 +10,6 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
-import InformationSection from "../components/InformationSection";
 import type { EventData } from "@/utils/types";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 import { AxiosError } from "axios";
@@ -52,7 +50,7 @@ export default function FeedbackEventPage() {
       }
     };
     fetchData();
-  }, [eventId]);
+  }, [eventId, t]);
 
   const handleSubmit = async () => {
     if (rating === 0) {

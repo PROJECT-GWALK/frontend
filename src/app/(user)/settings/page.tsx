@@ -59,7 +59,7 @@ export default function SettingsPage() {
       }
       setFetching(false);
     })();
-  }, []);
+  }, [form]);
 
   if (fetching) {
     return (

@@ -113,7 +113,9 @@ export default function UnifiedProjectList({
 
   const [commentOpen, setCommentOpen] = React.useState(false);
   const [commentText, setCommentText] = React.useState("");
-  const [selectedProjectId, setSelectedProjectId] = React.useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = React.useState<
+    string | null
+  >(null);
 
   const [vrDialogOpen, setVrDialogOpen] = React.useState(false);
   const [vrAmount, setVrAmount] = React.useState<number>(0);
@@ -157,9 +159,13 @@ export default function UnifiedProjectList({
   const sorted = React.useMemo(() => {
     let result = [...projects];
 
-    const startViewMs = eventStartView ? new Date(eventStartView).getTime() : null;
+    const startViewMs = eventStartView
+      ? new Date(eventStartView).getTime()
+      : null;
     const eventStarted =
-      startViewMs === null || Number.isNaN(startViewMs) ? true : Date.now() >= startViewMs;
+      startViewMs === null || Number.isNaN(startViewMs)
+        ? true
+        : Date.now() >= startViewMs;
 
     if (role !== "ORGANIZER" && !eventStarted) {
       if (!currentUserId) {
@@ -172,7 +178,9 @@ export default function UnifiedProjectList({
     if (searchQuery) {
       const lower = searchQuery.toLowerCase();
       result = result.filter(
-        (p) => p.title.toLowerCase().includes(lower) || p.desc?.toLowerCase().includes(lower),
+        (p) =>
+          p.title.toLowerCase().includes(lower) ||
+          p.desc?.toLowerCase().includes(lower),
       );
     }
 
@@ -190,7 +198,15 @@ export default function UnifiedProjectList({
     });
 
     return result;
-  }, [projects, role, currentUserId, eventStartView, searchQuery, filterStatus, projectRewards]);
+  }, [
+    projects,
+    role,
+    currentUserId,
+    eventStartView,
+    searchQuery,
+    filterStatus,
+    projectRewards,
+  ]);
 
   // Infinite Scroll Effect
   React.useEffect(() => {
@@ -203,14 +219,11 @@ export default function UnifiedProjectList({
       { threshold: 0.1 },
     );
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
+    const target = observerTarget.current;
+    if (target) observer.observe(target);
 
     return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
+      if (target) observer.unobserve(target);
     };
   }, [sorted.length]);
 
@@ -233,7 +246,9 @@ export default function UnifiedProjectList({
               disabled={loading}
               className="gap-2 hover:bg-primary/10 transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               {t("participantSection.refresh")}
             </Button>
           </div>
@@ -272,7 +287,9 @@ export default function UnifiedProjectList({
               <p className="text-base font-semibold text-foreground">
                 {t("projectTab.projectNotFound")}
               </p>
-              <p className="text-sm text-muted-foreground">{t("projectTab.ProjectNotFoundDesc")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("projectTab.ProjectNotFoundDesc")}
+              </p>
             </div>
           </div>
         ) : (
@@ -318,7 +335,9 @@ export default function UnifiedProjectList({
                               className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 rounded-full text-foreground"
                             >
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">{t("projectTab.moreOptions")}</span>
+                              <span className="sr-only">
+                                {t("projectTab.moreOptions")}
+                              </span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-52">
@@ -329,7 +348,9 @@ export default function UnifiedProjectList({
                                 </DropdownMenuLabel>
                                 <DropdownMenuItem
                                   className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
-                                  onClick={() => handleActionInternal("delete_team", p.id)}
+                                  onClick={() =>
+                                    handleActionInternal("delete_team", p.id)
+                                  }
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
                                   {t("projectTab.deleteProject")}
@@ -345,14 +366,19 @@ export default function UnifiedProjectList({
                   {/* Content Section */}
                   <div className="flex flex-col flex-1 p-4 gap-3">
                     <div className="space-y-2">
-                      <Link href={`/event/${eventId}/Projects/${p.id}`} className="block">
+                      <Link
+                        href={`/event/${eventId}/Projects/${p.id}`}
+                        className="block"
+                      >
                         <h4 className="font-semibold text-lg line-clamp-1 hover:text-primary transition-colors">
                           {p.title}
                         </h4>
                       </Link>
 
                       {p.desc && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">{p.desc}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {p.desc}
+                        </p>
                       )}
 
                       {/* Badges */}
@@ -365,7 +391,8 @@ export default function UnifiedProjectList({
                             >
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               {t("projectTab.givenVR")}{" "}
-                              {projectRewards[p.id]?.vrGiven?.toLocaleString()} {unitReward}
+                              {projectRewards[p.id]?.vrGiven?.toLocaleString()}{" "}
+                              {unitReward}
                             </Badge>
                           )}
                           {isSpecialGiven && (
@@ -418,9 +445,13 @@ export default function UnifiedProjectList({
                           ) : (
                             <>
                               <span className="text-green-600 dark:text-green-400 mr-1">
-                                {projectRewards[p.id]?.vrGiven?.toLocaleString() ?? 0}
+                                {projectRewards[
+                                  p.id
+                                ]?.vrGiven?.toLocaleString() ?? 0}
                               </span>
-                              <span className="text-muted-foreground mx-1">/</span>
+                              <span className="text-muted-foreground mx-1">
+                                /
+                              </span>
                               <span className="ml-1">
                                 {p.totalVr?.toLocaleString() ?? 0} {unitReward}
                               </span>
@@ -432,9 +463,13 @@ export default function UnifiedProjectList({
 
                     {/* Actions */}
                     <div className="mt-auto pt-2 flex gap-2">
-                      <Link href={`/event/${eventId}/Projects/${p.id}`} className="flex-1">
+                      <Link
+                        href={`/event/${eventId}/Projects/${p.id}`}
+                        className="flex-1"
+                      >
                         <Button size="sm" variant="outline" className="w-full">
-                          <Eye className="w-3.5 h-3.5 mr-1.5" /> {t("projectTab.viewProject")}
+                          <Eye className="w-3.5 h-3.5 mr-1.5" />{" "}
+                          {t("projectTab.viewProject")}
                         </Button>
                       </Link>
                     </div>
@@ -445,7 +480,10 @@ export default function UnifiedProjectList({
 
             {/* Sentinel for infinite scroll */}
             {visibleCount < sorted.length && (
-              <div ref={observerTarget} className="py-4 flex justify-center w-full">
+              <div
+                ref={observerTarget}
+                className="py-4 flex justify-center w-full"
+              >
                 <div className="flex items-center gap-2 text-muted-foreground text-sm animate-pulse">
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   {t("projectTab.loadingMoreProjects")}
@@ -461,9 +499,12 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                {t("projectTab.comments")} {selectedProject ? `- ${selectedProject.title}` : ""}
+                {t("projectTab.comments")}{" "}
+                {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>{t("projectTab.commentsDesc")}</DrawerDescription>
+              <DrawerDescription>
+                {t("projectTab.commentsDesc")}
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0">
               {selectedProject && (
@@ -520,9 +561,12 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                {t("projectTab.giveVR")} {selectedProject ? `- ${selectedProject.title}` : ""}
+                {t("projectTab.giveVR")}{" "}
+                {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>{t("projectTab.giveVRDesc")}</DrawerDescription>
+              <DrawerDescription>
+                {t("projectTab.giveVRDesc")}
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0">
               {selectedProject && (
@@ -537,9 +581,12 @@ export default function UnifiedProjectList({
               )}
               <Input
                 type="number"
-                value={vrAmount}
-                onChange={(e) => setVrAmount(Number(e.target.value || 0))}
-                className="w-full mb-4"
+                value={vrAmount === 0 ? "" : vrAmount}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setVrAmount(val === "" ? 0 : Number(val));
+                }}
+                className="w-full mb-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="จำนวน VR"
               />
             </div>
@@ -579,9 +626,12 @@ export default function UnifiedProjectList({
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>
-                {t("projectTab.giveSR")} {selectedProject ? `- ${selectedProject.title}` : ""}
+                {t("projectTab.giveSR")}{" "}
+                {selectedProject ? `- ${selectedProject.title}` : ""}
               </DrawerTitle>
-              <DrawerDescription>{t("projectTab.giveSRDesc")}</DrawerDescription>
+              <DrawerDescription>
+                {t("projectTab.giveSRDesc")}
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4 pb-0 space-y-3 mb-4">
               {selectedProject && (
@@ -650,7 +700,9 @@ export default function UnifiedProjectList({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("projectTab.confirmDeleteProject")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("projectTab.confirmDeleteProject")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {t("projectTab.confirmDeleteProjectDesc")}
             </AlertDialogDescription>

@@ -1,6 +1,5 @@
 "use client";
 
-import { useLanguage } from "@/contexts/LanguageContext";
 import { getCurrentUser } from "@/utils/apiuser";
 import { getUserHistory } from "@/utils/apievent";
 import { User } from "@/utils/types";
@@ -13,22 +12,21 @@ export default function ProfilePage() {
   const [participatedEvents, setParticipatedEvents] = useState<ParticipatedEvent[]>([]);
   const [organizedEvents, setOrganizedEvents] = useState<OrganizedEvent[]>([]);
 
-  const fetchUser = async () => {
-    try {
-      const data = await getCurrentUser();
-      setUser(data.user);
-
-      const history = await getUserHistory();
-      setParticipatedEvents(history.participated);
-      setOrganizedEvents(history.organized);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await getCurrentUser();
+        setUser(data.user);
+
+        const history = await getUserHistory();
+        setParticipatedEvents(history.participated);
+        setOrganizedEvents(history.organized);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUser();
   }, []);
 

@@ -14,10 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Edit2, Upload } from "lucide-react";
+import { Trash2, Edit2, Upload } from "lucide-react";
 import type { PresenterProject } from "./types";
-import { uploadTeamFile, updateTeam, deleteTeam } from "@/utils/apievent";
-import type { EventFileType } from "@/utils/types";
+import { updateTeam, deleteTeam } from "@/utils/apievent";
 import { toast } from "sonner";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import Image from "next/image";
@@ -136,40 +135,6 @@ export default function EditProjectDialog({
       toast.error(msg);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    fileTypeId: string
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const res = await uploadTeamFile(eventId, project.id, fileTypeId, file);
-      if (res.message === "ok") {
-        const newUrl = res.teamFile.fileUrl;
-        const name = file.name;
-
-        // Update form
-        setForm((f) => {
-          const newFiles = [...(f.files || [])];
-          // Remove existing file for this type if any
-          const existingIdx = newFiles.findIndex(
-            (x) => x.fileTypeId === fileTypeId
-          );
-          if (existingIdx >= 0) {
-            newFiles[existingIdx] = { name, url: newUrl, fileTypeId };
-          } else {
-            newFiles.push({ name, url: newUrl, fileTypeId });
-          }
-          return { ...f, files: newFiles };
-        });
-        toast.success(t("toast.fileUploaded"));
-      }
-    } catch (err) {
-      toast.error(t("toast.uploadFailed"));
     }
   };
 

@@ -2,7 +2,6 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { EventData } from "@/utils/types";
-import { useRouter } from "next/navigation";
 import CardInformation1 from "./CardInformation/CardInformation1";
 import CardInformation2 from "./CardInformation/CardInformation2";
 import CardInformation3 from "./CardInformation/CardInformation3";
@@ -26,14 +25,11 @@ type Props = {
 };
 
 export default function InformationSection({
-  id,
   event,
   editable,
   onEdit,
-  linkLabel = "Link",
 }: Props) {
-  const router = useRouter();
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
 
   const handleEditWrapper = (
     section: EditSection | string,
@@ -53,7 +49,6 @@ export default function InformationSection({
           event={event}
           editable={editable}
           onEdit={handleEditWrapper}
-          linkLabel={linkLabel}
         />
 
         {/* Part 3: Presenter/Rewards Config */}

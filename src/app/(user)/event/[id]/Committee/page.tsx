@@ -2,10 +2,8 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
-import Link from "next/link";
 import { getTeams, getEvent, giveVr, resetVr, giveSpecial, resetSpecial } from "@/utils/apievent";
-import { useState, useEffect, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, MessageSquare, BadgeCheck, Award, Gift } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,13 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { EventData, Team, SpecialReward } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
-import React from "react";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams, useRouter } from "next/navigation";
@@ -62,7 +57,7 @@ export function CommitteeView(props: Props) {
   const [bannerOpen, setBannerOpen] = useState(false);
   const [loading, setLoading] = useState(!props.event);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const res = await getEvent(id);
       if (res.message === "ok") {
@@ -76,7 +71,7 @@ export function CommitteeView(props: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (props.event) {
@@ -88,7 +83,7 @@ export function CommitteeView(props: Props) {
     } else if (id) {
       fetchData();
     }
-  }, [id, props.event]);
+  }, [id, props.event, fetchData]);
 
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
@@ -98,7 +93,7 @@ export function CommitteeView(props: Props) {
     Record<string, { vrGiven: number; specialGiven: string | null | string[] }>
   >({});
 
-  const fetchTeamsData = async () => {
+  const fetchTeamsData = useCallback(async () => {
     setProjectsLoading(true);
     try {
       const res = await getTeams(id);
@@ -156,12 +151,11 @@ export function CommitteeView(props: Props) {
     } finally {
       setProjectsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchTeamsData();
-  }, [id]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  }, [fetchTeamsData]);
 
   const { t } = useLanguage();
 

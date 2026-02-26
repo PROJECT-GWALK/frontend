@@ -37,7 +37,11 @@ type Props = {
   onUpdate: (criteria: CriteriaFormData[]) => void;
 };
 
-export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpdate }: Props) {
+export default function EvaluationCriteriaForm({
+  eventId,
+  initialCriteria,
+  onUpdate,
+}: Props) {
   const [criteria, setCriteria] = useState<CriteriaFormData[]>(initialCriteria);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -73,7 +77,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
   const handleAutoBalance = () => {
     if (criteria.length === 0) return;
 
-    const sorted = criteria.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const sorted = criteria
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
     const n = sorted.length;
     const base = Math.floor(10000 / n) / 100;
     let remainder = Number((100 - base * n).toFixed(2));
@@ -87,7 +93,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       return { ...c, weightPercentage: nextWeight };
     });
 
-    const nextCriteria = criteria.map((c) => nextSorted.find((s) => s.id === c.id) ?? c);
+    const nextCriteria = criteria.map(
+      (c) => nextSorted.find((s) => s.id === c.id) ?? c,
+    );
     setCriteria(nextCriteria);
     toast.info("Weights auto-balanced. Click Save to apply.");
   };
@@ -108,7 +116,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
     field: keyof CriteriaFormData,
     value: CriteriaFormData[keyof CriteriaFormData],
   ) => {
-    setCriteria(criteria.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
+    setCriteria(
+      criteria.map((c) => (c.id === id ? { ...c, [field]: value } : c)),
+    );
   };
 
   const handleDelete = (id: string) => {
@@ -137,14 +147,17 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         item.weightPercentage > 100
       ) {
         toast.error(
-          t("gradingSection.weightPercentageMustBeBetween") || "Weight must be between 0 and 100",
+          t("gradingSection.weightPercentageMustBeBetween") ||
+            "Weight must be between 0 and 100",
         );
         return;
       }
     }
 
     if (Math.abs(totalWeight - 100) > 0.01 && criteria.length > 0) {
-      toast.error(t("gradingSection.weightError") || "Total weight must be exactly 100%");
+      toast.error(
+        t("gradingSection.weightError") || "Total weight must be exactly 100%",
+      );
       return;
     }
 
@@ -183,11 +196,17 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
       onUpdate(updatedList);
       setIsEditing(false);
       setDeletedIds(new Set());
-      toast.success(t("gradingSection.criteriaUpdated") || "Grading criteria saved successfully");
+      toast.success(
+        t("gradingSection.criteriaUpdated") ||
+          "Grading criteria saved successfully",
+      );
     } catch (error) {
       console.error(error);
       toast.error(
-        getApiErrorMessage(error, t("gradingSection.failedToSaveCriteria") || "Failed to save criteria"),
+        getApiErrorMessage(
+          error,
+          t("gradingSection.failedToSaveCriteria") || "Failed to save criteria",
+        ),
       );
       // Refresh from server to ensure consistency
       try {
@@ -219,13 +238,21 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
           </div>
           <div className="flex flex-wrap gap-2 sm:justify-end">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} size="sm" variant="outline">
+              <Button
+                onClick={() => setIsEditing(true)}
+                size="sm"
+                variant="outline"
+              >
                 <Edit2 className="w-4 h-4 mr-2" />
                 {t("gradingSection.edit") || "Edit Criteria"}
               </Button>
             ) : (
               <>
-                <Button onClick={handleAutoBalance} size="sm" variant="secondary">
+                <Button
+                  onClick={handleAutoBalance}
+                  size="sm"
+                  variant="secondary"
+                >
                   Auto-Balance
                 </Button>
                 <Button onClick={handleCancel} size="sm" variant="ghost">
@@ -287,7 +314,9 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                 <TableHead className="w-[20%] sm:w-[16%] text-center whitespace-normal p-1 sm:p-2 leading-tight">
                   {t("gradingSection.weight") || "Weight"} %
                 </TableHead>
-                {isEditing && <TableHead className="w-[15%] sm:w-[5%] p-1 sm:p-2"></TableHead>}
+                {isEditing && (
+                  <TableHead className="w-[15%] sm:w-[5%] p-1 sm:p-2"></TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -308,18 +337,31 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                         <div className="space-y-1">
                           <Input
                             value={item.name}
-                            onChange={(e) => handleUpdateField(item.id!, "name", e.target.value)}
-                            placeholder={t("gradingSection.placeholderCriteriaName")}
+                            onChange={(e) =>
+                              handleUpdateField(
+                                item.id!,
+                                "name",
+                                e.target.value,
+                              )
+                            }
+                            placeholder={t(
+                              "gradingSection.placeholderCriteriaName",
+                            )}
                             className="h-8 text-[11px] sm:text-sm"
                           />
                           <div className="sm:hidden">
                             <Input
-
                               value={item.description || ""}
                               onChange={(e) =>
-                                handleUpdateField(item.id!, "description", e.target.value)
+                                handleUpdateField(
+                                  item.id!,
+                                  "description",
+                                  e.target.value,
+                                )
                               }
-                              placeholder={t("gradingSection.placeholderCriteriaDescription")}
+                              placeholder={t(
+                                "gradingSection.placeholderCriteriaDescription",
+                              )}
                               className="h-8 text-[11px] sm:text-sm"
                             />
                           </div>
@@ -338,28 +380,45 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                         <Input
                           value={item.description || ""}
                           onChange={(e) =>
-                            handleUpdateField(item.id!, "description", e.target.value)
+                            handleUpdateField(
+                              item.id!,
+                              "description",
+                              e.target.value,
+                            )
                           }
-                          placeholder={t("gradingSection.placeholderCriteriaDescription")}
+                          placeholder={t(
+                            "gradingSection.placeholderCriteriaDescription",
+                          )}
                           className="h-8 text-[11px] sm:text-sm"
                         />
                       ) : (
-                        <span className="text-muted-foreground text-sm">{item.description}</span>
+                        <span className="text-muted-foreground text-sm">
+                          {item.description}
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-center p-1 sm:p-2 align-top">
                       {isEditing ? (
                         <Input
                           type="number"
-                          className="h-8 text-center text-[11px] sm:text-sm px-1"
-                          value={item.maxScore}
-                          onChange={(e) =>
-                            handleUpdateField(
-                              item.id!,
-                              "maxScore",
-                              Number(e.target.value) || 0,
-                            )
-                          }
+                          min={0}
+                          className="h-8 text-center text-[11px] sm:text-sm px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          value={item.maxScore === 0 ? "" : item.maxScore}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "") {
+                              handleUpdateField(item.id!, "maxScore", 0);
+                              return;
+                            }
+                            const num = Number(val);
+                            if (!isNaN(num)) {
+                              handleUpdateField(
+                                item.id!,
+                                "maxScore",
+                                Math.max(0, num),
+                              );
+                            }
+                          }}
                         />
                       ) : (
                         item.maxScore
@@ -369,15 +428,33 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
                       {isEditing ? (
                         <Input
                           type="number"
-                          className="h-8 text-center text-[11px] sm:text-sm px-1"
-                          value={item.weightPercentage}
-                          onChange={(e) =>
-                            handleUpdateField(
-                              item.id!,
-                              "weightPercentage",
-                              Number(e.target.value) || 0,
-                            )
+                          min={0}
+                          placeholder="0-100%"
+                          className="h-8 text-center text-[11px] sm:text-sm px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          value={
+                            item.weightPercentage === 0
+                              ? ""
+                              : item.weightPercentage
                           }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "") {
+                              handleUpdateField(
+                                item.id!,
+                                "weightPercentage",
+                                0,
+                              );
+                              return;
+                            }
+                            const num = Number(val);
+                            if (!isNaN(num)) {
+                              handleUpdateField(
+                                item.id!,
+                                "weightPercentage",
+                                Math.max(0, num),
+                              );
+                            }
+                          }}
                         />
                       ) : (
                         `${item.weightPercentage}%`
@@ -403,7 +480,11 @@ export default function EvaluationCriteriaForm({ eventId, initialCriteria, onUpd
         </div>
 
         {isEditing && (
-          <Button onClick={handleAddCriteria} className="w-full" variant="outline">
+          <Button
+            onClick={handleAddCriteria}
+            className="w-full"
+            variant="outline"
+          >
             <Plus className="h-4 w-4 mr-2" />
             {t("gradingSection.addCriteria") || "Add Criteria"}
           </Button>

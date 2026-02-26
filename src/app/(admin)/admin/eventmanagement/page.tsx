@@ -59,7 +59,6 @@ import {
 } from "@/components/ui/sheet";
 import { RefreshCw, Trash2, Pencil, Search, Crown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ParticipantsSection from "@/app/(user)/event/[id]/Organizer/components/ParticipantsSection";
 
 type AdminEventListItem = {
   id: string;
@@ -394,7 +393,7 @@ export default function AdminEventManagementPage() {
             </div>
             <div className="flex w-full items-center gap-2 md:w-auto">
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                <SelectTrigger className="w-full md:w-[180px]">
+                <SelectTrigger className="w-full md:w-45">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -546,8 +545,8 @@ export default function AdminEventManagementPage() {
 
           <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-6">
             {!selectedEvent ? (
-              <div className="flex h-[240px] shrink-0 items-center justify-center rounded-md border border-dashed">
-                <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+              <div className="flex h-60 shrink-0 items-center justify-center rounded-md border border-dashed">
+                <div className="mx-auto flex max-w-105 flex-col items-center justify-center text-center">
                   <h3 className="mt-4 text-lg font-semibold">
                     {loadingEvent ? "Loading..." : "No event selected"}
                   </h3>
@@ -739,7 +738,7 @@ export default function AdminEventManagementPage() {
                                       })
                                     }
                                   >
-                                    <SelectTrigger className="w-[130px] h-8">
+                                    <SelectTrigger className="w-32.5 h-8">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -752,7 +751,7 @@ export default function AdminEventManagementPage() {
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-2">
-                                    <span className="truncate max-w-[140px] text-sm">
+                                    <span className="truncate max-w-35 text-sm">
                                       {p.team?.teamName || "-"}
                                     </span>
                                     {p.teamId && (

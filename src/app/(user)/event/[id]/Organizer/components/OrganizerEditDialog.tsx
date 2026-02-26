@@ -9,13 +9,7 @@ import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/u
 import {
   Upload,
   Trash2,
-  Trophy,
   Plus,
-  ChevronUp,
-  ChevronDown,
-  FileText,
-  Check,
-  X,
   HelpCircle,
   Calendar as CalendarIcon,
   Clock,
@@ -30,7 +24,7 @@ import {
   getEvent,
 } from "@/utils/apievent";
 import ImageCropDialog from "@/lib/image-crop-dialog";
-import { autoResizeTextarea, toYYYYMMDD, formatDate, toLocalDatetimeValue } from "@/utils/function";
+import { autoResizeTextarea, toYYYYMMDD, formatDate } from "@/utils/function";
 import type {
   EventData,
   EventEditSection,
@@ -67,7 +61,7 @@ export default function OrganizerEditDialog({
   event,
   onEventUpdate,
 }: Props) {
-  const { t, dateFormat, language } = useLanguage();
+  const { t, dateFormat } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [showCommitteeInput, setShowCommitteeInput] = useState(false);
 
@@ -862,13 +856,19 @@ export default function OrganizerEditDialog({
                     <Input
                       type="number"
                       value={form.committeeReward ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          committeeReward: e.target.value ? Number(e.target.value) : undefined,
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setForm((f) => ({ ...f, committeeReward: undefined }));
+                          return;
+                        }
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setForm((f) => ({ ...f, committeeReward: num }));
+                        }
+                      }}
                       placeholder={t("configuration.placeholderCommitteeReward")}
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 )}
@@ -877,13 +877,19 @@ export default function OrganizerEditDialog({
                   <Input
                     type="number"
                     value={form.guestReward ?? ""}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        guestReward: e.target.value ? Number(e.target.value) : undefined,
-                      }))
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                        setForm((f) => ({ ...f, guestReward: undefined }));
+                        return;
+                      }
+                      const num = Number(val);
+                      if (!isNaN(num)) {
+                        setForm((f) => ({ ...f, guestReward: num }));
+                      }
+                    }}
                     placeholder={t("configuration.placeholderGuestReward")}
+                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div className="space-y-3 rounded-lg border p-3">
@@ -913,13 +919,19 @@ export default function OrganizerEditDialog({
                           type="number"
                           min={0}
                           value={form.vrTeamCapGuest ?? ""}
-                          onChange={(e) =>
-                            setForm((f) => ({
-                              ...f,
-                              vrTeamCapGuest: e.target.value ? Number(e.target.value) : undefined,
-                            }))
-                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "") {
+                              setForm((f) => ({ ...f, vrTeamCapGuest: undefined }));
+                              return;
+                            }
+                            const num = Number(val);
+                            if (!isNaN(num)) {
+                              setForm((f) => ({ ...f, vrTeamCapGuest: num }));
+                            }
+                          }}
                           placeholder={t("configuration.placeholderVrTeamCapGuest")}
+                          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
 
@@ -930,15 +942,22 @@ export default function OrganizerEditDialog({
                             type="number"
                             min={0}
                             value={form.vrTeamCapCommittee ?? ""}
-                            onChange={(e) =>
-                              setForm((f) => ({
-                                ...f,
-                                vrTeamCapCommittee: e.target.value
-                                  ? Number(e.target.value)
-                                  : undefined,
-                              }))
-                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "") {
+                                setForm((f) => ({
+                                  ...f,
+                                  vrTeamCapCommittee: undefined,
+                                }));
+                                return;
+                              }
+                              const num = Number(val);
+                              if (!isNaN(num)) {
+                                setForm((f) => ({ ...f, vrTeamCapCommittee: num }));
+                              }
+                            }}
                             placeholder={t("configuration.placeholderVrTeamCapCommittee")}
+                            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </div>
                       )}
@@ -979,13 +998,19 @@ export default function OrganizerEditDialog({
                       type="number"
                       min={0}
                       value={form.maxTeams ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          maxTeams: e.target.value ? Number(e.target.value) : undefined,
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setForm((f) => ({ ...f, maxTeams: undefined }));
+                          return;
+                        }
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setForm((f) => ({ ...f, maxTeams: num }));
+                        }
+                      }}
                       placeholder={t("configuration.placeholderMaxGroups")}
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -994,13 +1019,19 @@ export default function OrganizerEditDialog({
                       type="number"
                       min={1}
                       value={form.maxTeamMembers ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          maxTeamMembers: e.target.value ? Number(e.target.value) : undefined,
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setForm((f) => ({ ...f, maxTeamMembers: undefined }));
+                          return;
+                        }
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setForm((f) => ({ ...f, maxTeamMembers: num }));
+                        }
+                      }}
                       placeholder={t("configuration.placeholderMaxPresenters")}
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>
@@ -1172,7 +1203,7 @@ export default function OrganizerEditDialog({
                     {t("rewardsSection.noRewards")}
                   </div>
                 ) : (
-                  srList.map((reward, idx) => (
+                  srList.map((reward) => (
                     <div
                       key={reward.id}
                       className="relative p-4 rounded-lg border bg-card space-y-4"

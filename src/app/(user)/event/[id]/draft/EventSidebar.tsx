@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2, LucideIcon, Save } from "lucide-react";
@@ -24,7 +23,6 @@ export function EventSidebar({
   sections,
   activeSection,
   onSectionChange,
-  eventId,
   onSaveDraft,
   completionPercent,
   isSaving,

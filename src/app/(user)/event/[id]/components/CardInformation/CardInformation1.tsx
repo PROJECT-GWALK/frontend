@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Info, MapPin, Link as LinkIcon, Eye, Edit, Globe, Lock, HelpCircle } from "lucide-react";
+import { Info, MapPin, Link as LinkIcon, Edit, Globe, Lock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Separator } from "@/components/ui/separator";
 import { EventData } from "@/utils/types";
@@ -17,7 +17,7 @@ type Props = {
   linkLabel?: string;
 };
 
-export default function CardInformation1({ event, editable, onEdit, linkLabel = "Link" }: Props) {
+export default function CardInformation1({ event, editable, onEdit }: Props) {
   const { t } = useLanguage();
 
   return (

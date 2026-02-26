@@ -4,7 +4,7 @@ import React, { useCallback, useState } from "react";
 import Cropper, { Area, MediaSize } from "react-easy-crop";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, RotateCw, RotateCcw, RefreshCcw, Check, X } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCw, RotateCcw, RefreshCcw, Check } from "lucide-react";
 
 type ImageCropDialogProps = {
   open: boolean;

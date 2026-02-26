@@ -1,7 +1,7 @@
 "use client";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -22,7 +22,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,7 +43,7 @@ import {
 } from "@/components/ui/pagination";
 import { getCurrentUser } from "@/utils/apiuser";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, ShieldOff, Ban, UserCheck, Trash2, Check, Search } from "lucide-react";
+import { Shield, ShieldOff, Ban, UserCheck, Trash2 } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -66,7 +65,7 @@ export default function UserManagementPage() {
   // เพิ่ม state สำหรับตัวกรองบทบาท
   const [filterRole, setFilterRole] = useState<"ALL" | "ADMIN" | "USER">("ALL");
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       // ใช้ค่าจาก filterRole เพื่อเรียก API ที่ให้มา
       const roleParam = filterRole === "ALL" ? undefined : filterRole;
@@ -80,11 +79,11 @@ export default function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterRole]);
 
   useEffect(() => {
     fetchUsers();
-  }, [filterRole]); // โหลดใหม่เมื่อเปลี่ยนตัวกรอง
+  }, [fetchUsers]); // โหลดใหม่เมื่อเปลี่ยนตัวกรอง
 
   const handleRoleChange = async (id: string, role: "USER" | "ADMIN") => {
     try {

@@ -3,13 +3,12 @@ import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Calendar as CalendarIcon,
   Users,
   ArrowLeft,
   Info,
-  UserCheck,
   Award,
   Save,
   Loader2,
@@ -18,7 +17,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventSidebar } from "@/app/(user)/event/[id]/draft/EventSidebar";
 
-import { validateEventTime, toDate, getDateTimeString, toLocalDatetimeValue } from "@/utils/function";
+import { validateEventTime, getDateTimeString, toLocalDatetimeValue } from "@/utils/function";
 import {
   getEvent,
   publishEvent,
@@ -32,7 +31,6 @@ import {
 import {
   createEvaluationCriteria,
   updateEvaluationCriteria,
-  deleteEvaluationCriteria,
   getEvaluationCriteria,
 } from "@/utils/apievaluation";
 
@@ -620,8 +618,10 @@ export default function EventDraft() {
                 [res.reward.id]: res.reward.image || prev[r.id] || null,
               }));
               setSrFiles((prev) => {
-                const { [r.id]: _, ...rest } = prev;
-                return { ...rest, [res.reward.id]: null };
+                const rest = { ...prev };
+                delete rest[r.id];
+                rest[res.reward.id] = null;
+                return rest;
               });
             }
           } else {
