@@ -198,7 +198,7 @@ export default function CommitteeGradingForm({
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-none">
+          <div className="flex items-center gap-2 flex-none self-end sm:self-auto">
             {submitted && !isEditing && (
               <div className="flex items-center gap-2">
                 <Button
