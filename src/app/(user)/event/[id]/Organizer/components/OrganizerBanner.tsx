@@ -13,27 +13,29 @@ export default function OrganizerBanner({ event, open, onOpenChange }: Props) {
   return (
     <>
       <div
-        className="relative w-full aspect-video md:aspect-2/1 md:h-100 overflow-hidden cursor-zoom-in"
+        className="relative w-full overflow-hidden cursor-zoom-in"
         onClick={() => onOpenChange(true)}
       >
         {event?.imageCover ? (
           <Image
             src={event.imageCover}
             alt={event.eventName || "Event banner"}
-            fill
+            width={1200}
+            height={600}
             sizes="100vw"
-            className="object-cover rounded-xl"
+            className="w-full h-auto rounded-xl"
           />
         ) : (
           <Image
             src="/banner.png"
             alt="Default banner"
-            fill
+            width={1200}
+            height={600}
             sizes="100vw"
-            className="object-cover rounded-xl"
+            className="w-full h-auto rounded-xl"
           />
         )}
-        <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent pointer-events-none rounded-xl" />
       </div>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent

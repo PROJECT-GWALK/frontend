@@ -451,9 +451,6 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                     value={topN}
                     onChange={(e) => {
                       const value = e.target.value;
-                      if (value.includes("e") || value.includes("E") || value.includes("-")) {
-                        return;
-                      }
                       if (value === "") {
                         setTopN("");
                         return;
@@ -467,12 +464,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                         }
                       }
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === "e" || e.key === "E" || e.key === "-") {
-                        e.preventDefault();
-                      }
-                    }}
-                    className="w-20"
+                    className="w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
                   />
                 </div>
               </div>

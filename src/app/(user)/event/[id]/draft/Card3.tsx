@@ -83,17 +83,10 @@ export default function Card3(props: Props) {
                 value={maxPresenters}
                 onChange={(e) => {
                   const v = e.target.value;
-                  if (v.includes("e") || v.includes("E") || v.includes("-")) {
-                    return;
-                  }
                   const n = Number(v);
                   setMaxPresenters(!v ? v : n < 0 ? "0" : v);
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "e" || e.key === "E" || e.key === "-") {
-                    e.preventDefault();
-                  }
-                }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -108,17 +101,10 @@ export default function Card3(props: Props) {
                 value={maxGroups}
                 onChange={(e) => {
                   const v = e.target.value;
-                  if (v.includes("e") || v.includes("E") || v.includes("-")) {
-                    return;
-                  }
                   const n = Number(v);
                   setMaxGroups(!v ? v : n < 0 ? "0" : v);
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "e" || e.key === "E" || e.key === "-") {
-                    e.preventDefault();
-                  }
-                }}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
@@ -169,16 +155,8 @@ export default function Card3(props: Props) {
                     value={committeeReward}
                     onChange={(e) => {
                       const v = e.target.value;
-                      if (v.includes("e") || v.includes("E") || v.includes("-")) {
-                        return;
-                      }
                       const n = Number(v);
                       setCommitteeReward(!v ? v : n < 0 ? "0" : v);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "e" || e.key === "E" || e.key === "-") {
-                        e.preventDefault();
-                      }
                     }}
                   />
                 </div>
@@ -211,17 +189,9 @@ export default function Card3(props: Props) {
                   value={guestRewardAmount}
                   onChange={(e) => {
                     const v = e.target.value;
-                  if (v.includes("e") || v.includes("E") || v.includes("-")) {
-                    return;
-                  }
                     const n = Number(v);
                     setGuestRewardAmount(!v ? v : n < 0 ? "0" : v);
                   }}
-                onKeyDown={(e) => {
-                  if (e.key === "e" || e.key === "E" || e.key === "-") {
-                    e.preventDefault();
-                  }
-                }}
                 />
               </div>
             </div>

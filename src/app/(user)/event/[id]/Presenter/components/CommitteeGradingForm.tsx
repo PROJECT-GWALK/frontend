@@ -169,7 +169,7 @@ export default function CommitteeGradingForm({
           <div className="flex-1 min-w-0">
             <CardTitle className="text-lg flex items-start sm:items-center gap-2 text-foreground">
               <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
-              <span className="break-words">
+              <span className="wrap-break-word">
                 {t("committeeGrade.title")} {teamName}
               </span>
             </CardTitle>
@@ -215,7 +215,7 @@ export default function CommitteeGradingForm({
               <div key={c.id} className="p-4 bg-card/50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold break-words leading-snug">
+                    <div className="font-semibold wrap-break-word leading-snug">
                       {c.name}
                       <span className="font-light"> ({c.weightPercentage}%)</span>
                       {c.description ? (
@@ -236,23 +236,18 @@ export default function CommitteeGradingForm({
                       value={score === 0 ? "" : (score ?? "")}
                       onChange={(e) => {
                         const val = e.target.value;
-                        if (val.includes("e") || val.includes("E") || val.includes("-")) {
-                          return;
-                        }
                         if (val === "") {
                           handleScoreChange(c.id, "");
-                        } else {
-                          handleScoreChange(c.id, val);
+                          return;
                         }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "e" || e.key === "E" || e.key === "-") {
-                          e.preventDefault();
+                        const num = parseFloat(val);
+                        if (!isNaN(num)) {
+                          handleScoreChange(c.id, val);
                         }
                       }}
                       placeholder="0"
                       disabled={disabled || (submitted && !isEditing)}
-                      className="w-24 text-center"
+                      className="w-24 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
                       / {c.maxScore}

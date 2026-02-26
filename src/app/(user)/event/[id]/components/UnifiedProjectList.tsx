@@ -584,21 +584,9 @@ export default function UnifiedProjectList({
                 value={vrAmount === 0 ? "" : vrAmount}
                 onChange={(e) => {
                   const val = e.target.value;
-                  if (
-                    val.includes("e") ||
-                    val.includes("E") ||
-                    val.includes("-")
-                  ) {
-                    return;
-                  }
                   setVrAmount(val === "" ? 0 : Number(val));
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "e" || e.key === "E" || e.key === "-") {
-                    e.preventDefault();
-                  }
-                }}
-                className="w-full mb-4"
+                className="w-full mb-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="จำนวน VR"
               />
             </div>

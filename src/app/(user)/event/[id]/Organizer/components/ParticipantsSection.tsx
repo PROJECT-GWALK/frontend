@@ -565,65 +565,62 @@ export default function ParticipantsSection({
                                                 {p.virtualUsed || 0} /
                                               </span>
                                               <Input
-                                                type="number"
-                                                min={0}
-                                                step={1}
-                                                value={
-                                                  typeof p.virtualReward ===
-                                                  "number"
-                                                    ? p.virtualReward === 0
-                                                      ? ""
-                                                      : p.virtualReward
-                                                    : ""
-                                                }
-                                                onChange={(e) => {
-                                                  const rawValue =
-                                                    e.target.value;
-                                                  if (
-                                                    rawValue.includes("e") ||
-                                                    rawValue.includes("E") ||
-                                                    rawValue.includes("-")
-                                                  ) {
-                                                    return;
+                                                  type="number"
+                                                  min={0}
+                                                  step={1}
+                                                  value={
+                                                    typeof p.virtualReward ===
+                                                    "number"
+                                                      ? p.virtualReward === 0
+                                                        ? ""
+                                                        : p.virtualReward
+                                                      : ""
                                                   }
-                                                  const raw = Number(rawValue);
-                                                  const val =
-                                                    rawValue === ""
-                                                      ? 0
-                                                      : Number.isFinite(raw)
-                                                        ? Math.max(0, raw)
-                                                        : 0;
-                                                  setParticipants((all) =>
-                                                    all.map((it) =>
-                                                      it.id === p.id
-                                                        ? {
-                                                            ...it,
-                                                            virtualReward: val,
-                                                          }
-                                                        : it,
-                                                    ),
-                                                  );
-                                                }}
-                                                onBlur={() => {
-                                                  applyUpdate(p.id, {
-                                                    virtualReward:
-                                                      p.virtualReward || 0,
-                                                  });
-                                                }}
-                                                onKeyDown={(e) => {
-                                                  if (e.key === "Enter") {
-                                                    e.currentTarget.blur();
-                                                  }
-                                                  if (
-                                                    e.key === "e" ||
-                                                    e.key === "E" ||
-                                                    e.key === "-"
-                                                  ) {
-                                                    e.preventDefault();
-                                                  }
-                                                }}
-                                                className="w-24"
-                                              />
+                                                  onChange={(e) => {
+                                                    const rawValue =
+                                                      e.target.value;
+                                                    if (rawValue === "") {
+                                                      setParticipants((all) =>
+                                                        all.map((it) =>
+                                                          it.id === p.id
+                                                            ? {
+                                                                ...it,
+                                                                virtualReward: 0,
+                                                              }
+                                                            : it,
+                                                        ),
+                                                      );
+                                                      applyUpdate(p.id, {
+                                                        virtualReward: 0,
+                                                      });
+                                                      return;
+                                                    }
+                                                    const raw = Number(rawValue);
+                                                    if (!isNaN(raw)) {
+                                                      const val = Math.max(0, raw);
+                                                      setParticipants((all) =>
+                                                        all.map((it) =>
+                                                          it.id === p.id
+                                                            ? {
+                                                                ...it,
+                                                                virtualReward:
+                                                                  val,
+                                                              }
+                                                            : it,
+                                                        ),
+                                                      );
+                                                      applyUpdate(p.id, {
+                                                        virtualReward: val,
+                                                      });
+                                                    }
+                                                  }}
+                                                  onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                      e.currentTarget.blur();
+                                                    }
+                                                  }}
+                                                  className="w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
                                               <span className="text-sm text-muted-foreground">
                                                 {unitReward}
                                               </span>

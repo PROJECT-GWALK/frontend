@@ -375,7 +375,7 @@ export default function Card5(props: Props) {
                               <Input
                                 type="number"
                                 min="1"
-                                className="text-center"
+                                className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 value={
                                   criteria.maxScore === 0
                                     ? ""
@@ -383,27 +383,11 @@ export default function Card5(props: Props) {
                                 }
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  if (
-                                    val.includes("e") ||
-                                    val.includes("E") ||
-                                    val.includes("-")
-                                  ) {
-                                    return;
-                                  }
                                   handleUpdateField(
                                     criteria.id,
                                     "maxScore",
                                     val === "" ? 0 : Number(val),
                                   );
-                                }}
-                                onKeyDown={(e) => {
-                                  if (
-                                    e.key === "e" ||
-                                    e.key === "E" ||
-                                    e.key === "-"
-                                  ) {
-                                    e.preventDefault();
-                                  }
                                 }}
                               />
                             ) : (
@@ -416,7 +400,7 @@ export default function Card5(props: Props) {
                                 type="number"
                                 min="0"
                                 max="100"
-                                className="text-center"
+                                className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 value={
                                   criteria.weightPercentage === 0
                                     ? ""
@@ -424,27 +408,11 @@ export default function Card5(props: Props) {
                                 }
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  if (
-                                    val.includes("e") ||
-                                    val.includes("E") ||
-                                    val.includes("-")
-                                  ) {
-                                    return;
-                                  }
                                   handleUpdateField(
                                     criteria.id,
                                     "weightPercentage",
                                     val === "" ? 0 : Number(val),
                                   );
-                                }}
-                                onKeyDown={(e) => {
-                                  if (
-                                    e.key === "e" ||
-                                    e.key === "E" ||
-                                    e.key === "-"
-                                  ) {
-                                    e.preventDefault();
-                                  }
                                 }}
                               />
                             ) : (

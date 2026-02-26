@@ -590,7 +590,7 @@ export default function ProjectDetailPage({ params }: Props) {
         {/* Hero Section */}
         <div className="relative group rounded-xl overflow-hidden shadow-sm border bg-card">
           <div
-            className="relative w-full aspect-21/9 md:h-100 bg-muted cursor-pointer"
+            className="relative w-full overflow-hidden cursor-pointer"
             onClick={() => setBannerOpen(true)}
           >
             {project.img &&
@@ -598,15 +598,19 @@ export default function ProjectDetailPage({ params }: Props) {
               <Image
                 src={project.img}
                 alt={project.title}
-                fill
-                className="object-cover transition-transform duration-700 opacity-90"
+                width={1200}
+                height={600}
+                sizes="100vw"
+                className="w-full h-auto transition-transform duration-700 opacity-90"
               />
             ) : (
               <Image
                 src="/banner.png"
                 alt={project.title}
-                fill
-                className="object-cover transition-transform duration-700 opacity-90"
+                width={1200}
+                height={600}
+                sizes="100vw"
+                className="w-full h-auto transition-transform duration-700 opacity-90"
               />
             )}
             <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
@@ -1104,17 +1108,9 @@ export default function ProjectDetailPage({ params }: Props) {
                               value={virtualReward === 0 ? "" : virtualReward}
                               onChange={(e) => {
                                 const val = e.target.value;
-                                if (val.includes("e") || val.includes("E") || val.includes("-")) {
-                                  return;
-                                }
                                 setVirtualReward(val === "" ? 0 : Number(val));
                               }}
-                              onKeyDown={(e) => {
-                                if (e.key === "e" || e.key === "E" || e.key === "-") {
-                                  e.preventDefault();
-                                }
-                              }}
-                              className="h-10"
+                              className="h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               disabled={!isEventActive}
                             />
                             <Button

@@ -401,30 +401,22 @@ export default function EvaluationCriteriaForm({
                       {isEditing ? (
                         <Input
                           type="number"
-                          className="h-8 text-center text-[11px] sm:text-sm px-1"
+                          min={0}
+                          className="h-8 text-center text-[11px] sm:text-sm px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           value={item.maxScore === 0 ? "" : item.maxScore}
                           onChange={(e) => {
                             const val = e.target.value;
-                            if (
-                              val.includes("e") ||
-                              val.includes("E") ||
-                              val.includes("-")
-                            ) {
+                            if (val === "") {
+                              handleUpdateField(item.id!, "maxScore", 0);
                               return;
                             }
-                            handleUpdateField(
-                              item.id!,
-                              "maxScore",
-                              val === "" ? 0 : Number(val),
-                            );
-                          }}
-                          onKeyDown={(e) => {
-                            if (
-                              e.key === "e" ||
-                              e.key === "E" ||
-                              e.key === "-"
-                            ) {
-                              e.preventDefault();
+                            const num = Number(val);
+                            if (!isNaN(num)) {
+                              handleUpdateField(
+                                item.id!,
+                                "maxScore",
+                                Math.max(0, num),
+                              );
                             }
                           }}
                         />
@@ -436,7 +428,9 @@ export default function EvaluationCriteriaForm({
                       {isEditing ? (
                         <Input
                           type="number"
-                          className="h-8 text-center text-[11px] sm:text-sm px-1"
+                          min={0}
+                          placeholder="0-100%"
+                          className="h-8 text-center text-[11px] sm:text-sm px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           value={
                             item.weightPercentage === 0
                               ? ""
@@ -444,26 +438,21 @@ export default function EvaluationCriteriaForm({
                           }
                           onChange={(e) => {
                             const val = e.target.value;
-                            if (
-                              val.includes("e") ||
-                              val.includes("E") ||
-                              val.includes("-")
-                            ) {
+                            if (val === "") {
+                              handleUpdateField(
+                                item.id!,
+                                "weightPercentage",
+                                0,
+                              );
                               return;
                             }
-                            handleUpdateField(
-                              item.id!,
-                              "weightPercentage",
-                              val === "" ? 0 : Number(val),
-                            );
-                          }}
-                          onKeyDown={(e) => {
-                            if (
-                              e.key === "e" ||
-                              e.key === "E" ||
-                              e.key === "-"
-                            ) {
-                              e.preventDefault();
+                            const num = Number(val);
+                            if (!isNaN(num)) {
+                              handleUpdateField(
+                                item.id!,
+                                "weightPercentage",
+                                Math.max(0, num),
+                              );
                             }
                           }}
                         />
