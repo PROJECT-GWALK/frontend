@@ -14,24 +14,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ResultSection from "../components/ResultSection";
 import FeedbackList from "./components/FeedbackList";
 import { getEvaluationCriteria } from "@/utils/apievaluation";
-import { useParams, useRouter } from "next/navigation";
-
 import OrganizerHeader from "./components/OrganizerHeader";
 import OrganizerBanner from "./components/OrganizerBanner";
 import OrganizerDashboard from "./components/OrganizerDashboard";
 import OrganizerEditDialog from "./components/OrganizerEditDialog";
 import EvaluationCriteriaForm from "./components/EvaluationCriteriaForm";
 import GradingDashboard from "./components/GradingDashboard";
-
-export default function OrganizerPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string | undefined;
-
-  if (id) router.replace(`/event/${id}`);
-
-  return null;
-}
 
 type Props = {
   id: string;
@@ -60,6 +48,7 @@ export function OrganizerView({ id, event }: Props) {
       sortOrder?: number;
     }[]
   >([]);
+  const [gradingRefreshTrigger, setGradingRefreshTrigger] = useState(0);
 
   const { t } = useLanguage();
 
@@ -252,9 +241,12 @@ export function OrganizerView({ id, event }: Props) {
                   <EvaluationCriteriaForm
                     eventId={id}
                     initialCriteria={evaluationCriteria}
-                    onUpdate={setEvaluationCriteria}
+                    onUpdate={(criteria) => {
+                      setEvaluationCriteria(criteria);
+                      setGradingRefreshTrigger((prev) => prev + 1);
+                    }}
                   />
-                  <GradingDashboard eventId={id} />
+                  <GradingDashboard eventId={id} refreshTrigger={gradingRefreshTrigger} />
                 </div>
               </TabsContent>
             )}

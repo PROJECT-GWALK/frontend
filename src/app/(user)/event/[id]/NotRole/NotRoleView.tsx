@@ -5,22 +5,9 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import InformationSection from "../components/InformationSection";
 import type { EventData } from "@/utils/types";
 import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
-import { useEffect, useState } from "react";
-
-export default function NotRolePage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string | undefined;
-
-  useEffect(() => {
-    if (!id) return;
-    router.replace(`/event/${id}`);
-  }, [id, router]);
-
-  return null;
-}
+import { useState } from "react";
 
 type Props = {
   id: string;

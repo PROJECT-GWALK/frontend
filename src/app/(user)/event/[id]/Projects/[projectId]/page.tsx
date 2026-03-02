@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,7 @@ import {
   Gift,
   Trophy,
   AlertCircle,
+  File,
 } from "lucide-react";
 import {
   getTeamById,
@@ -147,6 +148,21 @@ export default function ProjectDetailPage({ params }: Props) {
     (eventData?.myRole === "COMMITTEE" || eventData?.myRole === "GUEST") &&
     vrTeamCapEnabled &&
     totalVrForThisTeam > vrTeamCap;
+
+  const sortedFiles = useMemo(() => {
+    if (!project?.files) return [];
+    if (!eventData?.fileTypes) return project.files;
+
+    const fileTypeOrder = new Map(
+      eventData.fileTypes.map((ft, index) => [ft.id, index])
+    );
+
+    return [...project.files].sort((a, b) => {
+      const orderA = fileTypeOrder.get(a.fileTypeId ?? "") ?? 9999;
+      const orderB = fileTypeOrder.get(b.fileTypeId ?? "") ?? 9999;
+      return orderA - orderB;
+    });
+  }, [project?.files, eventData?.fileTypes]);
 
   const handleSaveVr = async () => {
     if (!eventData || !project) return;
@@ -790,8 +806,8 @@ export default function ProjectDetailPage({ params }: Props) {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 gap-8">
-                  {project.files && project.files.length > 0 ? (
-                    project.files.map((file, idx) => {
+                  {sortedFiles.length > 0 ? (
+                    sortedFiles.map((file, idx) => {
                       const ft = eventData?.fileTypes?.find(
                         (t) => t.id === file.fileTypeId,
                       );
@@ -869,13 +885,12 @@ export default function ProjectDetailPage({ params }: Props) {
                                   <Button variant="outline" size="sm" asChild>
                                     <a
                                       href={file.url}
-                                      download
                                       target="_blank"
                                       rel="noreferrer"
                                       className="flex items-center gap-2"
                                     >
-                                      <Download className="w-4 h-4" />
-                                      {t("projectDetail.files.downloadPDF")}
+                                      <File className="w-4 h-4" />
+                                      {t("projectDetail.files.openPDF")}
                                     </a>
                                   </Button>
                                 </div>

@@ -203,7 +203,7 @@ export default function ParticipantsSection({
 
   const getFilteredList = (group: EventGroup) => {
     const query = searchQueries[group].toLowerCase();
-    return participants.filter(
+    const filtered = participants.filter(
       (p) =>
         p.eventGroup === group &&
         (p.user?.name?.toLowerCase().includes(query) ||
@@ -212,6 +212,15 @@ export default function ParticipantsSection({
           p.team?.name?.toLowerCase().includes(query) ||
           p.team?.teamName?.toLowerCase().includes(query)),
     );
+    if (group !== "ORGANIZER") return filtered;
+
+    return [...filtered].sort((a, b) => {
+      const leaderDiff = Number(Boolean(b.isLeader)) - Number(Boolean(a.isLeader));
+      if (leaderDiff !== 0) return leaderDiff;
+      const an = (a.user?.name || a.user?.username || a.user?.email || "").toLowerCase();
+      const bn = (b.user?.name || b.user?.username || b.user?.email || "").toLowerCase();
+      return an.localeCompare(bn);
+    });
   };
 
   const totalCount = participants.length;

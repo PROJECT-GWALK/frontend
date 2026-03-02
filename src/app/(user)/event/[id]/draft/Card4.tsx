@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +51,8 @@ export default function Card4(props: Props) {
   } = props;
 
   const [dragState, setDragState] = useState<Record<string, boolean>>({});
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollToBottomRef = useRef(false);
 
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
@@ -83,6 +85,13 @@ export default function Card4(props: Props) {
 
   const { t } = useLanguage();
 
+  useEffect(() => {
+    if (!shouldScrollToBottomRef.current) return;
+    shouldScrollToBottomRef.current = false;
+    const el = listRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [specialRewards.length]);
+
   return (
     <Card id="card4" className="scroll-mt-6 lg:col-span-2 border-none shadow-md">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -92,7 +101,14 @@ export default function Card4(props: Props) {
           </div>
           <span className="">{t("rewardsSection.specialRewards")}</span>
         </CardTitle>
-        <Button onClick={handleAddSpecialReward} size="sm" variant="outline">
+        <Button
+          onClick={() => {
+            shouldScrollToBottomRef.current = true;
+            handleAddSpecialReward();
+          }}
+          size="sm"
+          variant="outline"
+        >
           <Plus className="h-4 w-4 mr-1" />
           {t("rewardsSection.addReward")}
         </Button>
@@ -122,93 +138,36 @@ export default function Card4(props: Props) {
             <p className="text-sm">{t("rewardsSection.clickToAdd")}</p>
           </div>
         ) : (
-          specialRewards.map((reward, index) => (
-            <div key={reward.id} className="border rounded-lg p-4 space-y-4 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {t("rewardsSection.rewardNum")} #{index + 1}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                  onClick={() => handleRemoveReward(reward.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+          <div ref={listRef} className="max-h-105 overflow-y-auto custom-scrollbar pr-2 space-y-4">
+            {specialRewards.map((reward, index) => (
+              <div key={reward.id} className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {t("rewardsSection.rewardNum")} #{index + 1}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => handleRemoveReward(reward.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-24 sm:w-32">
-                  {srPreviews[reward.id] ? (
-                    <>
-                      <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
-                        <Image
-                          src={srPreviews[reward.id] as string}
-                          alt="Reward image preview"
-                          fill
-                          sizes="128px"
-                          className="object-cover"
-                          unoptimized
-                        />
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          ref={(el) => {
-                            rewardFileRefs.current[reward.id] = el;
-                          }}
-                          onChange={(e) => handleRewardFileChange(reward.id, e)}
-                        />
-                      </div>
-                      <div className="mt-2 flex items-center justify-center gap-2">
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          aria-label="Change image"
-                          title={t("eventInfo.change")}
-                          onClick={() => openRewardFilePicker(reward.id)}
-                        >
-                          <Upload className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          aria-label="Remove image"
-                          title={t("eventInfo.remove")}
-                          onClick={() => handleRemoveRewardImage(reward.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        className={`relative w-full cursor-pointer rounded-lg ${
-                          dragState[reward.id] ? "ring-2 ring-primary bg-primary/10" : ""
-                        }`}
-                        onClick={() => openRewardFilePicker(reward.id)}
-                        onDragOver={(e) => handleDragOver(e, reward.id)}
-                        onDragLeave={(e) => handleDragLeave(e, reward.id)}
-                        onDrop={(e) => handleDrop(e, reward.id)}
-                      >
-                        <div
-                          className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
-                            dragState[reward.id]
-                              ? "border-primary"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
-                            <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
-                            <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
-                              {t("eventInfo.clickToUpload")}
-                            </p>
-                            <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">
-                              PNG, JPG, GIF
-                            </p>
-                          </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-24 sm:w-32">
+                    {srPreviews[reward.id] ? (
+                      <>
+                        <div className="relative border rounded-lg overflow-hidden aspect-square bg-muted w-full">
+                          <Image
+                            src={srPreviews[reward.id] as string}
+                            alt="Reward image preview"
+                            fill
+                            sizes="128px"
+                            className="object-cover"
+                            unoptimized
+                          />
                           <input
                             type="file"
                             className="hidden"
@@ -219,56 +178,115 @@ export default function Card4(props: Props) {
                             onChange={(e) => handleRewardFileChange(reward.id, e)}
                           />
                         </div>
-                      </div>
-                      <div className="mt-2 flex items-center justify-center">
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          aria-label="Upload image"
-                          title={t("eventInfo.clickToUpload")}
+                        <div className="mt-2 flex items-center justify-center gap-2">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            aria-label="Change image"
+                            title={t("eventInfo.change")}
+                            onClick={() => openRewardFilePicker(reward.id)}
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            aria-label="Remove image"
+                            title={t("eventInfo.remove")}
+                            onClick={() => handleRemoveRewardImage(reward.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          className={`relative w-full cursor-pointer rounded-lg ${
+                            dragState[reward.id] ? "ring-2 ring-primary bg-primary/10" : ""
+                          }`}
                           onClick={() => openRewardFilePicker(reward.id)}
+                          onDragOver={(e) => handleDragOver(e, reward.id)}
+                          onDragLeave={(e) => handleDragLeave(e, reward.id)}
+                          onDrop={(e) => handleDrop(e, reward.id)}
                         >
-                          <Upload className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="flex-1 space-y-3">
-                  <div className="space-y-2">
-                    <Label>{t("rewardsSection.rewardName")}</Label>
-                    <Input
-                      placeholder={t("rewardsSection.placeholderRewardName")}
-                      value={reward.name}
-                      onChange={(e) => handleRewardChange(reward.id, "name", e.target.value)}
-                    />
-                    {rewardErrors && rewardErrors[reward.id] && (
-                      <p className="text-xs text-destructive mt-1">{rewardErrors[reward.id]}</p>
+                          <div
+                            className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
+                              dragState[reward.id]
+                                ? "border-primary"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
+                              <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
+                              <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
+                                {t("eventInfo.clickToUpload")}
+                              </p>
+                              <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">
+                                PNG, JPG, GIF
+                              </p>
+                            </div>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              ref={(el) => {
+                                rewardFileRefs.current[reward.id] = el;
+                              }}
+                              onChange={(e) => handleRewardFileChange(reward.id, e)}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center justify-center">
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            aria-label="Upload image"
+                            title={t("eventInfo.clickToUpload")}
+                            onClick={() => openRewardFilePicker(reward.id)}
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label>{t("rewardsSection.rewardDescription")}</Label>
-                      <span className="text-xs text-muted-foreground">
-                        {(reward.description || "").length}/60
-                      </span>
+                  <div className="flex-1 space-y-3">
+                    <div className="space-y-2">
+                      <Label>{t("rewardsSection.rewardName")}</Label>
+                      <Input
+                        placeholder={t("rewardsSection.placeholderRewardName")}
+                        value={reward.name}
+                        onChange={(e) => handleRewardChange(reward.id, "name", e.target.value)}
+                      />
+                      {rewardErrors && rewardErrors[reward.id] && (
+                        <p className="text-xs text-destructive mt-1">{rewardErrors[reward.id]}</p>
+                      )}
                     </div>
-                    <Textarea
-                      ref={(el) => autoResizeTextarea(el)}
-                      placeholder={t("rewardsSection.placeholderRewardDesc")}
-                      value={reward.description ?? ""}
-                      maxLength={60}
-                      onChange={(e) => {
-                        autoResizeTextarea(e.target);
-                        handleRewardChange(reward.id, "description", e.target.value);
-                      }}
-                      className="resize-none overflow-hidden"
-                    />
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label>{t("rewardsSection.rewardDescription")}</Label>
+                        <span className="text-xs text-muted-foreground">
+                          {(reward.description || "").length}/60
+                        </span>
+                      </div>
+                      <Textarea
+                        ref={(el) => autoResizeTextarea(el)}
+                        placeholder={t("rewardsSection.placeholderRewardDesc")}
+                        value={reward.description ?? ""}
+                        maxLength={60}
+                        onChange={(e) => {
+                          autoResizeTextarea(e.target);
+                          handleRewardChange(reward.id, "description", e.target.value);
+                        }}
+                        className="resize-none overflow-hidden"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>

@@ -48,6 +48,9 @@ export function middleware(request: NextRequest) {
     pathname === "/sign-in" || 
     pathname === "/error" ||
     pathname === "/event" ||
+    pathname === "/manifest.json" ||
+    pathname === "/site.webmanifest" ||
+    pathname === "/manifest.webmanifest" ||
     pathname.startsWith("/profile/") ||
     /^\/event\/[^/]+\/Projects\/[^/]+(\/Scores)?$/.test(pathname) ||
     pathname.startsWith("/api/auth") ||

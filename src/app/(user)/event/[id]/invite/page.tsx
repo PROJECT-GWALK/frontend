@@ -33,6 +33,7 @@ export default function InviteConfirmPage() {
   const [loading, setLoading] = useState(true);
   const [bannerOpen, setBannerOpen] = useState(false);
   const {t} = useLanguage();
+  const isAlreadyMember = Boolean(event?.myRole);
 
   useEffect(() => {
     if (!id) return;
@@ -193,20 +194,35 @@ export default function InviteConfirmPage() {
             </div>
 
             {event?.myRole && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 text-center">
-                    <p className="text-yellow-800 dark:text-yellow-200">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900 rounded-2xl p-5 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold">
+                      ✓
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-emerald-900 dark:text-emerald-100 font-semibold text-base">
                         {t("inviteSection.already_member")}
-                        <Badge 
-                            variant="secondary" 
-                            className="ml-2 text-white"
-                            style={{
-                                backgroundColor: `var(--role-${event.myRole.toLowerCase()})`
-                            }}
-                        >
-                            {event.myRole}
-                        </Badge>
-                    </p>
+                      </div>
+                      <div className="text-sm text-emerald-800/80 dark:text-emerald-200/80">
+                        {t("inviteSection.already_member_hint")}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center md:justify-end">
+                    <Badge
+                      variant="secondary"
+                      className="text-sm font-bold text-white px-3 py-1.5"
+                      style={{
+                        backgroundColor: `var(--role-${event.myRole.toLowerCase()})`,
+                      }}
+                    >
+                      {event.myRole}
+                    </Badge>
+                  </div>
                 </div>
+              </div>
             )}
           </CardHeader>
 
@@ -243,20 +259,22 @@ export default function InviteConfirmPage() {
                     <ArrowLeft className="w-4 h-4" />
                     {t("inviteSection.button_cancel")}
                   </Button>
-                  <Button 
-                    onClick={doJoin} 
-                    disabled={joining}
-                    className="sm:min-w-35 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                  >
-                    {joining ? (
-                      <>
-                        <span className="animate-spin mr-2">⏳</span>
-                        {t("inviteSection.ongoing")}
-                      </>
-                    ) : (
-                      t("inviteSection.button_confirm")
-                    )}
-                  </Button>
+                  {!isAlreadyMember && (
+                    <Button 
+                      onClick={doJoin} 
+                      disabled={joining}
+                      className="sm:min-w-35 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    >
+                      {joining ? (
+                        <>
+                          <span className="animate-spin mr-2">⏳</span>
+                          {t("inviteSection.ongoing")}
+                        </>
+                      ) : (
+                        t("inviteSection.button_confirm")
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

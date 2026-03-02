@@ -179,7 +179,7 @@ export default function UserManagementPage() {
             placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 w-[150px] lg:w-[250px]"
+            className="h-8 w-37.5 lg:w-62.5"
           />
           <Select
             value={filterRole}
@@ -188,7 +188,7 @@ export default function UserManagementPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-8 w-[130px]">
+            <SelectTrigger className="h-8 w-32.5">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
@@ -329,7 +329,7 @@ export default function UserManagementPage() {
                                       setBanReason(e.target.value);
                                       handleAutoResize(e);
                                     }}
-                                    className="resize-none overflow-hidden min-h-[80px]"
+                                    className="resize-none overflow-hidden min-h-20"
                                     rows={1}
                                   />
                                 </div>

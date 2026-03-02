@@ -251,6 +251,9 @@ export default function EventsPage() {
               color: "bg-gray-500",
             };
 
+            const displayRole =
+              event.role === "ORGANIZER" ? (event.isLeader ? event.role : null) : event.role;
+
             const getRoleColorVar = (role?: string) => {
               switch (role) {
                 case "ORGANIZER":
@@ -266,7 +269,7 @@ export default function EventsPage() {
               }
             };
 
-            const roleColor = getRoleColorVar(event.role ?? undefined);
+            const roleColor = getRoleColorVar(displayRole ?? undefined);
 
             return (
               <Card
@@ -342,10 +345,10 @@ export default function EventsPage() {
                       className={`flex items-center gap-2 text-xs ${!roleColor ? "text-muted-foreground" : ""}`}
                       style={roleColor ? { color: roleColor } : {}}
                     >
-                      {event.role ? (
+                      {displayRole ? (
                         <>
                           <Users className="h-3.5 w-3.5" />
-                          <span className="font-medium">{event.role}</span>
+                          <span className="font-medium">{displayRole}</span>
                         </>
                       ) : (
                         <></>

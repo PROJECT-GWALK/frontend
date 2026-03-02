@@ -21,6 +21,8 @@ import {
   User as UserIcon,
   Gift,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { getEventRankings, getTeamById, getEvent } from "@/utils/apievent";
 // import { generateMockRankings } from "./mockData";
@@ -58,6 +60,16 @@ type SpecialReward = {
     name: string;
     votes: number;
   } | null;
+  winners?: {
+    id: string;
+    name: string;
+    votes: number;
+  }[];
+  votes?: {
+    id: string;
+    name: string;
+    votes: number;
+  }[];
 };
 
 type Props = {
@@ -82,6 +94,8 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
   const [topN, setTopN] = useState("5");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [eventInfo, setEventInfo] = useState<EventDetail | null>(null);
+  const [expandedVotedTeams, setExpandedVotedTeams] = useState<Record<string, boolean>>({});
+  const [expandedRewardDetails, setExpandedRewardDetails] = useState<Record<string, boolean>>({});
 
   const now = new Date();
   const eventStarted = !eventStartView || now >= new Date(eventStartView);
@@ -597,16 +611,41 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                   </CardHeader>
                   <CardContent className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto custom-scrollbar">
                     <div className="space-y-4">
-                      {specialRewards.map((reward, index) => (
-                        <div
-                          key={reward.id}
-                          className="border rounded-lg p-3 space-y-3 bg-muted/30"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              {t("resultsTab.SRRanking")} {index + 1}
-                            </span>
-                          </div>
+                      {specialRewards.map((reward, index) => {
+                        const detailsExpanded = expandedRewardDetails[reward.id] === true;
+                        const toggleDetails = () => {
+                          setExpandedRewardDetails((prev) => ({
+                            ...prev,
+                            [reward.id]: !detailsExpanded,
+                          }));
+                        };
+
+                        return (
+                          <div
+                            key={reward.id}
+                            className="border rounded-lg p-3 space-y-3 bg-muted/30"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {t("resultsTab.SRRanking")} {index + 1}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={toggleDetails}
+                              >
+                                {detailsExpanded
+                                  ? t("resultsTab.collapseRewardDetails")
+                                  : t("resultsTab.expandRewardDetails")}
+                                {detailsExpanded ? (
+                                  <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                                )}
+                              </Button>
+                            </div>
                           <div className="flex items-start gap-4">
                             <div className="w-24 sm:w-32 shrink-0">
                               {reward.image ? (
@@ -647,25 +686,147 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                                 </div>
                               )}
 
-                              <div className="pt-2 border-t mt-2">
-                                <div className="text-xs text-muted-foreground">
-                                  {t("resultsTab.winner")}
-                                </div>
-                                <div className="flex justify-between items-baseline">
-                                  <div className="font-bold text-primary truncate text-sm">
-                                    {reward.winner ? reward.winner.name : "—"}
-                                  </div>
-                                  {reward.winner && (
+                              {detailsExpanded && (
+                                <>
+                                  <div className="pt-2 border-t mt-2">
                                     <div className="text-xs text-muted-foreground">
-                                      {reward.winner.votes} {t("resultsTab.votes")}
+                                      {t("resultsTab.winner")}
                                     </div>
-                                  )}
-                                </div>
-                              </div>
+                                    {(() => {
+                                      const winners =
+                                        reward.winners && reward.winners.length > 0
+                                          ? reward.winners
+                                          : reward.winner
+                                            ? [reward.winner]
+                                            : [];
+                                      if (winners.length === 0) {
+                                        return (
+                                          <div className="font-bold text-primary truncate text-sm">
+                                            —
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <div className="flex flex-wrap gap-1">
+                                          {winners.map((w) => (
+                                            <Badge
+                                          key={w.id}
+                                          variant="secondary"
+                                          className="text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-300 dark:hover:bg-yellow-800"
+                                          title={w.name}
+                                        >
+                                          {w.name} ({w.votes} {t("resultsTab.votes")})
+                                        </Badge>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  <div className="pt-2 border-t">
+                                    {(() => {
+                                      const previewCount = 4;
+                                      const votedTeams =
+                                        reward.votes && reward.votes.length > 0
+                                          ? reward.votes
+                                          : reward.winner
+                                            ? [reward.winner]
+                                            : [];
+                                      const maxVotes =
+                                        votedTeams.length > 0 ? votedTeams[0].votes : 0;
+                                      const expanded = expandedVotedTeams[reward.id] === true;
+                                      const canToggle = votedTeams.length > previewCount;
+                                      const visible = expanded
+                                        ? votedTeams
+                                        : votedTeams.slice(0, previewCount);
+
+                                      const toggle = () => {
+                                        setExpandedVotedTeams((prev) => ({
+                                          ...prev,
+                                          [reward.id]: !expanded,
+                                        }));
+                                      };
+
+                                      if (votedTeams.length === 0) {
+                                        return (
+                                          <>
+                                            <div className="flex items-center justify-between">
+                                              <div className="text-xs text-muted-foreground">
+                                                {t("resultsTab.votedTeams")}
+                                              </div>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground italic">
+                                              {t("resultsTab.noVotes")}
+                                            </div>
+                                          </>
+                                        );
+                                      }
+                                      return (
+                                        <>
+                                          <div className="flex items-center justify-between gap-2">
+                                            <div className="text-xs text-muted-foreground">
+                                              {t("resultsTab.votedTeams")}
+                                            </div>
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 px-2 text-xs"
+                                              onClick={toggle}
+                                              disabled={!canToggle}
+                                            >
+                                              {expanded
+                                                ? t("resultsTab.collapseVotedTeams")
+                                                : t("resultsTab.expandVotedTeams")}
+                                              {expanded ? (
+                                                <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                                              ) : (
+                                                <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                                              )}
+                                            </Button>
+                                          </div>
+
+                                          <div
+                                            className={`mt-1 ${
+                                              expanded
+                                                ? "max-h-40 overflow-y-auto custom-scrollbar pr-1"
+                                                : ""
+                                            }`}
+                                          >
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                                              {visible.map((v) => (
+                                                <div
+                                                  key={v.id}
+                                                  className="flex items-baseline justify-between gap-2 text-xs"
+                                                >
+                                                  <div
+                                                    className={`min-w-0 truncate ${
+                                                      maxVotes > 0 && v.votes === maxVotes
+                                                        ? "font-semibold text-primary"
+                                                        : "text-foreground"
+                                                    }`}
+                                                    title={v.name}
+                                                  >
+                                                    {v.name}
+                                                  </div>
+                                                  <div className="shrink-0 text-muted-foreground">
+                                                    {v.votes} {t("resultsTab.votes")}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -895,14 +1056,42 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                   <CardDescription>{t("resultsTab.SRDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {specialRewards.map((reward, index) => (
-                      <div key={reward.id} className="border rounded-lg p-3 space-y-3 bg-muted/30">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground">
-                            {t("resultsTab.SRRanking")} {index + 1}
-                          </span>
-                        </div>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                    {specialRewards.map((reward, index) => {
+                      const detailsExpanded = expandedRewardDetails[reward.id] === true;
+                      const toggleDetails = () => {
+                        setExpandedRewardDetails((prev) => ({
+                          ...prev,
+                          [reward.id]: !detailsExpanded,
+                        }));
+                      };
+
+                      return (
+                        <div
+                          key={reward.id}
+                          className="border rounded-lg p-3 space-y-3 bg-muted/30"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {t("resultsTab.SRRanking")} {index + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={toggleDetails}
+                            >
+                              {detailsExpanded
+                                ? t("resultsTab.collapseRewardDetails")
+                                : t("resultsTab.expandRewardDetails")}
+                              {detailsExpanded ? (
+                                <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                              ) : (
+                                <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                              )}
+                            </Button>
+                          </div>
                         <div className="flex items-start gap-3">
                           <div className="w-20 shrink-0">
                             {reward.image ? (
@@ -943,25 +1132,147 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                               </div>
                             )}
 
-                            <div className="pt-2 border-t mt-2">
-                              <div className="text-xs text-muted-foreground">
-                                {t("resultsTab.winner")}
-                              </div>
-                              <div className="flex justify-between items-baseline">
-                                <div className="font-bold text-primary truncate text-sm">
-                                  {reward.winner ? reward.winner.name : "—"}
-                                </div>
-                                {reward.winner && (
+                            {detailsExpanded && (
+                              <>
+                                <div className="pt-2 border-t mt-2">
                                   <div className="text-xs text-muted-foreground">
-                                    {reward.winner.votes} {t("resultsTab.votes")}
+                                    {t("resultsTab.winner")}
                                   </div>
-                                )}
-                              </div>
-                            </div>
+                                  {(() => {
+                                    const winners =
+                                      reward.winners && reward.winners.length > 0
+                                        ? reward.winners
+                                        : reward.winner
+                                          ? [reward.winner]
+                                          : [];
+                                    if (winners.length === 0) {
+                                      return (
+                                        <div className="font-bold text-primary truncate text-sm">
+                                          —
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <div className="flex flex-wrap gap-1">
+                                        {winners.map((w) => (
+                                          <Badge
+                                            key={w.id}
+                                            variant="secondary"
+                                            className="text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-300 dark:hover:bg-yellow-800"
+                                            title={w.name}
+                                          >
+                                            {w.name} ({w.votes} {t("resultsTab.votes")})
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+
+                                <div className="pt-2 border-t">
+                                  {(() => {
+                                    const previewCount = 4;
+                                    const votedTeams =
+                                      reward.votes && reward.votes.length > 0
+                                        ? reward.votes
+                                        : reward.winner
+                                          ? [reward.winner]
+                                          : [];
+                                    const maxVotes =
+                                      votedTeams.length > 0 ? votedTeams[0].votes : 0;
+                                    const expanded = expandedVotedTeams[reward.id] === true;
+                                    const canToggle = votedTeams.length > previewCount;
+                                    const visible = expanded
+                                      ? votedTeams
+                                      : votedTeams.slice(0, previewCount);
+
+                                    const toggle = () => {
+                                      setExpandedVotedTeams((prev) => ({
+                                        ...prev,
+                                        [reward.id]: !expanded,
+                                      }));
+                                    };
+
+                                    if (votedTeams.length === 0) {
+                                      return (
+                                        <>
+                                          <div className="flex items-center justify-between">
+                                            <div className="text-xs text-muted-foreground">
+                                              {t("resultsTab.votedTeams")}
+                                            </div>
+                                          </div>
+                                          <div className="text-xs text-muted-foreground italic">
+                                            {t("resultsTab.noVotes")}
+                                          </div>
+                                        </>
+                                      );
+                                    }
+                                    return (
+                                      <>
+                                        <div className="flex items-center justify-between gap-2">
+                                          <div className="text-xs text-muted-foreground">
+                                            {t("resultsTab.votedTeams")}
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs"
+                                            onClick={toggle}
+                                            disabled={!canToggle}
+                                          >
+                                            {expanded
+                                              ? t("resultsTab.collapseVotedTeams")
+                                              : t("resultsTab.expandVotedTeams")}
+                                            {expanded ? (
+                                              <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                                            ) : (
+                                              <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                                            )}
+                                          </Button>
+                                        </div>
+
+                                        <div
+                                          className={`mt-1 ${
+                                            expanded
+                                              ? "max-h-40 overflow-y-auto custom-scrollbar pr-1"
+                                              : ""
+                                          }`}
+                                        >
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                                            {visible.map((v) => (
+                                              <div
+                                                key={v.id}
+                                                className="flex items-baseline justify-between gap-2 text-xs"
+                                              >
+                                                <div
+                                                  className={`min-w-0 truncate ${
+                                                    maxVotes > 0 && v.votes === maxVotes
+                                                      ? "font-semibold text-primary"
+                                                      : "text-foreground"
+                                                  }`}
+                                                  title={v.name}
+                                                >
+                                                  {v.name}
+                                                </div>
+                                                <div className="shrink-0 text-muted-foreground">
+                                                  {v.votes} {t("resultsTab.votes")}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -998,7 +1309,11 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                   </TableHeader>
                   <TableBody>
                     {rankings.map((team) => {
-                      const teamRewards = specialRewards.filter((r) => r.winner?.id === team.id);
+                      const teamRewards = specialRewards.filter((r) => {
+                        const winners =
+                          r.winners && r.winners.length > 0 ? r.winners : r.winner ? [r.winner] : [];
+                        return winners.some((w) => w.id === team.id);
+                      });
                       return (
                         <TableRow key={team.id}>
                           <TableCell className="font-medium">

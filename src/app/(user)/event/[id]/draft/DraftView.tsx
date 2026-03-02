@@ -156,7 +156,7 @@ export default function EventDraft() {
       name: "",
       description: "",
     };
-    setSpecialRewards([...specialRewards, newReward]);
+    setSpecialRewards((prev) => [...prev, newReward]);
   };
 
   const handleRemoveReward = (id: string) => {

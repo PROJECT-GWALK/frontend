@@ -118,6 +118,9 @@
     "role": "บทบาท",
     "activity": "กิจกรรม"
   },
+  "memberSection": {
+    "noUsers": "ไม่พบผู้ใช้"
+  },
   "committeeSection": {
     "used": "ใช้ไปแล้ว",
     "total": "ทั้งหมด",
@@ -184,7 +187,8 @@
     "checkName": "ตรวจสอบชื่ออีเวนต์",
     "fileTypeNotSupported": "รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP",
     "fileSizeExceeded": "ไฟล์ต้องไม่เกิน 5MB",
-    "checkNameFailed": "ตรวจสอบชื่ออีเวนต์ไม่สำเร็จ"
+    "checkNameFailed": "ตรวจสอบชื่ออีเวนต์ไม่สำเร็จ",
+    "checkNameBeforeSave": "กรุณากดตรวจสอบชื่อก่อนบันทึก"
   },
   "messages": {
     "savingDraft": "กำลังบันทึกแบบร่าง...",
@@ -193,7 +197,8 @@
     "publishing": "กำลังเผยแพร่อีเวนต์...",
     "publishSuccess": "เผยแพร่อีเวนต์สำเร็จ",
     "publishFailed": "เผยแพร่อีเวนต์ไม่สำเร็จ",
-    "errorLoading": "โหลดอีเวนต์ไม่สำเร็จ"
+    "errorLoading": "โหลดอีเวนต์ไม่สำเร็จ",
+    "savingCriteria": "กำลังบันทึกเกณฑ์ให้คะแนน..."
   },
   "dashboard": {
     "presenterCount": "ผู้นำเสนอ",
@@ -472,6 +477,7 @@
       "backToProjects": "กลับไปหน้ารายการโครงงาน",
       "downloadImage": "ดาวน์โหลดรูปภาพ",
       "downloadPDF": "ดาวน์โหลด PDF",
+      "openPDF": "เปิด PDF",
       "readMore": "ดูเพิ่มเติม",
       "readLess": "ย่อ",
       "openLink": "เปิดลิงก์",
@@ -532,6 +538,7 @@
       "download": "ดาวน์โหลด",
       "downloadImage": "ดาวน์โหลดรูปภาพ",
       "downloadPDF": "ดาวน์โหลด PDF",
+      "openPDF": "เปิด PDF",
       "remove": "ลบ",
       "open": "เปิด",
       "noRequirements": "ไม่มีข้อมูลที่ต้องส่งสำหรับอีเวนต์นี้"
@@ -679,8 +686,9 @@
     "confirm_button": "ลบ"
   },
   "inviteSection": {
-    "your_role": "บทบาทของคุณ",
+    "your_role": "เชิญในฐานะ",
     "already_member": "คุณเป็นสมาชิกของอีเวนต์นี้อยู่แล้วในฐานะ",
+    "already_member_hint": "ไม่จำเป็นต้องยืนยันการเข้าร่วมซ้ำ",
     "confirm_title": "ยืนยันการเข้าร่วม",
     "button_cancel": "ยกเลิก",
     "button_confirm": "ยืนยันการเข้าร่วม",
@@ -726,7 +734,7 @@
     "participants": "ผู้เข้าร่วม",
     "projects": "โครงงาน",
     "results": "ผลลัพธ์",
-    "grading": "ให้คะแนน",
+    "grading": "ดูคะแนน",
     "settings": "การตั้งค่า",
     "invite": "คำเชิญ"
   },
@@ -808,6 +816,12 @@
     "SRDescCol": "คำอธิบาย",
     "winner": "ผู้ได้รับรางวัล",
     "votes": "โหวต",
+    "votedTeams": "ทีมที่ได้รับโหวต",
+    "noVotes": "ยังไม่มีการโหวต",
+    "expandVotedTeams": "ขยาย",
+    "collapseVotedTeams": "ย่อ",
+    "expandRewardDetails": "ขยายรายละเอียด",
+    "collapseRewardDetails": "ย่อรายละเอียด",
     "projectDetail": "รายละเอียดโครงงาน",
     "closeProjectDetail": "ปิดรายละเอียดโครงงาน",
     "seeMore": "ดูเพิ่มเติม",

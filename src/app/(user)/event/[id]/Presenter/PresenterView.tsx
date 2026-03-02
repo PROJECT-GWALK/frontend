@@ -19,17 +19,6 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
 import CommentSection from "./components/Comment";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
-import { useParams, useRouter } from "next/navigation";
-
-export default function PresenterPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string | undefined;
-
-  if (id) router.replace(`/event/${id}`);
-
-  return null;
-}
 
 type Props = {
   id: string;

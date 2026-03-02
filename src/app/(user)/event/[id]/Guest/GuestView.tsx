@@ -2,7 +2,6 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTeams, giveVr, resetVr } from "@/utils/apievent";
-
 import { useCallback, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, BadgeCheck, MessageSquare, Gift } from "lucide-react";
@@ -23,17 +22,6 @@ import UnifiedProjectList from "../components/UnifiedProjectList";
 import ResultSection from "../components/ResultSection";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 import { useSession } from "next-auth/react";
-import { useParams, useRouter } from "next/navigation";
-
-export default function GuestPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string | undefined;
-
-  if (id) router.replace(`/event/${id}`);
-
-  return null;
-}
 
 type Props = {
   id: string;
@@ -440,7 +428,6 @@ export function GuestView({ id, event }: Props) {
             </TabsContent>
           </Tabs>
         </div>
-        {/* Edit Dialog (existing code left intact) */}
       </div>
     </div>
   );

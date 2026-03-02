@@ -52,6 +52,30 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
         return "bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300";
     }
   };
+  const getFilterButtonClass = (role: string, isSelected: boolean) => {
+    const upper = role.toUpperCase();
+    if (upper === "ALL") {
+      return isSelected
+        ? "bg-yellow-500 hover:bg-yellow-600 text-white dark:text-black border-yellow-500"
+        : "border-yellow-200 text-yellow-700 hover:bg-yellow-50 dark:border-yellow-800 dark:text-yellow-300 dark:hover:bg-yellow-950/40";
+    }
+    if (upper === "PRESENTER") {
+      return isSelected
+        ? "bg-green-600 hover:bg-green-600/90 text-white dark:bg-green-500 dark:hover:bg-green-500/90"
+        : "border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-950/40";
+    }
+    if (upper === "COMMITTEE") {
+      return isSelected
+        ? "bg-purple-600 hover:bg-purple-600/90 text-white dark:bg-purple-500 dark:hover:bg-purple-500/90"
+        : "border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950/40";
+    }
+    if (upper === "GUEST") {
+      return isSelected
+        ? "bg-orange-600 hover:bg-orange-600/90 text-white dark:bg-orange-500 dark:hover:bg-orange-500/90"
+        : "border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-950/40";
+    }
+    return isSelected ? "bg-primary text-primary-foreground" : "";
+  };
   const { t } = useLanguage();
   const filteredRatings =
     selectedRole === "all"
@@ -98,8 +122,8 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
             <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
             {t("FeedbackList.title")}
           </div>
-          <div className="flex items-center gap-2 text-sm font-normal bg-yellow-50 px-3 py-1 rounded-full border border-yellow-100">
-            <span className="font-bold text-yellow-700 text-lg">{averageRating}</span>
+          <div className="flex items-center gap-2 text-sm font-normal bg-yellow-50 dark:bg-yellow-950/30 px-3 py-1 rounded-full border border-yellow-100 dark:border-yellow-800">
+            <span className="font-bold text-yellow-700 dark:text-yellow-400 text-lg">{averageRating}</span>
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
@@ -125,7 +149,7 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
             variant={selectedRole === "all" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedRole("all")}
-            className="text-xs"
+            className={`text-xs ${getFilterButtonClass("ALL", selectedRole === "all")}`}
           >
             {t("FeedbackList.all")} ({ratings.length})
           </Button>
@@ -133,7 +157,7 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
             variant={selectedRole === "PRESENTER" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedRole("PRESENTER")}
-            className="text-xs border-green-200 text-green-700 dark:text-green-300"
+            className={`text-xs ${getFilterButtonClass("PRESENTER", selectedRole === "PRESENTER")}`}
           >
             {t("FeedbackList.presenter")} ({getRoleCount("PRESENTER")})
           </Button>
@@ -141,7 +165,7 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
             variant={selectedRole === "COMMITTEE" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedRole("COMMITTEE")}
-            className="text-xs border-purple-200 text-purple-700 dark:text-purple-300"
+            className={`text-xs ${getFilterButtonClass("COMMITTEE", selectedRole === "COMMITTEE")}`}
           >
             {t("FeedbackList.committee")} ({getRoleCount("COMMITTEE")})
           </Button>
@@ -149,7 +173,7 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
             variant={selectedRole === "GUEST" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedRole("GUEST")}
-            className="text-xs border-orange-200 text-orange-700 dark:text-orange-300"
+            className={`text-xs ${getFilterButtonClass("GUEST", selectedRole === "GUEST")}`}
           >
             {t("FeedbackList.guest")} ({getRoleCount("GUEST")})
           </Button>

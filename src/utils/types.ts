@@ -273,6 +273,7 @@ export type SpecialRewardEdit = SpecialReward & {
 };
 
 export type EventFormState = {
+  eventName?: string;
   eventDescription?: string;
   locationName?: string;
   location?: string;

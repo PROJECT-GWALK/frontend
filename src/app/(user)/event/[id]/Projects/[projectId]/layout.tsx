@@ -13,7 +13,7 @@ export async function generateMetadata({
   const proto = h.get("x-forwarded-proto") ?? "http";
   const origin = `${proto}://${host}`;
 
-  const fallbackTitle = "Gwalk";
+  const fallbackTitle = "Gallery Walk";
 
   try {
     const [eventRes, teamRes] = await Promise.all([

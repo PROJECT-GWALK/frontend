@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -31,8 +31,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = `${proto}://${host}`;
 
   const title = {
-    default: "Gwalk",
-    template: "%s | Gwalk",
+    default: "Gallery Walk",
+    template: "%s | Gallery Walk",
   };
 
   const description =
@@ -44,11 +44,17 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     metadataBase: new URL(origin),
-    applicationName: "Gwalk",
+    applicationName: "Gallery Walk",
+    manifest: "/manifest.json",
+    icons: {
+      icon: "/icon.png",
+      shortcut: "/icon.png",
+      apple: "/icon.png",
+    },
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
-      title: "Gwalk",
+      title: "Gallery Walk",
     },
     formatDetection: {
       telephone: false,
@@ -57,7 +63,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       images: [imageUrl],
-      siteName: "Gwalk",
+      siteName: "Gallery Walk",
       type: "website",
     },
     twitter: {
@@ -65,7 +71,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       images: [imageUrl],
-      creator: "@gwalk",
+      creator: "@gallery_walk",
     },
   };
 }
