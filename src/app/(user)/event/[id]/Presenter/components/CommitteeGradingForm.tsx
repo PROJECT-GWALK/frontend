@@ -154,10 +154,10 @@ export default function CommitteeGradingForm({
           <CardTitle className="text-lg flex items-start gap-2 text-foreground">
             <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
             <div className="flex-1 min-w-0 overflow-hidden">
-              <span className="block whitespace-normal break-words">
-                ให้คะแนนโครงงาน:
+              <span className="block whitespace-normal wrap-break-word">
+                {t("committeeGrade.title")}
               </span>
-              <span className="block whitespace-normal break-words">
+              <span className="block whitespace-normal wrap-break-word">
                 {teamName}
               </span>
             </div>
@@ -180,10 +180,10 @@ export default function CommitteeGradingForm({
             <CardTitle className="text-lg flex items-start gap-2 text-foreground">
               <BookCheck className="w-5 h-5 text-green-600 shrink-0" />
               <div className="flex-1 min-w-0 overflow-hidden">
-                <span className="block whitespace-normal break-words">
-                  ให้คะแนนโครงงาน:
+                <span className="block whitespace-normal wrap-break-word">
+                  {t("committeeGrade.title")}
                 </span>
-                <span className="block whitespace-normal break-words">
+                <span className="block whitespace-normal wrap-break-word">
                   {teamName}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export default function CommitteeGradingForm({
               <div key={c.id} className="p-4 bg-card/50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold break-words leading-snug">
+                    <div className="font-semibold wrap-break-word leading-snug">
                       {c.name}
                       <span className="font-light">
                         {" "}

@@ -32,6 +32,7 @@ import {
   createEvaluationCriteria,
   updateEvaluationCriteria,
   getEvaluationCriteria,
+  deleteEvaluationCriteria,
 } from "@/utils/apievaluation";
 
 import { EventDetail, EventFileType } from "@/utils/types";
@@ -155,7 +156,7 @@ export default function EventDraft() {
       name: "",
       description: "",
     };
-    setSpecialRewards([...specialRewards, newReward]);
+    setSpecialRewards((prev) => [...prev, newReward]);
   };
 
   const handleRemoveReward = (id: string) => {
@@ -573,6 +574,15 @@ export default function EventDraft() {
     for (const r of removed) {
       try {
         await deleteSpecialReward(id, r.id);
+        // Update event.specialRewards to reflect the deletion
+        setEvent((prev) =>
+          prev
+            ? {
+                ...prev,
+                specialRewards: (prev.specialRewards || []).filter((sr) => sr.id !== r.id),
+              }
+            : prev,
+        );
       } catch (e) {
         console.error("Failed to delete reward", e);
       }
@@ -602,6 +612,12 @@ export default function EventDraft() {
             fd.append("file", file);
             const res = await createSpecialReward(id, fd);
             if (res?.reward?.id) {
+              const newReward = {
+                id: res.reward.id,
+                name: r.name,
+                description: r.description,
+                image: res.reward.image || null,
+              };
               setSpecialRewards((prev) =>
                 prev.map((x) =>
                   x.id === r.id
@@ -623,6 +639,15 @@ export default function EventDraft() {
                 rest[res.reward.id] = null;
                 return rest;
               });
+              // Update event.specialRewards to include the new reward with server ID
+              setEvent((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      specialRewards: [...(prev.specialRewards || []), newReward],
+                    }
+                  : prev,
+              );
             }
           } else {
             const payload: { name: string; description?: string; image?: string | null } = {
@@ -635,6 +660,12 @@ export default function EventDraft() {
               image: null,
             });
             if (res?.reward?.id) {
+              const newReward = {
+                id: res.reward.id,
+                name: r.name,
+                description: r.description,
+                image: res.reward.image || null,
+              };
               setSpecialRewards((prev) =>
                 prev.map((x) =>
                   x.id === r.id
@@ -645,6 +676,15 @@ export default function EventDraft() {
                       }
                     : x,
                 ),
+              );
+              // Update event.specialRewards to include the new reward with server ID
+              setEvent((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      specialRewards: [...(prev.specialRewards || []), newReward],
+                    }
+                  : prev,
               );
             }
           }
@@ -675,65 +715,83 @@ export default function EventDraft() {
     { id: "card5", label: t("gradingSection.title") || "Grading", icon: BookOpen },
   ];
 
-  const syncGradingCriteria = async () => {
+  const syncGradingCriteria = async (criteriaToSync?: GradingCriteria[]) => {
     if (!id) return;
     if (!gradingEnabled) return; // Don't sync if grading is disabled
+
+    // Use the passed criteria or fall back to state
+    const criteria = criteriaToSync ?? gradingCriteria;
 
     // Helper to check if an ID is a valid UUID (from database)
     const isUUID = (str: string) =>
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
-    // Separate new criteria from existing ones
-    // New criteria either start with "new-" or are not valid UUIDs
-    const newCriteria = gradingCriteria.filter((c) => c.id.startsWith("new-") || !isUUID(c.id));
-    const existingCriteria = gradingCriteria.filter(
-      (c) => !c.id.startsWith("new-") && isUUID(c.id),
+    // Fetch current server criteria to detect deletions
+    let serverCriteria: GradingCriteria[] = [];
+    try {
+      const serverRes = await getEvaluationCriteria(id);
+      serverCriteria = serverRes?.criteria || [];
+    } catch (e) {
+      console.error("Failed to fetch server criteria for comparison", e);
+    }
+
+    // Find criteria that exist on server but not in the syncing list
+    const criteriaIdsToKeep = new Set(criteria.map((c) => c.id));
+    const criteriaToDelete = serverCriteria.filter(
+      (sc) => isUUID(sc.id) && !criteriaIdsToKeep.has(sc.id),
     );
 
-    // Create new criteria
-    const createdCriteria: GradingCriteria[] = [];
-    for (const criteria of newCriteria) {
+    // Delete removed criteria
+    for (const crit of criteriaToDelete) {
+      try {
+        await deleteEvaluationCriteria(id, crit.id);
+      } catch (e) {
+        console.error("Failed to delete criteria", e);
+      }
+    }
+
+    // Separate new criteria from existing ones
+    // New criteria either start with "new-" or are not valid UUIDs
+    const newCriteria = criteria.filter((c) => c.id.startsWith("new-") || !isUUID(c.id));
+    const existingCriteria = criteria.filter((c) => !c.id.startsWith("new-") && isUUID(c.id));
+
+    // Create new criteria and track the mapping of temp IDs to server IDs
+    const idMapping: Record<string, string> = {};
+    for (const crit of newCriteria) {
       try {
         const res = await createEvaluationCriteria(id, {
-          name: criteria.name,
-          description: criteria.description,
-          maxScore: criteria.maxScore,
-          weightPercentage: criteria.weightPercentage,
-          sortOrder: criteria.sortOrder,
+          name: crit.name,
+          description: crit.description,
+          maxScore: crit.maxScore,
+          weightPercentage: crit.weightPercentage,
+          sortOrder: crit.sortOrder,
         });
         if (res?.criteria?.id) {
-          createdCriteria.push({
-            id: res.criteria.id,
-            name: res.criteria.name,
-            description: res.criteria.description,
-            maxScore: res.criteria.maxScore,
-            weightPercentage: res.criteria.weightPercentage,
-            sortOrder: res.criteria.sortOrder,
-          });
+          idMapping[crit.id] = res.criteria.id;
         }
       } catch (e) {
         console.error("Failed to create criteria", e);
       }
     }
 
-    // Update gradingCriteria state with newly created IDs
-    if (createdCriteria.length > 0) {
-      setGradingCriteria((prev) => {
-        // Keep only existing valid UUID criteria (not temporary ones)
-        const validExisting = prev.filter((c) => !c.id.startsWith("new-") && isUUID(c.id));
-        return [...validExisting, ...createdCriteria];
-      });
+    // Update gradingCriteria state: replace temp IDs with server IDs while maintaining order
+    if (Object.keys(idMapping).length > 0) {
+      setGradingCriteria((prev) =>
+        prev
+          .map((c) => (idMapping[c.id] ? { ...c, id: idMapping[c.id] } : c))
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      );
     }
 
     // Update existing criteria
-    for (const criteria of existingCriteria) {
+    for (const crit of existingCriteria) {
       try {
-        await updateEvaluationCriteria(id, criteria.id, {
-          name: criteria.name,
-          description: criteria.description,
-          maxScore: criteria.maxScore,
-          weightPercentage: criteria.weightPercentage,
-          sortOrder: criteria.sortOrder,
+        await updateEvaluationCriteria(id, crit.id, {
+          name: crit.name,
+          description: crit.description,
+          maxScore: crit.maxScore,
+          weightPercentage: crit.weightPercentage,
+          sortOrder: crit.sortOrder,
         });
       } catch (e) {
         console.error("Failed to update criteria", e);
@@ -815,23 +873,15 @@ export default function EventDraft() {
         setMaxGroups(data.maxTeams?.toString() || "30");
 
         // ================= SUBMISSION PERIOD =================
-        const subStartLocal = data.startJoinDate
-          ? toLocalDatetimeValue(data.startJoinDate)
-          : "";
-        setSelectedSubStart(
-          data.startJoinDate ? new Date(data.startJoinDate) : undefined,
-        );
+        const subStartLocal = data.startJoinDate ? toLocalDatetimeValue(data.startJoinDate) : "";
+        setSelectedSubStart(data.startJoinDate ? new Date(data.startJoinDate) : undefined);
         setSubmissionStartDate(subStartLocal ? subStartLocal.split("T")[0] : "");
-        setSubmissionStartTime(
-          subStartLocal ? subStartLocal.split("T")[1] : "00:01",
-        );
+        setSubmissionStartTime(subStartLocal ? subStartLocal.split("T")[1] : "00:01");
 
         const subEndLocal = data.endJoinDate ? toLocalDatetimeValue(data.endJoinDate) : "";
         setSelectedSubEnd(data.endJoinDate ? new Date(data.endJoinDate) : undefined);
         setSubmissionEndDate(subEndLocal ? subEndLocal.split("T")[0] : "");
-        setSubmissionEndTime(
-          subEndLocal ? subEndLocal.split("T")[1] : "23:59",
-        );
+        setSubmissionEndTime(subEndLocal ? subEndLocal.split("T")[1] : "23:59");
 
         // ================= COMMITTEE & GUEST =================
         setHasCommittee(Boolean(data.hasCommittee));
@@ -859,7 +909,11 @@ export default function EventDraft() {
         try {
           const criteriaRes = await getEvaluationCriteria(id);
           if (criteriaRes?.criteria?.length) {
-            setGradingCriteria(criteriaRes.criteria);
+            // Sort by sortOrder to ensure correct display order
+            const sortedCriteria = [...criteriaRes.criteria].sort(
+              (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+            );
+            setGradingCriteria(sortedCriteria);
           }
         } catch (err) {
           console.error("Failed to load evaluation criteria:", err);
@@ -1130,6 +1184,7 @@ export default function EventDraft() {
                   gradingCriteria={gradingCriteria}
                   setGradingCriteria={setGradingCriteria}
                   onEditingChange={setIsGradingEditing}
+                  onSaveToServer={syncGradingCriteria}
                 />
 
                 <DeleteConfirmDialog

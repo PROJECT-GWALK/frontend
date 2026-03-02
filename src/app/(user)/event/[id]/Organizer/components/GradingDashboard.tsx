@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import { getGradingResults } from "@/utils/apievaluation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +28,7 @@ type Criteria = {
   name: string;
   maxScore: number;
   weightPercentage: number;
+  sortOrder?: number;
 };
 
 type SortField = "teamName" | "overallAverage";
@@ -40,30 +36,17 @@ type SortDirection = "asc" | "desc";
 
 type Props = {
   eventId: string;
+  refreshTrigger?: number;
 };
 
-export default function GradingDashboard({ eventId }: Props) {
+export default function GradingDashboard({ eventId, refreshTrigger }: Props) {
   const { t } = useLanguage();
   const [results, setResults] = useState<GradingResult[]>([]);
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [selectedResult, setSelectedResult] = useState<GradingResult | null>(
-    null,
-  );
-
-  const getAverageForCriteria = (
-    committeeScores: GradingResult["committeeScores"],
-    criteriaId: string,
-  ) => {
-    const values = committeeScores
-      .map((s) => s.scores[criteriaId])
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-
-    if (values.length === 0) return null;
-    return values.reduce((a, b) => a + b, 0) / values.length;
-  };
+  const [selectedResult, setSelectedResult] = useState<GradingResult | null>(null);
 
   const formatPresenterNames = (presenterName: string) => {
     const names = presenterName
@@ -124,7 +107,11 @@ export default function GradingDashboard({ eventId }: Props) {
         setLoading(true);
         const data = await getGradingResults(eventId);
         setResults(data.results || []);
-        setCriteria(data.criteria || []);
+        // Sort by sortOrder to ensure consistent display order
+        const sortedCriteria = [...(data.criteria || [])].sort(
+          (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+        );
+        setCriteria(sortedCriteria);
       } catch (error) {
         console.error("Failed to fetch grading results:", error);
         toast.error("Failed to load grading results");
@@ -134,7 +121,7 @@ export default function GradingDashboard({ eventId }: Props) {
     };
 
     fetchResults();
-  }, [eventId]);
+  }, [eventId, refreshTrigger]);
 
   if (loading) {
     return (
@@ -196,14 +183,6 @@ export default function GradingDashboard({ eventId }: Props) {
                     {getSortIcon("overallAverage")}
                   </Button>
                 </th>
-                {criteria.map((crit) => (
-                  <th
-                    key={crit.id}
-                    className="text-center p-3 font-semibold text-sm"
-                  >
-                    {crit.name} ({crit.maxScore})
-                  </th>
-                ))}
               </tr>
             </thead>
             <tbody>
@@ -218,29 +197,8 @@ export default function GradingDashboard({ eventId }: Props) {
                     {formatPresenterNames(result.presenterName)}
                   </td>
                   <td className="p-3 text-center">
-                    <span className="font-bold text-lg">
-                      {result.overallAverage.toFixed(2)}
-                    </span>
+                    <span className="font-bold text-lg">{result.overallAverage.toFixed(2)}</span>
                   </td>
-                  {criteria.map((crit) => (
-                    <td key={crit.id} className="p-3 text-center text-sm">
-                      {(() => {
-                        const avg = getAverageForCriteria(
-                          result.committeeScores,
-                          crit.id,
-                        );
-                        if (avg === null)
-                          return (
-                            <span className="text-muted-foreground">-</span>
-                          );
-                        return (
-                          <span className="font-semibold">
-                            {avg.toFixed(1)}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                  ))}
                 </tr>
               ))}
             </tbody>
@@ -248,21 +206,16 @@ export default function GradingDashboard({ eventId }: Props) {
         </div>
 
         {/* Committee Detail Dialog */}
-        <Dialog
-          open={!!selectedResult}
-          onOpenChange={(open) => !open && setSelectedResult(null)}
-        >
+        <Dialog open={!!selectedResult} onOpenChange={(open) => !open && setSelectedResult(null)}>
           <DialogContent className="w-[98vw] sm:max-w-[95vw] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-            <div className="p-6 pb-4 border-b flex-shrink-0">
+            <div className="p-6 pb-4 border-b shrink-0">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 pr-8">
                   {t("gradingDashboard.project")}: {selectedResult?.teamName}
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground">
                   {t("gradingDashboard.presenter")}:{" "}
-                  {selectedResult
-                    ? formatPresenterNames(selectedResult.presenterName)
-                    : ""}
+                  {selectedResult ? formatPresenterNames(selectedResult.presenterName) : ""}
                 </p>
               </DialogHeader>
             </div>
@@ -270,100 +223,84 @@ export default function GradingDashboard({ eventId }: Props) {
             <div className="flex-1 overflow-y-auto p-6 pt-4">
               {selectedResult && (
                 <div className="space-y-4">
-                {/* Overall Score */}
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="font-semibold">
-                    {t("gradingDashboard.totalScore")}
-                  </span>
-                  <span className="text-xl font-bold">
-                    {selectedResult.overallAverage.toFixed(2)}%
-                  </span>
-                </div>
+                  {/* Overall Score */}
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="font-semibold">{t("gradingDashboard.totalScore")}</span>
+                    <span className="text-xl font-bold">
+                      {selectedResult.overallAverage.toFixed(2)}%
+                    </span>
+                  </div>
 
-                {/* Per Committee Breakdown */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                    {t("gradingDashboard.committeeDetail") ||
-                      "Committee Score Details"}
-                  </h4>
+                  {/* Per Committee Breakdown */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                      {t("gradingDashboard.committeeDetail") || "Committee Score Details"}
+                    </h4>
 
-                  {selectedResult.committeeScores.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      {t("gradingDashboard.noGrade")}
-                    </p>
-                  ) : (
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                          <thead>
-                            <tr className="border-b bg-muted/50">
-                              <th className="text-left p-3 font-semibold">
-                                {t("gradingDashboard.committeeDetail") ||
-                                  "Committee"}
-                              </th>
-                              <th className="text-center p-3 font-semibold whitespace-nowrap">
-                                {t("gradingDashboard.totalScore") ||
-                                  "Total Score"}
-                              </th>
-                              {criteria.map((crit) => (
-                                <th
-                                  key={crit.id}
-                                  className="text-center p-3 font-semibold text-sm whitespace-nowrap"
-                                >
-                                  {crit.name} ({crit.maxScore})
+                    {selectedResult.committeeScores.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        {t("gradingDashboard.noGrade")}
+                      </p>
+                    ) : (
+                      <div className="border rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="border-b bg-muted/50">
+                                <th className="text-left p-3 font-semibold">
+                                  {t("gradingDashboard.committeeDetail") || "Committee"}
                                 </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedResult.committeeScores.map((cs, idx) => (
-                              <tr
-                                key={cs.committeeId}
-                                className={`border-b ${idx % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
-                              >
-                                <td className="p-3 font-semibold">
-                                  {cs.committeeName}
-                                </td>
-                                <td className="p-3 text-center">
-                                  <Badge variant="secondary">
-                                    {cs.avgScore.toFixed(2)}
-                                  </Badge>
-                                </td>
-                                {criteria.map((crit) => {
-                                  const score = cs.scores[crit.id];
-                                  const hasScore =
-                                    typeof score === "number" &&
-                                    Number.isFinite(score);
-                                  return (
-                                    <td
-                                      key={crit.id}
-                                      className="p-3 text-center text-sm"
-                                    >
-                                      {hasScore ? (
-                                        <span className="font-medium">
-                                          {score.toFixed(1)}
-                                          <span className="text-muted-foreground">
-                                            {" "}
-                                            / {crit.maxScore}
-                                          </span>
-                                        </span>
-                                      ) : (
-                                        <span className="text-muted-foreground">
-                                          -
-                                        </span>
-                                      )}
-                                    </td>
-                                  );
-                                })}
+                                <th className="text-center p-3 font-semibold whitespace-nowrap">
+                                  {t("gradingDashboard.totalScore") || "Total Score"}
+                                </th>
+                                {criteria.map((crit) => (
+                                  <th
+                                    key={crit.id}
+                                    className="text-center p-3 font-semibold text-sm whitespace-nowrap"
+                                  >
+                                    {crit.name} ({crit.maxScore})
+                                  </th>
+                                ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {selectedResult.committeeScores.map((cs, idx) => (
+                                <tr
+                                  key={cs.committeeId}
+                                  className={`border-b ${idx % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
+                                >
+                                  <td className="p-3 font-semibold">{cs.committeeName}</td>
+                                  <td className="p-3 text-center">
+                                    <Badge variant="secondary">{cs.avgScore.toFixed(2)}</Badge>
+                                  </td>
+                                  {criteria.map((crit) => {
+                                    const score = cs.scores[crit.id];
+                                    const hasScore =
+                                      typeof score === "number" && Number.isFinite(score);
+                                    return (
+                                      <td key={crit.id} className="p-3 text-center text-sm">
+                                        {hasScore ? (
+                                          <span className="font-medium">
+                                            {score.toFixed(1)}
+                                            <span className="text-muted-foreground">
+                                              {" "}
+                                              / {crit.maxScore}
+                                            </span>
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted-foreground">-</span>
+                                        )}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-
+                    )}
+                  </div>
                 </div>
               )}
             </div>

@@ -51,38 +51,40 @@ export default function CardInformation4({ event, editable, onEdit }: Props) {
       </CardHeader>
       <CardContent>
         {specialRewards.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {specialRewards.map((reward) => (
-              <div
-                key={reward.id}
-                className="flex items-start gap-4 p-4 rounded-2xl border bg-card dark:bg-card/50 dark:border-white/5 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 hover:border-amber-200 dark:hover:border-amber-500/30 transition-all duration-300 group/reward"
-              >
-                <div className="relative h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-muted border">
-                  {reward.image ? (
-                    <Image
-                      src={reward.image}
-                      alt={reward.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover/reward:scale-110"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full w-full bg-amber-50 text-amber-300 dark:bg-amber-900/20 dark:text-amber-800">
-                      <Gift className="h-8 w-8" />
-                    </div>
-                  )}
+          <div className="max-h-105 overflow-y-auto custom-scrollbar pr-2">
+            <div className="flex flex-col gap-4">
+              {specialRewards.map((reward) => (
+                <div
+                  key={reward.id}
+                  className="flex items-start gap-4 p-4 rounded-2xl border bg-card dark:bg-card/50 dark:border-white/5 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 hover:border-amber-200 dark:hover:border-amber-500/30 transition-all duration-300 group/reward"
+                >
+                  <div className="relative h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-muted border">
+                    {reward.image ? (
+                      <Image
+                        src={reward.image}
+                        alt={reward.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover/reward:scale-110"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full w-full bg-amber-50 text-amber-300 dark:bg-amber-900/20 dark:text-amber-800">
+                        <Gift className="h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h4 className="font-bold text-base truncate pr-2 group-hover/reward:text-amber-700 dark:group-hover/reward:text-amber-400 transition-colors">
+                      {reward.name}
+                    </h4>
+                    {reward.description && (
+                      <p className="text-xs text-muted-foreground leading-relaxed break-all">
+                        {reward.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="font-bold text-base truncate pr-2 group-hover/reward:text-amber-700 dark:group-hover/reward:text-amber-400 transition-colors">
-                    {reward.name}
-                  </h4>
-                  {reward.description && (
-                    <p className="text-xs text-muted-foreground leading-relaxed break-all">
-                      {reward.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 bg-muted/30 rounded-2xl border-2 border-dashed border-muted">

@@ -10,6 +10,8 @@ import {
   Upload,
   Trash2,
   Plus,
+  Check,
+  X,
   HelpCircle,
   Calendar as CalendarIcon,
   Clock,
@@ -18,6 +20,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import {
   updateEvent,
+  checkEventName,
   createSpecialReward,
   updateSpecialReward,
   deleteSpecialReward,
@@ -63,6 +66,8 @@ export default function OrganizerEditDialog({
 }: Props) {
   const { t, dateFormat } = useLanguage();
   const [saving, setSaving] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
+  const [nameChecked, setNameChecked] = useState<boolean | null>(null);
   const [showCommitteeInput, setShowCommitteeInput] = useState(false);
 
   // Presenter editing state (File Types)
@@ -72,6 +77,8 @@ export default function OrganizerEditDialog({
   const [srList, setSrList] = useState<SpecialRewardEdit[]>([]);
   const [srPreviews, setSrPreviews] = useState<Record<string, string | null>>({});
   const rewardFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const srListContainerRef = useRef<HTMLDivElement | null>(null);
+  const srShouldScrollToBottomRef = useRef(false);
   const [srCropOpen, setSrCropOpen] = useState(false);
   const [srCropSrc, setSrCropSrc] = useState<string | null>(null);
   const [srPendingMeta, setSrPendingMeta] = useState<{
@@ -95,6 +102,13 @@ export default function OrganizerEditDialog({
   const [isDragging, setIsDragging] = useState(false);
 
   const [srDragState, setSrDragState] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!srShouldScrollToBottomRef.current) return;
+    srShouldScrollToBottomRef.current = false;
+    const el = srListContainerRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [srList.length]);
 
   const handleSrDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
@@ -133,6 +147,12 @@ export default function OrganizerEditDialog({
         setBannerPreview(event?.imageCover || null);
         setBannerPendingFile(null);
         setRemoveBanner(false);
+        setForm((prev) => ({
+          ...prev,
+          eventName: event?.eventName,
+          eventDescription: event?.eventDescription,
+        }));
+        setNameChecked(null);
       } else if (section === "guest") {
         const showCommittee =
           typeof form.hasCommittee === "boolean"
@@ -227,8 +247,43 @@ export default function OrganizerEditDialog({
     }
   };
 
+  const handleCheckName = async () => {
+    const trimmed = (form.eventName || "").trim();
+    if (!trimmed) return;
+    const original = (event?.eventName || "").trim();
+    if (trimmed === original) {
+      setNameChecked(null);
+      return;
+    }
+    try {
+      setCheckingName(true);
+      const res = await checkEventName(trimmed);
+      const ok = Boolean(res?.available);
+      setNameChecked(ok);
+      toast[ok ? "success" : "error"](ok ? t("validation.nameAvailable") : t("validation.nameTaken"));
+    } catch (e) {
+      console.error(e);
+      setNameChecked(null);
+      toast.error(t("validation.checkNameFailed"));
+    } finally {
+      setCheckingName(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!id) return;
+    if (section === "description") {
+      const current = (form.eventName || "").trim();
+      const original = (event?.eventName || "").trim();
+      if (!current) {
+        toast.error(t("validation.eventTitleRequired"));
+        return;
+      }
+      if (current !== original && nameChecked !== true) {
+        toast.error(t("validation.checkNameBeforeSave"));
+        return;
+      }
+    }
     setSaving(true);
     try {
       const payload: Partial<EventData> = {};
@@ -248,6 +303,9 @@ export default function OrganizerEditDialog({
       } else if (section === "description") {
         if (bannerPendingFile || removeBanner) {
           const fd = new FormData();
+          if (typeof form.eventName === "string") {
+            fd.append("eventName", form.eventName);
+          }
           fd.append("eventDescription", form.eventDescription || "");
           if (bannerPendingFile) {
             fd.append("file", bannerPendingFile);
@@ -263,6 +321,7 @@ export default function OrganizerEditDialog({
           setSaving(false);
           return;
         }
+        payload.eventName = form.eventName;
         payload.eventDescription = form.eventDescription;
       } else if (section === "guest") {
         payload.virtualRewardGuest = Number(form.guestReward ?? 0);
@@ -367,6 +426,12 @@ export default function OrganizerEditDialog({
       setSaving(false);
     }
   };
+
+  const originalEventName = (event?.eventName || "").trim();
+  const currentEventName = (form.eventName || "").trim();
+  const nameSaveBlocked =
+    section === "description" &&
+    (!currentEventName || (currentEventName !== originalEventName && nameChecked !== true));
 
   return (
     <>
@@ -752,6 +817,47 @@ export default function OrganizerEditDialog({
 
             {section === "description" && (
               <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="eventName">
+                    {t("eventInfo.eventTitle")} <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="eventName"
+                      placeholder={t("eventDraft.placeholderEventTitle")}
+                      value={form.eventName || ""}
+                      onChange={(e) => {
+                        setNameChecked(null);
+                        setForm((f) => ({ ...f, eventName: e.target.value }));
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleCheckName}
+                      disabled={
+                        checkingName ||
+                        !(form.eventName || "").trim() ||
+                        (form.eventName || "").trim() === (event?.eventName || "").trim()
+                      }
+                    >
+                      {t("eventInfo.checkName")}
+                    </Button>
+                    {(form.eventName || "").trim() !== (event?.eventName || "").trim() &&
+                      (form.eventName || "").trim() &&
+                      nameChecked === true && (
+                        <div className="flex items-center gap-2 text-xs text-green-600">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      )}
+                    {(form.eventName || "").trim() !== (event?.eventName || "").trim() &&
+                      (form.eventName || "").trim() &&
+                      nameChecked === false && (
+                        <div className="flex items-center gap-2 text-xs text-destructive">
+                          <X className="h-4 w-4" />
+                        </div>
+                      )}
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label className="font-semibold text-lg">{t("eventInfo.eventBanner")}</Label>
                   <div className="relative w-full aspect-video rounded-lg overflow-hidden group">
@@ -1188,10 +1294,8 @@ export default function OrganizerEditDialog({
                     variant="outline"
                     onClick={() => {
                       const tempId = `temp-${Date.now()}`;
-                      setSrList((prev) => [
-                        ...prev,
-                        { id: tempId, name: "", description: "", _dirty: true },
-                      ]);
+                      srShouldScrollToBottomRef.current = true;
+                      setSrList((prev) => [...prev, { id: tempId, name: "", description: "", _dirty: true }]);
                     }}
                   >
                     + {t("rewardsSection.addReward")}
@@ -1203,202 +1307,208 @@ export default function OrganizerEditDialog({
                     {t("rewardsSection.noRewards")}
                   </div>
                 ) : (
-                  srList.map((reward) => (
-                    <div
-                      key={reward.id}
-                      className="relative p-4 rounded-lg border bg-card space-y-4"
-                    >
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-                        onClick={() => {
-                          setSrList((prev) => prev.filter((r) => r.id !== reward.id));
-                          if (!String(reward.id).startsWith("temp-")) {
-                            setRemovedRewardIds((prev) => [...prev, reward.id]);
-                          }
-                        }}
+                  <div
+                    ref={srListContainerRef}
+                    className="max-h-105 overflow-y-auto custom-scrollbar pr-2 space-y-4"
+                  >
+                    {srList.map((reward) => (
+                      <div
+                        key={reward.id}
+                        className="relative p-4 rounded-lg border bg-card space-y-4"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            setSrList((prev) => prev.filter((r) => r.id !== reward.id));
+                            if (!String(reward.id).startsWith("temp-")) {
+                              setRemovedRewardIds((prev) => [...prev, reward.id]);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
 
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        {/* Image Upload for Reward */}
-                        <div className="w-full sm:w-32 shrink-0 flex flex-col gap-2">
-                          {srPreviews[reward.id] || (reward.image && !reward.removeImage) ? (
-                            <>
-                              <div className="relative aspect-square w-full rounded-md overflow-hidden border">
-                                <Image
-                                  src={srPreviews[reward.id] || reward.image || ""}
-                                  alt={reward.name || "Reward"}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="flex gap-1 justify-center">
-                                <Button
-                                  size="icon"
-                                  variant="destructive"
-                                  aria-label="Remove image"
-                                  title="Remove"
-                                  className="h-6 w-6"
-                                  onClick={() => {
-                                    setSrList((prev) =>
-                                      prev.map((r) =>
-                                        r.id === reward.id
-                                          ? {
-                                              ...r,
-                                              pendingFile: undefined,
-                                              preview: null,
-                                              removeImage: !!r.image,
-                                            }
-                                          : r,
-                                      ),
-                                    );
-                                    setSrPreviews((p) => {
-                                      const np = { ...p };
-                                      delete np[reward.id];
-                                      return np;
-                                    });
-                                  }}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div
-                                className={`relative w-full cursor-pointer rounded-lg ${
-                                  srDragState[reward.id] ? "ring-2 ring-primary bg-primary/10" : ""
-                                }`}
-                                onClick={() => rewardFileRefs.current[reward.id]?.click()}
-                                onDragOver={(e) => handleSrDragOver(e, reward.id)}
-                                onDragLeave={(e) => handleSrDragLeave(e, reward.id)}
-                                onDrop={(e) => handleSrDrop(e, reward.id)}
-                              >
-                                <div
-                                  className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
-                                    srDragState[reward.id]
-                                      ? "border-primary"
-                                      : "border-border hover:border-primary/50"
-                                  }`}
-                                >
-                                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
-                                    <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
-                                    <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
-                                      {t("eventInfo.clickToUpload")}
-                                    </p>
-                                    <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">
-                                      PNG, JPG, GIF
-                                    </p>
-                                  </div>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    ref={(el) => {
-                                      rewardFileRefs.current[reward.id] = el;
-                                      if (el) {
-                                        el.onchange = (e: Event) => {
-                                          const target = e.target as HTMLInputElement;
-                                          const f = target.files?.[0];
-                                          if (!f) return;
-                                          const url = URL.createObjectURL(f);
-                                          setSrCropSrc(url);
-                                          setSrPendingMeta({
-                                            id: reward.id,
-                                            name: f.name,
-                                            type: f.type,
-                                          });
-                                          setSrCropOpen(true);
-                                        };
-                                      }
-                                    }}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <div className="w-full sm:w-32 shrink-0 flex flex-col gap-2">
+                            {srPreviews[reward.id] || (reward.image && !reward.removeImage) ? (
+                              <>
+                                <div className="relative aspect-square w-full rounded-md overflow-hidden border">
+                                  <Image
+                                    src={srPreviews[reward.id] || reward.image || ""}
+                                    alt={reward.name || "Reward"}
+                                    fill
+                                    className="object-cover"
                                   />
                                 </div>
-                              </div>
-                              <div className="mt-2 flex items-center justify-center sm:hidden">
-                                <Button
-                                  size="icon"
-                                  variant="secondary"
-                                  aria-label="Upload image"
-                                  title={t("eventInfo.clickToUpload")}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    rewardFileRefs.current[reward.id]?.click();
-                                  }}
+                                <div className="flex gap-1 justify-center">
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    aria-label="Remove image"
+                                    title="Remove"
+                                    className="h-6 w-6"
+                                    onClick={() => {
+                                      setSrList((prev) =>
+                                        prev.map((r) =>
+                                          r.id === reward.id
+                                            ? {
+                                                ...r,
+                                                pendingFile: undefined,
+                                                preview: null,
+                                                removeImage: !!r.image,
+                                              }
+                                            : r,
+                                        ),
+                                      );
+                                      setSrPreviews((p) => {
+                                        const np = { ...p };
+                                        delete np[reward.id];
+                                        return np;
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div
+                                  className={`relative w-full cursor-pointer rounded-lg ${
+                                    srDragState[reward.id]
+                                      ? "ring-2 ring-primary bg-primary/10"
+                                      : ""
+                                  }`}
+                                  onClick={() => rewardFileRefs.current[reward.id]?.click()}
+                                  onDragOver={(e) => handleSrDragOver(e, reward.id)}
+                                  onDragLeave={(e) => handleSrDragLeave(e, reward.id)}
+                                  onDrop={(e) => handleSrDrop(e, reward.id)}
                                 >
-                                  <Upload className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <div className="flex-1 space-y-3">
-                          <div className="space-y-2">
-                            <Label>{t("rewardsSection.rewardName")}</Label>
-                            <Input
-                              placeholder={t("rewardsSection.placeholderRewardName")}
-                              value={reward.name}
-                              onChange={(e) =>
-                                setSrList((prev) =>
-                                  prev.map((r) =>
-                                    r.id === reward.id
-                                      ? {
-                                          ...r,
-                                          name: e.target.value,
-                                          _dirty: !String(r.id).startsWith("temp-")
-                                            ? true
-                                            : r._dirty,
+                                  <div
+                                    className={`border-2 border-dashed rounded-lg transition-colors aspect-square overflow-hidden ${
+                                      srDragState[reward.id]
+                                        ? "border-primary"
+                                        : "border-border hover:border-primary/50"
+                                    }`}
+                                  >
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-6">
+                                      <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mb-2" />
+                                      <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
+                                        {t("eventInfo.clickToUpload")}
+                                      </p>
+                                      <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">
+                                        PNG, JPG, GIF
+                                      </p>
+                                    </div>
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      accept="image/*"
+                                      ref={(el) => {
+                                        rewardFileRefs.current[reward.id] = el;
+                                        if (el) {
+                                          el.onchange = (e: Event) => {
+                                            const target = e.target as HTMLInputElement;
+                                            const f = target.files?.[0];
+                                            if (!f) return;
+                                            const url = URL.createObjectURL(f);
+                                            setSrCropSrc(url);
+                                            setSrPendingMeta({
+                                              id: reward.id,
+                                              name: f.name,
+                                              type: f.type,
+                                            });
+                                            setSrCropOpen(true);
+                                          };
                                         }
-                                      : r,
-                                  ),
-                                )
-                              }
-                            />
-                            {rewardErrors && rewardErrors[reward.id] && (
-                              <p className="text-xs text-destructive mt-1">
-                                {rewardErrors[reward.id]}
-                              </p>
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="mt-2 flex items-center justify-center sm:hidden">
+                                  <Button
+                                    size="icon"
+                                    variant="secondary"
+                                    aria-label="Upload image"
+                                    title={t("eventInfo.clickToUpload")}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      rewardFileRefs.current[reward.id]?.click();
+                                    }}
+                                  >
+                                    <Upload className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </>
                             )}
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <Label>{t("rewardsSection.rewardDescription")}</Label>
-                              <span className="text-xs text-muted-foreground">
-                                {(reward.description || "").length}/60
-                              </span>
+
+                          <div className="flex-1 space-y-3">
+                            <div className="space-y-2">
+                              <Label>{t("rewardsSection.rewardName")}</Label>
+                              <Input
+                                placeholder={t("rewardsSection.placeholderRewardName")}
+                                value={reward.name}
+                                onChange={(e) =>
+                                  setSrList((prev) =>
+                                    prev.map((r) =>
+                                      r.id === reward.id
+                                        ? {
+                                            ...r,
+                                            name: e.target.value,
+                                            _dirty: !String(r.id).startsWith("temp-")
+                                              ? true
+                                              : r._dirty,
+                                          }
+                                        : r,
+                                    ),
+                                  )
+                                }
+                              />
+                              {rewardErrors && rewardErrors[reward.id] && (
+                                <p className="text-xs text-destructive mt-1">
+                                  {rewardErrors[reward.id]}
+                                </p>
+                              )}
                             </div>
-                            <Textarea
-                              ref={(el) => autoResizeTextarea(el)}
-                              placeholder={t("rewardsSection.placeholderRewardDesc")}
-                              value={reward.description ?? ""}
-                              maxLength={60}
-                              onChange={(e) => {
-                                autoResizeTextarea(e.target);
-                                setSrList((prev) =>
-                                  prev.map((r) =>
-                                    r.id === reward.id
-                                      ? {
-                                          ...r,
-                                          description: e.target.value,
-                                          _dirty: !String(r.id).startsWith("temp-")
-                                            ? true
-                                            : r._dirty,
-                                        }
-                                      : r,
-                                  ),
-                                );
-                              }}
-                              className="resize-none overflow-hidden"
-                            />
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label>{t("rewardsSection.rewardDescription")}</Label>
+                                <span className="text-xs text-muted-foreground">
+                                  {(reward.description || "").length}/60
+                                </span>
+                              </div>
+                              <Textarea
+                                ref={(el) => autoResizeTextarea(el)}
+                                placeholder={t("rewardsSection.placeholderRewardDesc")}
+                                value={reward.description ?? ""}
+                                maxLength={60}
+                                onChange={(e) => {
+                                  autoResizeTextarea(e.target);
+                                  setSrList((prev) =>
+                                    prev.map((r) =>
+                                      r.id === reward.id
+                                        ? {
+                                            ...r,
+                                            description: e.target.value,
+                                            _dirty: !String(r.id).startsWith("temp-")
+                                              ? true
+                                              : r._dirty,
+                                          }
+                                        : r,
+                                    ),
+                                  );
+                                }}
+                                className="resize-none overflow-hidden"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
@@ -1407,7 +1517,7 @@ export default function OrganizerEditDialog({
             <Button variant="secondary" onClick={onClose}>
               {t("dialog.cancel")}
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving || nameSaveBlocked}>
               {t("dialog.save")}
             </Button>
           </DialogFooter>

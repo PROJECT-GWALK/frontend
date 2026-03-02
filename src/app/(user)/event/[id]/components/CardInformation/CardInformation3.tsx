@@ -168,7 +168,7 @@ export default function CardInformation3({ event, editable, onEdit }: Props) {
                           })
                         }
                       >
-                        <Gift className="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-sm">

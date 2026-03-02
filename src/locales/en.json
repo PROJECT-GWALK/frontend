@@ -118,6 +118,9 @@
     "role": "Role",
     "activity": "Activity"
   },
+  "memberSection": {
+    "noUsers": "No users found"
+  },
   "committeeSection": {
     "used": "Used",
     "total": "Total",
@@ -184,7 +187,8 @@
     "checkName": "Check name",
     "fileTypeNotSupported": "Only JPG, PNG, GIF or WEBP are supported",
     "fileSizeExceeded": "File size must not exceed 5MB",
-    "checkNameFailed": "Failed to check event name"
+    "checkNameFailed": "Failed to check event name",
+    "checkNameBeforeSave": "Please check the event name before saving"
   },
   "messages": {
     "savingDraft": "Saving draft...",
@@ -193,7 +197,8 @@
     "publishing": "Publishing event...",
     "publishSuccess": "Event published successfully",
     "publishFailed": "Failed to publish event",
-    "errorLoading": "Failed to load event"
+    "errorLoading": "Failed to load event",
+    "savingCriteria": "Saving criteria..."
   },
   "dashboard": {
     "presenterCount": "Presenters",
@@ -473,6 +478,7 @@
       "backToProjects": "Back to Projects",
       "downloadImage": "Download Image",
       "downloadPDF": "Download PDF",
+      "openPDF": "Open PDF",
       "readMore": "Read More",
       "readLess": "Read Less",
       "openLink": "Open Link",
@@ -533,6 +539,7 @@
       "download": "Download",
       "downloadImage": "Download Image",
       "downloadPDF": "Download PDF",
+      "openPDF": "Open PDF",
       "remove": "Remove",
       "open": "Open",
       "noRequirements": "No specific submission requirements for this event."
@@ -680,8 +687,9 @@
     "confirm_button": "Delete"
   },
   "inviteSection": {
-    "your_role": "Your Role",
+    "your_role": "Invite Role",
     "already_member": "You are already a member of this event as",
+    "already_member_hint": "No need to confirm again.",
     "confirm_title": "Confirm Attendance",
     "button_cancel": "Cancel",
     "button_confirm": "Confirm Attendance",
@@ -727,7 +735,7 @@
     "participants": "Participants",
     "projects": "Projects",
     "results": "Results",
-    "grading": "Grading",
+    "grading": "View Scores",
     "settings": "Settings",
     "invite": "Invite"
   },
@@ -809,6 +817,12 @@
     "SRDescCol": "Description",
     "winner": "Winner",
     "votes": "Votes",
+    "votedTeams": "Voted Teams",
+    "noVotes": "No votes yet",
+    "expandVotedTeams": "Expand",
+    "collapseVotedTeams": "Collapse",
+    "expandRewardDetails": "Expand details",
+    "collapseRewardDetails": "Collapse details",
     "projectDetail": "Project Detail",
     "closeProjectDetail": "Close Project Detail",
     "seeMore": "See More",

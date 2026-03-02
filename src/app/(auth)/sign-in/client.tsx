@@ -20,7 +20,7 @@ export default function SignInClient({ onSignIn }: Props) {
           <div className="flex justify-start">
              <Image 
                src="/gwalk-icon.svg" 
-               alt="GWalk Logo" 
+               alt="Gallery Walk Logo" 
                width={140} 
                height={140} 
                className="drop-shadow-xl hover:scale-105 transition-transform duration-300" 

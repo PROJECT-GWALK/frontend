@@ -73,7 +73,7 @@ export default function ProfileView({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Check out ${user?.name}'s profile on GWALK`,
+          title: `Check out ${user?.name}'s profile on Gallery Walk`,
           url: url,
         });
       } catch (err) {

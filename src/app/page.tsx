@@ -23,7 +23,7 @@ const LandingPage = () => {
             <div className="space-y-8">
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="">Connect, Explore, and Experience</span> with{" "}
-                <span className="text-brand-quaternary">Gwalk</span>
+                <span className="text-brand-quaternary">Gallery Walk</span>
               </h1>
 
               <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
@@ -82,7 +82,7 @@ const LandingPage = () => {
                   <div className="text-center">
                     <Image
                       src="/gwalk-icon.svg"
-                      alt="Gwalk App"
+                      alt="Gallery Walk App"
                       width={300}
                       height={225}
                       className="w-full h-auto object-contain"

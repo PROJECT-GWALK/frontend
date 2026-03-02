@@ -21,20 +21,10 @@ import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import ResultSection from "../components/ResultSection";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 import { useSession } from "next-auth/react";
-
-export default function CommitteePage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string | undefined;
-
-  if (id) router.replace(`/event/${id}`);
-
-  return null;
-}
 
 type Props = {
   id: string;

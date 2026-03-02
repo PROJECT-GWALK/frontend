@@ -14,7 +14,7 @@ export async function generateMetadata({
   const proto = h.get("x-forwarded-proto") ?? "http";
   const origin = `${proto}://${host}`;
 
-  const fallbackTitle = "Gwalk";
+  const fallbackTitle = "Gallery Walk";
   const fallbackImage = new URL("/og-image.png", origin).toString();
 
   try {
