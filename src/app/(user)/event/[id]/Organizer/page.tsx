@@ -127,7 +127,11 @@ export function OrganizerView({ id, event }: Props) {
     const fetchCriteria = async () => {
       try {
         const res = await getEvaluationCriteria(id);
-        setEvaluationCriteria(res.criteria || []);
+        // Sort by sortOrder to ensure correct display order
+        const sortedCriteria = [...(res.criteria || [])].sort(
+          (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+        );
+        setEvaluationCriteria(sortedCriteria);
       } catch (error) {
         console.error(error);
         toast.error("Failed to load evaluation criteria");
