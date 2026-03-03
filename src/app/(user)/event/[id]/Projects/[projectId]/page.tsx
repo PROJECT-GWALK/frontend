@@ -99,6 +99,7 @@ export default function ProjectDetailPage({ params }: Props) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [isTeamLeader, setIsTeamLeader] = useState(false);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   // Files Dialog
@@ -284,19 +285,20 @@ export default function ProjectDetailPage({ params }: Props) {
         }
 
         // Check if user is leader of THIS team
-        let isTeamLeader = false;
+        let localIsTeamLeader = false;
         if (currentUserRes?.message === "ok") {
           const currentUser = currentUserRes.user;
           const userInTeam = t.participants?.find(
             (p) => p.user.id === currentUser.id,
           );
           if (userInTeam && userInTeam.isLeader) {
-            isTeamLeader = true;
+            localIsTeamLeader = true;
           }
         }
+        setIsTeamLeader(localIsTeamLeader);
 
-        // Final permission: Only Team Leader can edit
-        const canEdit = isTeamLeader;
+        // Final permission: Any member can edit
+        const canEdit = isUserMember;
 
         setProject({
           id: t.id,
@@ -415,10 +417,12 @@ export default function ProjectDetailPage({ params }: Props) {
     try {
       const res = await uploadTeamFile(id, project.id, fileTypeId, fileOrUrl);
       if (res.message === "ok") {
-        const newUrl = res.teamFile.fileUrl;
+        const newUrl = res.teamFile?.fileUrl;
+        if (!newUrl) throw new Error("Missing fileUrl in response");
+
         const name =
-          fileOrUrl instanceof File
-            ? fileOrUrl.name
+          typeof fileOrUrl === "object" && fileOrUrl !== null && "name" in fileOrUrl
+            ? (fileOrUrl as File).name
             : t("projectDetail.files.defaultLinkName");
 
         setProject((prev) => {
@@ -435,11 +439,16 @@ export default function ProjectDetailPage({ params }: Props) {
           return { ...prev, files: newFiles };
         });
         toast.success(t("projectDetail.messages.fileUploaded"));
+      } else {
+        throw new Error(res.message || "Unknown error");
       }
-    } catch {
-      toast.error(t("projectDetail.messages.uploadFailed"));
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.message || t("projectDetail.messages.uploadFailed"));
     } finally {
       setUploading((prev) => ({ ...prev, [fileTypeId]: false }));
+      // Reset input to allow selecting same file again
+      if (e) e.target.value = "";
     }
   };
 
@@ -665,7 +674,7 @@ export default function ProjectDetailPage({ params }: Props) {
                 {t("projectDetail.buttons.share")}
               </Button>
 
-              {isMember && !project.isLeader && (
+              {isMember && !isTeamLeader && (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -1316,7 +1325,7 @@ export default function ProjectDetailPage({ params }: Props) {
                           </Badge>
                         )}
                       </div>
-                      {project.isLeader && !m.isLeader && (
+                      {isTeamLeader && !m.isLeader && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -1335,7 +1344,7 @@ export default function ProjectDetailPage({ params }: Props) {
                     </div>
                   )}
 
-                  {project.isLeader && (
+                  {isTeamLeader && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -1763,6 +1772,7 @@ export default function ProjectDetailPage({ params }: Props) {
           onSuccess={fetchData}
           eventId={id}
           isSubmissionActive={isSubmissionActive}
+          canDelete={isTeamLeader}
         />
 
         {/* Share Dialog */}
