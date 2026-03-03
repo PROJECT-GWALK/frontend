@@ -29,6 +29,7 @@ type Props = {
   onSuccess: () => void;
   eventId: string;
   isSubmissionActive?: boolean;
+  canDelete?: boolean;
 };
 
 export default function EditProjectDialog({
@@ -38,12 +39,17 @@ export default function EditProjectDialog({
   onSuccess,
   eventId,
   isSubmissionActive = true,
+  canDelete,
 }: Props) {
   const router = useRouter();
   const { t } = useLanguage();
   const [form, setForm] = useState<PresenterProject>(project);
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Determine if delete button should be shown
+  // If canDelete is provided, use it. Otherwise fallback to project.isLeader
+  const showDelete = canDelete !== undefined ? canDelete : project.isLeader;
 
   const [cropOpen, setCropOpen] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -247,7 +253,7 @@ export default function EditProjectDialog({
           </div>
 
           <div className="flex justify-between gap-2 mt-2 pt-2 border-t">
-            {project.isLeader && (
+            {showDelete && (
               <Button
                 variant="destructive"
                 size="sm"
@@ -258,7 +264,7 @@ export default function EditProjectDialog({
                 Delete
               </Button>
             )}
-            <div className={`flex gap-2 ${!project.isLeader ? "w-full justify-end" : ""}`}>
+            <div className={`flex gap-2 ${!showDelete ? "w-full justify-end" : ""}`}>
               <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={loading}>
                 Cancel
               </Button>
