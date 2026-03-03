@@ -67,7 +67,7 @@ export default function CommitteeGradingForm({
           gradesRes.grades?.length === (criteriaRes.criteria?.length || 0) &&
             (criteriaRes.criteria?.length || 0) > 0,
         );
-      } catch (error) {
+      } catch {
         toast.error(t("committeeGrade.failedLoadGrade"));
       } finally {
         setLoading(false);
@@ -75,7 +75,7 @@ export default function CommitteeGradingForm({
     };
 
     fetchData();
-  }, [eventId, teamId]);
+  }, [eventId, teamId, t]);
 
   const handleScoreChange = (criteriaId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
@@ -116,7 +116,7 @@ export default function CommitteeGradingForm({
       setSubmitted(true);
       setIsEditing(false);
       toast.success(t("committeeGrade.submitGradeSuccess"));
-    } catch (error) {
+    } catch {
       toast.error(t("committeeGrade.submitGradeFailed"));
     } finally {
       setSubmitting(false);
