@@ -442,9 +442,13 @@ export default function ProjectDetailPage({ params }: Props) {
       } else {
         throw new Error(res.message || "Unknown error");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload error:", error);
-      toast.error(error.message || t("projectDetail.messages.uploadFailed"));
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : t("projectDetail.messages.uploadFailed");
+      toast.error(errorMessage);
     } finally {
       setUploading((prev) => ({ ...prev, [fileTypeId]: false }));
       // Reset input to allow selecting same file again
