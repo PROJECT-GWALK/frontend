@@ -200,7 +200,7 @@ export default function ImageCropDialog({
               showGrid
               cropShape="rect"
               zoomWithScroll
-              zoomSpeed={0.01}
+              zoomSpeed={0.25}
               objectFit="contain"
             />
           )}
