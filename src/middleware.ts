@@ -33,8 +33,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(targetUrl);
   }
 
-  // Allow static files (images, etc) to bypass auth
-  if (/\.(?:svg|png|jpg|jpeg|gif|webp)$/i.test(pathname)) {
+  // Allow static files and PWA files to bypass auth
+  if (
+    pathname === "/sw.js" ||
+    pathname === "/manifest.json" ||
+    pathname === "/site.webmanifest" ||
+    pathname === "/manifest.webmanifest" ||
+    /\/workbox-[^/]+\.js$/i.test(pathname) ||
+    /\/worker-[^/]+\.js$/i.test(pathname) ||
+    /\/fallback-[^/]+\.js$/i.test(pathname) ||
+    /\.[a-z0-9]+$/i.test(pathname)
+  ) {
     return NextResponse.next();
   }
 
@@ -74,7 +83,7 @@ export const config = {
   matcher: [
     // Match backend routes specifically (to allow images/files through)
     "/backend/:path*",
-    // Match everything else, excluding static files and images
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
+    // Match everything else, excluding Next internals and static files
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\..*).*)"
   ],
 };
