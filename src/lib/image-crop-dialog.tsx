@@ -200,6 +200,7 @@ export default function ImageCropDialog({
               showGrid
               cropShape="rect"
               zoomWithScroll
+              zoomSpeed={0.01}
               objectFit="contain"
             />
           )}
@@ -213,7 +214,7 @@ export default function ImageCropDialog({
                 type="range"
                 min={minZoom}
                 max={maxZoom}
-                step={1}
+                step={0.01}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="flex-1 h-1.5 bg-secondary rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
