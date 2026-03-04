@@ -1670,7 +1670,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                   </p>
                                 )}
                                 <p className="text-xs text-muted-foreground mt-2">
-                                  {t("eventInfo.clickToUpload")} or drag and drop
+                                  {t("eventInfo.clickToUpload")}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground mt-1 opacity-70">
                                   {t("projectDetail.files.maxSize")}
