@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm i && npx prisma generate && next dev",
-    "build": "next build",
+    "build": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true })\" && next build",
     "start": "next start",
     "lint": "eslint"
   },

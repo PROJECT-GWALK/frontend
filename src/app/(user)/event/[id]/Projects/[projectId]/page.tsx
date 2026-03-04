@@ -614,10 +614,10 @@ export default function ProjectDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen w-full flex justify-center bg-background">
-      <div className="w-full max-w-6xl mx-auto mt-6 space-y-8 animate-in fade-in duration-500 bg-background text-foreground">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="min-h-screen w-full flex flex-col items-center bg-background">
+      {/* Header */}
+      <div className="sticky top-16 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
+        <div className="w-full max-w-6xl mx-auto py-4 px-4 xl:px-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link href={`/event/${id}`}>
               <Button
@@ -655,7 +655,9 @@ export default function ProjectDetailPage({ params }: Props) {
             <SelectTeam className="w-full md:w-62.5" />
           </div>
         </div>
+      </div>
 
+      <div className="w-full max-w-6xl mx-auto mt-6 space-y-8 animate-in fade-in duration-500 bg-background text-foreground px-4 xl:px-0">
         {/* Hero Section */}
         <div className="relative group rounded-xl overflow-hidden shadow-sm border bg-card">
           <div

@@ -331,7 +331,13 @@
     }
   },
   "homePage": {
-    "title": "Home",
+    "feedback": {
+      "title": "Feedback Survey",
+      "button": "Give Feedback",
+      "description": "Help us improve Gallery Walk",
+      "rewardIncentive": "Join the survey to win a prize of 100 baht (3 prizes)"
+    },
+    "title": "Dashboard",
     "subtitle": "Create, manage, and join events with ease",
     "createEvent": "Create New Event",
     "searchPlaceholder": "Search events by name...",
