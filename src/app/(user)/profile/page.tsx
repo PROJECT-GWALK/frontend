@@ -36,6 +36,7 @@ export default function ProfilePage() {
       loading={loading}
       participatedEvents={participatedEvents}
       organizedEvents={organizedEvents}
+      isSelf
     />
   );
 }

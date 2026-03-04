@@ -18,7 +18,7 @@ import {
 import { linkify } from "@/utils/function";
 import { User } from "@/utils/types";
 import Link from "next/link";
-import { Calendar, Trophy, Star, ExternalLink, Share2, Check } from "lucide-react";
+import { Calendar, Trophy, Star, ExternalLink, Share2, Check, AlertCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -53,6 +53,7 @@ interface ProfileViewProps {
   error?: string | null;
   participatedEvents: ParticipatedEvent[];
   organizedEvents: OrganizedEvent[];
+  isSelf?: boolean;
 }
 
 export default function ProfileView({
@@ -61,6 +62,7 @@ export default function ProfileView({
   error,
   participatedEvents,
   organizedEvents,
+  isSelf,
 }: ProfileViewProps) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
@@ -125,12 +127,32 @@ export default function ProfileView({
 
   if (error || !user) {
     return (
-      <div className="flex justify-center p-6">
-        <Card className="w-full max-w-4xl shadow-md p-6 text-center">
-          <h2 className="text-2xl font-bold text-red-500">User not found</h2>
-          <p className="text-muted-foreground mt-2">
-            {error || "The user you are looking for does not exist."}
-          </p>
+      <div className="flex justify-center p-6 min-h-screen bg-background">
+        <Card className="w-full max-w-2xl shadow-lg border-none">
+          <CardContent className="p-8 md:p-10 text-center space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">
+                {t("notFound.title")}
+              </h2>
+              <p className="text-muted-foreground">
+                {t("notFound.description")}
+              </p>
+              {error && (
+                <p className="text-sm text-muted-foreground">{error}</p>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild>
+                <Link href="/home">{t("homePage.title")}</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/users">{t("navbar.users")}</Link>
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </div>
     );
@@ -159,19 +181,26 @@ export default function ProfileView({
                     @{user?.username}
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 gap-2"
-                  onClick={handleShare}
-                >
-                  {copied ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    <Share2 className="w-4 h-4" />
+                <div className="flex flex-wrap items-center gap-2">
+                  {isSelf && (
+                    <Button variant="secondary" size="sm" asChild>
+                      <Link href="/settings">Edit Profile</Link>
+                    </Button>
                   )}
-                  Share
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-2"
+                    onClick={handleShare}
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    Share
+                  </Button>
+                </div>
               </div>
 
               {user?.description && (

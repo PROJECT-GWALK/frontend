@@ -14,6 +14,8 @@ import {
   Users,
   Eye,
   Star,
+  ClipboardCheck,
+  ExternalLink,
 } from "lucide-react";
 import {
   Dialog,
@@ -745,6 +747,34 @@ export default function DashboardPage() {
 
             {/* Sidebar */}
             <div className="space-y-4">
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+                <CardHeader className="pb-3">
+                  <h3 className="font-semibold text-base flex items-center gap-2">
+                    <ClipboardCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    {t.homePage.feedback?.title || "Feedback"}
+                  </h3>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center gap-4">
+                  <div className="relative w-32 h-32 bg-white p-2 rounded-lg shadow-sm border">
+                    <Image
+                      src="/QRcodeFormGalleryWalk.png"
+                      alt="Feedback QR Code"
+                      fill
+                      className="object-contain p-1"
+                    />
+                  </div>
+                  <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="sm">
+                    <a href="https://cmu.to/GalleryWalk" target="_blank" rel="noreferrer">
+                      {t.homePage.feedback?.button || "Give Feedback"}
+                      <ExternalLink className="ml-2 h-3 w-3" />
+                    </a>
+                  </Button>
+                  <p className="text-xs text-center text-blue-600 dark:text-blue-400 font-medium">
+                    {t.homePage.feedback?.rewardIncentive}
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card className="bg-linear-to-br from-primary/5 to-primary/10 border-primary/20">
                 <CardHeader className="pb-3">
                   <h3 className="font-semibold text-base">{t.homePage.stats.title}</h3>

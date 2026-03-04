@@ -21,6 +21,36 @@ import ImageCropDialog from "@/lib/image-crop-dialog";
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "object" && error !== null) {
+    const response = (error as { response?: unknown }).response;
+    if (typeof response === "object" && response !== null) {
+      const data = (response as { data?: unknown }).data;
+      if (typeof data === "object" && data !== null) {
+        const msg = (data as { message?: unknown }).message;
+        if (typeof msg === "string" && msg.trim()) return msg;
+      }
+    }
+    const msg = (error as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
+
+const isUsernameConflict = (message: string) => {
+  const text = message.toLowerCase();
+  return (
+    (text.includes("username") &&
+      (text.includes("already") ||
+        text.includes("exists") ||
+        text.includes("taken") ||
+        text.includes("duplicate") ||
+        text.includes("unique"))) ||
+    text.includes("p2002") ||
+    text.includes("unique constraint failed")
+  );
+};
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -143,6 +173,7 @@ export default function SettingsPage() {
 
   const onSubmit = async (data: SettingsFormValues) => {
     setLoading(true);
+    form.clearErrors("username");
     try {
       const formData = new FormData();
       formData.append("username", data.username || "");
@@ -173,7 +204,15 @@ export default function SettingsPage() {
       });
     } catch (err) {
       console.error(err);
-      toast.error(t("toast.settingsSaveFailed"));
+      const message = getApiErrorMessage(err, t("toast.settingsSaveFailed"));
+      if (isUsernameConflict(message)) {
+        form.setError("username", {
+          type: "server",
+          message: t("validation.usernameTaken"),
+        });
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
