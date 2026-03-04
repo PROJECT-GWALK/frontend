@@ -72,6 +72,8 @@ export default function OrganizerEditDialog({
 
   // Presenter editing state (File Types)
   const [ftList, setFtList] = useState<EventFileType[]>([]);
+  const ftListContainerRef = useRef<HTMLDivElement | null>(null);
+  const ftShouldScrollToBottomRef = useRef(false);
 
   // Special rewards editing state
   const [srList, setSrList] = useState<SpecialRewardEdit[]>([]);
@@ -110,6 +112,13 @@ export default function OrganizerEditDialog({
     el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [srList.length]);
 
+  useEffect(() => {
+    if (!ftShouldScrollToBottomRef.current) return;
+    ftShouldScrollToBottomRef.current = false;
+    const el = ftListContainerRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [ftList.length]);
+
   const handleSrDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -129,6 +138,12 @@ export default function OrganizerEditDialog({
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
+
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error(t("projectDetail.files.sizeExceeded"));
+        return;
+      }
+
       const url = URL.createObjectURL(file);
       setSrCropSrc(url);
       setSrPendingMeta({
@@ -299,7 +314,11 @@ export default function OrganizerEditDialog({
       } else if (section === "presenter") {
         payload.maxTeams = form.maxTeams;
         payload.maxTeamMembers = form.maxTeamMembers;
-        payload.fileTypes = ftList;
+        payload.fileTypes = ftList.map((ft) => ({
+          ...ft,
+          name: String(ft.name ?? "").slice(0, 30),
+          description: String(ft.description ?? "").slice(0, 240),
+        }));
       } else if (section === "description") {
         if (bannerPendingFile || removeBanner) {
           const fd = new FormData();
@@ -909,6 +928,10 @@ export default function OrganizerEditDialog({
                         <p className="text-xs text-muted-foreground mt-1">
                           {t("eventInfo.clickToUpload")}
                         </p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("projectDetail.files.dragAndDrop")}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 opacity-70">
+                          {t("projectDetail.files.maxSize")}
+                        </p>
                       </div>
                     )}
                     <input
@@ -1153,6 +1176,7 @@ export default function OrganizerEditDialog({
                       size="sm"
                       variant="outline"
                       onClick={() => {
+                        ftShouldScrollToBottomRef.current = true;
                         setFtList((prev) => [
                           ...prev,
                           {
@@ -1174,7 +1198,10 @@ export default function OrganizerEditDialog({
                       {t("projectDetail.files.noRequirements")}
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div
+                      ref={ftListContainerRef}
+                      className="max-h-105 overflow-y-auto custom-scrollbar pr-2 space-y-4"
+                    >
                       {ftList.map((ft, idx) => (
                         <div
                           key={ft.id || idx}
@@ -1190,9 +1217,15 @@ export default function OrganizerEditDialog({
                           </Button>
 
                           <div className="space-y-2">
-                            <Label>{t("configuration.reqTitle")}</Label>
+                            <div className="flex justify-between items-center pr-8">
+                              <Label>{t("configuration.reqTitle")}</Label>
+                              <span className="text-[10px] text-muted-foreground">
+                                {ft.name.length}/30
+                              </span>
+                            </div>
                             <Input
                               value={ft.name}
+                              maxLength={30}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setFtList((prev) =>
@@ -1206,9 +1239,15 @@ export default function OrganizerEditDialog({
                           </div>
 
                           <div className="space-y-2">
-                            <Label>{t("configuration.reqDescription")}</Label>
+                            <div className="flex justify-between items-center">
+                              <Label>{t("configuration.reqDescription")}</Label>
+                              <span className="text-[10px] text-muted-foreground">
+                                {(ft.description || "").length}/240
+                              </span>
+                            </div>
                             <Input
                               value={ft.description || ""}
+                              maxLength={240}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setFtList((prev) =>
@@ -1398,8 +1437,12 @@ export default function OrganizerEditDialog({
                                       <p className="text-[10px] sm:text-sm text-muted-foreground hidden sm:block">
                                         {t("eventInfo.clickToUpload")}
                                       </p>
+                                      <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">{t("projectDetail.files.dragAndDrop")}</p>
                                       <p className="text-[9px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">
                                         PNG, JPG, GIF
+                                      </p>
+                                      <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 opacity-70 hidden sm:block">
+                                        {t("projectDetail.files.maxSize")}
                                       </p>
                                     </div>
                                     <input
@@ -1413,6 +1456,13 @@ export default function OrganizerEditDialog({
                                             const target = e.target as HTMLInputElement;
                                             const f = target.files?.[0];
                                             if (!f) return;
+
+                                            if (f.size > 50 * 1024 * 1024) {
+                                              toast.error(t("projectDetail.files.sizeExceeded"));
+                                              target.value = "";
+                                              return;
+                                            }
+
                                             const url = URL.createObjectURL(f);
                                             setSrCropSrc(url);
                                             setSrPendingMeta({
@@ -1447,10 +1497,16 @@ export default function OrganizerEditDialog({
 
                           <div className="flex-1 space-y-3">
                             <div className="space-y-2">
-                              <Label>{t("rewardsSection.rewardName")}</Label>
+                              <div className="flex justify-between items-center">
+                                <Label>{t("rewardsSection.rewardName")}</Label>
+                                <span className="text-xs text-muted-foreground">
+                                  {reward.name.length}/30
+                                </span>
+                              </div>
                               <Input
                                 placeholder={t("rewardsSection.placeholderRewardName")}
                                 value={reward.name}
+                                maxLength={30}
                                 onChange={(e) =>
                                   setSrList((prev) =>
                                     prev.map((r) =>

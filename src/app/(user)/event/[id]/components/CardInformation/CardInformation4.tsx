@@ -26,7 +26,7 @@ export default function CardInformation4({ event, editable, onEdit }: Props) {
             <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
               <Award className="h-5 w-5" />
             </div>
-            {t("rewardsSection.specialRewards") || "Special Rewards"}
+            {t("rewardsSection.specialRewards") || "Special Rewards"} ({specialRewards.length})
           </CardTitle>
           {editable && onEdit && (
             <TooltipProvider>

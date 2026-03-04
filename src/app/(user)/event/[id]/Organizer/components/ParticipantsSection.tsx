@@ -13,6 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
@@ -34,6 +41,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  Loader2,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,9 +51,12 @@ import {
   getParticipants,
   updateParticipant,
   deleteParticipant,
+  addParticipant,
+  searchCandidates,
 } from "@/utils/apievent";
 import { getCurrentUser } from "@/utils/apiuser";
-import type { EventGroup } from "@/utils/types";
+import type { EventGroup, Candidate } from "@/utils/types";
+import { UserAvatar } from "@/utils/function";
 
 type ParticipantUser = {
   id: string;
@@ -105,6 +118,22 @@ const groupConfig = {
 
 const ITEMS_PER_PAGE = 10;
 
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "object" && error !== null) {
+    const response = (error as { response?: unknown }).response;
+    if (typeof response === "object" && response !== null) {
+      const data = (response as { data?: unknown }).data;
+      if (typeof data === "object" && data !== null) {
+        const msg = (data as { message?: unknown }).message;
+        if (typeof msg === "string" && msg.trim()) return msg;
+      }
+    }
+    const msg = (error as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
+
 export default function ParticipantsSection({
   id,
   hasCommittee,
@@ -130,6 +159,12 @@ export default function ParticipantsSection({
     PRESENTER: 1,
     GUEST: 1,
   });
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addTargetRole, setAddTargetRole] = useState<EventGroup | null>(null);
+  const [addIdentifier, setAddIdentifier] = useState("");
+  const [addingParticipantId, setAddingParticipantId] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const onRefreshCountsRef = useRef<typeof onRefreshCounts | undefined>(
     onRefreshCounts,
   );
@@ -142,6 +177,27 @@ export default function ParticipantsSection({
     onRefreshCountsRef.current?.(participants);
   }, [participants]);
 
+  // Search Candidates for Adding
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (addIdentifier.length >= 2) {
+        setIsSearching(true);
+        try {
+          const res = await searchCandidates(id, addIdentifier);
+          setCandidates(res.candidates || []);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setCandidates([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [addIdentifier, id]);
+
   const isOrganizerLeader =
     participants.some(
       (p) =>
@@ -149,6 +205,27 @@ export default function ParticipantsSection({
         p.user?.id === currentUserId &&
         Boolean(p.isLeader),
     ) || false;
+
+  const isOrganizer =
+    participants.some(
+      (p) => p.eventGroup === "ORGANIZER" && p.user?.id === currentUserId,
+    ) || false;
+
+  const handleAddParticipant = async (identifier: string) => {
+    if (!id || !addTargetRole || !identifier.trim()) return;
+    setAddingParticipantId(identifier);
+    try {
+      const res = await addParticipant(id, identifier.trim(), addTargetRole);
+      if (res?.participant) {
+        setParticipants((all) => [...all, res.participant]);
+        toast.success(t("toast.saveSuccess"));
+      }
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, t("toast.saveFailed")));
+    } finally {
+      setAddingParticipantId(null);
+    }
+  };
 
   const applyUpdate = useCallback(
     async (
@@ -320,6 +397,8 @@ export default function ParticipantsSection({
                   const { items, total, totalPages, currentPage } =
                     getPaginatedList(g);
                   const Icon = config.icon;
+                  const canAdd =
+                    g === "ORGANIZER" ? isOrganizerLeader : isOrganizer;
 
                   return (
                     <Card
@@ -359,12 +438,27 @@ export default function ParticipantsSection({
                                 </p>
                               </div>
                             </div>
-                            <Badge
-                              variant="secondary"
-                              className={`${config.badge} border-none`}
-                            >
-                              {total}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {canAdd && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 hover:bg-background/80"
+                                  onClick={() => {
+                                    setAddTargetRole(g);
+                                    setAddDialogOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Badge
+                                variant="secondary"
+                                className={`${config.badge} border-none`}
+                              >
+                                {total}
+                              </Badge>
+                            </div>
                           </div>
                           <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -768,6 +862,157 @@ export default function ParticipantsSection({
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-2 border-b relative overflow-hidden">
+            {addTargetRole && (
+              <div
+                className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{ backgroundColor: groupConfig[addTargetRole].roleVar }}
+              />
+            )}
+            <DialogTitle className="relative flex items-center gap-2">
+              {addTargetRole && (
+                <div
+                  className={`p-1.5 rounded-md ${groupConfig[addTargetRole].badge}`}
+                >
+                  {(() => {
+                    const Icon = groupConfig[addTargetRole].icon;
+                    return <Icon className="w-4 h-4" />;
+                  })()}
+                </div>
+              )}
+              <span className="flex items-center gap-1">
+                {t("participantSection.add")}{" "}
+                <span
+                  style={{
+                    color: addTargetRole
+                      ? groupConfig[addTargetRole].roleVar
+                      : undefined,
+                  }}
+                >
+                  {addTargetRole
+                    ? groupConfig[addTargetRole].title
+                    : t("participantSection.participant")}
+                </span>
+              </span>
+            </DialogTitle>
+            <DialogDescription className="relative">
+              {t("participantSection.addDescription")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-4 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("projectDetail.member.searchPlaceholder")}
+                className="pl-9 bg-muted/50 border-border focus-visible:ring-1"
+                value={addIdentifier}
+                onChange={(e) => setAddIdentifier(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="h-75 overflow-y-auto rounded-lg border bg-muted/30 p-2">
+              {isSearching ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
+                  <span className="text-xs">
+                    {t("projectDetail.member.searching")}
+                  </span>
+                </div>
+              ) : candidates.length > 0 ? (
+                <div className="space-y-1">
+                  {candidates.map((c) => {
+                    const isAdded = participants.some(
+                      (p) => p.user?.id === c.userId,
+                    );
+                    const isAdding = addingParticipantId === c.userId;
+
+                    return (
+                      <div
+                        key={c.userId}
+                        className="flex items-center justify-between p-2 hover:bg-card hover:shadow-sm rounded-lg transition-all group border border-transparent hover:border-border"
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <UserAvatar
+                            user={c}
+                            className="w-9 h-9 border bg-card"
+                          />
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium truncate text-foreground">
+                              {c.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              @{c.username}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={isAdded ? "ghost" : "secondary"}
+                          className={`h-8 px-3 shadow-sm transition-all ${
+                            !isAdded && !isAdding && addTargetRole
+                              ? "text-white hover:opacity-90"
+                              : ""
+                          }`}
+                          style={{
+                            backgroundColor:
+                              !isAdded && !isAdding && addTargetRole
+                                ? groupConfig[addTargetRole].roleVar
+                                : undefined,
+                          }}
+                          onClick={() => handleAddParticipant(c.userId)}
+                          disabled={!!addingParticipantId || isAdded}
+                        >
+                          {isAdding ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : isAdded ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 mr-1.5" />
+                              {t("participantSection.added")}
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-3.5 h-3.5 mr-1.5" />
+                              {t("participantSection.add")}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : addIdentifier.length >= 2 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
+                  <Users className="w-8 h-8" />
+                  <span className="text-sm">
+                    {t("projectDetail.member.noUsers")}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 opacity-50">
+                  <Search className="w-8 h-8" />
+                  <span className="text-sm">
+                    {t("projectDetail.member.typeToSearch")}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="p-3 bg-muted border-t flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setAddDialogOpen(false)}
+            >
+              {t("projectDetail.buttons.cancel")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

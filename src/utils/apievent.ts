@@ -277,6 +277,15 @@ export const getParticipants = async (eventId: string) => {
   return res.data; // { message, participants }
 };
 
+export const addParticipant = async (eventId: string, identifier: string, role: string) => {
+  const res = await axios.post(
+    `/backend/api/events/${eventId}/participants`,
+    { identifier, role },
+    { withCredentials: true }
+  );
+  return res.data; // { message, participant }
+};
+
 export const updateParticipant = async (eventId: string, pid: string, data: ParticipantUpdatePayload) => {
   const res = await axios.put(
     `/backend/api/events/${eventId}/participants/${pid}`,

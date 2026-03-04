@@ -7,25 +7,27 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import {
-  Users,
-  FileText,
-  Search,
-  Plus,
-  Share2,
-  Edit3,
-  Loader2,
-  X,
-  ChevronDown,
-  ChevronUp,
-  LogOut,
-  Download,
-  ClipboardCopy,
-  ArrowLeft,
-  Gift,
-  Trophy,
-  AlertCircle,
-  File,
-} from "lucide-react";
+    Users,
+    FileText,
+    Search,
+    Plus,
+    Share2,
+    Edit3,
+    Loader2,
+    X,
+    ChevronDown,
+    ChevronUp,
+    LogOut,
+    Download,
+    ClipboardCopy,
+    ArrowLeft,
+    Gift,
+    Trophy,
+    AlertCircle,
+    File,
+    Edit,
+    Upload,
+  } from "lucide-react";
 import {
   getTeamById,
   getEvent,
@@ -115,6 +117,36 @@ export default function ProjectDetailPage({ params }: Props) {
 
   // Upload loading state per fileTypeId
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [dragState, setDragState] = useState<Record<string, boolean>>({});
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragState((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const handleDragLeave = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragState((prev) => ({ ...prev, [id]: false }));
+  };
+
+  const handleDrop = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragState((prev) => ({ ...prev, [id]: false }));
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const event = {
+        target: {
+          files: [file],
+        },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+      handleFileUpload(event, id);
+    }
+  };
 
   // Evaluation State
   const [virtualReward, setVirtualReward] = useState<number>(0);
@@ -413,6 +445,14 @@ export default function ProjectDetailPage({ params }: Props) {
 
     if (!fileOrUrl) return;
 
+    if (typeof fileOrUrl === "object" && "size" in fileOrUrl) {
+      if ((fileOrUrl as File).size > 50 * 1024 * 1024) {
+        toast.error(t("projectDetail.files.sizeExceeded"));
+        if (e) e.target.value = "";
+        return;
+      }
+    }
+
     setUploading((prev) => ({ ...prev, [fileTypeId]: true }));
     try {
       const res = await uploadTeamFile(id, project.id, fileTypeId, fileOrUrl);
@@ -702,26 +742,6 @@ export default function ProjectDetailPage({ params }: Props) {
                   {t("projectDetail.buttons.editProject")}
                 </Button>
               )}
-
-              {isMember && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shadow-sm"
-                  onClick={() => setFilesOpen(true)}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  {t("projectDetail.buttons.manageFiles")}
-                  {project.files && project.files.length > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-2 h-5 min-w-5 px-1"
-                    >
-                      {project.files.length}
-                    </Badge>
-                  )}
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -811,11 +831,21 @@ export default function ProjectDetailPage({ params }: Props) {
 
             {/* Project Works Display */}
             <Card className="border-none shadow-md overflow-hidden bg-card">
-              <CardHeader className="border-b px-6 py-4">
+              <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <FileText className="w-5 h-5 text-primary" />
                   {t("projectDetail.sections.projectWorks")}
                 </CardTitle>
+                {isMember && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setFilesOpen(true)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 gap-8">
@@ -840,12 +870,12 @@ export default function ProjectDetailPage({ params }: Props) {
 
                       return (
                         <div key={idx} className="space-y-3">
-                          <div className="flex items-baseline justify-between border-b pb-2 border-border">
+                          <div className="flex flex-col gap-1 border-b pb-2 border-border">
                             <h3 className="font-semibold text-lg text-foreground">
                               {ft?.name || file.name}
                             </h3>
                             {ft?.description && (
-                              <span className="text-sm text-muted-foreground ml-4 text-right">
+                              <span className="text-sm text-muted-foreground">
                                 {ft.description}
                               </span>
                             )}
@@ -1451,23 +1481,24 @@ export default function ProjectDetailPage({ params }: Props) {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6 max-h-[60vh] custom-scrollbar">
               {(eventData?.fileTypes || []).map((ft) => {
                 const uploaded = project.files?.find(
                   (f) => f.fileTypeId === ft.id,
                 );
                 const isUrlType = ft.allowedFileTypes.includes(FileType.url);
                 const isUploading = ft.id ? uploading[ft.id] : false;
+                const isDragging = ft.id ? dragState[ft.id] : false;
 
                 return (
                   <div
                     key={ft.id}
-                    className="flex flex-col md:flex-row gap-4 p-4 border rounded-xl bg-card hover:bg-muted/50 transition-colors items-start"
+                    className="flex flex-col gap-4 p-4 border rounded-xl bg-card hover:bg-muted/50 transition-colors"
                   >
                     {/* Info Section */}
-                    <div className="flex-1 space-y-1.5">
+                    <div className="space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm md:text-base">
+                        <span className="font-semibold text-base">
                           {ft.name}
                         </span>
                         {ft.isRequired && (
@@ -1492,13 +1523,15 @@ export default function ProjectDetailPage({ params }: Props) {
                           {ft.description}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground font-mono bg-muted w-fit px-1.5 py-0.5 rounded border">
-                        {ft.allowedFileTypes.join(", ")}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-muted-foreground font-mono bg-muted w-fit px-1.5 py-0.5 rounded border">
+                          {ft.allowedFileTypes.join(", ")}
+                        </p>
+                      </div>
                     </div>
 
                     {/* Actions Section */}
-                    <div className="w-full md:w-70 flex flex-col justify-center gap-3 shrink-0">
+                    <div className="w-full flex flex-col justify-center gap-3">
                       {isUrlType ? (
                         <div className="flex flex-col gap-2 w-full">
                           <div className="flex gap-2 w-full items-center">
@@ -1529,7 +1562,7 @@ export default function ProjectDetailPage({ params }: Props) {
                             <Button
                               size="sm"
                               disabled={isUploading || !isSubmissionActive}
-                              className="h-9"
+                              className="h-9 shrink-0"
                               onClick={() => {
                                 const input = document.getElementById(
                                   `url-input-${ft.id}`,
@@ -1554,7 +1587,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-7 text-xs"
+                                  className="h-8 px-3 text-xs"
                                   asChild
                                 >
                                   <a
@@ -1570,7 +1603,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  className="h-8 px-3 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                                   onClick={() => handleDeleteFile(ft.id!)}
                                   disabled={!isSubmissionActive}
                                 >
@@ -1582,46 +1615,76 @@ export default function ProjectDetailPage({ params }: Props) {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-end gap-2 w-full">
-                          <Input
-                            type="file"
-                            id={`file-${ft.id}`}
-                            className="hidden"
-                            accept={ft.allowedFileTypes
-                              .map((t) => "." + t)
-                              .join(",")}
-                            onChange={(e) => handleFileUpload(e, ft.id)}
-                            disabled={isUploading || !isSubmissionActive}
-                          />
-                          <div className="flex gap-2 w-full justify-end">
-                            <Button
-                              variant={uploaded ? "outline" : "default"}
-                              size="sm"
-                              className="w-full h-9"
+                        <div className="flex flex-col gap-2 w-full">
+                          <div
+                            className={`flex flex-col items-center justify-center w-full min-h-25 border-2 border-dashed rounded-lg transition-colors cursor-pointer p-4 text-center ${
+                              isDragging
+                                ? "border-primary bg-primary/5"
+                                : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"
+                            } ${
+                              isUploading || !isSubmissionActive
+                                ? "opacity-50 cursor-not-allowed pointer-events-none"
+                                : ""
+                            }`}
+                            onDragOver={(e) =>
+                              ft.id && handleDragOver(e, ft.id)
+                            }
+                            onDragLeave={(e) =>
+                              ft.id && handleDragLeave(e, ft.id)
+                            }
+                            onDrop={(e) => ft.id && handleDrop(e, ft.id)}
+                            onClick={() =>
+                              document
+                                .getElementById(`file-${ft.id}`)
+                                ?.click()
+                            }
+                          >
+                            <Input
+                              type="file"
+                              id={`file-${ft.id}`}
+                              className="hidden"
+                              accept={ft.allowedFileTypes
+                                .map((t) => "." + t)
+                                .join(",")}
+                              onChange={(e) => handleFileUpload(e, ft.id)}
                               disabled={isUploading || !isSubmissionActive}
-                              onClick={() =>
-                                document
-                                  .getElementById(`file-${ft.id}`)
-                                  ?.click()
-                              }
-                            >
-                              {isUploading ? (
-                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                              ) : (
-                                <Plus className="w-4 h-4 mr-2" />
-                              )}
-                              {uploaded
-                                ? t("projectDetail.files.replaceFile")
-                                : t("projectDetail.files.uploadFile")}
-                            </Button>
+                            />
+                            {isUploading ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                <span className="text-sm text-muted-foreground">
+                                  Uploading...
+                                </span>
+                              </div>
+                            ) : (
+                              <>
+                                <Upload className="w-8 h-8 text-muted-foreground mb-3" />
+                                <p className="text-sm font-medium">
+                                  {uploaded
+                                    ? t("projectDetail.files.replaceFile")
+                                    : t("projectDetail.files.uploadFile")}
+                                </p>
+                                {uploaded && (
+                                  <p className="text-sm text-primary font-medium mt-1 truncate max-w-50">
+                                    {uploaded.name}
+                                  </p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {t("eventInfo.clickToUpload")} or drag and drop
+                                </p>
+                                <p className="text-[10px] text-muted-foreground mt-1 opacity-70">
+                                  {t("projectDetail.files.maxSize")}
+                                </p>
+                              </>
+                            )}
                           </div>
 
                           {uploaded && (
                             <div className="flex gap-2 justify-end w-full">
                               <Button
                                 size="sm"
-                                variant="secondary"
-                                className="h-7 text-xs"
+                                variant="outline"
+                                className="h-8 px-3 text-xs"
                                 asChild
                               >
                                 <a
@@ -1630,14 +1693,14 @@ export default function ProjectDetailPage({ params }: Props) {
                                   rel="noreferrer"
                                   className="flex items-center gap-1.5"
                                 >
-                                  <Download className="w-3 h-3" />{" "}
-                                  {t("projectDetail.files.download")}
+                                  <File className="w-3 h-3" />{" "}
+                                  {t("projectDetail.files.open")}
                                 </a>
                               </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="h-8 px-3 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => ft.id && handleDeleteFile(ft.id)}
                                 disabled={!isSubmissionActive}
                               >

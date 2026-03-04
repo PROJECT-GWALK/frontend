@@ -235,7 +235,7 @@
   "userDashboard": {
     "eventdashboard": "Event Dashboard",
     "recruting": "Applying",
-    "startingSoon": "Event Starting Soon",
+    "startingSoon": "Starting Soon",
     "draft": "Draft",
     "liveNow": "Live",
     "ended": "Ended"
@@ -272,7 +272,7 @@
     "candidates": "candidates"
   },
   "eventStatus": {
-    "startsIn": "Event Starts In",
+    "startsIn": "Starts In",
     "endsIn": "Event Ends In",
     "ongoing": "Ongoing",
     "status": "Status",
@@ -301,7 +301,6 @@
     "title": "Events",
     "subtitle": "List of currently open events",
     "searchPlaceholder": "Search by event name...",
-    "noEvents": "No events found",
     "joinedEvent": "Joined Event",
     "joinAsPresenter": "Join as Presenter",
     "joinAsGuest": "Join as Guest",
@@ -310,7 +309,7 @@
       "all": "All Events",
       "upcomingRecruit": "Applying Soon",
       "accepting": "Applying",
-      "viewSoon": "Event Starting Soon",
+      "viewSoon": "Starting Soon",
       "viewOpen": "Live",
       "finished": "Finished"
     },
@@ -351,7 +350,7 @@
       "draft": "Drafts",
       "upcomingRecruit": "Applying Soon",
       "accepting": "Applying",
-      "viewSoon": "Event Starting Soon",
+      "viewSoon": "Starting Soon",
       "viewOpen": "Live",
       "finished": "Ended"
     },
@@ -376,7 +375,7 @@
       "draft": "Draft",
       "upcomingRecruit": "Applying Soon",
       "accepting": "Applying",
-      "viewSoon": "Event Starting Soon",
+      "viewSoon": "Starting Soon",
       "viewOpen": "Live",
       "finished": "Ended"
     },
@@ -482,7 +481,9 @@
       "readMore": "Read More",
       "readLess": "Read Less",
       "openLink": "Open Link",
-      "max": "Max"
+      "max": "Max",
+      "create": "Create",
+      "creating": "Creating..."
     },
     "sections": {
       "description": "Project Description",
@@ -490,7 +491,7 @@
       "evaluation": "Rewards",
       "grade": "Grade",
       "projectVideo": "Project Video",
-      "projectWorks": "Project Works"
+      "projectWorks": "Project Submission"
     },
     "dialogs": {
       "manageFilesTitle": "Manage Project Files",
@@ -500,9 +501,12 @@
       "leaveTeamTitle": "Leave Team",
       "leaveTeamDesc": "Are you sure you want to leave this team?",
       "shareProjectTitle": "Share Project",
-      "shareProjectDesc": "Share this project via link or QR code."
+      "shareProjectDesc": "Share this project via link or QR code.",
+      "deleteProjectTitle": "Delete Project",
+      "deleteProjectDesc": "Are you sure you want to delete this project? This action cannot be undone."
     },
     "messages": {
+      "deleting": "Deleting...",
       "confirmRemoveMember": "Are you sure you want to remove this member?",
       "confirmDeleteFile": "Are you sure you want to delete this file?",
       "memberAdded": "Member added",
@@ -542,7 +546,11 @@
       "openPDF": "Open PDF",
       "remove": "Remove",
       "open": "Open",
-      "noRequirements": "No specific submission requirements for this event."
+      "noRequirements": "No specific submission requirements for this event.",
+      "maxSize": "Max file size: 50MB",
+      "sizeExceeded": "File size exceeds 50MB limit",
+      "onlyImage": "Please upload an image file",
+      "dragAndDrop": "or drag and drop"
     },
     "evaluation": {
       "virtualReward": "Virtual Reward",
@@ -678,7 +686,10 @@
     "all": "total",
     "refresh": "Refresh",
     "noSearchResults": "No participants found for your search",
-    "noParticipantsInGroup": "No participants in this group yet"
+    "noParticipantsInGroup": "No participants in this group yet",
+    "addDescription": "Enter name, username, or email to add a new participant.",
+    "add": "Add",
+    "added": "Added"
   },
   "removeParticipantModal": {
     "title": "Remove Participant",
@@ -734,13 +745,14 @@
     "dashboard": "Dashboard",
     "participants": "Participants",
     "projects": "Projects",
-    "results": "Results",
-    "grading": "View Scores",
+    "results": "Rewards",
+    "grading": "Grade",
     "settings": "Settings",
     "invite": "Invite"
   },
   "publishedEventBanner": {
-    "publish": "Published",
+    "publicStatus": "Public",
+    "hiddenStatus": "Hidden",
     "hidePublic": "Hide from Public",
     "showPublic": "Show to Public"
   },
@@ -800,7 +812,7 @@
     "requiredName": "Please provide a category name"
   },
   "resultsTab": {
-    "title": "Event Results",
+    "title": "Event Rewards",
     "resultsDesc": "Ranking by Virtual Rewards and Special Rewards",
     "refresh": "Refresh Results",
     "tryAgain": "Try Again",

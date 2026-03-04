@@ -26,7 +26,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<
-    "all" | "upcomingRecruit" | "accepting" | "viewSoon" | "viewOpen" | "finished"
+    "all" | "accepting" | "viewSoon" | "viewOpen"
   >("all");
 
   const getEventStatus = (event: MyEvent): string => {
@@ -55,11 +55,9 @@ export default function EventsPage() {
   };
 
   const counts = {
-    upcomingRecruit: events.filter((e) => getEventStatus(e) === "upcomingRecruit").length,
     accepting: events.filter((e) => getEventStatus(e) === "accepting").length,
     viewSoon: events.filter((e) => getEventStatus(e) === "viewSoon").length,
     viewOpen: events.filter((e) => getEventStatus(e) === "viewOpen").length,
-    finished: events.filter((e) => getEventStatus(e) === "finished").length,
   };
 
   useEffect(() => {
@@ -149,11 +147,9 @@ export default function EventsPage() {
   const getFilterLabel = (f: string) => {
     const labels: Record<string, string> = {
       all: t.homePage.filter.all,
-      upcomingRecruit: t.homePage.filter.upcomingRecruit,
       accepting: t.homePage.filter.accepting,
       viewSoon: t.homePage.filter.viewSoon,
       viewOpen: t.homePage.filter.viewOpen,
-      finished: t.homePage.filter.finished,
     };
     return labels[f] || f;
   };
@@ -161,13 +157,10 @@ export default function EventsPage() {
   const getFilterTooltip = (f: string) => {
     const tooltips: Record<string, string> = {
       all: t.homePage.filterTooltip?.all || "Show all available events",
-      upcomingRecruit:
-        t.homePage.filterTooltip?.upcomingRecruit || "Events that will open for recruitment soon",
       accepting: t.homePage.filterTooltip?.accepting || "Events currently accepting participants",
       viewSoon: t.homePage.filterTooltip?.viewSoon || "Events starting soon after recruitment ends",
       viewOpen:
         t.homePage.filterTooltip?.viewOpen || "Events currently ongoing or in viewing period",
-      finished: t.homePage.filterTooltip?.finished || "Events that have ended",
     };
     return tooltips[f] || f;
   };
@@ -193,7 +186,7 @@ export default function EventsPage() {
       <div className="flex flex-wrap gap-2">
         <TooltipProvider>
           {(
-            ["all", "upcomingRecruit", "accepting", "viewSoon", "viewOpen", "finished"] as const
+            ["all", "accepting", "viewSoon", "viewOpen"] as const
           ).map((f) => {
             const count = f === "all" ? events.length : counts[f];
             return (
