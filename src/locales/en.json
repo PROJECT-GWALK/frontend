@@ -183,6 +183,7 @@
     "submissionBeforeEvent": "Submission must be before event start",
     "rewardNameRequired": "Please enter reward name",
     "nameTaken": "Event name already in use",
+    "usernameTaken": "Username already exists",
     "nameAvailable": "Event name available",
     "checkName": "Check name",
     "fileTypeNotSupported": "Only JPG, PNG, GIF or WEBP are supported",

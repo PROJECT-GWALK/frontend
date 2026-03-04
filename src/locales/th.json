@@ -183,6 +183,7 @@
     "submissionBeforeEvent": "วันที่และเวลาส่งผลงานต้องอยู่ก่อนวันที่และเวลาที่เริ่มต้นอีเวนต์",
     "rewardNameRequired": "กรุณากรอกชื่อรางวัลพิเศษ",
     "nameTaken": "ชื่ออีเวนต์ถูกใช้แล้ว",
+    "usernameTaken": "ชื่อผู้ใช้นี้ถูกใช้แล้ว",
     "nameAvailable": "ชื่ออีเวนต์สามารถใช้ได้",
     "checkName": "ตรวจสอบชื่ออีเวนต์",
     "fileTypeNotSupported": "รองรับเฉพาะไฟล์ JPG, PNG, GIF หรือ WEBP",

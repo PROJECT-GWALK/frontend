@@ -1,6 +1,6 @@
 "use client";
 
-import { getUserByUsername } from "@/utils/apiuser";
+import { getCurrentUser, getUserByUsername } from "@/utils/apiuser";
 import { getUserHistoryByUsername } from "@/utils/apievent";
 import { User } from "@/utils/types";
 import { useEffect, useState } from "react";
@@ -14,6 +14,7 @@ export default function OtherProfilePage() {
   const [participatedEvents, setParticipatedEvents] = useState<ParticipatedEvent[]>([]);
   const [organizedEvents, setOrganizedEvents] = useState<OrganizedEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -28,12 +29,15 @@ export default function OtherProfilePage() {
         // Decode URI component to handle %40
         const decodedId = decodeURIComponent(idParam);
 
-        const userData = await getUserByUsername(decodedId);
+        const [userData, history, current] = await Promise.all([
+          getUserByUsername(decodedId),
+          getUserHistoryByUsername(decodedId),
+          getCurrentUser().catch(() => null),
+        ]);
         setUser(userData.user);
-
-        const history = await getUserHistoryByUsername(decodedId);
         setParticipatedEvents(history.participated);
         setOrganizedEvents(history.organized);
+        if (current?.user) setCurrentUser(current.user);
       } catch (error: unknown) {
         console.error("Error fetching user:", error);
         if (error instanceof Error && error.message) {
@@ -49,6 +53,11 @@ export default function OtherProfilePage() {
     if (params.id) fetchUser();
   }, [params.id]);
 
+  const isSelf =
+    !!currentUser &&
+    !!user &&
+    (currentUser.id ? currentUser.id === user.id : currentUser.username === user.username);
+
   return (
     <ProfileView
       user={user}
@@ -56,6 +65,7 @@ export default function OtherProfilePage() {
       error={error}
       participatedEvents={participatedEvents}
       organizedEvents={organizedEvents}
+      isSelf={isSelf}
     />
   );
 }
