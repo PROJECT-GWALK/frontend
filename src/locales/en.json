@@ -496,7 +496,7 @@
       "manageFilesTitle": "Manage Project Files",
       "manageFilesDesc": "Upload and manage files for your project.",
       "addMemberTitle": "Add Team Member",
-      "addMemberDesc": "Search by name or email to add members.",
+      "addMemberDesc": "Search by name, username or email to add members.",
       "leaveTeamTitle": "Leave Team",
       "leaveTeamDesc": "Are you sure you want to leave this team?",
       "shareProjectTitle": "Share Project",
@@ -570,7 +570,7 @@
       "selected": "selected"
     },
     "member": {
-      "searchPlaceholder": "Search users...",
+      "searchPlaceholder": "Search by name, username or email...",
       "searching": "Searching...",
       "add": "Add",
       "owner": "Owner",

@@ -1298,9 +1298,27 @@ export default function ProjectDetailPage({ params }: Props) {
                   <Users className="w-5 h-5 text-primary" />
                   {t("projectDetail.projectMembers")}
                 </CardTitle>
-                <Badge variant="secondary" className="font-normal">
-                  {membersData.length} / {eventData?.maxTeamMembers || "-"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="font-normal">
+                    {membersData.length} / {eventData?.maxTeamMembers || "-"}
+                  </Badge>
+                  {isTeamLeader && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex sm:hidden border-dashed border-2 hover:border-primary hover:text-primary"
+                      onClick={() => setInviteOpen(true)}
+                      disabled={
+                        (!!eventData?.maxTeamMembers &&
+                          membersData.length >= eventData.maxTeamMembers) ||
+                        !isSubmissionActive
+                      }
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t("projectDetail.buttons.addMember")}
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -1333,7 +1351,7 @@ export default function ProjectDetailPage({ params }: Props) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          className="absolute top-2 right-2 h-6 w-6 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                           onClick={() => handleRemoveMember(m.id)}
                           disabled={!isSubmissionActive}
                         >
@@ -1352,7 +1370,7 @@ export default function ProjectDetailPage({ params }: Props) {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full mt-2 border-dashed border-2 hover:border-primary hover:text-primary"
+                      className="hidden sm:flex w-full mt-2 border-dashed border-2 hover:border-primary hover:text-primary"
                       onClick={() => setInviteOpen(true)}
                       disabled={
                         (!!eventData?.maxTeamMembers &&

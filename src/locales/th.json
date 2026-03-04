@@ -495,7 +495,7 @@
       "manageFilesTitle": "จัดการไฟล์โครงงาน",
       "manageFilesDesc": "อัปโหลดและจัดการไฟล์สำหรับโครงงานของคุณ",
       "addMemberTitle": "เพิ่มสมาชิกทีม",
-      "addMemberDesc": "ค้นหาด้วยชื่อหรืออีเมลเพื่อเพิ่มสมาชิก",
+      "addMemberDesc": "ค้นหาด้วยชื่อ, username หรืออีเมลเพื่อเพิ่มสมาชิก",
       "leaveTeamTitle": "ออกจากทีม",
       "leaveTeamDesc": "คุณแน่ใจหรือไม่ว่าต้องการออกจากทีมนี้?",
       "shareProjectTitle": "แชร์โครงงาน",
@@ -569,7 +569,7 @@
       "selected": "รายการที่เลือก"
     },
     "member": {
-      "searchPlaceholder": "ค้นหาผู้ใช้...",
+      "searchPlaceholder": "ค้นหาด้วยชื่อ, username หรืออีเมล...",
       "searching": "กำลังค้นหา...",
       "add": "เพิ่ม",
       "owner": "เจ้าของ",
