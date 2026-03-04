@@ -135,6 +135,9 @@ export function Navbar() {
                         <p className="text-xs leading-none text-muted-foreground">
                           @{user.username}
                         </p>
+                        <p className="text-xs leading-snug text-muted-foreground break-all whitespace-normal">
+                          {user.email}
+                        </p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -204,6 +207,9 @@ export function Navbar() {
                             <span className="font-semibold truncate">{user.name}</span>
                             <span className="text-xs text-muted-foreground truncate">
                               @{user.username}
+                            </span>
+                            <span className="text-xs text-muted-foreground break-all whitespace-normal leading-snug">
+                              {user.email}
                             </span>
                           </div>
                         </div>
