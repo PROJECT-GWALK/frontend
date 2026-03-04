@@ -253,10 +253,16 @@ export default function Card4(props: Props) {
                   </div>
                   <div className="flex-1 space-y-3">
                     <div className="space-y-2">
-                      <Label>{t("rewardsSection.rewardName")}</Label>
+                      <div className="flex justify-between items-center">
+                        <Label>{t("rewardsSection.rewardName")}</Label>
+                        <span className="text-xs text-muted-foreground">
+                          {reward.name.length}/30
+                        </span>
+                      </div>
                       <Input
                         placeholder={t("rewardsSection.placeholderRewardName")}
                         value={reward.name}
+                        maxLength={30}
                         onChange={(e) => handleRewardChange(reward.id, "name", e.target.value)}
                       />
                       {rewardErrors && rewardErrors[reward.id] && (

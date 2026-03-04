@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,15 @@ export default function Card3(props: Props) {
   } = props;
 
   const { t } = useLanguage();
+  const reqListContainerRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollToBottomRef = useRef(false);
+
+  useEffect(() => {
+    if (!shouldScrollToBottomRef.current) return;
+    shouldScrollToBottomRef.current = false;
+    const el = reqListContainerRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [fileRequirements.length]);
 
   return (
     <Card id="card3" className="lg:col-span-2 scroll-mt-6 border-none shadow-md">
@@ -211,116 +221,16 @@ export default function Card3(props: Props) {
 
         {/* File Requirements Section */}
         <div className="space-y-6">
-          <div className="flex items-center gap-2 font-semibold text-lg">
-            <FileText className="h-5 w-5" />
-            {t("configuration.fileRequirements")}
-          </div>
-          
-          <div className="space-y-4">
-            {fileRequirements.map((req, index) => (
-              <div key={req.id || index} className="p-4 border rounded-lg bg-background space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2 flex-1 mr-4">
-                    <Label>{t("configuration.reqTitle")}</Label>
-                    <Input
-                      value={req.name}
-                      onChange={(e) => {
-                        const newReqs = [...fileRequirements];
-                        newReqs[index].name = e.target.value;
-                        setFileRequirements(newReqs);
-                      }}
-                      placeholder={t("configuration.placeholderReqName")}
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive"
-                    onClick={() => {
-                      const newReqs = [...fileRequirements];
-                      newReqs.splice(index, 1);
-                      setFileRequirements(newReqs);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("configuration.reqDescription")}</Label>
-                  <Input
-                    value={req.description || ""}
-                    onChange={(e) => {
-                      const newReqs = [...fileRequirements];
-                      newReqs[index].description = e.target.value;
-                      setFileRequirements(newReqs);
-                    }}
-                    placeholder={t("configuration.placeholderReqDesc")}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("configuration.allowedTypes")}</Label>
-                  <div className="flex flex-wrap gap-4">
-                    {Object.values(FileType).map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`req-${index}-${type}`}
-                          checked={req.allowedFileTypes.includes(type)}
-                          onCheckedChange={(checked) => {
-                            const newReqs = [...fileRequirements];
-                            if (checked) {
-                              if (type === FileType.url) {
-                                newReqs[index].allowedFileTypes = [FileType.url];
-                              } else {
-                                newReqs[index].allowedFileTypes = newReqs[
-                                  index
-                                ].allowedFileTypes.filter(
-                                  (t) => t !== FileType.url
-                                );
-                                newReqs[index].allowedFileTypes.push(type);
-                              }
-                            } else {
-                              if (newReqs[index].allowedFileTypes.length <= 1) return;
-                              newReqs[index].allowedFileTypes = newReqs[
-                                index
-                              ].allowedFileTypes.filter((t) => t !== type);
-                            }
-                            setFileRequirements(newReqs);
-                          }}
-                        />
-                        <label
-                          htmlFor={`req-${index}-${type}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase"
-                        >
-                          {type}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id={`req-${index}-required`}
-                    checked={req.isRequired}
-                    onCheckedChange={(checked) => {
-                      const newReqs = [...fileRequirements];
-                      newReqs[index].isRequired = !!checked;
-                      setFileRequirements(newReqs);
-                    }}
-                  />
-                  <label htmlFor={`req-${index}-required`} className="text-sm font-medium leading-none">
-                    {t("configuration.required")}
-                  </label>
-                </div>
-              </div>
-            ))}
-
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 font-semibold text-lg">
+              <FileText className="h-5 w-5" />
+              {t("configuration.fileRequirements")}
+            </div>
             <Button
+              size="sm"
               variant="outline"
-              className="w-full border-dashed"
               onClick={() => {
+                shouldScrollToBottomRef.current = true;
                 setFileRequirements([
                   ...fileRequirements,
                   {
@@ -332,9 +242,131 @@ export default function Card3(props: Props) {
                 ]);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" /> {t("configuration.addFileReq")}
+              <Plus className="h-4 w-4 mr-1" /> {t("configuration.addFileReq")}
             </Button>
           </div>
+          
+          {fileRequirements.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground border border-dashed rounded-lg">
+              {t("projectDetail.files.noRequirements")}
+            </div>
+          ) : (
+            <div
+              ref={reqListContainerRef}
+              className="max-h-105 overflow-y-auto custom-scrollbar pr-2 space-y-4"
+            >
+              {fileRequirements.map((req, index) => (
+                <div key={req.id || index} className="p-4 border rounded-lg bg-background space-y-3 relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      const newReqs = [...fileRequirements];
+                      newReqs.splice(index, 1);
+                      setFileRequirements(newReqs);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center pr-8">
+                      <Label>{t("configuration.reqTitle")}</Label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {req.name.length}/30
+                      </span>
+                    </div>
+                    <Input
+                      value={req.name}
+                      maxLength={30}
+                      onChange={(e) => {
+                        const newReqs = [...fileRequirements];
+                        newReqs[index].name = e.target.value;
+                        setFileRequirements(newReqs);
+                      }}
+                      placeholder={t("configuration.placeholderReqName")}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label>{t("configuration.reqDescription")}</Label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {(req.description || "").length}/240
+                      </span>
+                    </div>
+                    <Input
+                      value={req.description || ""}
+                      maxLength={240}
+                      onChange={(e) => {
+                        const newReqs = [...fileRequirements];
+                        newReqs[index].description = e.target.value;
+                        setFileRequirements(newReqs);
+                      }}
+                      placeholder={t("configuration.placeholderReqDesc")}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t("configuration.allowedTypes")}</Label>
+                    <div className="flex flex-wrap gap-4">
+                      {Object.values(FileType).map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`req-${index}-${type}`}
+                            checked={req.allowedFileTypes.includes(type)}
+                            onCheckedChange={(checked) => {
+                              const newReqs = [...fileRequirements];
+                              if (checked) {
+                                if (type === FileType.url) {
+                                  newReqs[index].allowedFileTypes = [FileType.url];
+                                } else {
+                                  newReqs[index].allowedFileTypes = newReqs[
+                                    index
+                                  ].allowedFileTypes.filter(
+                                    (t) => t !== FileType.url
+                                  );
+                                  newReqs[index].allowedFileTypes.push(type);
+                                }
+                              } else {
+                                if (newReqs[index].allowedFileTypes.length <= 1) return;
+                                newReqs[index].allowedFileTypes = newReqs[
+                                  index
+                                ].allowedFileTypes.filter((t) => t !== type);
+                              }
+                              setFileRequirements(newReqs);
+                            }}
+                          />
+                          <label
+                            htmlFor={`req-${index}-${type}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase"
+                          >
+                            {type}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox
+                      id={`req-${index}-required`}
+                      checked={req.isRequired}
+                      onCheckedChange={(checked) => {
+                        const newReqs = [...fileRequirements];
+                        newReqs[index].isRequired = !!checked;
+                        setFileRequirements(newReqs);
+                      }}
+                    />
+                    <label htmlFor={`req-${index}-required`} className="text-sm font-medium leading-none">
+                      {t("configuration.required")}
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

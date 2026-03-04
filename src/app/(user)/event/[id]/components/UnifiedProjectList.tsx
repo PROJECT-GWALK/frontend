@@ -62,6 +62,7 @@ type Props = {
   eventId: string;
   currentUserId?: string;
   eventStartView?: string | null;
+  eventEndJoinDate?: string | null;
   searchQuery?: string;
   filterStatus?: "all" | "scored" | "unscored";
   projectRewards?: ProjectRewardsState; // For Committee local state
@@ -95,6 +96,7 @@ export default function UnifiedProjectList({
   eventId,
   currentUserId,
   eventStartView,
+  eventEndJoinDate,
   searchQuery = "",
   filterStatus = "all",
   projectRewards = {},
@@ -167,7 +169,15 @@ export default function UnifiedProjectList({
         ? true
         : Date.now() >= startViewMs;
 
-    if (role !== "ORGANIZER" && !eventStarted) {
+    const submissionEnded = eventEndJoinDate
+      ? new Date() >= new Date(eventEndJoinDate)
+      : false;
+
+    if (
+      role !== "ORGANIZER" &&
+      !(role === "COMMITTEE" && submissionEnded) &&
+      !eventStarted
+    ) {
       if (!currentUserId) {
         result = [];
       } else {
@@ -203,6 +213,7 @@ export default function UnifiedProjectList({
     role,
     currentUserId,
     eventStartView,
+    eventEndJoinDate,
     searchQuery,
     filterStatus,
     projectRewards,

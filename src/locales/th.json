@@ -301,7 +301,6 @@
     "title": "อีเวนต์",
     "subtitle": "รายการอีเวนต์ที่กำลังเปิดอยู่",
     "searchPlaceholder": "ค้นหาด้วยชื่ออีเวนต์...",
-    "noEvents": "ยังไม่มีอีเวนต์ที่เผยแพร่",
     "joinedEvent": "เข้าร่วมแล้ว",
     "joinAsPresenter": "เข้าร่วมในฐานะผู้นำเสนอ",
     "joinAsGuest": "เข้าร่วมในฐานะผู้เข้าร่วม",
@@ -481,7 +480,9 @@
       "readMore": "ดูเพิ่มเติม",
       "readLess": "ย่อ",
       "openLink": "เปิดลิงก์",
-      "max": "สูงสุด"
+      "max": "สูงสุด",
+      "create": "สร้าง",
+      "creating": "กำลังสร้าง..."
     },
     "sections": {
       "description": "รายละเอียดโครงงาน",
@@ -499,9 +500,12 @@
       "leaveTeamTitle": "ออกจากทีม",
       "leaveTeamDesc": "คุณแน่ใจหรือไม่ว่าต้องการออกจากทีมนี้?",
       "shareProjectTitle": "แชร์โครงงาน",
-      "shareProjectDesc": "แชร์โครงงานนี้ผ่านลิงก์หรือ QR Code"
+      "shareProjectDesc": "แชร์โครงงานนี้ผ่านลิงก์หรือ QR Code",
+      "deleteProjectTitle": "ลบโครงงาน",
+      "deleteProjectDesc": "คุณแน่ใจหรือไม่ว่าต้องการลบโครงงานนี้? การกระทำนี้ไม่สามารถย้อนกลับได้"
     },
     "messages": {
+      "deleting": "กำลังลบ...",
       "confirmRemoveMember": "คุณแน่ใจหรือไม่ว่าต้องการลบสมาชิกนี้?",
       "confirmDeleteFile": "คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?",
       "memberAdded": "เพิ่มสมาชิกเรียบร้อยแล้ว",
@@ -541,7 +545,11 @@
       "openPDF": "เปิด PDF",
       "remove": "ลบ",
       "open": "เปิด",
-      "noRequirements": "ไม่มีข้อมูลที่ต้องส่งสำหรับอีเวนต์นี้"
+      "noRequirements": "ไม่มีข้อมูลที่ต้องส่งสำหรับอีเวนต์นี้",
+      "maxSize": "ขนาดไฟล์สูงสุด: 50MB",
+      "sizeExceeded": "ขนาดไฟล์เกินกำหนด 50MB",
+      "onlyImage": "กรุณาอัปโหลดไฟล์รูปภาพ",
+      "dragAndDrop": "หรือลากและวาง"
     },
     "evaluation": {
       "virtualReward": "รางวัลเสมือน",
@@ -677,7 +685,10 @@
     "all": "ทั้งหมด",
     "refresh": "รีเฟรช",
     "noSearchResults": "ไม่พบผู้เข้าร่วมที่ค้นหา",
-    "noParticipantsInGroup": "ยังไม่มีผู้เข้าร่วมกลุ่มนี้"
+    "noParticipantsInGroup": "ยังไม่มีผู้เข้าร่วมกลุ่มนี้",
+    "addDescription": "กรอกชื่อ, ชื่อผู้ใช้ หรืออีเมล เพื่อเพิ่มผู้เข้าร่วมใหม่",
+    "add": "เพิ่ม",
+    "added": "เพิ่มแล้ว"
   },
   "removeParticipantModal": {
     "title": "ลบผู้เข้าร่วม",
@@ -733,15 +744,16 @@
     "dashboard": "แดชบอร์ด",
     "participants": "ผู้เข้าร่วม",
     "projects": "โครงงาน",
-    "results": "ผลลัพธ์",
-    "grading": "ดูคะแนน",
+    "results": "รางวัลเสมือน",
+    "grading": "ประเมิน",
     "settings": "การตั้งค่า",
     "invite": "คำเชิญ"
   },
   "publishedEventBanner": {
-    "publish": "เผยแพร่แล้ว",
-    "hidePublic": "ซ่อนจากสาธารณะ",
-    "showPublic": "แสดงต่อสาธารณะ"
+    "publicStatus": "สาธารณะ",
+    "hiddenStatus": "ไม่แสดงต่อสาธารณะ",
+    "hidePublic": "ปิดมองเห็นสาธารณะ",
+    "showPublic": "เปิดมองเห็นสาธารณะ"
   },
   "FeedbackList": {
     "title": "รายการฟีดแบ็กและคะแนน",
@@ -799,7 +811,7 @@
     "requiredName": "กรุณากรอกชื่อหมวดหมู่"
   },
   "resultsTab": {
-    "title": "ผลลัพธ์ของอีเวนต์",
+    "title": "รางวัลเสมือนของอีเวนต์",
     "resultsDesc": "จัดอันดับจากรางวัลเสมือนและรางวัลพิเศษ",
     "refresh": "รีเฟรชผลลัพธ์",
     "tryAgain": "ลองอีกครั้ง",

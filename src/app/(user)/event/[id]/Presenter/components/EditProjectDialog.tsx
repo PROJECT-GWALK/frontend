@@ -58,6 +58,49 @@ export default function EditProjectDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag and Drop state
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (!isSubmissionActive) return;
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        // Create a synthetic event to reuse onBannerFileChange logic
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        const event = {
+          target: {
+            files: dataTransfer.files,
+            value: "", // Reset value simulation
+          },
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+        
+        onBannerFileChange(event);
+      } else {
+        toast.error(t("projectDetail.files.onlyImage"));
+      }
+    }
+  };
+
   useEffect(() => {
     setForm(project);
     setBannerPreview(project.img || null);
@@ -71,6 +114,13 @@ export default function EditProjectDialog({
   const onBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(t("projectDetail.files.sizeExceeded"));
+      e.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setCropSrc(reader.result as string);
@@ -148,7 +198,7 @@ export default function EditProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl w-[calc(100%-2rem)] rounded-lg flex flex-col max-h-[90vh]">
         <DialogTitle className="flex items-center gap-2">
-          <Edit2 className="w-4 h-4" /> Edit Project
+          <Edit2 className="w-4 h-4" /> {t("projectDetail.buttons.editProject")}
         </DialogTitle>
         <div className="mt-2 space-y-3 flex-1 overflow-hidden flex flex-col">
           <div>
@@ -189,7 +239,7 @@ export default function EditProjectDialog({
               onConfirm={onCropConfirm}
             />
             {bannerPreview ? (
-              <div className="relative border rounded-lg overflow-hidden bg-muted mt-1 flex-1 min-h-30">
+              <div className="relative border rounded-lg overflow-hidden bg-muted mt-1 flex-1 min-h-30 group">
                 <Image
                   src={bannerPreview}
                   alt="Project cover preview"
@@ -197,11 +247,11 @@ export default function EditProjectDialog({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={openFilePicker} disabled={!isSubmissionActive} className="h-7 text-xs">
-                    Change
+                  <Button size="sm" variant="secondary" onClick={openFilePicker} disabled={!isSubmissionActive} className="h-7 text-xs shadow-md">
+                    {t("eventInfo.change")}
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={onRemoveBanner} disabled={!isSubmissionActive} className="h-7 text-xs">
-                    Remove
+                  <Button size="sm" variant="destructive" onClick={onRemoveBanner} disabled={!isSubmissionActive} className="h-7 text-xs shadow-md">
+                    {t("eventInfo.remove")}
                   </Button>
                 </div>
                 <input
@@ -215,13 +265,24 @@ export default function EditProjectDialog({
               </div>
             ) : (
               <div
-                className={`border-2 border-dashed border-border rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center mt-1 flex-1 min-h-30 ${
-                  isSubmissionActive ? "hover:border-primary/50 cursor-pointer" : "opacity-50 cursor-not-allowed"
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center mt-1 flex-1 min-h-30 ${
+                  isDragging
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                } ${
+                  !isSubmissionActive ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 }`}
                 onClick={isSubmissionActive ? openFilePicker : undefined}
+                onDragOver={isSubmissionActive ? handleDragOver : undefined}
+                onDragLeave={isSubmissionActive ? handleDragLeave : undefined}
+                onDrop={isSubmissionActive ? handleDrop : undefined}
               >
-                <Upload className="h-8 w-8 text-muted-foreground mb-1" />
-                <p className="text-xs text-muted-foreground">Click to upload</p>
+                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm font-medium">{t("eventInfo.clickToUpload")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("projectDetail.files.dragAndDrop")}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 opacity-70">
+                  {t("projectDetail.files.maxSize")}
+                </p>
                 <input
                   type="file"
                   className="hidden"
@@ -261,15 +322,15 @@ export default function EditProjectDialog({
                 disabled={loading || !isSubmissionActive}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+                {t("dialog.delete")}
               </Button>
             )}
             <div className={`flex gap-2 ${!showDelete ? "w-full justify-end" : ""}`}>
               <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={loading}>
-                Cancel
+                {t("dialog.cancel")}
               </Button>
               <Button size="sm" onClick={handleSave} disabled={loading || !isSubmissionActive}>
-                {loading ? "Saving..." : "Save"}
+                {loading ? t("projectDetail.evaluation.saving") : t("dialog.save")}
               </Button>
             </div>
           </div>
@@ -280,17 +341,17 @@ export default function EditProjectDialog({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Project</DialogTitle>
+            <DialogTitle>{t("projectDetail.dialogs.deleteProjectTitle")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this project? This action cannot be undone.
+              {t("projectDetail.dialogs.deleteProjectDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t("dialog.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={loading}>
-              {loading ? "Deleting..." : "Delete Project"}
+              {loading ? t("projectDetail.messages.deleting") : t("projectDetail.dialogs.deleteProjectTitle")}
             </Button>
           </DialogFooter>
         </DialogContent>

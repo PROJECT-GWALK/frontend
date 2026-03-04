@@ -34,6 +34,49 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag and Drop state
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (!isSubmissionActive) return;
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        // Create a synthetic event to reuse onBannerFileChange logic
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        const event = {
+          target: {
+            files: dataTransfer.files,
+            value: "", // Reset value simulation
+          },
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+        
+        onBannerFileChange(event);
+      } else {
+        toast.error(t("projectDetail.files.onlyImage"));
+      }
+    }
+  };
+
   const [loading, setLoading] = useState(false);
   const params = useParams();
   const eventId = params?.id as string;
@@ -54,6 +97,13 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
   const onBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(t("projectDetail.files.sizeExceeded"));
+      e.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setCropSrc(reader.result as string);
@@ -154,11 +204,24 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
               </div>
             ) : (
               <div
-                className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer aspect-video flex flex-col items-center justify-center mt-2"
-                onClick={openFilePicker}
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors flex flex-col items-center justify-center mt-2 aspect-video ${
+                  isDragging
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                } ${
+                  !isSubmissionActive ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                }`}
+                onClick={isSubmissionActive ? openFilePicker : undefined}
+                onDragOver={isSubmissionActive ? handleDragOver : undefined}
+                onDragLeave={isSubmissionActive ? handleDragLeave : undefined}
+                onDrop={isSubmissionActive ? handleDrop : undefined}
               >
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Click to upload</p>
+                <p className="text-sm text-muted-foreground">{t("eventInfo.clickToUpload")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("projectDetail.files.dragAndDrop")}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 opacity-70">
+                  {t("projectDetail.files.maxSize")}
+                </p>
                 <input
                   type="file"
                   className="hidden"
@@ -180,7 +243,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
                 onOpenChange(false);
               }}
             >
-              Cancel
+              {t("dialog.cancel")}
             </Button>
             <Button
               size="sm"
@@ -211,7 +274,7 @@ export default function CreateProjectDialog({ open, onOpenChange, onSuccess, isS
                 }
               }}
             >
-              {loading ? "Creating..." : "Create"}
+              {loading ? t("projectDetail.buttons.creating") : t("projectDetail.buttons.create")}
             </Button>
           </div>
         </div>

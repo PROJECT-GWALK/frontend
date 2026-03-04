@@ -725,6 +725,7 @@ export function CommitteeView(props: Props) {
                     eventId={id}
                     currentUserId={userId}
                     eventStartView={localEvent?.startView ?? null}
+                    eventEndJoinDate={localEvent?.endJoinDate ?? null}
                     searchQuery={searchQuery}
                     filterStatus={filterStatus}
                     projectRewards={projectRewards}
