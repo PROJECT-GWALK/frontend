@@ -147,6 +147,11 @@ export default function AdminEventManagementPage() {
   const [eventNameDraft, setEventNameDraft] = useState("");
   const [eventPublicViewDraft, setEventPublicViewDraft] = useState(false);
   
+  // Pagination states for Participants and Teams inside the sheet
+  const [participantsPage, setParticipantsPage] = useState(1);
+  const [teamsPage, setTeamsPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
   const eventDirty = useMemo(() => {
     if (!selectedEvent) return false;
     return (
@@ -198,6 +203,8 @@ export default function AdminEventManagementPage() {
       const ev = res.event as AdminEventDetail;
       setSelectedEventId(eventId);
       setSelectedEvent(ev);
+      setParticipantsPage(1);
+      setTeamsPage(1);
       setEventNameDraft(ev.eventName);
       setEventPublicViewDraft(ev.publicView);
       setParticipantEdits({});
@@ -692,7 +699,12 @@ export default function AdminEventManagementPage() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          selectedEvent.participants.map((p) => {
+                          selectedEvent.participants
+                            .slice(
+                              (participantsPage - 1) * ITEMS_PER_PAGE,
+                              participantsPage * ITEMS_PER_PAGE,
+                            )
+                            .map((p) => {
                             const edit = participantEditFor(p.id);
                             const effectiveRole: ParticipantGroup = isParticipantGroup(
                               (edit.eventGroup ?? p.eventGroup ?? "GUEST") as string,
@@ -826,6 +838,36 @@ export default function AdminEventManagementPage() {
                       </TableBody>
                     </Table>
                   </div>
+                  {/* Participants Pagination */}
+                  {selectedEvent.participants.length > ITEMS_PER_PAGE && (
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="text-sm text-muted-foreground">
+                        Page {participantsPage} /{" "}
+                        {Math.ceil(selectedEvent.participants.length / ITEMS_PER_PAGE)}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={participantsPage <= 1}
+                          onClick={() => setParticipantsPage((p) => Math.max(1, p - 1))}
+                        >
+                          Prev
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            participantsPage >=
+                            Math.ceil(selectedEvent.participants.length / ITEMS_PER_PAGE)
+                          }
+                          onClick={() => setParticipantsPage((p) => p + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -850,7 +892,12 @@ export default function AdminEventManagementPage() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          selectedEvent.teams.map((o) => (
+                          selectedEvent.teams
+                            .slice(
+                              (teamsPage - 1) * ITEMS_PER_PAGE,
+                              teamsPage * ITEMS_PER_PAGE,
+                            )
+                            .map((o) => (
                             <TableRow key={o.id}>
                               <TableCell className="font-medium">{o.teamName}</TableCell>
                               <TableCell className="text-right">{o.participants?.length || 0}</TableCell>
@@ -897,6 +944,36 @@ export default function AdminEventManagementPage() {
                       </TableBody>
                     </Table>
                   </div>
+                  {/* Teams Pagination */}
+                  {selectedEvent.teams.length > ITEMS_PER_PAGE && (
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="text-sm text-muted-foreground">
+                        Page {teamsPage} /{" "}
+                        {Math.ceil(selectedEvent.teams.length / ITEMS_PER_PAGE)}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={teamsPage <= 1}
+                          onClick={() => setTeamsPage((p) => Math.max(1, p - 1))}
+                        >
+                          Prev
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            teamsPage >=
+                            Math.ceil(selectedEvent.teams.length / ITEMS_PER_PAGE)
+                          }
+                          onClick={() => setTeamsPage((p) => p + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}

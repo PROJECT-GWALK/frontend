@@ -9,11 +9,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { getTeams } from "@/utils/apievent";
 import { Team } from "@/utils/types";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SelectTeam({ className }: { className?: string }) {
   const params = useParams();
@@ -28,6 +34,7 @@ export default function SelectTeam({ className }: { className?: string }) {
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     const fetchTeams = async () => {
@@ -71,97 +78,122 @@ export default function SelectTeam({ className }: { className?: string }) {
     router.push(newPath);
   };
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-62.5 justify-between", className)}
-        >
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="truncate">
-              {selectedTeam ? selectedTeam.teamName : "Select team..."}
-            </span>
-            {selectedTeam && (
+  const trigger = (
+    <Button
+      variant="outline"
+      role="combobox"
+      aria-expanded={open}
+      className={cn("w-62.5 justify-between", className)}
+    >
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <span className="truncate">
+          {selectedTeam ? selectedTeam.teamName : "Select team..."}
+        </span>
+        {selectedTeam && (
+          <div className="flex items-center gap-1 shrink-0">
+            {(selectedTeam.myReward ?? 0) > 0 && (
+              <span title={vrTitle} className="inline-flex">
+                <Gift className="h-4 w-4 text-emerald-600" />
+              </span>
+            )}
+            {(selectedTeam.mySpecialRewards?.length ?? 0) > 0 && (
+              <span title={specialTitle} className="inline-flex">
+                <Award className="h-4 w-4 text-emerald-600" />
+              </span>
+            )}
+            {!!selectedTeam.myGraded && (
+              <span title={gradingTitle} className="inline-flex">
+                <Star className="h-4 w-4 text-emerald-600" />
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+    </Button>
+  );
+
+  const list = (
+    <div className="flex flex-col">
+      <div className="flex items-center border-b px-3">
+        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+        <Input
+          placeholder="Search team..."
+          className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 px-0 shadow-none"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      <div className="max-h-75 overflow-y-auto p-1 custom-scrollbar">
+        {loading ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">Loading...</div>
+        ) : filteredTeams.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">No team found.</div>
+        ) : (
+          filteredTeams.map((team) => (
+            <div
+              key={team.id}
+              className={cn(
+                "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+                team.id === currentProjectId && "bg-accent text-accent-foreground"
+              )}
+              onClick={() => onSelect(team.id)}
+            >
+              <Check
+                className={cn(
+                  "mr-2 h-4 w-4",
+                  team.id === currentProjectId ? "opacity-100" : "opacity-0"
+                )}
+              />
+              <span className="truncate flex-1 min-w-0">{team.teamName}</span>
               <div className="flex items-center gap-1 shrink-0">
-                {(selectedTeam.myReward ?? 0) > 0 && (
+                {(team.myReward ?? 0) > 0 && (
                   <span title={vrTitle} className="inline-flex">
                     <Gift className="h-4 w-4 text-emerald-600" />
                   </span>
                 )}
-                {(selectedTeam.mySpecialRewards?.length ?? 0) > 0 && (
+                {(team.mySpecialRewards?.length ?? 0) > 0 && (
                   <span title={specialTitle} className="inline-flex">
                     <Award className="h-4 w-4 text-emerald-600" />
                   </span>
                 )}
-                {!!selectedTeam.myGraded && (
+                {!!team.myGraded && (
                   <span title={gradingTitle} className="inline-flex">
                     <Star className="h-4 w-4 text-emerald-600" />
                   </span>
                 )}
               </div>
-            )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent className="max-h-[85vh]">
+          <div className="mx-auto w-full max-w-md px-2 pb-4">
+            {list}
           </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-62.5 p-0" side="bottom">
-        <div className="flex flex-col">
-            <div className="flex items-center border-b px-3">
-                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                <Input
-                    placeholder="Search team..."
-                    className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 px-0 shadow-none"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
-            <div className="max-h-75 overflow-y-auto p-1 custom-scrollbar">
-                {loading ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">Loading...</div>
-                ) : filteredTeams.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">No team found.</div>
-                ) : (
-                    filteredTeams.map((team) => (
-                        <div
-                            key={team.id}
-                            className={cn(
-                                "relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
-                                team.id === currentProjectId && "bg-accent text-accent-foreground"
-                            )}
-                            onClick={() => onSelect(team.id)}
-                        >
-                            <Check
-                                className={cn(
-                                    "mr-2 h-4 w-4",
-                                    team.id === currentProjectId ? "opacity-100" : "opacity-0"
-                                )}
-                            />
-                            <span className="truncate flex-1 min-w-0">{team.teamName}</span>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {(team.myReward ?? 0) > 0 && (
-                                <span title={vrTitle} className="inline-flex">
-                                  <Gift className="h-4 w-4 text-emerald-600" />
-                                </span>
-                              )}
-                              {(team.mySpecialRewards?.length ?? 0) > 0 && (
-                                <span title={specialTitle} className="inline-flex">
-                                  <Award className="h-4 w-4 text-emerald-600" />
-                                </span>
-                              )}
-                              {!!team.myGraded && (
-                                <span title={gradingTitle} className="inline-flex">
-                                  <Star className="h-4 w-4 text-emerald-600" />
-                                </span>
-                              )}
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent
+        className="w-[min(92vw,22rem)] md:w-62.5 p-0"
+        side="bottom"
+        align="start"
+        sideOffset={8}
+        avoidCollisions={false}
+      >
+        {list}
       </PopoverContent>
     </Popover>
   );
