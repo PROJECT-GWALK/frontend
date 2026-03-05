@@ -581,7 +581,7 @@ export default function OrganizerEditDialog({
                                           // Event can start on same day as Submission end
                                           if (
                                             selectedSubEnd &&
-                                            date <= new Date(selectedSubEnd.setHours(0, 0, 0, 0))
+                                            date < new Date(selectedSubEnd.setHours(0, 0, 0, 0))
                                           )
                                             return true;
                                           if (
@@ -793,7 +793,7 @@ export default function OrganizerEditDialog({
                                           // Submission end can be on same day as Event start
                                           if (
                                             selectedStart &&
-                                            date >= new Date(selectedStart.setHours(0, 0, 0, 0))
+                                            date > new Date(selectedStart.setHours(0, 0, 0, 0))
                                           )
                                             return true;
                                           return false;

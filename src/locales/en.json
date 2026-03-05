@@ -432,6 +432,9 @@
   "invite": {
     "title": "Invite Links",
     "inviteSuffix": "Invite",
+    "invitePeriodLabel": "Invite Period:",
+    "invitePeriodUnknown": "Invite period is not set",
+    "invitePeriodAlways": "Always Open",
     "regenerateToken": "Regenerate Token",
     "loading": "Loading...",
     "downloadQr": "Download QR",
