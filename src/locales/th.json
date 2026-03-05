@@ -134,7 +134,12 @@
     "feedbackGiven": "ให้ความคิดเห็นแล้ว",
     "myVirtualRewards": "Virtual Reward ของฉัน",
     "waitForVote": "รอการโหวต",
-    "waitForFeedback": "รอการให้ความคิดเห็น"
+    "waitForFeedback": "รอการให้ความคิดเห็น",
+    "filter": "ตัวกรอง",
+    "allProjects": "โครงงานทั้งหมด",
+    "grading": "ให้คะแนนแล้ว",
+    "rewards": "ให้รางวัลแล้ว",
+    "pending": "รอดำเนินการ"
   },
   "rewardsSection": {
     "specialRewards": "รางวัลพิเศษ",
@@ -636,7 +641,7 @@
     "filter": "ตัวกรอง",
     "allProjects": "โครงงานทั้งหมด",
     "myProjects": "โครงงานของฉัน",
-    "evaluated": "ประเมินแล้ว",
+    "evaluated": "ให้รางวัลแล้ว",
     "pending": "รอดำเนินการ",
     "searchProjects": "ค้นหาโครงงานด้วยชื่อ...",
     "ranking": "การจัดอันดับ",
