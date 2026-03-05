@@ -706,15 +706,15 @@ export function CommitteeView(props: Props) {
                               <Filter className="w-4 h-4 text-muted-foreground" />
                               <span>
                                 {activeFilters.includes("all")
-                                  ? "All Projects"
-                                  : `Filtered (${activeFilters.length})`}
+                                  ? t("committeeSection.allProjects")
+                                  : `${t("committeeSection.filter")} (${activeFilters.length})`}
                               </span>
                             </div>
                             <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel>Show projects</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t("committeeSection.filter")}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuCheckboxItem
                             checked={activeFilters.includes("all")}
@@ -722,7 +722,7 @@ export function CommitteeView(props: Props) {
                               if (checked) setActiveFilters(["all"]);
                             }}
                           >
-                            All Projects
+                            {t("committeeSection.allProjects")}
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuCheckboxItem
@@ -738,7 +738,7 @@ export function CommitteeView(props: Props) {
                               setActiveFilters(next);
                             }}
                           >
-                            Grading
+                            {t("committeeSection.grading")}
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuCheckboxItem
                             checked={activeFilters.includes("rewards")}
@@ -753,7 +753,7 @@ export function CommitteeView(props: Props) {
                               setActiveFilters(next);
                             }}
                           >
-                            Rewards
+                            {t("committeeSection.rewards")}
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuCheckboxItem
                             checked={activeFilters.includes("pending")}
@@ -765,7 +765,7 @@ export function CommitteeView(props: Props) {
                               }
                             }}
                           >
-                            Pending
+                            {t("committeeSection.pending")}
                           </DropdownMenuCheckboxItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

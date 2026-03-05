@@ -134,7 +134,12 @@
     "feedbackGiven": "Feedback Given",
     "myVirtualRewards": "My Virtual Rewards",
     "waitForVote": "Waiting for Vote",
-    "waitForFeedback": "Waiting for Feedback"
+    "waitForFeedback": "Waiting for Feedback",
+    "filter": "Filter",
+    "allProjects": "All Projects",
+    "grading": "Graded",
+    "rewards": "Rewarded",
+    "pending": "Pending"
   },
   "rewardsSection": {
     "specialRewards": "Special Rewards",
@@ -637,7 +642,7 @@
     "filter": "Filter",
     "allProjects": "All Projects",
     "myProjects": "My Projects",
-    "evaluated": "Evaluated",
+    "evaluated": "Rewarded",
     "pending": "Pending",
     "searchProjects": "Search projects by name...",
     "ranking": "Ranking",
