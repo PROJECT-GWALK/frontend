@@ -19,8 +19,19 @@ type Props = {
 };
 
 export default function CardInformation5({ event, editable }: Props) {
-  const { t } = useLanguage();
+  const { t, timeFormat } = useLanguage();
   const id = event.id;
+  const guestInviteStart = event.startView ? new Date(new Date(event.startView).getTime() - 3600000) : null;
+  const guestInviteEnd = event.endView ? new Date(event.endView) : null;
+  const formatWindowDateTime = (date: Date) =>
+    date.toLocaleString(timeFormat, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
   // Organizers State
   const organizers = event.participants?.filter((p) => p.eventGroup === "ORGANIZER") || [];
@@ -337,43 +348,82 @@ export default function CardInformation5({ event, editable }: Props) {
                       )}`
                     : "";
 
+                let start: Date | null = null;
+                let end: Date | null = null;
+                let isAlways = false;
+
+                if (role === "organizer" || role === "committee") {
+                  isAlways = true;
+                } else if (role === "presenter") {
+                  if (event.startJoinDate && event.endJoinDate) {
+                    start = new Date(event.startJoinDate);
+                    end = new Date(event.endJoinDate);
+                  }
+                } else if (role === "guest") {
+                  if (guestInviteStart && guestInviteEnd) {
+                    start = guestInviteStart;
+                    end = guestInviteEnd;
+                  }
+                }
+
                 return (
                   <div
                     key={role}
                     className="flex flex-col space-y-3 p-4 rounded-2xl bg-background dark:bg-muted/10 border dark:border-white/10 shadow-sm transition-all hover:shadow-md"
                   >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div
-                        className={`p-2 rounded-lg ${
-                          role === "presenter"
-                            ? "bg-(--role-presenter)/10 text-(--role-presenter)"
+                    <div className="flex flex-col gap-1.5 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-lg ${
+                            role === "presenter"
+                              ? "bg-(--role-presenter)/10 text-(--role-presenter)"
+                              : role === "committee"
+                                ? "bg-(--role-committee)/10 text-(--role-committee)"
+                                : role === "organizer"
+                                  ? "bg-(--role-organizer)/10 text-(--role-organizer)"
+                                  : "bg-(--role-guest)/10 text-(--role-guest)"
+                          }`}
+                        >
+                          {role === "presenter" ? (
+                            <Users className="h-4 w-4" />
+                          ) : role === "committee" ? (
+                            <Award className="h-4 w-4" />
+                          ) : role === "organizer" ? (
+                            <Users className="h-4 w-4" />
+                          ) : (
+                            <Users className="h-4 w-4" />
+                          )}
+                        </div>
+                        <span className="font-bold capitalize text-sm">
+                          {t("invite.inviteSuffix")}{" "}
+                          {role === "presenter"
+                            ? t("roles.presenter")
                             : role === "committee"
-                              ? "bg-(--role-committee)/10 text-(--role-committee)"
+                              ? t("roles.committee")
                               : role === "organizer"
-                                ? "bg-(--role-organizer)/10 text-(--role-organizer)"
-                                : "bg-(--role-guest)/10 text-(--role-guest)"
-                        }`}
-                      >
-                        {role === "presenter" ? (
-                          <Users className="h-4 w-4" />
-                        ) : role === "committee" ? (
-                          <Award className="h-4 w-4" />
-                        ) : role === "organizer" ? (
-                          <Users className="h-4 w-4" />
+                                ? t("roles.organizer")
+                              : t("roles.guest")}
+                        </span>
+                      </div>
+                      
+                      <div className="ml-1">
+                        {isAlways ? (
+                          <div className="text-xs text-muted-foreground">
+                            {t("invite.invitePeriodLabel")} <span className="text-foreground">{t("invite.invitePeriodAlways")}</span>
+                          </div>
+                        ) : start && end ? (
+                          <div className="flex flex-wrap gap-1 text-xs text-muted-foreground">
+                             <span className="shrink-0">{t("invite.invitePeriodLabel")}</span>
+                             <span className="text-foreground">
+                               <span className="whitespace-nowrap">{formatWindowDateTime(start)}</span> - <span className="whitespace-nowrap">{formatWindowDateTime(end)}</span>
+                             </span>
+                          </div>
                         ) : (
-                          <Users className="h-4 w-4" />
+                          <div className="text-xs text-muted-foreground">
+                            {t("invite.invitePeriodUnknown")}
+                          </div>
                         )}
                       </div>
-                      <span className="font-bold capitalize text-sm">
-                        {t("invite.inviteSuffix")}{" "}
-                        {role === "presenter"
-                          ? t("roles.presenter")
-                          : role === "committee"
-                            ? t("roles.committee")
-                            : role === "organizer"
-                              ? t("roles.organizer")
-                            : t("roles.guest")}
-                      </span>
                     </div>
 
                     {token ? (

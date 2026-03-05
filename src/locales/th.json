@@ -432,6 +432,9 @@
   "invite": {
     "title": "ลิงก์คำเชิญ",
     "inviteSuffix": "เชิญ",
+    "invitePeriodLabel": "ช่วงเวลาเชิญ:",
+    "invitePeriodUnknown": "ยังไม่กำหนดช่วงเวลา",
+    "invitePeriodAlways": "ตลอดเวลา",
     "regenerateToken": "สร้างโทเค็นใหม่",
     "loading": "กำลังโหลด...",
     "downloadQr": "ดาวน์โหลด QR",

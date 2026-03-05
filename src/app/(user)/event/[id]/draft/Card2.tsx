@@ -115,7 +115,7 @@ export default function Card2(props: Props) {
                     disabled={
                       selectedSubEnd || selectedSubStart
                         ? (date) => {
-                            if (selectedSubEnd && date <= selectedSubEnd) return true;
+                            if (selectedSubEnd && date < selectedSubEnd) return true;
                             if (selectedSubStart && date <= selectedSubStart) return true;
                             return false;
                           }
@@ -329,7 +329,7 @@ export default function Card2(props: Props) {
                       selectedSubStart || selectedStart
                         ? (date) => {
                             if (selectedSubStart && date < selectedSubStart) return true;
-                            if (selectedStart && date >= selectedStart) return true;
+                            if (selectedStart && date > selectedStart) return true;
                             return false;
                           }
                         : undefined
