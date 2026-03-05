@@ -4,16 +4,18 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getTeams, giveVr, resetVr } from "@/utils/apievent";
 import { useCallback, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, BadgeCheck, MessageSquare, Gift } from "lucide-react";
+import { Users, Building, BadgeCheck, MessageSquare, ChevronDown, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import type { EventData, Team } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
@@ -33,7 +35,7 @@ export function GuestView({ id, event }: Props) {
   const userId = session?.user?.id;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
+  const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -244,6 +246,17 @@ export function GuestView({ id, event }: Props) {
                           </span>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">{t("dashboard.givenTo")}</p>
+                        <div className="flex items-baseline justify-end gap-1">
+                          <span className="text-2xl font-bold text-foreground">
+                            {Object.values(projectRewards).filter((r) => r.vrGiven > 0).length}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {t("dashboard.teamCount")}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <div className="h-2 w-full bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden">
                       <div
@@ -304,57 +317,16 @@ export function GuestView({ id, event }: Props) {
                       <div className="p-2 rounded-lg bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-400">
                         <MessageSquare className="h-5 w-5" />
                       </div>
-                      {t("dashboard.allComments")}
+                      {t("dashboard.commentGiven")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-4xl font-bold text-foreground">
-                      {localEvent?.opinionsGot?.toLocaleString() ?? 33}
+                      {projects.filter((p) => p.myComment).length}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {t("guest.totalFeedbackDesc")}
+                      {t("dashboard.teamCount")}
                     </p>
-                  </CardContent>
-                </Card>
-
-                {/* Virtual Rewards (Global) */}
-                <Card className="border-0 dark:border dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-lg font-semibold">
-                      <div className="p-2 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">
-                        <Gift className="h-5 w-5" />
-                      </div>
-                      {t("dashboard.reward")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">{t("dashboard.usedAlready")}</span>
-                      <span className="text-lg font-bold text-foreground">{localEvent?.vrUsed?.toLocaleString() ?? 20000}</span>
-                    </div>
-                    <div className="h-2 w-full bg-purple-100 dark:bg-purple-900/30 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-linear-to-r from-purple-500 to-indigo-400 dark:from-purple-600 dark:to-indigo-400 rounded-full transition-all duration-1000 ease-out"
-                        style={{
-                          width: `${
-                            ((localEvent?.vrUsed ?? 20000) / (localEvent?.vrTotal ?? 50000)) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>
-                         {t("guest.totalPool")} {(localEvent?.vrTotal ?? 50000).toLocaleString()}
-                      </span>
-                      <span>
-                        {Math.round(
-                          ((localEvent?.vrUsed ?? 20000) /
-                            (localEvent?.vrTotal ?? 50000)) *
-                            100
-                        )}
-                        %
-                      </span>
-                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -375,21 +347,61 @@ export function GuestView({ id, event }: Props) {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <h2 className="text-lg font-semibold">{t("guest.projectSectionTitle")}</h2>
                     <div className="flex gap-2 w-full sm:w-auto">
-                      <Select
-                        value={filterStatus}
-                        onValueChange={(v) =>
-                          setFilterStatus(v as "all" | "scored" | "unscored")
-                        }
-                      >
-                        <SelectTrigger className="w-32.5">
-                          <SelectValue placeholder={t("guest.filter")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t("guest.allProjects")}</SelectItem>
-                          <SelectItem value="scored">{t("guest.evaluated")}</SelectItem>
-                          <SelectItem value="unscored">{t("guest.pending")}</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="w-auto min-w-37.5 justify-between">
+                            <div className="flex items-center gap-2">
+                              <Filter className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                {activeFilters.includes("all")
+                                  ? t("guest.allProjects")
+                                  : `Filtered (${activeFilters.length})`}
+                              </span>
+                            </div>
+                            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>{t("guest.filter")}</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("all")}
+                            onCheckedChange={(checked) => {
+                              if (checked) setActiveFilters(["all"]);
+                            }}
+                          >
+                            {t("guest.allProjects")}
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("rewards")}
+                            onCheckedChange={(checked) => {
+                              let next = activeFilters.filter((f) => f !== "all" && f !== "pending");
+                              if (checked) {
+                                next.push("rewards");
+                              } else {
+                                next = next.filter((f) => f !== "rewards");
+                              }
+                              if (next.length === 0) next = ["all"];
+                              setActiveFilters(next);
+                            }}
+                          >
+                            {t("guest.evaluated")}
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("pending")}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setActiveFilters(["pending"]);
+                              } else {
+                                setActiveFilters(["all"]);
+                              }
+                            }}
+                          >
+                            {t("guest.pending")}
+                          </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Input
                         placeholder={t("guest.searchProjects")}
                         value={searchQuery}
@@ -406,7 +418,7 @@ export function GuestView({ id, event }: Props) {
                     currentUserId={userId}
                     eventStartView={localEvent?.startView ?? null}
                     searchQuery={searchQuery}
-                    filterStatus={filterStatus}
+                    activeFilters={activeFilters}
                     projectRewards={projectRewards}
                     userVrBalance={
                       (localEvent?.myVirtualTotal ?? 0) - (localEvent?.myVirtualUsed ?? 0)

@@ -148,9 +148,6 @@ export default function ProfileView({
               <Button asChild>
                 <Link href="/home">{t("homePage.title")}</Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href="/users">{t("navbar.users")}</Link>
-              </Button>
             </div>
           </CardContent>
         </Card>

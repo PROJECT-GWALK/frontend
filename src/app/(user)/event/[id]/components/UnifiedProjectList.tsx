@@ -64,7 +64,8 @@ type Props = {
   eventStartView?: string | null;
   eventEndJoinDate?: string | null;
   searchQuery?: string;
-  filterStatus?: "all" | "scored" | "unscored";
+  filterStatus?: "all" | "scored" | "unscored"; // Deprecated
+  activeFilters?: string[]; // New filter prop: ["grading", "rewards"]
   projectRewards?: ProjectRewardsState; // For Committee local state
   userVrBalance?: number;
   loading?: boolean;
@@ -99,6 +100,7 @@ export default function UnifiedProjectList({
   eventEndJoinDate,
   searchQuery = "",
   filterStatus = "all",
+  activeFilters = [],
   projectRewards = {},
   loading = false,
   onAction,
@@ -194,18 +196,24 @@ export default function UnifiedProjectList({
       );
     }
 
-    if (filterStatus === "scored") {
+    if (activeFilters.length > 0 && !activeFilters.includes("all")) {
+      result = result.filter((p) => {
+        const isGraded = !!p.myGraded;
+        const isRewarded = (projectRewards[p.id]?.vrGiven || 0) > 0;
+        const isPending = !isGraded && !isRewarded; // Pending means neither graded nor rewarded
+
+        // Check if any of the active filters match
+        const matchGrading = activeFilters.includes("grading") && isGraded;
+        const matchRewards = activeFilters.includes("rewards") && isRewarded;
+        const matchPending = activeFilters.includes("pending") && isPending;
+
+        return matchGrading || matchRewards || matchPending;
+      });
+    } else if (filterStatus === "scored") {
       result = result.filter((p) => (projectRewards[p.id]?.vrGiven || 0) > 0);
     } else if (filterStatus === "unscored") {
       result = result.filter((p) => (projectRewards[p.id]?.vrGiven || 0) === 0);
     }
-
-    // Sort by createdAt (Oldest -> Newest)
-    result.sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return dateA - dateB;
-    });
 
     return result;
   }, [
@@ -216,6 +224,7 @@ export default function UnifiedProjectList({
     eventEndJoinDate,
     searchQuery,
     filterStatus,
+    activeFilters,
     projectRewards,
   ]);
 

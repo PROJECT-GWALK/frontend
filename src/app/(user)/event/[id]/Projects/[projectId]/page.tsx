@@ -684,27 +684,24 @@ export default function ProjectDetailPage({ params }: Props) {
                 className="w-full h-auto transition-transform duration-700 opacity-90"
               />
             )}
-            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
-
-            <div className="absolute bottom-0 left-0 p-6 md:p-10 text-white w-full max-w-4xl z-10">
-              <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-lg leading-tight backdrop-blur-md bg-black/30 rounded-lg px-4 py-2 w-fit">
-                {project.title}
-              </h1>
-            </div>
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-500" />
           </div>
 
           {/* Action Bar */}
-          <div className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between bg-card border-t">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <div className="p-6 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center bg-card border-t">
+            <div className="flex flex-col gap-3 w-full md:w-auto">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                {project.title}
+              </h1>
               <Badge
                 variant="outline"
-                className="px-3 py-1 text-sm font-normal border-border"
+                className="w-fit px-3 py-1 text-sm font-normal border-border text-muted-foreground"
               >
                 {eventData?.eventName || t("projectDetail.defaultEventName")}
               </Badge>
             </div>
 
-            <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-end w-full sm:w-auto">
+            <div className="flex flex-wrap gap-2 shrink-0 w-full md:w-auto justify-start md:justify-end">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1645,9 +1642,16 @@ export default function ProjectDetailPage({ params }: Props) {
                               type="file"
                               id={`file-${ft.id}`}
                               className="hidden"
-                              accept={ft.allowedFileTypes
-                                .map((t) => "." + t)
-                                .join(",")}
+                              accept={[
+                                ...ft.allowedFileTypes.map((t) => "." + t),
+                                ...(ft.allowedFileTypes.some((t) =>
+                                  ["jpg", "jpeg", "png"].includes(
+                                    t.toLowerCase(),
+                                  ),
+                                )
+                                  ? [".heic", ".HEIC"]
+                                  : []),
+                              ].join(",")}
                               onChange={(e) => handleFileUpload(e, ft.id)}
                               disabled={isUploading || !isSubmissionActive}
                             />

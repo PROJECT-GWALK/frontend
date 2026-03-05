@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllRatings } from "@/utils/apievent";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/utils/function";
 import { Star, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ type Rating = {
   user: {
     name: string | null;
     image: string | null;
+    username: string | null;
   };
   role?: string | null;
 };
@@ -180,17 +181,14 @@ export default function FeedbackList({ eventId }: { eventId: string }) {
         </div>
 
         {/* Filtered Feedback List */}
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-4 pt-4 border-t max-h-125 overflow-y-auto pr-2 custom-scrollbar">
           {filteredRatings.length > 0 ? (
             filteredRatings.map((item) => (
               <div
                 key={item.id}
                 className="flex gap-4 p-4 rounded-lg bg-muted/30 border hover:bg-muted/50 transition-colors"
               >
-                <Avatar className="h-10 w-10 border bg-background">
-                  <AvatarImage src={item.user.image || ""} />
-                  <AvatarFallback>{item.user.name?.[0] || "?"}</AvatarFallback>
-                </Avatar>
+                <UserAvatar user={item.user} className="h-10 w-10 border bg-background" />
                 <div className="flex-1 space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex flex-col gap-1">
