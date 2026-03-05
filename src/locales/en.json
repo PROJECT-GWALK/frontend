@@ -30,7 +30,7 @@
     "cropTitle": "Crop to 800x400"
   },
   "eventInfo": {
-    "eventInformation": "Event Information",
+    "eventInformation": "Information",
     "eventTitle": "Event Title",
     "checkName": "Check",
     "eventDescription": "Event Description",
@@ -168,7 +168,7 @@
     "progressSoFar": "Progress so far",
     "saveDraft": "Save Draft",
     "saving": "Saving...",
-    "eventInfo": "Event Information",
+    "eventInfo": "Information",
     "timeConfig": "Time Configuration",
     "config": "Configuration",
     "rewards": "Special Rewards"
@@ -208,6 +208,7 @@
     "totalParticipants": "Total Participants",
     "teamCount": "Teams",
     "allComments": "Comments",
+    "givenTo": "Given to",
     "commentGiven": "Comments Given",
     "feedbackGiven": "Feedback Given",
     "used": "Used",
@@ -744,14 +745,14 @@
     "btn_change_photo": "Change",
     "label_email": "Email",
     "label_username": "Username",
-    "label_fullname": "Full Name",
+    "label_fullname": "Display Name",
     "label_description": "Description",
     "btn_save": "Save Changes",
     "change": "Change",
     "remove": "Remove"
   },
   "eventTab": {
-    "information": "Event Information",
+    "information": "Information",
     "dashboard": "Dashboard",
     "participants": "Participants",
     "projects": "Projects",

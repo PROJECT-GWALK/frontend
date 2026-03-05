@@ -21,7 +21,16 @@ export function UserAvatar({
   user,
   className,
 }: {
-  user: Partial<User> | null | undefined;
+  user:
+    | Partial<User>
+    | {
+        name?: string | null;
+        image?: string | null;
+        username?: string | null;
+        email?: string | null;
+      }
+    | null
+    | undefined;
   className?: string;
 }) {
   const fallback = user?.name?.trim() || user?.username || user?.email || "??";

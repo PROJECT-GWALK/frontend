@@ -29,21 +29,44 @@ export async function generateMetadata({
 
     const teamData = teamRes.ok
       ? ((await teamRes.json()) as {
-          team?: { teamName: string };
+          team?: {
+            teamName: string;
+            imageCover?: string;
+            description?: string;
+          };
         })
       : {};
 
     const eventName = eventData.event?.eventName?.trim() || fallbackTitle;
     const projectName = teamData.team?.teamName?.trim() || "Project";
+    const description = teamData.team?.description?.trim() || `Project ${projectName} in ${eventName}`;
     const title = `${projectName} - ${eventName}`;
+
+    let images: string[] = [];
+    if (teamData.team?.imageCover) {
+      // If it's a relative URL, prepend the origin
+      if (teamData.team.imageCover.startsWith("/")) {
+        images = [`${origin}${teamData.team.imageCover}`];
+      } else if (teamData.team.imageCover.startsWith("http")) {
+        images = [teamData.team.imageCover];
+      }
+    } else {
+        images = ["/banner.png"];
+    }
 
     return {
       title,
+      description,
       openGraph: {
         title,
+        description,
+        images,
       },
       twitter: {
+        card: "summary_large_image",
         title,
+        description,
+        images,
       },
     };
   } catch {

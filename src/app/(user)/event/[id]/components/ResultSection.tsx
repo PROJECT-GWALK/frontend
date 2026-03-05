@@ -149,7 +149,12 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
   };
 
   // Dynamic bar size based on topN
-  const getBarSize = (count: number) => {
+  const getBarSize = (count: number, isFullscreenMode: boolean): number | string => {
+    // If fullscreen, use percentage to ensure it fits within the container height
+    if (isFullscreenMode) {
+      return "65%";
+    }
+    
     if (count <= 1) return 300;
     if (count <= 2) return 180;
     if (count <= 3) return 150;
@@ -514,7 +519,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
               ) : (
                 <ChartContainer
                   config={chartConfig}
-                  className={`w-full ${isFullscreen ? "lg:h-full min-h-125" : "min-h-75"}`}
+                  className={`w-full ${isFullscreen ? "lg:h-full lg:min-h-0 min-h-125" : "min-h-75"}`}
                 >
                   <BarChart
                     accessibilityLayer
@@ -537,7 +542,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                     <Bar
                       dataKey="totalReward"
                       radius={5}
-                      barSize={getBarSize(topLimit)}
+                      barSize={getBarSize(topLimit, isFullscreen)}
                       onClick={(data) => {
                         if (!isFullscreen) return;
                         const payload = (data as { payload?: ChartEntry }).payload;

@@ -5,16 +5,18 @@ import Image from "next/image";
 import { getTeams, getEvent, giveVr, resetVr, giveSpecial, resetSpecial } from "@/utils/apievent";
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, MessageSquare, BadgeCheck, Award, Gift } from "lucide-react";
+import { Users, Building, MessageSquare, BadgeCheck, Award, Gift, ChevronDown, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import type { EventData, Team, SpecialReward } from "@/utils/types";
 import InformationSection from "../components/InformationSection";
@@ -40,7 +42,7 @@ export function CommitteeView(props: Props) {
   const id = props.id || idFromParams;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "scored" | "unscored">("all");
+  const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
   const [localEvent, setLocalEvent] = useState<EventData | null>(props.event || null);
   const [awardsUnused, setAwardsUnused] = useState<SpecialReward[]>([]);
@@ -697,19 +699,76 @@ export function CommitteeView(props: Props) {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                     <h2 className="text-lg font-semibold">Projects</h2>
                     <div className="flex gap-2 w-full sm:w-auto">
-                      <Select
-                        value={filterStatus}
-                        onValueChange={(v) => setFilterStatus(v as "all" | "scored" | "unscored")}
-                      >
-                        <SelectTrigger className="w-35">
-                          <SelectValue placeholder="Filter" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Projects</SelectItem>
-                          <SelectItem value="scored">Evaluated</SelectItem>
-                          <SelectItem value="unscored">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="w-auto min-w-37.5 justify-between">
+                            <div className="flex items-center gap-2">
+                              <Filter className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                {activeFilters.includes("all")
+                                  ? "All Projects"
+                                  : `Filtered (${activeFilters.length})`}
+                              </span>
+                            </div>
+                            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>Show projects</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("all")}
+                            onCheckedChange={(checked) => {
+                              if (checked) setActiveFilters(["all"]);
+                            }}
+                          >
+                            All Projects
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("grading")}
+                            onCheckedChange={(checked) => {
+                              let next = activeFilters.filter((f) => f !== "all" && f !== "pending");
+                              if (checked) {
+                                next.push("grading");
+                              } else {
+                                next = next.filter((f) => f !== "grading");
+                              }
+                              if (next.length === 0) next = ["all"];
+                              setActiveFilters(next);
+                            }}
+                          >
+                            Grading
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("rewards")}
+                            onCheckedChange={(checked) => {
+                              let next = activeFilters.filter((f) => f !== "all" && f !== "pending");
+                              if (checked) {
+                                next.push("rewards");
+                              } else {
+                                next = next.filter((f) => f !== "rewards");
+                              }
+                              if (next.length === 0) next = ["all"];
+                              setActiveFilters(next);
+                            }}
+                          >
+                            Rewards
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={activeFilters.includes("pending")}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setActiveFilters(["pending"]);
+                              } else {
+                                setActiveFilters(["all"]);
+                              }
+                            }}
+                          >
+                            Pending
+                          </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Input
                         placeholder="Search projects..."
                         value={searchQuery}
@@ -727,7 +786,7 @@ export function CommitteeView(props: Props) {
                     eventStartView={localEvent?.startView ?? null}
                     eventEndJoinDate={localEvent?.endJoinDate ?? null}
                     searchQuery={searchQuery}
-                    filterStatus={filterStatus}
+                    activeFilters={activeFilters}
                     projectRewards={projectRewards}
                     loading={projectsLoading}
                     onAction={handleAction}

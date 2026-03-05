@@ -24,6 +24,7 @@ type CommentType = {
   createdAt: string;
   user: {
     id: string;
+    username: string;
     name: string;
     image: string | null;
     role: string;
