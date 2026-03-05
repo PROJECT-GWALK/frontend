@@ -84,6 +84,14 @@ type ChartEntry = {
   totalReward: number;
 };
 
+type BarNameLabelProps = {
+  x?: number | string;
+  y?: number | string;
+  width?: number | string;
+  height?: number | string;
+  value?: string | number;
+};
+
 export default function ResultSection({ eventId, role, eventStartView }: Props) {
   const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -275,6 +283,43 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
   }, [rankings, topLimit]);
 
   const showLabels = chartData.length <= 30;
+  const hasRightPanel = specialRewards.length > 0 || Boolean(selectedTeamId);
+
+  const renderBarNameLabel = ({ x, y, width, height, value }: BarNameLabelProps) => {
+    const barX = Number(x ?? 0);
+    const barY = Number(y ?? 0);
+    const barWidth = Number(width ?? 0);
+    const barHeight = Number(height ?? 0);
+    const rawLabel = typeof value === "string" ? value : "";
+
+    if (!rawLabel || !Number.isFinite(barWidth) || !Number.isFinite(barHeight)) {
+      return null;
+    }
+
+    const safeWidth = Math.max(0, barWidth - 20);
+    if (safeWidth < 64) {
+      return null;
+    }
+
+    const maxChars = Math.max(6, Math.floor(safeWidth / 7));
+    const displayLabel =
+      rawLabel.length > maxChars ? `${rawLabel.slice(0, Math.max(0, maxChars - 3))}...` : rawLabel;
+
+    return (
+      <text
+        x={barX + 10}
+        y={barY + barHeight / 2}
+        fill="white"
+        fontSize={14}
+        fontWeight={600}
+        textAnchor="start"
+        dominantBaseline="middle"
+      >
+        <title>{rawLabel}</title>
+        {displayLabel}
+      </text>
+    );
+  };
 
   // ชุดสีที่ดูทันสมัยและสดใส (Modern Vibrant Palette)
   const CHART_COLORS = [
@@ -310,7 +355,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
       ref={containerRef}
       className={`${
         isFullscreen
-          ? "bg-background min-h-screen w-screen lg:h-screen lg:overflow-hidden flex flex-col relative overflow-y-auto"
+          ? "bg-background min-h-screen w-full overflow-y-auto flex flex-col relative lg:h-screen lg:overflow-hidden"
           : "space-y-8"
       }`}
     >
@@ -332,7 +377,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
       )}
 
       <div
-        className={`relative z-10 flex flex-col lg:h-full space-y-4 ${isFullscreen ? "p-6" : ""}`}
+        className={`relative z-10 flex flex-col lg:h-full space-y-4 ${isFullscreen ? "p-6 w-full max-w-full overflow-x-hidden lg:h-full lg:overflow-hidden" : ""}`}
       >
         <div className="flex flex-col gap-3 shrink-0">
           {isFullscreen && eventInfo && (
@@ -423,23 +468,14 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
         <div
           className={`${
             isFullscreen
-              ? `lg:flex-1 grid grid-cols-1 ${
-                  selectedTeamId ? "lg:grid-cols-2" : "lg:grid-cols-3"
-                } gap-6 lg:min-h-0`
+              ? `lg:flex-1 grid grid-cols-1 ${hasRightPanel ? "lg:grid-cols-2" : "lg:grid-cols-1"} gap-6 lg:min-h-0 lg:overflow-hidden`
               : "space-y-8"
           }`}
         >
           {/* Top Rankings Chart */}
           <Card
             className={`flex flex-col ${
-              isFullscreen
-                ? "" +
-                  (selectedTeamId
-                    ? "lg:col-span-1"
-                    : specialRewards.length > 0
-                      ? "lg:col-span-2"
-                      : "lg:col-span-3")
-                : ""
+              isFullscreen ? "lg:col-span-1 lg:min-h-0" : ""
             }`}
           >
             <CardHeader className="shrink-0">
@@ -482,7 +518,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
               {loading && rankings.length === 0 ? (
                 <div
                   className={`w-full ${
-                    isFullscreen ? "lg:h-full min-h-75" : "min-h-75"
+                    isFullscreen ? "h-full min-h-0" : "min-h-75"
                   } flex flex-col justify-center gap-3`}
                 >
                   <Skeleton className="h-6 w-2/3" />
@@ -493,7 +529,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
               ) : rankings.length === 0 ? (
                 <div
                   className={`w-full ${
-                    isFullscreen ? "lg:h-full min-h-75" : "min-h-75"
+                    isFullscreen ? "h-full min-h-0" : "min-h-75"
                   } flex items-center justify-center`}
                 >
                   <div className="text-center space-y-2">
@@ -506,7 +542,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
               ) : (
                 <ChartContainer
                   config={chartConfig}
-                  className={`w-full ${isFullscreen ? "lg:h-full lg:min-h-0 min-h-125" : "min-h-75"}`}
+                  className={`w-full ${isFullscreen ? "h-full min-h-0" : "min-h-75"}`}
                 >
                   <BarChart
                     accessibilityLayer
@@ -524,7 +560,31 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                     <XAxis dataKey="totalReward" type="number" hide />
                     <ChartTooltip
                       cursor={false}
-                      content={<ChartTooltipContent hideLabel={showLabels} />}
+                      content={
+                        <ChartTooltipContent
+                          hideLabel
+                          formatter={(value, _name, _item, _index, payload) => {
+                            const teamName =
+                              payload &&
+                              typeof payload === "object" &&
+                              "name" in payload &&
+                              typeof payload.name === "string"
+                                ? payload.name
+                                : "-";
+
+                            return (
+                              <div className="flex w-full items-center justify-between gap-2">
+                                <span className="text-muted-foreground">{teamName}</span>
+                                <span className="text-foreground font-mono font-medium tabular-nums">
+                                  {typeof value === "number"
+                                    ? value.toLocaleString()
+                                    : Number(value || 0).toLocaleString()}
+                                </span>
+                              </div>
+                            );
+                          }}
+                        />
+                      }
                     />
                     <Bar
                       dataKey="totalReward"
@@ -556,13 +616,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                       {showLabels && (
                         <LabelList
                           dataKey="name"
-                          position="insideLeft"
-                          offset={10}
-                          className="fill-white font-semibold"
-                          fontSize={14}
-                          formatter={(value: string) =>
-                            value.length > 28 ? `${value.slice(0, 28)}...` : value
-                          }
+                          content={renderBarNameLabel}
                         />
                       )}
                       {showLabels && (
@@ -583,7 +637,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
           </Card>
 
           {/* Right Side Panel (Team Details & Special Rewards) */}
-          {isFullscreen ? (
+          {isFullscreen && hasRightPanel ? (
             <div className="lg:col-span-1 flex flex-col gap-4 lg:min-h-0">
               {/* Special Rewards Section */}
               {specialRewards.length > 0 && (
