@@ -196,20 +196,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
       setErrorMessage(null);
       try {
         const res = await getEventRankings(eventId);
-
-        // Merge API data with Mock data
-        let combinedRankings = [...res.rankings];
-        // const mockData = generateMockRankings(50);
-        // let combinedRankings = [...res.rankings, ...mockData];
-
-        // Sort by totalReward descending and re-assign rank
-        combinedRankings.sort((a, b) => b.totalReward - a.totalReward);
-        combinedRankings = combinedRankings.map((team, index) => ({
-          ...team,
-          rank: index + 1,
-        }));
-
-        setRankings(combinedRankings);
+        setRankings(res.rankings as Ranking[]);
         setSpecialRewards(res.specialRewards);
       } catch (error) {
         console.error("Failed to fetch rankings", error);
