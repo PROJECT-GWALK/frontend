@@ -41,6 +41,7 @@ import Image from "next/image";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Ranking = {
   id: string;
@@ -94,6 +95,7 @@ type BarNameLabelProps = {
 
 export default function ResultSection({ eventId, role, eventStartView }: Props) {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [rankings, setRankings] = useState<Ranking[]>([]);
   const [specialRewards, setSpecialRewards] = useState<SpecialReward[]>([]);
@@ -157,19 +159,24 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
   };
 
   // Dynamic bar size based on topN
-  const getBarSize = (count: number, isFullscreenMode: boolean): number | string => {
-    // If fullscreen, use percentage to ensure it fits within the container height
-    if (isFullscreenMode) {
+  const getBarSize = (
+    count: number,
+    isFullscreenMode: boolean,
+    isMobileView: boolean,
+  ): number | string => {
+    if (isFullscreenMode && !isMobileView) {
       return "65%";
     }
-    
-    if (count <= 1) return 300;
-    if (count <= 2) return 180;
-    if (count <= 3) return 150;
-    if (count <= 5) return 120;
-    if (count <= 8) return 100;
-    if (count <= 10) return 80;
-    return 60;
+
+    if (count <= 1) return isMobileView ? 110 : 300;
+    if (count <= 2) return isMobileView ? 88 : 180;
+    if (count <= 3) return isMobileView ? 72 : 150;
+    if (count <= 5) return isMobileView ? 56 : 120;
+    if (count <= 8) return isMobileView ? 44 : 100;
+    if (count <= 10) return isMobileView ? 38 : 80;
+    if (count <= 15) return isMobileView ? 32 : 60;
+    if (count <= 20) return isMobileView ? 28 : 56;
+    return isMobileView ? 24 : 52;
   };
 
   const isUserScrollingRef = useRef(false);
@@ -281,6 +288,13 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
       totalReward: r.totalReward,
     }));
   }, [rankings, topLimit]);
+
+  const mobileChartHeight = useMemo(() => {
+    if (!isMobile) return undefined;
+    const rowHeight = isFullscreen ? 42 : 46;
+    const minHeight = isFullscreen ? 360 : 420;
+    return Math.max(minHeight, chartData.length * rowHeight + 40);
+  }, [chartData.length, isFullscreen, isMobile]);
 
   const showLabels = chartData.length <= 30;
   const hasRightPanel = specialRewards.length > 0 || Boolean(selectedTeamId);
@@ -542,7 +556,8 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
               ) : (
                 <ChartContainer
                   config={chartConfig}
-                  className={`w-full ${isFullscreen ? "h-full min-h-0" : "min-h-75"}`}
+                  className={`w-full ${isFullscreen ? "lg:h-full lg:min-h-0" : "min-h-75"}`}
+                  style={mobileChartHeight ? { height: `${mobileChartHeight}px` } : undefined}
                 >
                   <BarChart
                     accessibilityLayer
@@ -589,7 +604,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                     <Bar
                       dataKey="totalReward"
                       radius={5}
-                      barSize={getBarSize(topLimit, isFullscreen)}
+                      barSize={getBarSize(topLimit, isFullscreen, isMobile)}
                       onClick={(data) => {
                         if (!isFullscreen) return;
                         const payload = (data as { payload?: ChartEntry }).payload;
