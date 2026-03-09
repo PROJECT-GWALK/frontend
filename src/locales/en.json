@@ -547,7 +547,9 @@
       "noWorks": "No works uploaded yet.",
       "noMembers": "No members yet.",
       "eventEnded": "Event has ended or not in active period. Actions are restricted.",
-      "submissionEnded": "Submission period has ended. You cannot create or edit projects."
+      "submissionEnded": "Submission period has ended. You cannot create or edit projects.",
+      "committeeGradingDeadline": "Committee grading is available until 2 days after event end:",
+      "committeeGradingClosed": "Committee grading is closed (more than 2 days after event end)."
     },
     "files": {
       "defaultFileName": "File",

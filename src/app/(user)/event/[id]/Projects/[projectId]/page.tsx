@@ -69,7 +69,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { linkify, UserAvatar, generateQrCode } from "@/utils/function";
+import { linkify, UserAvatar, generateQrCode, formatDateTime } from "@/utils/function";
 import SelectTeam from "../../components/selectTeam";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -88,7 +88,7 @@ type Props = {
 };
 
 export default function ProjectDetailPage({ params }: Props) {
-  const { t } = useLanguage();
+  const { t, timeFormat } = useLanguage();
   const router = useRouter();
   const paramsResolved = React.use(params);
   const { projectId, id } = paramsResolved;
@@ -166,6 +166,17 @@ export default function ProjectDetailPage({ params }: Props) {
     ? new Date() >= new Date(eventData.startView || "") &&
       new Date() <= new Date(eventData.endView || "")
     : false;
+
+  const committeeGradingDeadline = eventData?.endView
+    ? new Date(new Date(eventData.endView).getTime() + 48 * 60 * 60 * 1000)
+    : null;
+  const isCommitteeGradingWindowActive =
+    eventData?.myRole === "COMMITTEE"
+      ? eventData?.startView
+        ? new Date() >= new Date(eventData.startView) &&
+          (!committeeGradingDeadline || new Date() <= committeeGradingDeadline)
+        : !committeeGradingDeadline || new Date() <= committeeGradingDeadline
+      : isEventActive;
 
   const isSubmissionActive = eventData
     ? (!eventData.startJoinDate ||
@@ -1401,12 +1412,34 @@ export default function ProjectDetailPage({ params }: Props) {
             {/* Grading Section (Committee only) */}
             {eventData?.myRole === "COMMITTEE" &&
               (eventData?.gradingEnabled ?? true) && (
-                <CommitteeGradingForm
-                  eventId={id}
-                  teamId={projectId}
-                  teamName={project.title}
-                  disabled={!isEventActive}
-                />
+                <>
+                  {committeeGradingDeadline && isCommitteeGradingWindowActive && (
+                    <Card className="border-l-4 border-l-primary bg-primary/10 mb-4">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-primary" />
+                        <p className="text-sm font-medium text-primary">
+                          {`${t("projectDetail.messages.committeeGradingDeadline")} ${formatDateTime(committeeGradingDeadline, timeFormat)}`}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {!isCommitteeGradingWindowActive && (
+                    <Card className="border-l-4 border-l-destructive bg-destructive/10 mb-4">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-destructive" />
+                        <p className="text-sm font-medium text-destructive">
+                          {t("projectDetail.messages.committeeGradingClosed")}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  <CommitteeGradingForm
+                    eventId={id}
+                    teamId={projectId}
+                    teamName={project.title}
+                    disabled={!isCommitteeGradingWindowActive}
+                  />
+                </>
               )}
 
             {/* Comment Section */}
