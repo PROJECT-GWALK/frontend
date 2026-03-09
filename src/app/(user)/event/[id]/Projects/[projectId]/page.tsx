@@ -153,6 +153,9 @@ export default function ProjectDetailPage({ params }: Props) {
   const [selectedSpecialRewards, setSelectedSpecialRewards] = useState<
     string[]
   >([]);
+  const [originalSpecialRewards, setOriginalSpecialRewards] = useState<string[]>(
+    [],
+  );
   const [savingVr, setSavingVr] = useState(false);
   const [savingSpecial, setSavingSpecial] = useState(false);
 
@@ -233,6 +236,7 @@ export default function ProjectDetailPage({ params }: Props) {
     try {
       setSavingSpecial(true);
       await giveSpecial(id, projectId, selectedSpecialRewards);
+      setOriginalSpecialRewards(selectedSpecialRewards);
       toast.success(t("projectDetail.messages.specialRewardsSaved"));
     } catch (error: unknown) {
       const fallback = t("projectDetail.messages.specialRewardsSaveFailed");
@@ -258,6 +262,11 @@ export default function ProjectDetailPage({ params }: Props) {
     });
   };
 
+  const specialRewardsForVoting =
+    eventData?.myRole === "GUEST"
+      ? (eventData?.specialRewards ?? []).filter((r) => r.allowGuestVote)
+      : eventData?.specialRewards ?? [];
+
   const specialRewardsById = new Map(
     (eventData?.specialRewards ?? []).map((r) => [r.id, r] as const),
   );
@@ -275,11 +284,17 @@ export default function ProjectDetailPage({ params }: Props) {
     return `${names[0]}, ${names[1]} +${names.length - 2}`;
   })();
 
+  const normalizeRewardDescription = (desc?: string | null) => {
+    const normalized = (desc ?? "").replace(/\u200B/g, "").trim();
+    return normalized || t("projectDetail.noDescription");
+  };
+
   const isRewardDisabled = (rewardId: string) => {
     const isUnused = eventData?.awardsUnused?.some((r) => r.id === rewardId);
+    const wasOriginallySelected = originalSpecialRewards.includes(rewardId);
 
     const currentlySelected = selectedSpecialRewards.includes(rewardId);
-    return !isUnused && !currentlySelected;
+    return !isUnused && !currentlySelected && !wasOriginallySelected;
   };
 
   const [shareOpen, setShareOpen] = useState(false);
@@ -304,7 +319,9 @@ export default function ProjectDetailPage({ params }: Props) {
       if (teamRes.message === "ok") {
         const t = teamRes.team as Team;
         setVirtualReward(t.myReward || 0);
-        setSelectedSpecialRewards(t.mySpecialRewards || []);
+        const initialSpecialRewards = t.mySpecialRewards || [];
+        setSelectedSpecialRewards(initialSpecialRewards);
+        setOriginalSpecialRewards(initialSpecialRewards);
         let isUserMember = false;
 
         // Check if current user is member of the team
@@ -1027,17 +1044,18 @@ export default function ProjectDetailPage({ params }: Props) {
                       <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-muted border rounded-lg mb-6">
                         <TabsTrigger
                           value="virtual"
-                          className="flex items-center gap-2 py-2"
+                          className="flex items-center gap-2 py-2 text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-2 data-[state=active]:ring-purple-500/30"
                         >
                           <Gift className="w-4 h-4" />
                           <span>
                             {t("projectDetail.evaluation.virtualReward")}
                           </span>
                         </TabsTrigger>
-                        {eventData?.myRole === "COMMITTEE" && (
+                        {(eventData?.myRole === "COMMITTEE" ||
+                          eventData?.myRole === "GUEST") && (
                           <TabsTrigger
                             value="special"
-                            className="flex items-center gap-2 py-2"
+                            className="flex items-center gap-2 py-2 text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-2 data-[state=active]:ring-yellow-500/30"
                           >
                             <Trophy className="w-4 h-4" />
                             <span>
@@ -1187,7 +1205,8 @@ export default function ProjectDetailPage({ params }: Props) {
                         </div>
                       </TabsContent>
 
-                      {eventData?.myRole === "COMMITTEE" && (
+                      {(eventData?.myRole === "COMMITTEE" ||
+                        eventData?.myRole === "GUEST") && (
                         <TabsContent value="special" className="space-y-4 mt-0">
                           <div className="space-y-2">
                             <Label>
@@ -1225,9 +1244,12 @@ export default function ProjectDetailPage({ params }: Props) {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <div className="max-h-50 overflow-y-auto custom-scrollbar">
-                                  {eventData.specialRewards?.map((reward) => {
+                                  {specialRewardsForVoting.map((reward) => {
                                     const disabled = isRewardDisabled(
                                       reward.id,
+                                    );
+                                    const descriptionText = normalizeRewardDescription(
+                                      reward.description,
                                     );
                                     return (
                                       <DropdownMenuCheckboxItem
@@ -1240,15 +1262,43 @@ export default function ProjectDetailPage({ params }: Props) {
                                         }
                                         disabled={disabled}
                                       >
-                                        <span
-                                          className={
-                                            disabled
-                                              ? "text-muted-foreground line-through opacity-70"
-                                              : ""
-                                          }
-                                        >
-                                          {reward.name}
-                                        </span>
+                                        <div className="flex items-start gap-3">
+                                          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md border bg-muted">
+                                            {reward.image ? (
+                                              <Image
+                                                src={reward.image}
+                                                alt={reward.name}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            ) : (
+                                              <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                                                <Gift className="h-4 w-4" />
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex min-w-0 flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                              <span
+                                                className={`truncate ${
+                                                  disabled
+                                                    ? "text-muted-foreground line-through opacity-70"
+                                                    : ""
+                                                }`}
+                                              >
+                                                {reward.name}
+                                              </span>
+                                              {selectedSpecialRewards.includes(reward.id) && (
+                                                <Badge variant="secondary" className="text-[10px]">
+                                                  {t("projectDetail.evaluation.selected")}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground line-clamp-2">
+                                              {descriptionText}
+                                            </span>
+                                          </div>
+                                        </div>
                                       </DropdownMenuCheckboxItem>
                                     );
                                   })}
@@ -1256,30 +1306,53 @@ export default function ProjectDetailPage({ params }: Props) {
                               </DropdownMenuContent>
                             </DropdownMenu>
                             {selectedSpecialRewardItems.length > 0 && (
-                              <div className="flex flex-wrap gap-2 pt-2">
-                                {selectedSpecialRewardItems.map((reward) => (
-                                  <Badge
-                                    key={reward.id}
-                                    variant="secondary"
-                                    className="flex items-center gap-1"
-                                  >
-                                    <span className="max-w-60 truncate">
-                                      {reward.name}
-                                    </span>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-5 w-5 p-0"
-                                      onClick={() =>
-                                        toggleSpecialReward(reward.id)
-                                      }
-                                      disabled={!isEventActive}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </Badge>
-                                ))}
+                              <div className="flex flex-col gap-2 pt-2 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                                {selectedSpecialRewardItems.map((reward) => {
+                                  const fullReward = specialRewardsById.get(reward.id);
+                                  const descriptionText = normalizeRewardDescription(
+                                    fullReward?.description,
+                                  );
+                                  return (
+                                    <div key={reward.id} className="flex items-start gap-3">
+                                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
+                                        {fullReward?.image ? (
+                                          <Image
+                                            src={fullReward.image}
+                                            alt={reward.name}
+                                            fill
+                                            className="object-cover"
+                                          />
+                                        ) : (
+                                          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                                            <Gift className="h-4 w-4" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex min-w-0 flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="truncate font-medium">
+                                            {reward.name}
+                                          </span>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 w-5 p-0"
+                                            onClick={() =>
+                                              toggleSpecialReward(reward.id)
+                                            }
+                                            disabled={!isEventActive}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                        <span className="text-xs text-muted-foreground line-clamp-2">
+                                          {descriptionText}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>

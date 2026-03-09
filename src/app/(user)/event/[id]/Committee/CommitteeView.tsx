@@ -639,7 +639,7 @@ export function CommitteeView(props: Props) {
                         <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
                           <MessageSquare className="h-5 w-5" />
                         </div>
-                        Comment Progress
+                        {t("dashboard.commentGiven")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">

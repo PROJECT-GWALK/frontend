@@ -188,6 +188,7 @@ export default function OrganizerEditDialog({
           name: r.name,
           description: r.description,
           image: r.image,
+          allowGuestVote: r.allowGuestVote ?? false,
           voteCount: r.voteCount,
           teamCount: r.teamCount,
           _dirty: false,
@@ -378,11 +379,13 @@ export default function OrganizerEditDialog({
                 fd.append("name", r.name || "");
                 fd.append("description", r.description || "");
                 fd.append("image", r.pendingFile);
+                fd.append("allowGuestVote", String(!!r.allowGuestVote));
                 await createSpecialReward(id, fd);
               } else {
                 await createSpecialReward(id, {
                   name: r.name || "",
                   description: r.description || "",
+                  allowGuestVote: !!r.allowGuestVote,
                 });
               }
             } else {
@@ -392,13 +395,20 @@ export default function OrganizerEditDialog({
                   fd.append("name", r.name || "");
                   fd.append("description", r.description || "");
                   fd.append("image", r.pendingFile);
+                  fd.append("allowGuestVote", String(!!r.allowGuestVote));
                   await updateSpecialReward(id, r.id, fd);
                 } else {
-                  const up: { name: string; description: string; image?: null } = {
+                  const up: {
+                    name: string;
+                    description: string;
+                    image?: null;
+                    allowGuestVote?: boolean;
+                  } = {
                     name: r.name || "",
                     description: r.description || "",
                   };
                   if (r.removeImage) up.image = null;
+                  up.allowGuestVote = !!r.allowGuestVote;
                   await updateSpecialReward(id, r.id, up);
                 }
               }
@@ -1334,7 +1344,16 @@ export default function OrganizerEditDialog({
                     onClick={() => {
                       const tempId = `temp-${Date.now()}`;
                       srShouldScrollToBottomRef.current = true;
-                      setSrList((prev) => [...prev, { id: tempId, name: "", description: "", _dirty: true }]);
+                      setSrList((prev) => [
+                        ...prev,
+                        {
+                          id: tempId,
+                          name: "",
+                          description: "",
+                          allowGuestVote: false,
+                          _dirty: true,
+                        },
+                      ]);
                     }}
                   >
                     + {t("rewardsSection.addReward")}
@@ -1496,6 +1515,30 @@ export default function OrganizerEditDialog({
                           </div>
 
                           <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id={`guest-vote-${reward.id}`}
+                                checked={reward.allowGuestVote ?? false}
+                                onCheckedChange={(checked) =>
+                                  setSrList((prev) =>
+                                    prev.map((r) =>
+                                      r.id === reward.id
+                                        ? {
+                                            ...r,
+                                            allowGuestVote: checked === true,
+                                            _dirty: !String(r.id).startsWith("temp-")
+                                              ? true
+                                              : r._dirty,
+                                          }
+                                        : r,
+                                    ),
+                                  )
+                                }
+                              />
+                              <Label htmlFor={`guest-vote-${reward.id}`}>
+                                {t("rewardsSection.allowGuestVote")}
+                              </Label>
+                            </div>
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
                                 <Label>{t("rewardsSection.rewardName")}</Label>

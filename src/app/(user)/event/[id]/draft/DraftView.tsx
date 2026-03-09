@@ -52,6 +52,7 @@ type SpecialReward = {
   name: string;
   description: string;
   image?: string | null;
+  allowGuestVote?: boolean;
 };
 
 type EventUpdatePayload = {
@@ -155,6 +156,7 @@ export default function EventDraft() {
       id: Date.now().toString(),
       name: "",
       description: "",
+      allowGuestVote: false,
     };
     setSpecialRewards((prev) => [...prev, newReward]);
   };
@@ -163,8 +165,14 @@ export default function EventDraft() {
     setSpecialRewards(specialRewards.filter((r) => r.id !== id));
   };
 
-  const handleRewardChange = (id: string, field: "name" | "description", value: string) => {
-    setSpecialRewards(specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  const handleRewardChange = (
+    id: string,
+    field: "name" | "description" | "allowGuestVote",
+    value: string | boolean,
+  ) => {
+    setSpecialRewards(
+      specialRewards.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+    );
   };
 
   const rewardFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -597,11 +605,18 @@ export default function EventDraft() {
             fd.append("name", r.name);
             if (r.description) fd.append("description", r.description);
             fd.append("file", file);
+            fd.append("allowGuestVote", String(!!r.allowGuestVote));
             await updateSpecialReward(id, r.id, fd);
           } else {
-            const payload: { name: string; description?: string; image?: null } = { name: r.name };
+            const payload: {
+              name: string;
+              description?: string;
+              image?: null;
+              allowGuestVote?: boolean;
+            } = { name: r.name };
             if (r.description) payload.description = r.description;
             if (isRemoved) payload.image = null;
+            payload.allowGuestVote = !!r.allowGuestVote;
             await updateSpecialReward(id, r.id, payload);
           }
         } else {
@@ -610,6 +625,7 @@ export default function EventDraft() {
             fd.append("name", r.name);
             if (r.description) fd.append("description", r.description);
             fd.append("file", file);
+            fd.append("allowGuestVote", String(!!r.allowGuestVote));
             const res = await createSpecialReward(id, fd);
             if (res?.reward?.id) {
               const newReward = {
@@ -617,6 +633,7 @@ export default function EventDraft() {
                 name: r.name,
                 description: r.description,
                 image: res.reward.image || null,
+                allowGuestVote: r.allowGuestVote ?? false,
               };
               setSpecialRewards((prev) =>
                 prev.map((x) =>
@@ -650,14 +667,21 @@ export default function EventDraft() {
               );
             }
           } else {
-            const payload: { name: string; description?: string; image?: string | null } = {
+            const payload: {
+              name: string;
+              description?: string;
+              image?: string | null;
+              allowGuestVote?: boolean;
+            } = {
               name: r.name,
             };
             if (r.description) payload.description = r.description;
+            payload.allowGuestVote = !!r.allowGuestVote;
             const res = await createSpecialReward(id, {
               name: r.name,
               description: r.description,
               image: null,
+              allowGuestVote: !!r.allowGuestVote,
             });
             if (res?.reward?.id) {
               const newReward = {
@@ -665,6 +689,7 @@ export default function EventDraft() {
                 name: r.name,
                 description: r.description,
                 image: res.reward.image || null,
+                allowGuestVote: r.allowGuestVote ?? false,
               };
               setSpecialRewards((prev) =>
                 prev.map((x) =>
