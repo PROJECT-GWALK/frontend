@@ -25,7 +25,7 @@ export default function InviteConfirmPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const tokenParam = searchParams.get("token") || "";
+  const tokenParam = searchParams?.get("token") || "";
 
   const [inviteRole, setInviteRole] = useState<RoleStr | null>(null);
   const [event, setEvent] = useState<EventData | null>(null);

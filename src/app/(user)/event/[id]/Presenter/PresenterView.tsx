@@ -41,7 +41,7 @@ export function PresenterView({ id, event }: Props) {
   const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">(
     () => {
       if (typeof window === "undefined") return "dashboard";
-      const fromQuery = resolveTab(searchParams.get("tab"));
+      const fromQuery = resolveTab(searchParams?.get("tab") ?? null);
       const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
       return fromQuery || fromStorage || "dashboard";
     },

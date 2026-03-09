@@ -21,7 +21,7 @@ export default function OtherProfilePage() {
       try {
         setLoading(true);
         setError(null);
-        const idParam = Array.isArray(params.id) ? params.id[0] : params.id;
+        const idParam = Array.isArray(params?.id) ? params?.id[0] : params?.id;
 
         if (!idParam) return;
 
@@ -50,8 +50,8 @@ export default function OtherProfilePage() {
       }
     };
 
-    if (params.id) fetchUser();
-  }, [params.id]);
+    if (params?.id) fetchUser();
+  }, [params?.id]);
 
   const isSelf =
     !!currentUser &&

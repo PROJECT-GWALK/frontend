@@ -46,7 +46,7 @@ export function OrganizerView({ id, event }: Props) {
     "dashboard" | "information" | "Participants" | "project" | "result" | "grading"
   >(() => {
     if (typeof window === "undefined") return "dashboard";
-    const fromQuery = resolveTab(searchParams.get("tab"));
+    const fromQuery = resolveTab(searchParams?.get("tab") ?? null);
     const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
     return fromQuery || fromStorage || "dashboard";
   });

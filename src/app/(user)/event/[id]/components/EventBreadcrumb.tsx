@@ -51,7 +51,7 @@ export default function EventBreadcrumb() {
   }, [id, projectId]);
 
   // Determine segments
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = (pathname ?? "").split("/").filter(Boolean);
   // segments[0] = event
   // segments[1] = [id]
   
