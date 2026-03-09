@@ -23,7 +23,7 @@ import InformationSection from "../components/InformationSection";
 import type { PresenterProject } from "../Presenter/components/types";
 import UnifiedProjectList from "../components/UnifiedProjectList";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import ResultSection from "../components/ResultSection";
 import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 import { useSession } from "next-auth/react";
@@ -40,14 +40,33 @@ export function CommitteeView(props: Props) {
   const paramsHook = useParams();
   const idFromParams = paramsHook?.id as string;
   const id = props.id || idFromParams;
+  const searchParams = useSearchParams();
+  const resolveTab = (value: string | null) => {
+    const allowed = ["dashboard", "information", "project", "result"] as const;
+    return allowed.includes(value as (typeof allowed)[number])
+      ? (value as (typeof allowed)[number])
+      : null;
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
-  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">(
+    () => {
+      if (typeof window === "undefined") return "dashboard";
+      const fromQuery = resolveTab(searchParams?.get("tab") ?? null);
+      const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
+      return fromQuery || fromStorage || "dashboard";
+    },
+  );
   const [localEvent, setLocalEvent] = useState<EventData | null>(props.event || null);
   const [awardsUnused, setAwardsUnused] = useState<SpecialReward[]>([]);
   const [bannerOpen, setBannerOpen] = useState(false);
   const [loading, setLoading] = useState(!props.event);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`eventTab:${id}`, tab);
+    }
+  }, [id, tab]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -397,17 +416,17 @@ export function CommitteeView(props: Props) {
           </div>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
-            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/70 border border-border/60 rounded-xl">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 Dashboard
               </TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-25">
+              <TabsTrigger value="information" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 Information
               </TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-25">
+              <TabsTrigger value="project" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 Projects
               </TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-25">
+              <TabsTrigger value="result" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 Result
               </TabsTrigger>
             </TabsList>
@@ -639,7 +658,7 @@ export function CommitteeView(props: Props) {
                         <div className="p-2 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
                           <MessageSquare className="h-5 w-5" />
                         </div>
-                        Comment Progress
+                        {t("dashboard.commentGiven")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">

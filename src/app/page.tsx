@@ -1,14 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Star, Check, Mail, IdCard } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/user/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const LandingPage = () => {
+  const { status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/home");
+    }
+  }, [router, status]);
+
   return (
     <div className="relative min-h-screen bg-background">
       {/* Overlay gradient for hero background */}

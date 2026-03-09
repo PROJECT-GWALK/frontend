@@ -86,6 +86,7 @@ export type SpecialReward = {
   name: string;
   description: string;
   image?: string | null;
+  allowGuestVote?: boolean;
   voteCount?: number;
   teamCount?: number;
 };

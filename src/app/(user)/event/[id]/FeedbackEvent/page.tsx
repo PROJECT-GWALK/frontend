@@ -18,7 +18,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function FeedbackEventPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = params.id as string;
+  const eventId = params?.id as string;
   const { t } = useLanguage();
 
   const [rating, setRating] = useState<number>(0);

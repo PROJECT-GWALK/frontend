@@ -259,3 +259,9 @@
 .bg-brand-secondary-soft { background-color: var(--brand-secondary); opacity: 0.2; }
 .bg-brand-tertiary-soft { background-color: var(--brand-tertiary); opacity: 0.2; }
 .bg-brand-quaternary-soft { background-color: var(--brand-quaternary); opacity: 0.2; }
+
+@media (max-width: 48rem) {
+  .hide-mobile-navbar nav {
+    display: none;
+  }
+}

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, Gift, Plus, Trash2, Award } from "lucide-react";
 import ImageCropDialog from "@/lib/image-crop-dialog";
 import type { SpecialReward } from "@/utils/types";
@@ -22,7 +23,11 @@ type Props = {
   handleRemoveRewardImage: (id: string) => void;
   handleAddSpecialReward: () => void;
   handleRemoveReward: (id: string) => void;
-  handleRewardChange: (id: string, field: "name" | "description", value: string) => void;
+  handleRewardChange: (
+    id: string,
+    field: "name" | "description" | "allowGuestVote",
+    value: string | boolean,
+  ) => void;
   rewardErrors?: Record<string, string>;
   srCropOpen: boolean;
   srCropSrc: string | null;
@@ -92,6 +97,18 @@ export default function Card4(props: Props) {
     el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [specialRewards.length]);
 
+  useEffect(() => {
+    specialRewards.forEach((reward) => {
+      if (
+        reward.description === undefined ||
+        reward.description === null ||
+        reward.description === ""
+      ) {
+        handleRewardChange(reward.id, "description", "\u200B");
+      }
+    });
+  }, [specialRewards, handleRewardChange]);
+
   return (
     <Card id="card4" className="scroll-mt-6 lg:col-span-2 border-none shadow-md">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -139,7 +156,11 @@ export default function Card4(props: Props) {
           </div>
         ) : (
           <div ref={listRef} className="max-h-105 overflow-y-auto custom-scrollbar pr-2 space-y-4">
-            {specialRewards.map((reward, index) => (
+            {specialRewards.map((reward, index) => {
+              const normalizedDescription =
+                reward.description === "\u200B" ? "" : reward.description ?? "";
+
+              return (
               <div key={reward.id} className="border rounded-lg p-4 space-y-4 bg-muted/30">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">
@@ -252,6 +273,18 @@ export default function Card4(props: Props) {
                     )}
                   </div>
                   <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`guest-vote-${reward.id}`}
+                        checked={reward.allowGuestVote ?? false}
+                        onCheckedChange={(checked) =>
+                          handleRewardChange(reward.id, "allowGuestVote", checked === true)
+                        }
+                      />
+                      <Label htmlFor={`guest-vote-${reward.id}`}>
+                        {t("rewardsSection.allowGuestVote")}
+                      </Label>
+                    </div>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <Label>{t("rewardsSection.rewardName")}</Label>
@@ -273,17 +306,21 @@ export default function Card4(props: Props) {
                       <div className="flex justify-between items-center">
                         <Label>{t("rewardsSection.rewardDescription")}</Label>
                         <span className="text-xs text-muted-foreground">
-                          {(reward.description || "").length}/60
+                          {normalizedDescription.length}/60
                         </span>
                       </div>
                       <Textarea
                         ref={(el) => autoResizeTextarea(el)}
                         placeholder={t("rewardsSection.placeholderRewardDesc")}
-                        value={reward.description ?? ""}
+                        value={normalizedDescription}
                         maxLength={60}
                         onChange={(e) => {
                           autoResizeTextarea(e.target);
-                          handleRewardChange(reward.id, "description", e.target.value);
+                          handleRewardChange(
+                            reward.id,
+                            "description",
+                            e.target.value || "\u200B",
+                          );
                         }}
                         className="resize-none overflow-hidden"
                       />
@@ -291,7 +328,8 @@ export default function Card4(props: Props) {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

@@ -43,7 +43,7 @@ export default function EventDetail() {
   const {t} = useLanguage();
 
   useEffect(() => {
-    const inviteFlag = searchParams.get("invite");
+    const inviteFlag = searchParams?.get("invite");
     if (inviteFlag === "1") {
       if (status === "unauthenticated") {
         const currentUrl =
@@ -55,8 +55,8 @@ export default function EventDetail() {
         return;
       }
       if (!confirmOpen) setConfirmOpen(true);
-      const tokenParam = searchParams.get("token");
-      const roleParam = searchParams.get("role");
+      const tokenParam = searchParams?.get("token");
+      const roleParam = searchParams?.get("role");
       (async () => {
         try {
           if (tokenParam) {
@@ -161,8 +161,8 @@ export default function EventDetail() {
 
   const doJoin = async () => {
     if (!id || !event || event.status !== "PUBLISHED") return;
-    const inviteFlag = searchParams.get("invite");
-    const tokenParam = searchParams.get("token");
+    const inviteFlag = searchParams?.get("invite");
+    const tokenParam = searchParams?.get("token");
     if (inviteFlag !== "1") return;
     if (status !== "authenticated") return;
     setJoining(true);

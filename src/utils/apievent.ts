@@ -142,7 +142,12 @@ export const getMyEvents = async () => {
 // ====================== SPECIAL REWARD ======================
 export const createSpecialReward = async (
   eventId: string,
-  data: FormData | { name: string; description?: string; image?: string | null }
+  data: FormData | {
+    name: string;
+    description?: string;
+    image?: string | null;
+    allowGuestVote?: boolean;
+  }
 ) => {
   const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
   let body: FormData | string;
@@ -172,7 +177,12 @@ export const createSpecialReward = async (
 export const updateSpecialReward = async (
   eventId: string,
   rewardId: string,
-  data: FormData | { name?: string; description?: string; image?: string | null }
+  data: FormData | {
+    name?: string;
+    description?: string;
+    image?: string | null;
+    allowGuestVote?: boolean;
+  }
 ) => {
   const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
   let body: FormData | string;

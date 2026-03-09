@@ -27,8 +27,8 @@ export default function SelectTeam({ className }: { className?: string }) {
   const pathname = usePathname();
   const { t } = useLanguage();
   // Ensure we handle potential array values from params, though usually they are strings
-  const eventId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const currentProjectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
+  const eventId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const currentProjectId = Array.isArray(params?.projectId) ? params?.projectId[0] : params?.projectId;
 
   const [open, setOpen] = React.useState(false);
   const [teams, setTeams] = React.useState<Team[]>([]);
@@ -69,7 +69,7 @@ export default function SelectTeam({ className }: { className?: string }) {
     if (teamId === currentProjectId) return;
 
     let newPath = "";
-    if (pathname.includes("/Scores")) {
+    if ((pathname ?? "").includes("/Scores")) {
          newPath = `/event/${eventId}/Projects/${teamId}/Scores`;
     } else {
          newPath = `/event/${eventId}/Projects/${teamId}`;

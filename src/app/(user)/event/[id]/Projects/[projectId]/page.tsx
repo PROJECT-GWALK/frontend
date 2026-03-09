@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
@@ -70,7 +69,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { linkify, UserAvatar, generateQrCode } from "@/utils/function";
+import { linkify, UserAvatar, generateQrCode, formatDateTime } from "@/utils/function";
 import SelectTeam from "../../components/selectTeam";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -89,7 +88,7 @@ type Props = {
 };
 
 export default function ProjectDetailPage({ params }: Props) {
-  const { t } = useLanguage();
+  const { t, timeFormat } = useLanguage();
   const router = useRouter();
   const paramsResolved = React.use(params);
   const { projectId, id } = paramsResolved;
@@ -153,6 +152,9 @@ export default function ProjectDetailPage({ params }: Props) {
   const [selectedSpecialRewards, setSelectedSpecialRewards] = useState<
     string[]
   >([]);
+  const [originalSpecialRewards, setOriginalSpecialRewards] = useState<string[]>(
+    [],
+  );
   const [savingVr, setSavingVr] = useState(false);
   const [savingSpecial, setSavingSpecial] = useState(false);
 
@@ -164,6 +166,17 @@ export default function ProjectDetailPage({ params }: Props) {
     ? new Date() >= new Date(eventData.startView || "") &&
       new Date() <= new Date(eventData.endView || "")
     : false;
+
+  const committeeGradingDeadline = eventData?.endView
+    ? new Date(new Date(eventData.endView).getTime() + 48 * 60 * 60 * 1000)
+    : null;
+  const isCommitteeGradingWindowActive =
+    eventData?.myRole === "COMMITTEE"
+      ? eventData?.startView
+        ? new Date() >= new Date(eventData.startView) &&
+          (!committeeGradingDeadline || new Date() <= committeeGradingDeadline)
+        : !committeeGradingDeadline || new Date() <= committeeGradingDeadline
+      : isEventActive;
 
   const isSubmissionActive = eventData
     ? (!eventData.startJoinDate ||
@@ -233,6 +246,7 @@ export default function ProjectDetailPage({ params }: Props) {
     try {
       setSavingSpecial(true);
       await giveSpecial(id, projectId, selectedSpecialRewards);
+      setOriginalSpecialRewards(selectedSpecialRewards);
       toast.success(t("projectDetail.messages.specialRewardsSaved"));
     } catch (error: unknown) {
       const fallback = t("projectDetail.messages.specialRewardsSaveFailed");
@@ -258,6 +272,11 @@ export default function ProjectDetailPage({ params }: Props) {
     });
   };
 
+  const specialRewardsForVoting =
+    eventData?.myRole === "GUEST"
+      ? (eventData?.specialRewards ?? []).filter((r) => r.allowGuestVote)
+      : eventData?.specialRewards ?? [];
+
   const specialRewardsById = new Map(
     (eventData?.specialRewards ?? []).map((r) => [r.id, r] as const),
   );
@@ -275,15 +294,51 @@ export default function ProjectDetailPage({ params }: Props) {
     return `${names[0]}, ${names[1]} +${names.length - 2}`;
   })();
 
+  const normalizeRewardDescription = (desc?: string | null) => {
+    const normalized = (desc ?? "").replace(/\u200B/g, "").trim();
+    return normalized || t("projectDetail.noDescription");
+  };
+
   const isRewardDisabled = (rewardId: string) => {
     const isUnused = eventData?.awardsUnused?.some((r) => r.id === rewardId);
+    const wasOriginallySelected = originalSpecialRewards.includes(rewardId);
 
     const currentlySelected = selectedSpecialRewards.includes(rewardId);
-    return !isUnused && !currentlySelected;
+    return !isUnused && !currentlySelected && !wasOriginallySelected;
   };
 
   const [shareOpen, setShareOpen] = useState(false);
   const [shareQrSrc, setShareQrSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const updateNavbarVisibility = () => {
+      if (window.scrollY > 0) {
+        document.body.classList.add("hide-mobile-navbar");
+      } else {
+        document.body.classList.remove("hide-mobile-navbar");
+      }
+    };
+    updateNavbarVisibility();
+    window.addEventListener("scroll", updateNavbarVisibility, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateNavbarVisibility);
+      document.body.classList.remove("hide-mobile-navbar");
+    };
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (typeof window !== "undefined") {
+      if (window.history.length > 1) {
+        router.back();
+        return;
+      }
+      const savedTab = sessionStorage.getItem(`eventTab:${id}`) || "project";
+      router.push(`/event/${id}?tab=${savedTab}`);
+      return;
+    }
+    router.push(`/event/${id}`);
+  }, [id, router]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -304,7 +359,9 @@ export default function ProjectDetailPage({ params }: Props) {
       if (teamRes.message === "ok") {
         const t = teamRes.team as Team;
         setVirtualReward(t.myReward || 0);
-        setSelectedSpecialRewards(t.mySpecialRewards || []);
+        const initialSpecialRewards = t.mySpecialRewards || [];
+        setSelectedSpecialRewards(initialSpecialRewards);
+        setOriginalSpecialRewards(initialSpecialRewards);
         let isUserMember = false;
 
         // Check if current user is member of the team
@@ -603,12 +660,10 @@ export default function ProjectDetailPage({ params }: Props) {
         <p className="text-muted-foreground mb-8 max-w-md">
           {t("projectDetail.messages.projectNotFoundDetail") || t("projectDetail.messages.ProjectNotFoundDesc")}
         </p>
-        <Link href={`/event/${id}`}>
-          <Button variant="default" size="lg">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("projectDetail.buttons.backToProjects")}
-          </Button>
-        </Link>
+        <Button variant="default" size="lg" onClick={handleBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("projectDetail.buttons.backToProjects")}
+        </Button>
       </div>
     );
   }
@@ -616,18 +671,17 @@ export default function ProjectDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-background">
       {/* Header */}
-      <div className="sticky top-16 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
+      <div className="sticky top-0 md:top-16 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
         <div className="w-full max-w-6xl mx-auto py-4 px-4 xl:px-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Link href={`/event/${id}`}>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              onClick={handleBack}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -693,12 +747,9 @@ export default function ProjectDetailPage({ params }: Props) {
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">
                 {project.title}
               </h1>
-              <Badge
-                variant="outline"
-                className="w-fit px-3 py-1 text-sm font-normal border-border text-muted-foreground"
-              >
+              <div className="w-fit max-w-full rounded-full border border-border px-3 py-1 text-sm font-normal text-muted-foreground whitespace-normal wrap-break-word">
                 {eventData?.eventName || t("projectDetail.defaultEventName")}
-              </Badge>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2 shrink-0 w-full md:w-auto justify-start md:justify-end">
@@ -1027,17 +1078,18 @@ export default function ProjectDetailPage({ params }: Props) {
                       <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-muted border rounded-lg mb-6">
                         <TabsTrigger
                           value="virtual"
-                          className="flex items-center gap-2 py-2"
+                          className="flex items-center gap-2 py-2 text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-2 data-[state=active]:ring-purple-500/30"
                         >
                           <Gift className="w-4 h-4" />
                           <span>
                             {t("projectDetail.evaluation.virtualReward")}
                           </span>
                         </TabsTrigger>
-                        {eventData?.myRole === "COMMITTEE" && (
+                        {(eventData?.myRole === "COMMITTEE" ||
+                          eventData?.myRole === "GUEST") && (
                           <TabsTrigger
                             value="special"
-                            className="flex items-center gap-2 py-2"
+                            className="flex items-center gap-2 py-2 text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-sm data-[state=active]:ring-2 data-[state=active]:ring-yellow-500/30"
                           >
                             <Trophy className="w-4 h-4" />
                             <span>
@@ -1187,7 +1239,8 @@ export default function ProjectDetailPage({ params }: Props) {
                         </div>
                       </TabsContent>
 
-                      {eventData?.myRole === "COMMITTEE" && (
+                      {(eventData?.myRole === "COMMITTEE" ||
+                        eventData?.myRole === "GUEST") && (
                         <TabsContent value="special" className="space-y-4 mt-0">
                           <div className="space-y-2">
                             <Label>
@@ -1225,9 +1278,12 @@ export default function ProjectDetailPage({ params }: Props) {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <div className="max-h-50 overflow-y-auto custom-scrollbar">
-                                  {eventData.specialRewards?.map((reward) => {
+                                  {specialRewardsForVoting.map((reward) => {
                                     const disabled = isRewardDisabled(
                                       reward.id,
+                                    );
+                                    const descriptionText = normalizeRewardDescription(
+                                      reward.description,
                                     );
                                     return (
                                       <DropdownMenuCheckboxItem
@@ -1240,15 +1296,43 @@ export default function ProjectDetailPage({ params }: Props) {
                                         }
                                         disabled={disabled}
                                       >
-                                        <span
-                                          className={
-                                            disabled
-                                              ? "text-muted-foreground line-through opacity-70"
-                                              : ""
-                                          }
-                                        >
-                                          {reward.name}
-                                        </span>
+                                        <div className="flex items-start gap-3">
+                                          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md border bg-muted">
+                                            {reward.image ? (
+                                              <Image
+                                                src={reward.image}
+                                                alt={reward.name}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            ) : (
+                                              <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                                                <Gift className="h-4 w-4" />
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex min-w-0 flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                              <span
+                                                className={`truncate ${
+                                                  disabled
+                                                    ? "text-muted-foreground line-through opacity-70"
+                                                    : ""
+                                                }`}
+                                              >
+                                                {reward.name}
+                                              </span>
+                                              {selectedSpecialRewards.includes(reward.id) && (
+                                                <Badge variant="secondary" className="text-[10px]">
+                                                  {t("projectDetail.evaluation.selected")}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground line-clamp-2">
+                                              {descriptionText}
+                                            </span>
+                                          </div>
+                                        </div>
                                       </DropdownMenuCheckboxItem>
                                     );
                                   })}
@@ -1256,30 +1340,53 @@ export default function ProjectDetailPage({ params }: Props) {
                               </DropdownMenuContent>
                             </DropdownMenu>
                             {selectedSpecialRewardItems.length > 0 && (
-                              <div className="flex flex-wrap gap-2 pt-2">
-                                {selectedSpecialRewardItems.map((reward) => (
-                                  <Badge
-                                    key={reward.id}
-                                    variant="secondary"
-                                    className="flex items-center gap-1"
-                                  >
-                                    <span className="max-w-60 truncate">
-                                      {reward.name}
-                                    </span>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-5 w-5 p-0"
-                                      onClick={() =>
-                                        toggleSpecialReward(reward.id)
-                                      }
-                                      disabled={!isEventActive}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </Badge>
-                                ))}
+                              <div className="flex flex-col gap-2 pt-2 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                                {selectedSpecialRewardItems.map((reward) => {
+                                  const fullReward = specialRewardsById.get(reward.id);
+                                  const descriptionText = normalizeRewardDescription(
+                                    fullReward?.description,
+                                  );
+                                  return (
+                                    <div key={reward.id} className="flex items-start gap-3">
+                                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
+                                        {fullReward?.image ? (
+                                          <Image
+                                            src={fullReward.image}
+                                            alt={reward.name}
+                                            fill
+                                            className="object-cover"
+                                          />
+                                        ) : (
+                                          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                                            <Gift className="h-4 w-4" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex min-w-0 flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="truncate font-medium">
+                                            {reward.name}
+                                          </span>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 w-5 p-0"
+                                            onClick={() =>
+                                              toggleSpecialReward(reward.id)
+                                            }
+                                            disabled={!isEventActive}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                        <span className="text-xs text-muted-foreground line-clamp-2">
+                                          {descriptionText}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
@@ -1305,12 +1412,34 @@ export default function ProjectDetailPage({ params }: Props) {
             {/* Grading Section (Committee only) */}
             {eventData?.myRole === "COMMITTEE" &&
               (eventData?.gradingEnabled ?? true) && (
-                <CommitteeGradingForm
-                  eventId={id}
-                  teamId={projectId}
-                  teamName={project.title}
-                  disabled={!isEventActive}
-                />
+                <>
+                  {committeeGradingDeadline && isCommitteeGradingWindowActive && (
+                    <Card className="border-l-4 border-l-primary bg-primary/10 mb-4">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-primary" />
+                        <p className="text-sm font-medium text-primary">
+                          {`${t("projectDetail.messages.committeeGradingDeadline")} ${formatDateTime(committeeGradingDeadline, timeFormat)}`}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {!isCommitteeGradingWindowActive && (
+                    <Card className="border-l-4 border-l-destructive bg-destructive/10 mb-4">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-destructive" />
+                        <p className="text-sm font-medium text-destructive">
+                          {t("projectDetail.messages.committeeGradingClosed")}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  <CommitteeGradingForm
+                    eventId={id}
+                    teamId={projectId}
+                    teamName={project.title}
+                    disabled={!isCommitteeGradingWindowActive}
+                  />
+                </>
               )}
 
             {/* Comment Section */}

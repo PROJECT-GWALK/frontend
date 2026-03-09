@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTeams, deleteTeam } from "@/utils/apievent";
@@ -27,9 +28,28 @@ type Props = {
 };
 
 export function OrganizerView({ id, event }: Props) {
+  const searchParams = useSearchParams();
+  const resolveTab = (value: string | null) => {
+    const allowed = [
+      "dashboard",
+      "information",
+      "Participants",
+      "project",
+      "result",
+      "grading",
+    ] as const;
+    return allowed.includes(value as (typeof allowed)[number])
+      ? (value as (typeof allowed)[number])
+      : null;
+  };
   const [tab, setTab] = useState<
     "dashboard" | "information" | "Participants" | "project" | "result" | "grading"
-  >("dashboard");
+  >(() => {
+    if (typeof window === "undefined") return "dashboard";
+    const fromQuery = resolveTab(searchParams?.get("tab") ?? null);
+    const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
+    return fromQuery || fromStorage || "dashboard";
+  });
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<EventEditSection | null>(null);
@@ -51,6 +71,11 @@ export function OrganizerView({ id, event }: Props) {
   const [gradingRefreshTrigger, setGradingRefreshTrigger] = useState(0);
 
   const { t } = useLanguage();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`eventTab:${id}`, tab);
+    }
+  }, [id, tab]);
 
   const handleDeleteTeam = async (projectId: string) => {
     try {
@@ -144,24 +169,24 @@ export function OrganizerView({ id, event }: Props) {
           />
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
-            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
-              <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/70 border border-border/60 rounded-xl">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.dashboard")}
               </TabsTrigger>
-              <TabsTrigger value="information" className="flex-1 min-w-25">
+              <TabsTrigger value="information" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.information")}
               </TabsTrigger>
-              <TabsTrigger value="Participants" className="flex-1 min-w-25">
+              <TabsTrigger value="Participants" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.participants")}
               </TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-25">
+              <TabsTrigger value="project" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.projects")}
               </TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-25">
+              <TabsTrigger value="result" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.results")}
               </TabsTrigger>
               {(localEvent?.gradingEnabled ?? true) && (
-                <TabsTrigger value="grading" className="flex-1 min-w-25">
+                <TabsTrigger value="grading" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                   {t("eventTab.grading")}
                 </TabsTrigger>
               )}

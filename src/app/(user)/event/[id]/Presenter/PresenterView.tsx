@@ -3,6 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, Trophy, Star, Gift, AlertCircle } from "lucide-react";
@@ -29,8 +30,22 @@ export function PresenterView({ id, event }: Props) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
+  const searchParams = useSearchParams();
+  const resolveTab = (value: string | null) => {
+    const allowed = ["dashboard", "information", "project", "result"] as const;
+    return allowed.includes(value as (typeof allowed)[number])
+      ? (value as (typeof allowed)[number])
+      : null;
+  };
   const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">(
+    () => {
+      if (typeof window === "undefined") return "dashboard";
+      const fromQuery = resolveTab(searchParams?.get("tab") ?? null);
+      const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
+      return fromQuery || fromStorage || "dashboard";
+    },
+  );
   const localEvent = event;
   const [bannerOpen, setBannerOpen] = useState(false);
 
@@ -63,6 +78,11 @@ export function PresenterView({ id, event }: Props) {
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const { t } = useLanguage();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`eventTab:${id}`, tab);
+    }
+  }, [id, tab]);
 
   const now = new Date();
   const eventStarted = !localEvent.startView || now >= new Date(localEvent.startView);
@@ -212,19 +232,19 @@ export function PresenterView({ id, event }: Props) {
           )}
 
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6">
-            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/50">
+            <TabsList className="w-full flex flex-wrap h-auto p-1 justify-start gap-1 bg-muted/70 border border-border/60 rounded-xl">
               {userProject && (
-                <TabsTrigger value="dashboard" className="flex-1 min-w-25">
+                <TabsTrigger value="dashboard" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                   {t("eventTab.dashboard")}
                 </TabsTrigger>
               )}
-              <TabsTrigger value="information" className="flex-1 min-w-25">
+              <TabsTrigger value="information" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.information")}
               </TabsTrigger>
-              <TabsTrigger value="project" className="flex-1 min-w-25">
+              <TabsTrigger value="project" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.projects")}
               </TabsTrigger>
-              <TabsTrigger value="result" className="flex-1 min-w-25">
+              <TabsTrigger value="result" className="flex-1 min-w-25 font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 dark:data-[state=active]:bg-white dark:data-[state=active]:text-black dark:data-[state=active]:shadow-white/30 dark:data-[state=active]:border dark:data-[state=active]:border-white/70">
                 {t("eventTab.results")}
               </TabsTrigger>
             </TabsList>
