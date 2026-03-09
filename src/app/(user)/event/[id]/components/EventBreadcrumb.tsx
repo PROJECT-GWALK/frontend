@@ -94,12 +94,16 @@ export default function EventBreadcrumb() {
         
         {isEventRoot ? (
              <BreadcrumbItem>
-               <BreadcrumbPage>{eventName || "Event"}</BreadcrumbPage>
+               <BreadcrumbPage className="max-w-56 truncate">
+                 {eventName || "Event"}
+               </BreadcrumbPage>
              </BreadcrumbItem>
         ) : (
             <>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href={`/event/${id}`}>{eventName || "Event"}</BreadcrumbLink>
+                  <BreadcrumbLink href={`/event/${id}`} className="max-w-56 truncate">
+                    {eventName || "Event"}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 

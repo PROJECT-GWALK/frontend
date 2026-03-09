@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
@@ -299,6 +298,36 @@ export default function ProjectDetailPage({ params }: Props) {
 
   const [shareOpen, setShareOpen] = useState(false);
   const [shareQrSrc, setShareQrSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const updateNavbarVisibility = () => {
+      if (window.scrollY > 0) {
+        document.body.classList.add("hide-mobile-navbar");
+      } else {
+        document.body.classList.remove("hide-mobile-navbar");
+      }
+    };
+    updateNavbarVisibility();
+    window.addEventListener("scroll", updateNavbarVisibility, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateNavbarVisibility);
+      document.body.classList.remove("hide-mobile-navbar");
+    };
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (typeof window !== "undefined") {
+      if (window.history.length > 1) {
+        router.back();
+        return;
+      }
+      const savedTab = sessionStorage.getItem(`eventTab:${id}`) || "project";
+      router.push(`/event/${id}?tab=${savedTab}`);
+      return;
+    }
+    router.push(`/event/${id}`);
+  }, [id, router]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -620,12 +649,10 @@ export default function ProjectDetailPage({ params }: Props) {
         <p className="text-muted-foreground mb-8 max-w-md">
           {t("projectDetail.messages.projectNotFoundDetail") || t("projectDetail.messages.ProjectNotFoundDesc")}
         </p>
-        <Link href={`/event/${id}`}>
-          <Button variant="default" size="lg">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("projectDetail.buttons.backToProjects")}
-          </Button>
-        </Link>
+        <Button variant="default" size="lg" onClick={handleBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("projectDetail.buttons.backToProjects")}
+        </Button>
       </div>
     );
   }
@@ -633,18 +660,17 @@ export default function ProjectDetailPage({ params }: Props) {
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-background">
       {/* Header */}
-      <div className="sticky top-16 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
+      <div className="sticky top-0 md:top-16 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b">
         <div className="w-full max-w-6xl mx-auto py-4 px-4 xl:px-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Link href={`/event/${id}`}>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              onClick={handleBack}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -710,12 +736,9 @@ export default function ProjectDetailPage({ params }: Props) {
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">
                 {project.title}
               </h1>
-              <Badge
-                variant="outline"
-                className="w-fit px-3 py-1 text-sm font-normal border-border text-muted-foreground"
-              >
+              <div className="w-fit max-w-full rounded-full border border-border px-3 py-1 text-sm font-normal text-muted-foreground whitespace-normal wrap-break-word">
                 {eventData?.eventName || t("projectDetail.defaultEventName")}
-              </Badge>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2 shrink-0 w-full md:w-auto justify-start md:justify-end">

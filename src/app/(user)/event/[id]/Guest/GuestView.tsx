@@ -3,6 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTeams, giveVr, resetVr } from "@/utils/apievent";
 import { useCallback, useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import {
@@ -44,13 +45,32 @@ export function GuestView({ id, event }: Props) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
+  const searchParams = useSearchParams();
+  const resolveTab = (value: string | null) => {
+    const allowed = ["dashboard", "information", "project", "result"] as const;
+    return allowed.includes(value as (typeof allowed)[number])
+      ? (value as (typeof allowed)[number])
+      : null;
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>(["all"]);
-  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">(
+    () => {
+      if (typeof window === "undefined") return "dashboard";
+      const fromQuery = resolveTab(searchParams.get("tab"));
+      const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
+      return fromQuery || fromStorage || "dashboard";
+    },
+  );
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
 
   const { t } = useLanguage();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`eventTab:${id}`, tab);
+    }
+  }, [id, tab]);
   const [projects, setProjects] = useState<PresenterProject[]>([]);
 
   // Guest-specific UI state for project interactions

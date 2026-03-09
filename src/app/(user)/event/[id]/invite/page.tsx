@@ -8,7 +8,7 @@ import type { EventData } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CalendarIcon, MapPinIcon, Users, ArrowLeft } from "lucide-react";
+import { CalendarIcon, MapPinIcon, Users, ArrowLeft, Clock3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime, linkify } from "@/utils/function";
@@ -32,8 +32,75 @@ export default function InviteConfirmPage() {
   const [joining, setJoining] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerOpen, setBannerOpen] = useState(false);
+  const [now, setNow] = useState<Date>(new Date());
   const {t} = useLanguage();
+  const formatText = (key: string, values: Record<string, string>) => {
+    let text = t(key);
+    for (const [name, value] of Object.entries(values)) {
+      text = text.replaceAll(`{${name}}`, value);
+    }
+    return text;
+  };
   const isAlreadyMember = Boolean(event?.myRole);
+  const inviteNeedsJoinWindow =
+    inviteRole === "presenter" || inviteRole === "guest" || inviteRole === "committee";
+  const presenterJoinStart = event?.startJoinDate
+    ? new Date(event.startJoinDate)
+    : null;
+  const presenterJoinEnd = event?.endJoinDate
+    ? new Date(event.endJoinDate)
+    : null;
+  const guestBaseStart = event?.startView ? new Date(event.startView) : null;
+  const guestJoinStart = guestBaseStart
+    ? new Date(guestBaseStart.getTime() - 60 * 60 * 1000)
+    : null;
+  const guestJoinEnd = event?.endView ? new Date(event.endView) : null;
+  const committeeJoinEnd = event?.endView
+    ? new Date(event.endView)
+    : event?.endJoinDate
+      ? new Date(event.endJoinDate)
+      : null;
+  const joinStart =
+    inviteRole === "presenter"
+      ? presenterJoinStart
+      : inviteRole === "guest"
+        ? guestJoinStart
+        : inviteRole === "committee"
+          ? null
+        : null;
+  const joinEnd =
+    inviteRole === "presenter"
+      ? presenterJoinEnd
+      : inviteRole === "guest"
+        ? guestJoinEnd
+        : inviteRole === "committee"
+          ? committeeJoinEnd
+        : null;
+  const isBeforeJoinStart = Boolean(
+    inviteNeedsJoinWindow && joinStart && now < joinStart,
+  );
+  const isAfterJoinEnd = Boolean(
+    inviteNeedsJoinWindow && joinEnd && now > joinEnd,
+  );
+  const canJoinNow = !isBeforeJoinStart && !isAfterJoinEnd;
+  const countdownMs =
+    isBeforeJoinStart && joinStart ? Math.max(0, joinStart.getTime() - now.getTime()) : 0;
+  const countdown = (() => {
+    const totalSeconds = Math.floor(countdownMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return { days, hours, minutes, seconds };
+  })();
+
+  useEffect(() => {
+    if (!isBeforeJoinStart) return;
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isBeforeJoinStart]);
 
   useEffect(() => {
     if (!id) return;
@@ -110,6 +177,18 @@ export default function InviteConfirmPage() {
   const doJoin = async () => {
     if (!id) return;
     if (status !== "authenticated") return;
+    if (!canJoinNow) {
+      if (isBeforeJoinStart && joinStart) {
+        toast.message(
+          formatText("inviteSection.join_not_started_toast", {
+            date: formatDateTime(joinStart, timeFormat),
+          }),
+        );
+      } else if (isAfterJoinEnd) {
+        toast.message(t("inviteSection.join_closed_toast"));
+      }
+      return;
+    }
     setJoining(true);
     try {
       if (tokenParam) {
@@ -150,10 +229,10 @@ export default function InviteConfirmPage() {
               <div className="space-y-4 flex-1">
                 <div className="space-y-2">
                   <Badge variant="secondary" className="mb-2">
-                    Invitation
+                    {t("inviteSection.badge_invitation")}
                   </Badge>
                   <CardTitle className="text-3xl md:text-4xl font-bold">
-                    {event?.eventName || "Loading..."}
+                    {event?.eventName || t("inviteSection.loading_event")}
                   </CardTitle>
                 </div>
                 
@@ -237,18 +316,74 @@ export default function InviteConfirmPage() {
 
             <div className="bg-muted/30 rounded-xl p-6 md:p-8 border border-border/50">
               <div className="flex flex-col items-center text-center space-y-4">
-                <div className="p-3 bg-primary/10 rounded-full">
-                  <Users className="w-8 h-8 text-primary" />
+                <div
+                  className={`p-3 rounded-full ${
+                    isBeforeJoinStart
+                      ? "bg-amber-100 dark:bg-amber-900/30"
+                      : isAfterJoinEnd
+                        ? "bg-red-100 dark:bg-red-900/30"
+                        : "bg-primary/10"
+                  }`}
+                >
+                  <Users
+                    className={`w-8 h-8 ${
+                      isBeforeJoinStart
+                        ? "text-amber-600 dark:text-amber-400"
+                        : isAfterJoinEnd
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-primary"
+                    }`}
+                  />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-semibold">{t("inviteSection.confirm_title")}</h3>
+                  <h3
+                    className={`text-lg font-semibold ${
+                      isBeforeJoinStart
+                        ? "text-amber-700 dark:text-amber-300"
+                        : isAfterJoinEnd
+                          ? "text-red-700 dark:text-red-300"
+                          : ""
+                    }`}
+                  >
+                    {isBeforeJoinStart
+                      ? t("inviteSection.join_not_started_title")
+                      : isAfterJoinEnd
+                        ? t("inviteSection.join_closed_title")
+                        : t("inviteSection.confirm_title")}
+                  </h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
-                    {inviteRole 
-                      ? `${t("inviteSection.confirm_description")} ${inviteRole} ${t("inviteSection.confirm_description2")}`
-                      : `${t("inviteSection.confirm_description2")}`
-                    }
+                    {isBeforeJoinStart && joinStart
+                      ? formatText("inviteSection.join_not_started_desc", {
+                          role: inviteRole || "-",
+                          date: formatDateTime(joinStart, timeFormat),
+                          note:
+                            inviteRole === "guest"
+                              ? t("inviteSection.note_guest_early")
+                              : inviteRole === "presenter"
+                                ? t("inviteSection.note_presenter_window")
+                                : "",
+                        })
+                      : isAfterJoinEnd
+                        ? t("inviteSection.join_closed_desc")
+                        : inviteRole
+                          ? `${t("inviteSection.confirm_description")} ${inviteRole} ${t("inviteSection.confirm_description2")}${inviteRole === "committee" && joinEnd ? ` (${formatText("inviteSection.note_committee_until", { date: formatDateTime(joinEnd, timeFormat) })})` : ""}`
+                          : `${t("inviteSection.confirm_description2")}`}
                   </p>
                 </div>
+                {isBeforeJoinStart && (
+                  <div className="w-full max-w-md rounded-xl border bg-background/70 p-4">
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+                      <Clock3 className="w-4 h-4" />
+                      <span>{t("inviteSection.countdown_label")}</span>
+                    </div>
+                    <div className="text-center text-lg md:text-xl font-semibold">
+                      {countdown.days > 0 ? `${countdown.days} วัน ` : ""}
+                      {String(countdown.hours).padStart(2, "0")}:
+                      {String(countdown.minutes).padStart(2, "0")}:
+                      {String(countdown.seconds).padStart(2, "0")}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto pt-2">
                   <Button 
@@ -259,7 +394,7 @@ export default function InviteConfirmPage() {
                     <ArrowLeft className="w-4 h-4" />
                     {t("inviteSection.button_cancel")}
                   </Button>
-                  {!isAlreadyMember && (
+                  {!isAlreadyMember && canJoinNow && (
                     <Button 
                       onClick={doJoin} 
                       disabled={joining}

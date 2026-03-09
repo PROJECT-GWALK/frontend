@@ -3,6 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building, Trophy, Star, Gift, AlertCircle } from "lucide-react";
@@ -29,8 +30,22 @@ export function PresenterView({ id, event }: Props) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
+  const searchParams = useSearchParams();
+  const resolveTab = (value: string | null) => {
+    const allowed = ["dashboard", "information", "project", "result"] as const;
+    return allowed.includes(value as (typeof allowed)[number])
+      ? (value as (typeof allowed)[number])
+      : null;
+  };
   const [searchQuery, setSearchQuery] = useState("");
-  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "information" | "project" | "result">(
+    () => {
+      if (typeof window === "undefined") return "dashboard";
+      const fromQuery = resolveTab(searchParams.get("tab"));
+      const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
+      return fromQuery || fromStorage || "dashboard";
+    },
+  );
   const localEvent = event;
   const [bannerOpen, setBannerOpen] = useState(false);
 
@@ -63,6 +78,11 @@ export function PresenterView({ id, event }: Props) {
   const [projects, setProjects] = useState<PresenterProject[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const { t } = useLanguage();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`eventTab:${id}`, tab);
+    }
+  }, [id, tab]);
 
   const now = new Date();
   const eventStarted = !localEvent.startView || now >= new Date(localEvent.startView);

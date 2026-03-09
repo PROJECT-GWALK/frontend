@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getTeams, deleteTeam } from "@/utils/apievent";
@@ -27,9 +28,28 @@ type Props = {
 };
 
 export function OrganizerView({ id, event }: Props) {
+  const searchParams = useSearchParams();
+  const resolveTab = (value: string | null) => {
+    const allowed = [
+      "dashboard",
+      "information",
+      "Participants",
+      "project",
+      "result",
+      "grading",
+    ] as const;
+    return allowed.includes(value as (typeof allowed)[number])
+      ? (value as (typeof allowed)[number])
+      : null;
+  };
   const [tab, setTab] = useState<
     "dashboard" | "information" | "Participants" | "project" | "result" | "grading"
-  >("dashboard");
+  >(() => {
+    if (typeof window === "undefined") return "dashboard";
+    const fromQuery = resolveTab(searchParams.get("tab"));
+    const fromStorage = resolveTab(sessionStorage.getItem(`eventTab:${id}`));
+    return fromQuery || fromStorage || "dashboard";
+  });
   const [localEvent, setLocalEvent] = useState<EventData>(event);
   const [bannerOpen, setBannerOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<EventEditSection | null>(null);
@@ -51,6 +71,11 @@ export function OrganizerView({ id, event }: Props) {
   const [gradingRefreshTrigger, setGradingRefreshTrigger] = useState(0);
 
   const { t } = useLanguage();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`eventTab:${id}`, tab);
+    }
+  }, [id, tab]);
 
   const handleDeleteTeam = async (projectId: string) => {
     try {
