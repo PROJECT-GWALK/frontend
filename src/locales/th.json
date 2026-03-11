@@ -547,8 +547,8 @@
       "noMembers": "ยังไม่มีสมาชิก",
       "eventEnded": "งานจบแล้วหรือไม่อยู่ในช่วงเวลาที่กำหนด ไม่สามารถดำเนินการได้",
       "submissionEnded": "หมดช่วงส่งผลงานแล้ว คุณไม่สามารถสร้างหรือแก้ไขโครงงานได้",
-      "committeeGradingDeadline": "กรรมการให้คะแนนได้จนถึง 2 วันหลังงานจบ:",
-      "committeeGradingClosed": "หมดเวลาการให้คะแนนของกรรมการแล้ว (เกิน 2 วันหลังงานจบ)"
+      "committeeGradingDeadline": "กรรมการให้คะแนนได้จนถึง {days} วันหลังงานจบ:",
+      "committeeGradingClosed": "หมดเวลาการให้คะแนนของกรรมการแล้ว (เกิน {days} วันหลังงานจบ)"
     },
     "files": {
       "defaultFileName": "ไฟล์",
@@ -929,7 +929,16 @@
     "presenter": "ผู้นำเสนอ",
     "totalScore": "คะแนนรวม",
     "max": "เต็ม",
-    "committeeDetail": "กรรมการ"
+    "committeeDetail": "กรรมการ",
+    "gradingDaysLabel": "จำนวนวันหลังจบกิจกรรมที่ยังให้คะแนนได้",
+    "gradingDaysHint": "0 = ให้คะแนนได้เฉพาะช่วงกิจกรรม",
+    "dayUnit": "วัน",
+    "save": "บันทึก",
+    "saving": "กำลังบันทึก...",
+    "daysUpdated": "อัปเดตช่วงเวลาให้คะแนนเรียบร้อยแล้ว",
+    "daysUpdateFailed": "ไม่สามารถอัปเดตช่วงเวลาให้คะแนนได้",
+    "failedToLoadDays": "ไม่สามารถโหลดค่าช่วงเวลาให้คะแนนได้",
+    "invalidDays": "กรุณากรอกจำนวนวันที่ถูกต้อง"
   },
   "toolTip": {
     "eventInfo": "แก้ไขรายละเอียดอีเวนต์ และรูปภาพแบนเนอร์",
@@ -1051,5 +1060,55 @@
   "banReasonPrompt": "กรุณาระบุเหตุผลในการแบนผู้ใช้นี้",
   "unbanUserConfirm": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแบนผู้ใช้นี้?",
   "unbanUser": "ยกเลิกการแบนผู้ใช้"
+  },
+  "export": {
+    "button": "ส่งออกข้อมูล",
+    "loading": "กำลังส่งออกข้อมูล...",
+    "success": "ส่งออกข้อมูลสำเร็จ",
+    "failed": "ส่งออกข้อมูลล้มเหลว",
+    "sheets": {
+      "infoSummary": "สรุปข้อมูล",
+      "participantsList": "รายชื่อผู้เข้าร่วม",
+      "rewardsSummary": "สรุปรางวัล",
+      "comments": "ความคิดเห็น",
+      "gradingSummary": "สรุปคะแนน",
+      "detailedGrading": "คะแนนละเอียด"
+    },
+    "info": {
+      "title": "สรุปข้อมูลอีเวนต์",
+      "eventName": "ชื่ออีเวนต์",
+      "participantsOverview": "ภาพรวมผู้เข้าร่วม",
+      "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+      "presenters": "ผู้นำเสนอ",
+      "guests": "ผู้เข้าร่วม",
+      "committee": "กรรมการ",
+      "totalTeams": "ทีมทั้งหมด",
+      "engagementRewards": "การมีส่วนร่วมและรางวัล",
+      "totalVrBudget": "งบประมาณรางวัลเสมือนทั้งหมด",
+      "totalVrDistributed": "แจกจ่ายรางวัลเสมือนไปแล้ว",
+      "remainingBudget": "งบประมาณคงเหลือ",
+      "totalComments": "ความคิดเห็นทั้งหมด",
+      "specialAwardsVoted": "โหวตรางวัลพิเศษแล้ว"
+    },
+    "headers": {
+      "no": "ลำดับ",
+      "name": "ชื่อ",
+      "role": "บทบาท",
+      "project": "โครงงาน",
+      "projectName": "ชื่อโครงงาน",
+      "projectTitle": "ชื่อโครงงาน",
+      "totalVr": "VR รวม",
+      "committeeVr": "VR กรรมการ",
+      "guestVr": "VR ผู้เข้าร่วม",
+      "specialRewards": "รางวัลพิเศษ",
+      "commenter": "ผู้แสดงความคิดเห็น",
+      "comment": "ความคิดเห็น",
+      "date": "วันที่",
+      "totalScore": "คะแนนรวม",
+      "committeeName": "ชื่อกรรมการ",
+      "total": "รวม",
+      "totalAll": "รวมทั้งหมด",
+      "totalAvg": "ค่าเฉลี่ยรวม"
+    }
   }
 }

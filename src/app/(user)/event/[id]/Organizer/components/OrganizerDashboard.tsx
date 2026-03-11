@@ -3,6 +3,7 @@ import { Users, Coins, Trophy, Gift } from "lucide-react";
 import { EventData } from "@/utils/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
+import ExportDataButton from "./ExportDataButton";
 
 type Props = {
   event: EventData | null;
@@ -28,6 +29,10 @@ export default function OrganizerDashboard({ event }: Props) {
 
   return (
     <div className="space-y-6 mt-6">
+      <div className="flex justify-end">
+        <ExportDataButton event={event} />
+      </div>
+
       {/* SECTION 1: PEOPLE & PARTICIPATION */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Participants - Highlighted Card */}

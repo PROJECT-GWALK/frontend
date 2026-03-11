@@ -418,6 +418,13 @@ export const deleteTeamFile = async (eventId: string, teamId: string, fileTypeId
 };
 
 // ====================== TEAMS ======================
+export const getEventExportData = async (eventId: string) => {
+  const res = await axios.get(`/backend/api/events/${eventId}/export-data`, {
+    withCredentials: true,
+  });
+  return res.data;
+};
+
 export const createTeam = async (eventId: string, teamName: string, description?: string, videoLink?: string, imageCover?: string | File) => {
   let body: FormData | Record<string, unknown>;
   const headers: Record<string, string> = {};
