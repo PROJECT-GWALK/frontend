@@ -13,6 +13,79 @@ type Props = {
   event: EventData | null;
 };
 
+type ExportUserRole = "ORGANIZER" | "COMMITTEE" | "PRESENTER" | "GUEST";
+
+type ExportUser = {
+  name?: string;
+  role?: ExportUserRole | string;
+};
+
+type ExportTeamParticipant = {
+  userId: string;
+};
+
+type ExportTeam = {
+  id: string;
+  teamName: string;
+  createdAt: string;
+  participants?: ExportTeamParticipant[];
+};
+
+type ExportComment = {
+  teamId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user?: { name?: string };
+};
+
+type ExportTeamReward = {
+  giverId: string;
+  teamId: string;
+  reward: number;
+};
+
+type ExportTeamRewardCategory = {
+  giverId: string;
+  teamId: string;
+  amount: number;
+};
+
+type ExportSpecialRewardVote = {
+  rewardId: string;
+  teamId: string;
+};
+
+type ExportSpecialReward = {
+  id: string;
+  name: string;
+};
+
+type ExportEvaluationCriteria = {
+  name: string;
+  maxScore?: number;
+  weightPercentage?: number;
+};
+
+type ExportEvaluationResult = {
+  teamId: string;
+  committeeId: string;
+  score: number;
+  criteria?: { name?: string };
+};
+
+type ExportData = {
+  teams: ExportTeam[];
+  userMap: Record<string, ExportUser>;
+  comments: ExportComment[];
+  teamRewards: ExportTeamReward[];
+  teamRewardCategories: ExportTeamRewardCategory[];
+  specialRewardVotes: ExportSpecialRewardVote[];
+  specialRewards: ExportSpecialReward[];
+  evaluationResults: ExportEvaluationResult[];
+  evaluationCriteria: ExportEvaluationCriteria[];
+};
+
 export default function ExportDataButton({ event }: Props) {
   const { t } = useLanguage();
 
@@ -20,7 +93,7 @@ export default function ExportDataButton({ event }: Props) {
     if (!event?.id) return;
     const toastId = toast.loading(t("export.loading") || "Exporting data...");
     try {
-      const data = await getEventExportData(event.id);
+      const data = (await getEventExportData(event.id)) as ExportData;
       
       const workbook = new ExcelJS.Workbook();
       workbook.creator = "GWALK System";
@@ -173,24 +246,33 @@ export default function ExportDataButton({ event }: Props) {
       });
 
       // Gather and Group Participants
-      const usersByRole: Record<string, any[]> = { "ORGANIZER": [], "COMMITTEE": [], "PRESENTER": [], "GUEST": [] };
-      Object.entries(data.userMap).forEach(([userId, user]: [string, any]) => {
+      const usersByRole: Record<ExportUserRole, { name: string; role: ExportUserRole; team: string }[]> = {
+        ORGANIZER: [],
+        COMMITTEE: [],
+        PRESENTER: [],
+        GUEST: [],
+      };
+      Object.entries(data.userMap).forEach(([userId, user]) => {
         const role = user.role || "GUEST";
-        if (usersByRole[role]) {
+        if (role in usersByRole) {
           // Find team if presenter
           let teamName = "-";
           if (role === "PRESENTER") {
             // Find which team this user belongs to
-            const team = data.teams.find((t: any) => 
-              t.participants?.some((p: any) => p.userId === userId)
+            const team = data.teams.find((t) =>
+              t.participants?.some((p) => p.userId === userId),
             );
             if (team) teamName = team.teamName;
           }
-          usersByRole[role].push({ name: user.name, role, team: teamName });
+          usersByRole[role as ExportUserRole].push({
+            name: user.name || "-",
+            role: role as ExportUserRole,
+            team: teamName,
+          });
         }
       });
 
-      const rolesToDisplay = [
+      const rolesToDisplay: { key: ExportUserRole; label: string; style: Partial<ExcelJS.Style> }[] = [
         { key: "ORGANIZER", label: "ORGANIZER", style: organizerHeaderStyle },
         { key: "COMMITTEE", label: "COMMITTEE", style: committeeHeaderStyle },
         { key: "PRESENTER", label: "PRESENTER", style: presenterHeaderStyle },
@@ -245,7 +327,7 @@ export default function ExportDataButton({ event }: Props) {
 
       // Prepare Data
       const teamVrStats: Record<string, { name: string; total: number; committee: number; guest: number; specialRewards: Set<string> }> = {};
-      data.teams.forEach((team: any) => {
+      data.teams.forEach((team) => {
         teamVrStats[team.id] = { name: team.teamName, total: 0, committee: 0, guest: 0, specialRewards: new Set() };
       });
 
@@ -257,16 +339,16 @@ export default function ExportDataButton({ event }: Props) {
         if (role === "GUEST") teamVrStats[teamId].guest += amount;
       };
 
-      data.teamRewards.forEach((r: any) => processReward(r.giverId, r.teamId, r.reward));
-      data.teamRewardCategories.forEach((r: any) => processReward(r.giverId, r.teamId, r.amount));
+      data.teamRewards.forEach((r) => processReward(r.giverId, r.teamId, r.reward));
+      data.teamRewardCategories.forEach((r) => processReward(r.giverId, r.teamId, r.amount));
 
       const rewardVotes: Record<string, Record<string, number>> = {};
-      data.specialRewardVotes.forEach((v: any) => {
+      data.specialRewardVotes.forEach((v) => {
         if (!rewardVotes[v.rewardId]) rewardVotes[v.rewardId] = {};
         rewardVotes[v.rewardId][v.teamId] = (rewardVotes[v.rewardId][v.teamId] || 0) + 1;
       });
 
-      data.specialRewards.forEach((r: any) => {
+      data.specialRewards.forEach((r) => {
         const votes = rewardVotes[r.id];
         if (!votes) return;
         const maxVotes = Math.max(...Object.values(votes));
@@ -309,10 +391,10 @@ export default function ExportDataButton({ event }: Props) {
       });
 
       // Group comments by Project
-      const commentsByProject: Record<string, { projectName: string; comments: any[] }> = {};
+      const commentsByProject: Record<string, { projectName: string; comments: ExportComment[] }> = {};
       
-      data.comments.forEach((c: any) => {
-        const team = data.teams.find((t: any) => t.id === c.teamId);
+      data.comments.forEach((c) => {
+        const team = data.teams.find((t) => t.id === c.teamId);
         const teamId = team?.id || "Unknown";
         if (!commentsByProject[teamId]) {
           commentsByProject[teamId] = {
@@ -326,26 +408,29 @@ export default function ExportDataButton({ event }: Props) {
       // Sort projects by createdAt (using data.teams order which is already sorted)
       // Filter only teams that have comments
       const sortedTeamsWithComments = data.teams
-        .filter((t: any) => commentsByProject[t.id])
-        .map((t: any) => ({
+        .filter((t) => commentsByProject[t.id])
+        .map((t) => ({
           ...commentsByProject[t.id],
           teamId: t.id
         }));
 
       // Also include any comments for unknown teams (if any)
       if (commentsByProject["Unknown"]) {
-        sortedTeamsWithComments.push(commentsByProject["Unknown"]);
+        sortedTeamsWithComments.push({
+          ...commentsByProject["Unknown"],
+          teamId: "Unknown",
+        });
       }
 
       let commentRowIndex = 2;
-      sortedTeamsWithComments.forEach((project: any, index: number) => {
+      sortedTeamsWithComments.forEach((project, index) => {
         const commentCount = project.comments.length;
         if (commentCount === 0) return;
 
         const startRow = commentRowIndex;
         const endRow = commentRowIndex + commentCount - 1;
 
-        project.comments.forEach((c: any) => {
+        project.comments.forEach((c) => {
           const role = data.userMap[c.userId]?.role || "Unknown";
           const roleLabel = t(`roles.${role.toLowerCase()}`) || role;
           
@@ -394,11 +479,11 @@ export default function ExportDataButton({ event }: Props) {
       const allCommittees = new Set<string>();
       const gradingSummary: Record<string, { name: string; totalScore: number; committees: Record<string, number> }> = {};
 
-      data.teams.forEach((t: any) => {
+      data.teams.forEach((t) => {
         gradingSummary[t.id] = { name: t.teamName, totalScore: 0, committees: {} };
       });
 
-      data.evaluationResults.forEach((res: any) => {
+      data.evaluationResults.forEach((res) => {
         if (!gradingSummary[res.teamId]) return;
         gradingSummary[res.teamId].totalScore += res.score;
         const committeeName = data.userMap[res.committeeId]?.name || "Unknown";
@@ -423,7 +508,7 @@ export default function ExportDataButton({ event }: Props) {
       });
 
       Object.values(gradingSummary).forEach((s, index) => {
-        const row: any = {
+        const row: Record<string, string | number> = {
           no: index + 1,
           projectName: s.name,
           totalScore: s.totalScore,
@@ -438,11 +523,14 @@ export default function ExportDataButton({ event }: Props) {
       // ================= SHEET 4: Detailed Grading (Poster) =================
       const sheet4 = workbook.addWorksheet(t("export.sheets.detailedGrading") || "Detailed Grading");
       
-      const criteriaMaxScores = data.evaluationCriteria.reduce((sum: number, c: any) => sum + (c.maxScore || 0), 0);
+      const criteriaMaxScores = data.evaluationCriteria.reduce(
+        (sum, c) => sum + (c.maxScore || 0),
+        0,
+      );
       const totalAllMax = criteriaMaxScores * (event?.committeeCount || 0);
       
       // Define Columns (Just for width setting, headers will be custom)
-      const criteriaKeys = data.evaluationCriteria.map((c: any) => c.name);
+      const criteriaKeys = data.evaluationCriteria.map((c) => c.name);
       
       sheet4.columns = [
         { key: "no", width: 8 },
@@ -459,7 +547,7 @@ export default function ExportDataButton({ event }: Props) {
         t("export.headers.no") || "No.", 
         t("export.headers.projectTitle") || "Project Title", 
         t("export.headers.committeeName") || "Committee Name", 
-        ...data.evaluationCriteria.map((c: any) => `${c.name}(${c.maxScore})`),
+        ...data.evaluationCriteria.map((c) => `${c.name}(${c.maxScore})`),
         `${t("export.headers.total") || "Total"}(${criteriaMaxScores})`,
         `${t("export.headers.totalAll") || "Total All"}(${totalAllMax})`,
         `${t("export.headers.totalAvg") || "Total Avg"}(${criteriaMaxScores})`
@@ -471,7 +559,7 @@ export default function ExportDataButton({ event }: Props) {
         "", // No (Merged)
         "", // Title (Merged)
         "", // Committee (Merged)
-        ...data.evaluationCriteria.map((c: any) => `${c.weightPercentage}%`),
+        ...data.evaluationCriteria.map((c) => `${c.weightPercentage}%`),
         "", // Total (Merged)
         "", // Total All (Merged)
         ""  // Total Avg (Merged)
@@ -514,7 +602,7 @@ export default function ExportDataButton({ event }: Props) {
       }> = {};
 
       // Initialize with all teams to ensure order and completeness
-      data.teams.forEach((team: any) => {
+      data.teams.forEach((team) => {
         projectGradingData[team.id] = { 
           projectName: team.teamName, 
           createdAt: team.createdAt,
@@ -522,7 +610,7 @@ export default function ExportDataButton({ event }: Props) {
         };
       });
 
-      data.evaluationResults.forEach((res: any) => {
+      data.evaluationResults.forEach((res) => {
         if (!projectGradingData[res.teamId]) return; // Should not happen if initialized from teams
         
         const committeeName = data.userMap[res.committeeId]?.name || "Unknown";
@@ -538,12 +626,12 @@ export default function ExportDataButton({ event }: Props) {
       });
 
       // Convert to array using the original teams order (which is sorted by createdAt from backend)
-      const sortedProjectData = data.teams.map((team: any) => projectGradingData[team.id]);
+      const sortedProjectData = data.teams.map((team) => projectGradingData[team.id]);
 
       let currentRow = 3; // Start after 2 header rows
       const criteriaStartIndex = 4; // A=1, B=2, C=3, Criteria Starts at D=4
 
-      sortedProjectData.forEach((project: { projectName: string; createdAt: string; rows: { committeeName: string; scores: Record<string, number>; total: number }[] }, index: number) => {
+      sortedProjectData.forEach((project, index) => {
         const committeeCount = project.rows.length;
         if (committeeCount === 0) return;
 
@@ -556,8 +644,8 @@ export default function ExportDataButton({ event }: Props) {
         // Total All Cell: Column (totalAllColIndex), Row (startRow merged to endRow)
         // Avg Cell: Column (totalAvgColIndex), Row (startRow merged to endRow)
 
-        project.rows.forEach((row: { committeeName: string; scores: Record<string, number>; total: number }) => {
-          const excelRow: any = {
+        project.rows.forEach((row) => {
+          const excelRow: Record<string, string | number> = {
             no: index + 1,
             projectTitle: project.projectName,
             committeeName: row.committeeName,
@@ -573,8 +661,6 @@ export default function ExportDataButton({ event }: Props) {
           // Add Formula for Row Total
           const startColLetter = sheet4.getColumn(criteriaStartIndex).letter;
           const endColLetter = sheet4.getColumn(criteriaStartIndex + criteriaCount - 1).letter;
-          const totalColLetter = sheet4.getColumn(totalColIndex).letter;
-          
           const rowNum = newRow.number;
           newRow.getCell(totalColIndex).value = { 
             formula: `SUM(${startColLetter}${rowNum}:${endColLetter}${rowNum})`,

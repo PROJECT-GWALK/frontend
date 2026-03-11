@@ -548,8 +548,8 @@
       "noMembers": "No members yet.",
       "eventEnded": "Event has ended or not in active period. Actions are restricted.",
       "submissionEnded": "Submission period has ended. You cannot create or edit projects.",
-      "committeeGradingDeadline": "Committee grading is available until 2 days after event end:",
-      "committeeGradingClosed": "Committee grading is closed (more than 2 days after event end)."
+      "committeeGradingDeadline": "Committee grading is available until {days} days after event end:",
+      "committeeGradingClosed": "Committee grading is closed (more than {days} days after event end)."
     },
     "files": {
       "defaultFileName": "File",
@@ -930,7 +930,16 @@
     "presenter": "Presenter",
     "totalScore": "Total Score",
     "max": "Max",
-    "committeeDetail": "Committee"
+    "committeeDetail": "Committee",
+    "gradingDaysLabel": "Days after event end for grading",
+    "gradingDaysHint": "0 = grading only during the event",
+    "dayUnit": "days",
+    "save": "Save",
+    "saving": "Saving...",
+    "daysUpdated": "Grading window updated",
+    "daysUpdateFailed": "Failed to update grading window",
+    "failedToLoadDays": "Failed to load grading window",
+    "invalidDays": "Please enter a valid number of days"
   },
   "toolTip": {
     "eventInfo": "Edit event description and event banner",

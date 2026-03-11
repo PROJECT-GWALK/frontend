@@ -167,8 +167,11 @@ export default function ProjectDetailPage({ params }: Props) {
       new Date() <= new Date(eventData.endView || "")
     : false;
 
+  const gradingDaysAfterEnd = eventData?.gradingDaysAfterEnd ?? 2;
   const committeeGradingDeadline = eventData?.endView
-    ? new Date(new Date(eventData.endView).getTime() + 48 * 60 * 60 * 1000)
+    ? new Date(
+        new Date(eventData.endView).getTime() + gradingDaysAfterEnd * 24 * 60 * 60 * 1000,
+      )
     : null;
   const isCommitteeGradingWindowActive =
     eventData?.myRole === "COMMITTEE"
@@ -1418,7 +1421,7 @@ export default function ProjectDetailPage({ params }: Props) {
                       <CardContent className="p-4 flex items-center gap-3">
                         <AlertCircle className="h-5 w-5 text-primary" />
                         <p className="text-sm font-medium text-primary">
-                          {`${t("projectDetail.messages.committeeGradingDeadline")} ${formatDateTime(committeeGradingDeadline, timeFormat)}`}
+                          {`${t("projectDetail.messages.committeeGradingDeadline").replace("{days}", String(gradingDaysAfterEnd))} ${formatDateTime(committeeGradingDeadline, timeFormat)}`}
                         </p>
                       </CardContent>
                     </Card>
@@ -1428,7 +1431,10 @@ export default function ProjectDetailPage({ params }: Props) {
                       <CardContent className="p-4 flex items-center gap-3">
                         <AlertCircle className="h-5 w-5 text-destructive" />
                         <p className="text-sm font-medium text-destructive">
-                          {t("projectDetail.messages.committeeGradingClosed")}
+                          {t("projectDetail.messages.committeeGradingClosed").replace(
+                            "{days}",
+                            String(gradingDaysAfterEnd),
+                          )}
                         </p>
                       </CardContent>
                     </Card>

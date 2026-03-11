@@ -157,6 +157,7 @@ export type DraftEvent = {
   vrTeamCapEnabled?: boolean;
   vrTeamCapGuest?: number;
   vrTeamCapCommittee?: number;
+  gradingDaysAfterEnd?: number;
   hasCommittee?: boolean;
   unitReward?: string;
   locationName?: string;
@@ -189,6 +190,7 @@ export type EventData = {
   status?: "DRAFT" | "PUBLISHED";
   publicView?: boolean;
   gradingEnabled?: boolean;
+  gradingDaysAfterEnd?: number;
   startView?: string;
   endView?: string;
   startJoinDate?: string;

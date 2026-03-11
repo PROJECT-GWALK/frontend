@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 const LandingPage = () => {
   const { status } = useSession();
   const router = useRouter();
