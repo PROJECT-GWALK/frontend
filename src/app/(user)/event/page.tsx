@@ -9,7 +9,7 @@ import { Search, Calendar, Users, Eye, Building } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getPublishedEvents, getInviteToken, joinEventWithToken } from "@/utils/apievent";
+import { getPublishedEvents, getInviteToken } from "@/utils/apievent";
 import { formatDateTime } from "@/utils/function";
 import type { MyEvent } from "@/utils/types";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -86,15 +86,7 @@ export default function EventsPage() {
         toast.error(t.eventsPage.toast.joinError);
         return;
       }
-      const resJoin = await joinEventWithToken(eventId, token.token);
-      if (resJoin?.message === "ok") {
-        toast.success(t.eventsPage.toast.joinSuccess);
-        setEvents((prev) =>
-          prev.map((e) => (e.id === eventId ? { ...e, role: role.toUpperCase() } : e)),
-        );
-      } else {
-        toast.error(resJoin?.message || t.eventsPage.toast.joinFail);
-      }
+      router.push(`/event/${eventId}/invite?token=${encodeURIComponent(token.token)}`);
     } catch (err) {
       let message = t.eventsPage.toast.joinFail;
       const ax = err as AxiosError<{ message?: string }>;
@@ -263,6 +255,15 @@ export default function EventsPage() {
             };
 
             const roleColor = getRoleColorVar(displayRole ?? undefined);
+            const subStart = event.startJoinDate ? new Date(event.startJoinDate) : null;
+            const subEnd = event.endJoinDate ? new Date(event.endJoinDate) : null;
+            const eventStart = event.startView ? new Date(event.startView) : null;
+            const eventEnd = event.endView ? new Date(event.endView) : null;
+            const now = new Date();
+            const canJoinGuest = eventStart
+              ? now >= new Date(eventStart.getTime() - 60 * 60 * 1000) &&
+                (!eventEnd || now <= eventEnd)
+              : status === "viewSoon" || status === "viewOpen";
 
             return (
               <Card
@@ -351,11 +352,6 @@ export default function EventsPage() {
 
                   <div className="space-y-2 pt-1">
                     {(() => {
-                      const subStart = event.startJoinDate ? new Date(event.startJoinDate) : null;
-                      const subEnd = event.endJoinDate ? new Date(event.endJoinDate) : null;
-                      const eventStart = event.startView ? new Date(event.startView) : null;
-                      const eventEnd = event.endView ? new Date(event.endView) : null;
-
                       return (
                         <>
                           {eventStart && eventEnd && (
@@ -419,7 +415,7 @@ export default function EventsPage() {
                           </div>
                         )}
 
-                        {(status === "viewSoon" || status === "viewOpen") && (
+                        {canJoinGuest && (
                           <div className="flex gap-2">
                             <Button
                               size="sm"
