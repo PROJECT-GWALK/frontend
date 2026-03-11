@@ -154,7 +154,8 @@
     "cropTitle": "Crop to square",
     "placeholderRewardName": "e.g. Best Presentation",
     "allowGuestVote": "Allow guest voting",
-    "placeholderRewardDesc": "Describe what this reward is for..."
+    "placeholderRewardDesc": "Describe what this reward is for...",
+    "guestVote": "Guest Vote Allowed"
   },
   "dialog": {
     "deleteConfirmTitle": "Confirm Deletion",

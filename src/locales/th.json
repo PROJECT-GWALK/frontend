@@ -154,7 +154,8 @@
     "cropTitle": "ครอบภาพสี่เหลี่ยมจัตุรัส",
     "placeholderRewardName": "เช่น รางวัลการนำเสนอยอดเยี่ยม",
     "allowGuestVote": "อนุญาตให้ผู้เยี่ยมชมโหวต",
-    "placeholderRewardDesc": "อธิบายรายละเอียดของรางวัลนี้..."
+    "placeholderRewardDesc": "อธิบายรายละเอียดของรางวัลนี้...",
+    "guestVote": "โหวตโดยผู้เข้าชมได้"
   },
   "dialog": {
     "deleteConfirmTitle": "ยืนยันการลบ",

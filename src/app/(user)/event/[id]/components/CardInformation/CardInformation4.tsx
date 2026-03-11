@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, Edit, Gift } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Award, Edit, Gift, Users, Vote } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import type { EventData } from "@/utils/types";
@@ -76,6 +77,15 @@ export default function CardInformation4({ event, editable, onEdit }: Props) {
                     <h4 className="font-bold text-base truncate pr-2 group-hover/reward:text-amber-700 dark:group-hover/reward:text-amber-400 transition-colors">
                       {reward.name}
                     </h4>
+                    {reward.allowGuestVote && (
+                      <Badge
+                        variant="secondary"
+                        className="mt-1 gap-1 text-[10px] px-1.5 h-5 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30 border-amber-200 dark:border-amber-500/30 w-fit"
+                      >
+                        <Users className="h-3 w-3" />
+                        {t("rewardsSection.guestVote") || "Guest Vote"}
+                      </Badge>
+                    )}
                     {reward.description && (
                       <p className="text-xs text-muted-foreground leading-relaxed break-all">
                         {reward.description}
