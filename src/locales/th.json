@@ -1051,5 +1051,55 @@
   "banReasonPrompt": "กรุณาระบุเหตุผลในการแบนผู้ใช้นี้",
   "unbanUserConfirm": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแบนผู้ใช้นี้?",
   "unbanUser": "ยกเลิกการแบนผู้ใช้"
+  },
+  "export": {
+    "button": "ส่งออกข้อมูล",
+    "loading": "กำลังส่งออกข้อมูล...",
+    "success": "ส่งออกข้อมูลสำเร็จ",
+    "failed": "ส่งออกข้อมูลล้มเหลว",
+    "sheets": {
+      "infoSummary": "สรุปข้อมูล",
+      "participantsList": "รายชื่อผู้เข้าร่วม",
+      "rewardsSummary": "สรุปรางวัล",
+      "comments": "ความคิดเห็น",
+      "gradingSummary": "สรุปคะแนน",
+      "detailedGrading": "คะแนนละเอียด"
+    },
+    "info": {
+      "title": "สรุปข้อมูลอีเวนต์",
+      "eventName": "ชื่ออีเวนต์",
+      "participantsOverview": "ภาพรวมผู้เข้าร่วม",
+      "totalParticipants": "ผู้เข้าร่วมทั้งหมด",
+      "presenters": "ผู้นำเสนอ",
+      "guests": "ผู้เข้าร่วม",
+      "committee": "กรรมการ",
+      "totalTeams": "ทีมทั้งหมด",
+      "engagementRewards": "การมีส่วนร่วมและรางวัล",
+      "totalVrBudget": "งบประมาณรางวัลเสมือนทั้งหมด",
+      "totalVrDistributed": "แจกจ่ายรางวัลเสมือนไปแล้ว",
+      "remainingBudget": "งบประมาณคงเหลือ",
+      "totalComments": "ความคิดเห็นทั้งหมด",
+      "specialAwardsVoted": "โหวตรางวัลพิเศษแล้ว"
+    },
+    "headers": {
+      "no": "ลำดับ",
+      "name": "ชื่อ",
+      "role": "บทบาท",
+      "project": "โครงงาน",
+      "projectName": "ชื่อโครงงาน",
+      "projectTitle": "ชื่อโครงงาน",
+      "totalVr": "VR รวม",
+      "committeeVr": "VR กรรมการ",
+      "guestVr": "VR ผู้เข้าร่วม",
+      "specialRewards": "รางวัลพิเศษ",
+      "commenter": "ผู้แสดงความคิดเห็น",
+      "comment": "ความคิดเห็น",
+      "date": "วันที่",
+      "totalScore": "คะแนนรวม",
+      "committeeName": "ชื่อกรรมการ",
+      "total": "รวม",
+      "totalAll": "รวมทั้งหมด",
+      "totalAvg": "ค่าเฉลี่ยรวม"
+    }
   }
 }

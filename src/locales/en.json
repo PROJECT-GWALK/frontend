@@ -1052,5 +1052,55 @@
   "banReasonPrompt": "Please provide a reason for banning this user.",
   "unbanUserConfirm": "Are you sure you want to unban this user?",
   "unbanUser": "Unban User"  
-}
+  },
+  "export": {
+    "button": "Export Data",
+    "loading": "Exporting data...",
+    "success": "Export successful",
+    "failed": "Export failed",
+    "sheets": {
+      "infoSummary": "Information Summary",
+      "participantsList": "Participants List",
+      "rewardsSummary": "Rewards Summary",
+      "comments": "Comments",
+      "gradingSummary": "Grading Summary",
+      "detailedGrading": "Detailed Grading"
+    },
+    "info": {
+      "title": "Event Information Summary",
+      "eventName": "Event Name",
+      "participantsOverview": "Participants Overview",
+      "totalParticipants": "Total Participants",
+      "presenters": "Presenters",
+      "guests": "Guests",
+      "committee": "Committee",
+      "totalTeams": "Total Teams",
+      "engagementRewards": "Engagement & Rewards",
+      "totalVrBudget": "Total Virtual Rewards Budget",
+      "totalVrDistributed": "Total Virtual Rewards Distributed",
+      "remainingBudget": "Remaining Budget",
+      "totalComments": "Total Comments",
+      "specialAwardsVoted": "Special Awards Voted"
+    },
+    "headers": {
+      "no": "No.",
+      "name": "Name",
+      "role": "Role",
+      "project": "Project",
+      "projectName": "Project Name",
+      "projectTitle": "Project Title",
+      "totalVr": "Total VR",
+      "committeeVr": "Committee VR",
+      "guestVr": "Guest VR",
+      "specialRewards": "Special Rewards",
+      "commenter": "Commenter",
+      "comment": "Comment",
+      "date": "Date",
+      "totalScore": "Total Score",
+      "committeeName": "Committee Name",
+      "total": "Total",
+      "totalAll": "Total All",
+      "totalAvg": "Total Avg"
+    }
+  }
 }
