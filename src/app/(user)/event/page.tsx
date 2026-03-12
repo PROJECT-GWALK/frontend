@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Calendar, Users, Eye, Building } from "lucide-react";
+import { Search, Calendar, Users, Eye, Building, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,10 +24,25 @@ export default function EventsPage() {
   const router = useRouter();
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef<IntersectionObserver | null>(null);
   const [filter, setFilter] = useState<
     "all" | "accepting" | "viewSoon" | "viewOpen"
   >("all");
+
+  const lastEventElementRef = useCallback((node: HTMLDivElement) => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage((prevPage) => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore]);
 
   const getEventStatus = (event: MyEvent): string => {
     const now = new Date();
@@ -63,16 +78,27 @@ export default function EventsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await getPublishedEvents();
-        setEvents(res.events || []);
+        if (page === 1) setLoading(true);
+        else setLoadingMore(true);
+        
+        const res = await getPublishedEvents(page);
+        
+        if (page === 1) {
+          setEvents(res.events || []);
+        } else {
+          setEvents((prev) => [...prev, ...(res.events || [])]);
+        }
+        
+        setHasMore(res.events?.length > 0 && page < (res.meta?.totalPages || 1));
       } catch {
         toast.error(t.eventsPage.toast.loadError);
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     };
     load();
-  }, [t]);
+  }, [page, t]);
 
   const handleJoin = async (eventId: string, role: "presenter" | "committee" | "guest") => {
     if (sessionStatus !== "authenticated") {
@@ -221,7 +247,7 @@ export default function EventsPage() {
             if (filter === "all") return true;
             return getEventStatus(e) === filter;
           })
-          .map((event) => {
+          .map((event, index, filteredEvents) => {
             const hasBanner = Boolean(event.imageCover);
             const status = getEventStatus(event);
             const statusConfig = {
@@ -266,8 +292,8 @@ export default function EventsPage() {
               : status === "viewSoon" || status === "viewOpen";
 
             return (
+              <div ref={index === filteredEvents.length - 1 ? lastEventElementRef : null} key={event.id}>
               <Card
-                key={event.id}
                 className="group relative flex flex-col overflow-hidden hover:shadow-xl transition-all duration-300 border border-border/60 p-0 gap-0"
                 style={
                   roleColor
@@ -432,9 +458,15 @@ export default function EventsPage() {
                   </div>
                 </div>
               </Card>
+              </div>
             );
           })}
       </div>
+      {loadingMore && (
+        <div className="flex justify-center p-4">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
     </div>
   );
 }

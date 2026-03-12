@@ -61,16 +61,24 @@ export default function UserManagementPage() {
   const { t } = useLanguage();
 
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const perPage = 10;
   // เพิ่ม state สำหรับตัวกรองบทบาท
   const [filterRole, setFilterRole] = useState<"ALL" | "ADMIN" | "USER">("ALL");
 
   const fetchUsers = useCallback(async () => {
     try {
+      setLoading(true);
       // ใช้ค่าจาก filterRole เพื่อเรียก API ที่ให้มา
       const roleParam = filterRole === "ALL" ? undefined : filterRole;
-      const res = await getAllUsers(roleParam);
+      const res = await getAllUsers({
+        role: roleParam,
+        page,
+        limit: perPage,
+        search: search || undefined,
+      });
       setUsers(res.users);
+      setTotalPages(res.meta?.totalPages || 1);
 
       const me = await getCurrentUser();
       setCurrentUser(me.user ?? null);
@@ -79,10 +87,13 @@ export default function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterRole]);
+  }, [filterRole, page, search]);
 
   useEffect(() => {
-    fetchUsers();
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 300); // Debounce search
+    return () => clearTimeout(timer);
   }, [fetchUsers]); // โหลดใหม่เมื่อเปลี่ยนตัวกรอง
 
   const handleRoleChange = async (id: string, role: "USER" | "ADMIN") => {
@@ -121,21 +132,6 @@ export default function UserManagementPage() {
       console.error("Failed to unban user:", err);
     }
   };
-
-  const filteredUsers = users.filter((u) => {
-    const keyword = search.toLowerCase();
-    return (
-      u.name?.toLowerCase().includes(keyword) ||
-      u.email?.toLowerCase().includes(keyword) ||
-      u.username?.toLowerCase().includes(keyword)
-    );
-  });
-
-  const totalPages = Math.ceil(filteredUsers.length / perPage);
-  const paginatedUsers = filteredUsers.slice(
-    (page - 1) * perPage,
-    page * perPage
-  );
 
   const handleAutoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     e.target.style.height = "auto";
@@ -178,7 +174,10 @@ export default function UserManagementPage() {
           <Input
             placeholder="Search users..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="h-8 w-37.5 lg:w-62.5"
           />
           <Select
@@ -219,14 +218,14 @@ export default function UserManagementPage() {
                   Loading users...
                 </TableCell>
               </TableRow>
-            ) : paginatedUsers.length === 0 ? (
+            ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
                   {t("memberSection.noUsers")}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedUsers.map((u) => (
+              users.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell>
                     <div className="font-medium">{u.name ?? "—"}</div>

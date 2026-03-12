@@ -993,6 +993,16 @@
     "searchPlaceholder": "ค้นหาโครงงานตามชื่อ..."
   },
   "adminSection": {
+    "systemLogs": "บันทึกระบบ",
+    "viewSystemActivities": "ดูความเคลื่อนไหวของระบบและบันทึกการตรวจสอบ",
+    "searchLogs": "ค้นหาบันทึก...",
+    "pickDateRange": "เลือกช่วงวันที่",
+    "clearDateFilter": "ล้างตัวกรองวันที่",
+    "timestamp": "เวลา",
+    "user": "ผู้ใช้",
+    "details": "รายละเอียด",
+    "ipAddress": "IP Address",
+    "noLogsFound": "ไม่พบบันทึก",
     "eventManagement": "จัดการอีเวนต์",
     "events": "อีเวนต์",
     "manageYourEventsHere": "จัดการอีเวนต์ของคุณที่นี่",

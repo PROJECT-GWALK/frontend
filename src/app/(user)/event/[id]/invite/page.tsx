@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { previewInvite, joinEventWithToken, getMyEvents, getEvent } from "@/utils/apievent";
 import type { EventData } from "@/utils/types";
@@ -17,7 +17,7 @@ import OrganizerBanner from "../Organizer/components/OrganizerBanner";
 
 type RoleStr = "presenter" | "committee" | "guest" | "organizer";
 
-export default function InviteConfirmPage() {
+function InviteConfirmContent() {
   const { timeFormat } = useLanguage();
   const { status } = useSession();
   const params = useParams();
@@ -417,5 +417,13 @@ export default function InviteConfirmPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function InviteConfirmPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pb-12 w-full justify-center flex"><div className="w-full h-full flex items-center justify-center">Loading...</div></div>}>
+      <InviteConfirmContent />
+    </Suspense>
   );
 }

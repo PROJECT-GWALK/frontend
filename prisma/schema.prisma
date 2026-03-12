@@ -61,6 +61,7 @@ model User {
   ratings      EventRating[]
   dailyActives UserDailyActive[]
   evaluationResults EvaluationResult[]
+  systemLogs SystemLog[]
 }
 
 model Account {
@@ -426,4 +427,19 @@ model LinkInvite {
   organizerToken String?
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+//////////////////////////////////////////////////////////
+// SYSTEM LOGS
+//////////////////////////////////////////////////////////
+model SystemLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  action    String
+  details   String?
+  userId    String?  @db.Uuid
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }

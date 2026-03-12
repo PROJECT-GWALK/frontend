@@ -225,11 +225,12 @@ export const deleteSpecialReward = async (eventId: string, rewardId: string) => 
 };
 
 // ====================== PUBLIC EVENTS & INVITE ======================
-export const getPublishedEvents = async () => {
+export const getPublishedEvents = async (page = 1, limit = 12) => {
   const res = await axios.get("/backend/api/events", {
+    params: { page, limit },
     withCredentials: true,
   });
-  return res.data; // { message, sig }
+  return res.data; // { message, events, meta }
 };
 
 export const joinEventWithToken = async (

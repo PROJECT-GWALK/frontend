@@ -994,6 +994,16 @@
     "searchPlaceholder": "Search projects by name..."
   },
   "adminSection": {
+    "systemLogs": "System Logs",
+    "viewSystemActivities": "View system activities and audit logs.",
+    "searchLogs": "Search logs...",
+    "pickDateRange": "Pick a date range",
+    "clearDateFilter": "Clear date filter",
+    "timestamp": "Timestamp",
+    "user": "User",
+    "details": "Details",
+    "ipAddress": "IP Address",
+    "noLogsFound": "No logs found",
     "eventManagement": "Event Management",
     "events": "Events",
     "manageYourEventsHere": "Manage your events here.",

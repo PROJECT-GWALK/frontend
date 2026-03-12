@@ -600,6 +600,14 @@ export default function EventDraft() {
       const isRemoved = srRemoved[r.id] || false;
       try {
         if (existingIds.has(r.id)) {
+          // Check for changes before updating
+          const original = event.specialRewards?.find((sr) => sr.id === r.id);
+          const hasChanges =
+            original?.name !== r.name ||
+            (original?.description || "") !== (r.description || "") ||
+            Boolean(original?.allowGuestVote) !== Boolean(r.allowGuestVote) ||
+            (isRemoved && original?.image !== null);
+
           if (file) {
             const fd = new FormData();
             fd.append("name", r.name);
@@ -607,7 +615,7 @@ export default function EventDraft() {
             fd.append("file", file);
             fd.append("allowGuestVote", String(!!r.allowGuestVote));
             await updateSpecialReward(id, r.id, fd);
-          } else {
+          } else if (hasChanges) {
             const payload: {
               name: string;
               description?: string;
@@ -810,16 +818,26 @@ export default function EventDraft() {
 
     // Update existing criteria
     for (const crit of existingCriteria) {
-      try {
-        await updateEvaluationCriteria(id, crit.id, {
-          name: crit.name,
-          description: crit.description,
-          maxScore: crit.maxScore,
-          weightPercentage: crit.weightPercentage,
-          sortOrder: crit.sortOrder,
-        });
-      } catch (e) {
-        console.error("Failed to update criteria", e);
+      const original = serverCriteria.find((sc) => sc.id === crit.id);
+      const hasChanges =
+        original?.name !== crit.name ||
+        (original?.description || "") !== (crit.description || "") ||
+        original?.maxScore !== crit.maxScore ||
+        original?.weightPercentage !== crit.weightPercentage ||
+        original?.sortOrder !== crit.sortOrder;
+
+      if (hasChanges) {
+        try {
+          await updateEvaluationCriteria(id, crit.id, {
+            name: crit.name,
+            description: crit.description,
+            maxScore: crit.maxScore,
+            weightPercentage: crit.weightPercentage,
+            sortOrder: crit.sortOrder,
+          });
+        } catch (e) {
+          console.error("Failed to update criteria", e);
+        }
       }
     }
   };
