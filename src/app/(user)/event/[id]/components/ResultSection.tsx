@@ -1116,8 +1116,8 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                   </CardTitle>
                   <CardDescription>{t("resultsTab.SRDesc")}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                <CardContent className="max-h-120 overflow-y-auto custom-scrollbar">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 pr-1">
                     {specialRewards.map((reward, index) => {
                       const detailsExpanded = expandedRewardDetails[reward.id] === true;
                       const toggleDetails = () => {
@@ -1347,7 +1347,7 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
             <CardHeader>
               <CardTitle>{t("resultsTab.OARanking")}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-h-120 overflow-y-auto custom-scrollbar">
               {loading && rankings.length === 0 ? (
                 <div className="space-y-2">
                   <Skeleton className="h-10 w-full" />
@@ -1359,73 +1359,75 @@ export default function ResultSection({ eventId, role, eventStartView }: Props) 
                   {t("resultsTab.noOARanking")}
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-20">{t("resultsTab.rank")}</TableHead>
-                      <TableHead>{t("resultsTab.project")}</TableHead>
-                      <TableHead className="text-right">{t("resultsTab.VR")}</TableHead>
-                      <TableHead className="text-right">{t("resultsTab.SR")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rankings.map((team) => {
-                      const teamRewards = specialRewards.filter((r) => {
-                        const winners =
-                          r.winners && r.winners.length > 0 ? r.winners : r.winner ? [r.winner] : [];
-                        return winners.some((w) => w.id === team.id);
-                      });
-                      return (
-                        <TableRow key={team.id}>
-                          <TableCell className="font-medium">
-                            {team.rank === 1 && (
-                              <Medal className="h-5 w-5 text-yellow-500 inline mr-1" />
-                            )}
-                            {team.rank === 2 && (
-                              <Medal className="h-5 w-5 text-gray-400 inline mr-1" />
-                            )}
-                            {team.rank === 3 && (
-                              <Medal className="h-5 w-5 text-amber-600 inline mr-1" />
-                            )}
-                            #{team.rank}
-                          </TableCell>
-                          <TableCell>{team.name}</TableCell>
-                          <TableCell className="text-right font-bold text-primary">
-                            {team.totalReward.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1 flex-wrap items-center">
-                              {teamRewards.map((reward) =>
-                                reward.image ? (
-                                  <div
-                                    key={reward.id}
-                                    className="relative h-8 w-8 overflow-hidden rounded-md border border-border shadow-sm"
-                                    title={reward.name}
-                                  >
-                                    <Image
-                                      src={reward.image}
-                                      alt={reward.name}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  </div>
-                                ) : (
-                                  <Badge
-                                    key={reward.id}
-                                    variant="secondary"
-                                    className="text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-                                  >
-                                    {reward.name}
-                                  </Badge>
-                                ),
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-20">{t("resultsTab.rank")}</TableHead>
+                        <TableHead>{t("resultsTab.project")}</TableHead>
+                        <TableHead className="text-right">{t("resultsTab.VR")}</TableHead>
+                        <TableHead className="text-right">{t("resultsTab.SR")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rankings.map((team) => {
+                        const teamRewards = specialRewards.filter((r) => {
+                          const winners =
+                            r.winners && r.winners.length > 0 ? r.winners : r.winner ? [r.winner] : [];
+                          return winners.some((w) => w.id === team.id);
+                        });
+                        return (
+                          <TableRow key={team.id}>
+                            <TableCell className="font-medium">
+                              {team.rank === 1 && (
+                                <Medal className="h-5 w-5 text-yellow-500 inline mr-1" />
                               )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                              {team.rank === 2 && (
+                                <Medal className="h-5 w-5 text-gray-400 inline mr-1" />
+                              )}
+                              {team.rank === 3 && (
+                                <Medal className="h-5 w-5 text-amber-600 inline mr-1" />
+                              )}
+                              #{team.rank}
+                            </TableCell>
+                            <TableCell>{team.name}</TableCell>
+                            <TableCell className="text-right font-bold text-primary">
+                              {team.totalReward.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1 flex-wrap items-center">
+                                {teamRewards.map((reward) =>
+                                  reward.image ? (
+                                    <div
+                                      key={reward.id}
+                                      className="relative h-8 w-8 overflow-hidden rounded-md border border-border shadow-sm"
+                                      title={reward.name}
+                                    >
+                                      <Image
+                                        src={reward.image}
+                                        alt={reward.name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <Badge
+                                      key={reward.id}
+                                      variant="secondary"
+                                      className="text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+                                    >
+                                      {reward.name}
+                                    </Badge>
+                                  ),
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

@@ -57,7 +57,15 @@
     "submissionPeriod": "ช่วงเวลาส่งผลงานสำหรับผู้นำเสนอ",
     "submissionStartDate": "วันที่เริ่มส่ง",
     "submissionEndDate": "วันที่สิ้นสุดส่ง",
-    "selectDate": "เลือกวันที่"
+    "selectDate": "เลือกวันที่",
+    "gradingPeriod": "ช่วงเวลาการให้คะแนนของกรรมการ",
+    "gradingEndDate": "วันที่สิ้นสุดการให้คะแนน",
+    "gradingEndTime": "เวลาสิ้นสุดการให้คะแนน",
+    "gradingEndDateTime": "กำหนดสิ้นสุดการให้คะแนน",
+    "allowProjectDataUpdate": "อนุญาตให้อัปเดตข้อมูลโครงงาน",
+    "allowProjectDataUpdateHint": "เปิดชั่วคราวให้ผู้นำเสนอแก้ไขทีมและผลงานได้ แม้นอกช่วง submission period",
+    "allowProjectDataUpdateEnabled": "เปิดใช้งาน (แก้ไขชั่วคราวได้)",
+    "allowProjectDataUpdateDisabled": "ปิดใช้งาน (ยึดตาม submission period)"
   },
   "presenterSection": {
     "presenterDetails": "รายละเอียดผู้นำเสนอ",
@@ -548,8 +556,9 @@
       "noMembers": "ยังไม่มีสมาชิก",
       "eventEnded": "งานจบแล้วหรือไม่อยู่ในช่วงเวลาที่กำหนด ไม่สามารถดำเนินการได้",
       "submissionEnded": "หมดช่วงส่งผลงานแล้ว คุณไม่สามารถสร้างหรือแก้ไขโครงงานได้",
-      "committeeGradingDeadline": "กรรมการให้คะแนนได้จนถึง {days} วันหลังงานจบ:",
-      "committeeGradingClosed": "หมดเวลาการให้คะแนนของกรรมการแล้ว (เกิน {days} วันหลังงานจบ)"
+      "committeeGradingDeadline": "กรรมการให้คะแนนได้ถึง {date}",
+      "committeeGradingClosed": "หมดเวลาการให้คะแนนของกรรมการแล้ว (ให้คะแนนได้ถึง {date})",
+      "committeeGradingClosedNoDate": "หมดเวลาการให้คะแนนของกรรมการแล้ว"
     },
     "files": {
       "defaultFileName": "ไฟล์",
@@ -944,7 +953,7 @@
   "toolTip": {
     "eventInfo": "แก้ไขรายละเอียดอีเวนต์ และรูปภาพแบนเนอร์",
     "eventLocation": "แก้ไขสถานที่จัดงาน และลิงก์ตำแหน่งที่ตั้ง",
-    "eventTime": "แก้ไขช่วงเวลาจัดอีเวนต์ และช่วงเวลาส่งผลงาน",
+    "eventTime": "แก้ไขช่วงเวลาจัดอีเวนต์ ช่วงส่งผลงาน วันสิ้นสุดการให้คะแนน และสิทธิ์อัปเดตข้อมูลโครงงานชั่วคราว",
     "participants": "แก้ไขการตั้งค่าผู้เข้าร่วม และข้อมูลที่ต้องส่ง",
     "vr": "แก้ไขรางวัลเสมือน ลิมิตการให้รางวัลเสมือน และการให้คะแนน",
     "sr": "สร้างและแก้ไขรางวัลพิเศษ"
@@ -993,6 +1002,16 @@
     "searchPlaceholder": "ค้นหาโครงงานตามชื่อ..."
   },
   "adminSection": {
+    "systemLogs": "บันทึกระบบ",
+    "viewSystemActivities": "ดูความเคลื่อนไหวของระบบและบันทึกการตรวจสอบ",
+    "searchLogs": "ค้นหาบันทึก...",
+    "pickDateRange": "เลือกช่วงวันที่",
+    "clearDateFilter": "ล้างตัวกรองวันที่",
+    "timestamp": "เวลา",
+    "user": "ผู้ใช้",
+    "details": "รายละเอียด",
+    "ipAddress": "IP Address",
+    "noLogsFound": "ไม่พบบันทึก",
     "eventManagement": "จัดการอีเวนต์",
     "events": "อีเวนต์",
     "manageYourEventsHere": "จัดการอีเวนต์ของคุณที่นี่",

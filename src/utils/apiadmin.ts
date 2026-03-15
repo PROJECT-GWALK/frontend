@@ -2,9 +2,9 @@ import axios from "axios";
 
 // ====================== USER MANAGEMENT ======================
 
-export const getAllUsers = async (role?: "ADMIN" | "USER") => {
+export const getAllUsers = async (params?: { role?: "ADMIN" | "USER"; page?: number; limit?: number; search?: string }) => {
   const res = await axios.get("/backend/api/usermanagement", {
-    params: role ? { role } : {},
+    params,
     withCredentials: true,
   });
   return res.data;
@@ -169,4 +169,47 @@ export const deleteAdminTeam = async (eventId: string, teamId: string) => {
     { withCredentials: true },
   );
   return res.data;
+};
+
+// ====================== SYSTEM LOGS ======================
+export interface SystemLog {
+  id: string;
+  action: string;
+  details: string | null;
+  userId: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  user: {
+    id: string;
+    username: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
+}
+
+export interface GetSystemLogsResponse {
+  data: SystemLog[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export const getSystemLogs = async (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  action?: string;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+}) => {
+  const res = await axios.get("/backend/api/systemlogs", {
+    params,
+    withCredentials: true,
+  });
+  return res.data as GetSystemLogsResponse;
 };

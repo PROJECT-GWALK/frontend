@@ -158,6 +158,8 @@ export type DraftEvent = {
   vrTeamCapGuest?: number;
   vrTeamCapCommittee?: number;
   gradingDaysAfterEnd?: number;
+  gradingEndAt?: string | null;
+  allowProjectDataUpdate?: boolean;
   hasCommittee?: boolean;
   unitReward?: string;
   locationName?: string;
@@ -191,6 +193,8 @@ export type EventData = {
   publicView?: boolean;
   gradingEnabled?: boolean;
   gradingDaysAfterEnd?: number;
+  gradingEndAt?: string | null;
+  allowProjectDataUpdate?: boolean;
   startView?: string;
   endView?: string;
   startJoinDate?: string;
@@ -292,6 +296,8 @@ export type EventFormState = {
   endView?: string;
   startJoinDate?: string;
   endJoinDate?: string;
+  gradingEndAt?: string | null;
+  allowProjectDataUpdate?: boolean;
   maxTeams?: number;
   maxTeamMembers?: number;
 };

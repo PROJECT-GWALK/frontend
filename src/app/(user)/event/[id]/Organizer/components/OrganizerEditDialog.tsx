@@ -37,6 +37,7 @@ import type {
 } from "@/utils/types";
 import { FileType } from "@/utils/types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -206,12 +207,21 @@ export default function OrganizerEditDialog({
           setFtList([]);
         }
       } else if (section === "time") {
+        const fallbackGradingEndAt = event?.gradingEndAt
+          ? event.gradingEndAt
+          : event?.endView
+            ? new Date(
+                new Date(event.endView).getTime() + (event.gradingDaysAfterEnd ?? 2) * 24 * 60 * 60 * 1000,
+              ).toISOString()
+            : undefined;
         setForm((prev) => ({
           ...prev,
           startView: event?.startView,
           endView: event?.endView,
           startJoinDate: event?.startJoinDate,
           endJoinDate: event?.endJoinDate,
+          gradingEndAt: fallbackGradingEndAt,
+          allowProjectDataUpdate: event?.allowProjectDataUpdate ?? false,
         }));
       } else if (section === "location") {
         setForm((prev) => ({
@@ -307,11 +317,13 @@ export default function OrganizerEditDialog({
         payload.locationName = form.locationName;
         payload.location = form.location;
       } else if (section === "time") {
-        const toISO = (d?: string) => (d ? new Date(d).toISOString() : undefined);
+        const toISO = (d?: string | null) => (d ? new Date(d).toISOString() : undefined);
         payload.startView = toISO(form.startView);
         payload.endView = toISO(form.endView);
         payload.startJoinDate = toISO(form.startJoinDate);
         payload.endJoinDate = toISO(form.endJoinDate);
+        payload.gradingEndAt = toISO(form.gradingEndAt) ?? null;
+        payload.allowProjectDataUpdate = form.allowProjectDataUpdate ?? false;
       } else if (section === "presenter") {
         payload.maxTeams = form.maxTeams;
         payload.maxTeamMembers = form.maxTeamMembers;
@@ -520,6 +532,9 @@ export default function OrganizerEditDialog({
                     ? new Date(form.startJoinDate)
                     : undefined;
                   const selectedSubEnd = form.endJoinDate ? new Date(form.endJoinDate) : undefined;
+                  const selectedGradingEnd = form.gradingEndAt
+                    ? new Date(form.gradingEndAt)
+                    : undefined;
 
                   // Helpers
                   const getTime = (val: string | undefined | null) => {
@@ -834,6 +849,92 @@ export default function OrganizerEditDialog({
                               />
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-2 font-semibold text-lg">
+                          <Clock className="h-5 w-5" />
+                          {t("eventTime.gradingPeriod")}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>{t("eventTime.gradingEndDate")}</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start text-left font-normal"
+                                  disabled={!selectedEnd}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  {formatDate(
+                                    selectedGradingEnd,
+                                    t("eventTime.selectDate"),
+                                    dateFormat,
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0 flex justify-center">
+                                <DateCalendar
+                                  mode="single"
+                                  captionLayout="dropdown"
+                                  className="mx-auto"
+                                  fixedWeeks
+                                  defaultMonth={selectedGradingEnd || selectedEnd || new Date()}
+                                  selected={selectedGradingEnd}
+                                  onSelect={(d) =>
+                                    updateDate("gradingEndAt", d, getTime(form.gradingEndAt))
+                                  }
+                                  disabled={
+                                    selectedEnd
+                                      ? (date) => date < new Date(selectedEnd.setHours(0, 0, 0, 0))
+                                      : undefined
+                                  }
+                                  formatters={{
+                                    formatMonthDropdown: (date) =>
+                                      date.toLocaleString(dateFormat, { month: "long" }),
+                                    formatYearDropdown: (date) =>
+                                      date.toLocaleDateString(dateFormat, { year: "numeric" }),
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{t("eventTime.gradingEndTime")}</Label>
+                            <div className="relative">
+                              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                type="time"
+                                value={getTime(form.gradingEndAt)}
+                                onChange={(e) =>
+                                  updateTime("gradingEndAt", selectedGradingEnd, e.target.value)
+                                }
+                                className="pl-10"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 rounded-lg border p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="space-y-0.5">
+                            <div className="text-sm font-semibold">
+                              {t("eventTime.allowProjectDataUpdate")}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {t("eventTime.allowProjectDataUpdateHint")}
+                            </div>
+                          </div>
+                          <Switch
+                            checked={form.allowProjectDataUpdate === true}
+                            onCheckedChange={(checked) =>
+                              setForm((f) => ({ ...f, allowProjectDataUpdate: checked }))
+                            }
+                          />
                         </div>
                       </div>
 

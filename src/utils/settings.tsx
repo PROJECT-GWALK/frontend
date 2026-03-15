@@ -5,6 +5,7 @@ import {
   Users,
   LayoutDashboard,
   Calendar,
+  FileText,
 } from "lucide-react";
 
 export const appBrand = {
@@ -48,6 +49,11 @@ export const menuItemsAdmin = [
     title: "Event Management",
     url: "/admin/eventmanagement",
     icon: <Calendar />,
+  },
+  {
+    title: "System Logs",
+    url: "/admin/logview",
+    icon: <FileText />,
   },
 ];
 

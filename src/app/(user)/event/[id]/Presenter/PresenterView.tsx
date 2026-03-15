@@ -88,8 +88,9 @@ export function PresenterView({ id, event }: Props) {
   const eventStarted = !localEvent.startView || now >= new Date(localEvent.startView);
 
   const isSubmissionActive = localEvent
-    ? (!localEvent.startJoinDate || now >= new Date(localEvent.startJoinDate)) &&
-      (!localEvent.endJoinDate || now <= new Date(localEvent.endJoinDate))
+    ? localEvent.allowProjectDataUpdate === true ||
+      ((!localEvent.startJoinDate || now >= new Date(localEvent.startJoinDate)) &&
+        (!localEvent.endJoinDate || now <= new Date(localEvent.endJoinDate)))
     : true;
 
   const fetchTeamsData = useCallback(async () => {
