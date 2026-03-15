@@ -212,6 +212,39 @@ function InviteConfirmContent() {
     }
   };
 
+  const renderActionButtons = (mobile: boolean) => (
+    <div className={`flex gap-3 ${mobile ? "w-full sm:hidden" : "flex-col sm:flex-row w-full sm:w-auto pt-2 hidden sm:flex"}`}>
+      <Button
+        variant="outline"
+        onClick={() => router.replace(`/event/${id}`)}
+        className={`${mobile ? "flex-1 h-12 text-base rounded-xl" : "sm:min-w-35 gap-2"}`}
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        {t("inviteSection.button_cancel")}
+      </Button>
+      {!isAlreadyMember && canJoinNow && (
+        <Button
+          onClick={doJoin}
+          disabled={joining}
+          className={`${
+            mobile 
+              ? "flex-2 h-12 text-base rounded-xl shadow-lg shadow-primary/25 bg-linear-to-r from-primary to-primary/90" 
+              : "sm:min-w-35 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+          }`}
+        >
+          {joining ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              {t("inviteSection.ongoing")}
+            </>
+          ) : (
+            t("inviteSection.button_confirm")
+          )}
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Banner Section */}
@@ -222,6 +255,11 @@ function InviteConfirmContent() {
       />
 
       <div className="max-w-6xl mx-auto mt-6 relative z-10">
+        <div className="sm:hidden sticky top-16 z-20 px-4 mb-4">
+          <div className="rounded-2xl border bg-background/80 backdrop-blur-md p-2 shadow-lg ring-1 ring-black/5 dark:ring-white/10">
+            {renderActionButtons(true)}
+          </div>
+        </div>
         <Card className="border-none shadow-xl bg-linear-to-br from-background/95 to-muted/20 backdrop-blur-sm overflow-hidden">
           <div className="h-2 bg-linear-to-r from-primary to-primary/60" />
           <CardHeader className="p-6 md:p-8 space-y-6">
@@ -385,32 +423,7 @@ function InviteConfirmContent() {
                   </div>
                 )}
                 
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => router.replace(`/event/${id}`)}
-                    className="sm:min-w-35 gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    {t("inviteSection.button_cancel")}
-                  </Button>
-                  {!isAlreadyMember && canJoinNow && (
-                    <Button 
-                      onClick={doJoin} 
-                      disabled={joining}
-                      className="sm:min-w-35 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                    >
-                      {joining ? (
-                        <>
-                          <span className="animate-spin mr-2">⏳</span>
-                          {t("inviteSection.ongoing")}
-                        </>
-                      ) : (
-                        t("inviteSection.button_confirm")
-                      )}
-                    </Button>
-                  )}
-                </div>
+                {renderActionButtons(false)}
               </div>
             </div>
           </CardContent>

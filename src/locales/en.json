@@ -57,7 +57,15 @@
     "submissionPeriod": "Submission Period for Presenters",
     "submissionStartDate": "Start Date",
     "submissionEndDate": "End Date",
-    "selectDate": "Select date"
+    "selectDate": "Select date",
+    "gradingPeriod": "Committee Grading Period",
+    "gradingEndDate": "Grading End Date",
+    "gradingEndTime": "Grading End Time",
+    "gradingEndDateTime": "Grading Deadline",
+    "allowProjectDataUpdate": "Allow project data update",
+    "allowProjectDataUpdateHint": "Temporarily allow presenters to edit team data and submissions outside the submission period.",
+    "allowProjectDataUpdateEnabled": "Enabled (temporary update is allowed)",
+    "allowProjectDataUpdateDisabled": "Disabled (follow submission period)"
   },
   "presenterSection": {
     "presenterDetails": "Presenter Details",
@@ -549,8 +557,9 @@
       "noMembers": "No members yet.",
       "eventEnded": "Event has ended or not in active period. Actions are restricted.",
       "submissionEnded": "Submission period has ended. You cannot create or edit projects.",
-      "committeeGradingDeadline": "Committee grading is available until {days} days after event end:",
-      "committeeGradingClosed": "Committee grading is closed (more than {days} days after event end)."
+      "committeeGradingDeadline": "Committee grading is available until {date}.",
+      "committeeGradingClosed": "Committee grading is closed (deadline was {date}).",
+      "committeeGradingClosedNoDate": "Committee grading is closed."
     },
     "files": {
       "defaultFileName": "File",
@@ -945,7 +954,7 @@
   "toolTip": {
     "eventInfo": "Edit event description and event banner",
     "eventLocation": "Edit event location and location link",
-    "eventTime": "Edit event time period and submission time period",
+    "eventTime": "Edit event period, submission period, grading deadline, and temporary project update permission",
     "participants": "Edit participant configuration and submission requirements",
     "vr": "Edit virtual rewards, virtual reward limits, and grading",
     "sr": "Create and edit special rewards"

@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getGradingResults } from "@/utils/apievaluation";
-import { getEvent, updateEvent } from "@/utils/apievent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type GradingResult = {
@@ -49,10 +47,6 @@ export default function GradingDashboard({ eventId, refreshTrigger }: Props) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedResult, setSelectedResult] = useState<GradingResult | null>(null);
-  const [gradingDaysAfterEnd, setGradingDaysAfterEnd] = useState<number | null>(null);
-  const [gradingDaysInput, setGradingDaysInput] = useState("");
-  const [loadingDays, setLoadingDays] = useState(true);
-  const [savingDays, setSavingDays] = useState(false);
 
   const formatPresenterNames = (presenterName: string) => {
     const names = presenterName
@@ -129,50 +123,6 @@ export default function GradingDashboard({ eventId, refreshTrigger }: Props) {
     fetchResults();
   }, [eventId, refreshTrigger]);
 
-  useEffect(() => {
-    const fetchEventSettings = async () => {
-      try {
-        setLoadingDays(true);
-        const data = await getEvent(eventId);
-        const days = data?.event?.gradingDaysAfterEnd ?? 2;
-        setGradingDaysAfterEnd(days);
-        setGradingDaysInput(String(days));
-      } catch (error) {
-        console.error("Failed to fetch grading settings:", error);
-        toast.error(t("gradingDashboard.failedToLoadDays"));
-      } finally {
-        setLoadingDays(false);
-      }
-    };
-
-    fetchEventSettings();
-  }, [eventId, t]);
-
-  const saveGradingDays = async () => {
-    const parsed = Number(gradingDaysInput);
-    if (!Number.isFinite(parsed)) {
-      toast.error(t("gradingDashboard.invalidDays"));
-      return;
-    }
-    const normalized = Math.max(0, Math.floor(parsed));
-    setSavingDays(true);
-    try {
-      const res = await updateEvent(eventId, { gradingDaysAfterEnd: normalized });
-      const nextDays = res?.event?.gradingDaysAfterEnd ?? normalized;
-      setGradingDaysAfterEnd(nextDays);
-      setGradingDaysInput(String(nextDays));
-      toast.success(t("gradingDashboard.daysUpdated"));
-    } catch (error) {
-      console.error("Failed to update grading days:", error);
-      toast.error(t("gradingDashboard.daysUpdateFailed"));
-    } finally {
-      setSavingDays(false);
-    }
-  };
-
-  const isDaysDirty =
-    gradingDaysAfterEnd !== null && gradingDaysInput !== String(gradingDaysAfterEnd);
-
   if (loading) {
     return (
       <Card>
@@ -186,37 +136,8 @@ export default function GradingDashboard({ eventId, refreshTrigger }: Props) {
   if (results.length === 0) {
     return (
       <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <CardHeader>
           <CardTitle>{t("gradingDashboard.title")}</CardTitle>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">
-                {t("gradingDashboard.gradingDaysLabel")}
-              </span>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={0}
-                  value={gradingDaysInput}
-                  onChange={(e) => setGradingDaysInput(e.target.value)}
-                  disabled={loadingDays || savingDays}
-                  className="w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <span className="text-xs text-muted-foreground">
-                  {t("gradingDashboard.dayUnit")}
-                </span>
-              </div>
-              <span className="text-[11px] text-muted-foreground">
-                {t("gradingDashboard.gradingDaysHint")}
-              </span>
-            </div>
-            <Button
-              onClick={saveGradingDays}
-              disabled={savingDays || loadingDays || !isDaysDirty}
-            >
-              {savingDays ? t("gradingDashboard.saving") : t("gradingDashboard.save")}
-            </Button>
-          </div>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
@@ -229,34 +150,8 @@ export default function GradingDashboard({ eventId, refreshTrigger }: Props) {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <CardHeader>
         <CardTitle>{t("gradingDashboard.title")}</CardTitle>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">
-              {t("gradingDashboard.gradingDaysLabel")}
-            </span>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min={0}
-                value={gradingDaysInput}
-                onChange={(e) => setGradingDaysInput(e.target.value)}
-                disabled={loadingDays || savingDays}
-                className="w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <span className="text-xs text-muted-foreground">
-                {t("gradingDashboard.dayUnit")}
-              </span>
-            </div>
-            <span className="text-[11px] text-muted-foreground">
-              {t("gradingDashboard.gradingDaysHint")}
-            </span>
-          </div>
-          <Button onClick={saveGradingDays} disabled={savingDays || loadingDays || !isDaysDirty}>
-            {savingDays ? t("gradingDashboard.saving") : t("gradingDashboard.save")}
-          </Button>
-        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

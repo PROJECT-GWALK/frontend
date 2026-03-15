@@ -17,7 +17,6 @@ import {
     ChevronDown,
     ChevronUp,
     LogOut,
-    Download,
     ClipboardCopy,
     ArrowLeft,
     Gift,
@@ -168,11 +167,13 @@ export default function ProjectDetailPage({ params }: Props) {
     : false;
 
   const gradingDaysAfterEnd = eventData?.gradingDaysAfterEnd ?? 2;
-  const committeeGradingDeadline = eventData?.endView
-    ? new Date(
-        new Date(eventData.endView).getTime() + gradingDaysAfterEnd * 24 * 60 * 60 * 1000,
-      )
-    : null;
+  const committeeGradingDeadline = eventData?.gradingEndAt
+    ? new Date(eventData.gradingEndAt)
+    : eventData?.endView
+      ? new Date(
+          new Date(eventData.endView).getTime() + gradingDaysAfterEnd * 24 * 60 * 60 * 1000,
+        )
+      : null;
   const isCommitteeGradingWindowActive =
     eventData?.myRole === "COMMITTEE"
       ? eventData?.startView
@@ -182,9 +183,9 @@ export default function ProjectDetailPage({ params }: Props) {
       : isEventActive;
 
   const isSubmissionActive = eventData
-    ? (!eventData.startJoinDate ||
-        new Date() >= new Date(eventData.startJoinDate)) &&
-      (!eventData.endJoinDate || new Date() <= new Date(eventData.endJoinDate))
+    ? eventData.allowProjectDataUpdate === true ||
+      ((!eventData.startJoinDate || new Date() >= new Date(eventData.startJoinDate)) &&
+        (!eventData.endJoinDate || new Date() <= new Date(eventData.endJoinDate)))
     : true;
 
   const vrTeamCapEnabled = eventData?.vrTeamCapEnabled ?? true;
@@ -950,24 +951,25 @@ export default function ProjectDetailPage({ params }: Props) {
                                   <Search className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
                                 </div>
                                 <div className="absolute bottom-0 right-0 p-3 flex justify-end pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    asChild
-                                    className="shadow-lg"
-                                  >
-                                    <a
-                                      href={file.url}
-                                      download
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="flex items-center gap-2"
-                                      onClick={(e) => e.stopPropagation()}
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      asChild
+                                      className="shadow-lg"
                                     >
-                                      <Download className="w-4 h-4" />
-                                      {t("projectDetail.files.downloadImage")}
-                                    </a>
-                                  </Button>
+                                      <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer nofollow"
+                                        className="flex items-center gap-2"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <File className="w-4 h-4" />
+                                        {t("projectDetail.files.open")}
+                                      </a>
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             ) : isPdf ? (
@@ -982,7 +984,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                     <a
                                       href={file.url}
                                       target="_blank"
-                                      rel="noreferrer"
+                                      rel="noopener noreferrer nofollow"
                                       className="flex items-center gap-2"
                                     >
                                       <File className="w-4 h-4" />
@@ -1019,7 +1021,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                     <a
                                       href={file.url}
                                       target="_blank"
-                                      rel="noreferrer"
+                                      rel="noopener noreferrer nofollow"
                                     >
                                       {file.url}
                                     </a>
@@ -1028,7 +1030,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                     <a
                                       href={file.url}
                                       target="_blank"
-                                      rel="noreferrer"
+                                      rel="noopener noreferrer nofollow"
                                     >
                                       {t("projectDetail.buttons.openLink")}
                                     </a>
@@ -1421,7 +1423,10 @@ export default function ProjectDetailPage({ params }: Props) {
                       <CardContent className="p-4 flex items-center gap-3">
                         <AlertCircle className="h-5 w-5 text-primary" />
                         <p className="text-sm font-medium text-primary">
-                          {`${t("projectDetail.messages.committeeGradingDeadline").replace("{days}", String(gradingDaysAfterEnd))} ${formatDateTime(committeeGradingDeadline, timeFormat)}`}
+                          {t("projectDetail.messages.committeeGradingDeadline").replace(
+                            "{date}",
+                            formatDateTime(committeeGradingDeadline, timeFormat),
+                          )}
                         </p>
                       </CardContent>
                     </Card>
@@ -1431,10 +1436,12 @@ export default function ProjectDetailPage({ params }: Props) {
                       <CardContent className="p-4 flex items-center gap-3">
                         <AlertCircle className="h-5 w-5 text-destructive" />
                         <p className="text-sm font-medium text-destructive">
-                          {t("projectDetail.messages.committeeGradingClosed").replace(
-                            "{days}",
-                            String(gradingDaysAfterEnd),
-                          )}
+                          {committeeGradingDeadline
+                            ? t("projectDetail.messages.committeeGradingClosed").replace(
+                                "{date}",
+                                formatDateTime(committeeGradingDeadline, timeFormat),
+                              )
+                            : t("projectDetail.messages.committeeGradingClosedNoDate")}
                         </p>
                       </CardContent>
                     </Card>
@@ -1727,7 +1734,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                   <a
                                     href={uploaded.url}
                                     target="_blank"
-                                    rel="noreferrer"
+                                    rel="noopener noreferrer nofollow"
                                     className="flex items-center gap-1.5"
                                   >
                                     <Share2 className="w-3 h-3" />{" "}
@@ -1831,7 +1838,7 @@ export default function ProjectDetailPage({ params }: Props) {
                                 <a
                                   href={uploaded.url}
                                   target="_blank"
-                                  rel="noreferrer"
+                                  rel="noopener noreferrer nofollow"
                                   className="flex items-center gap-1.5"
                                 >
                                   <File className="w-3 h-3" />{" "}

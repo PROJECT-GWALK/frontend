@@ -18,6 +18,13 @@ type Props = {
 export default function CardInformation2({ event, editable, onEdit, language = "en" }: Props) {
   const { t } = useLanguage();
   const locale = language === "th" ? "th-TH" : "en-US";
+  const gradingDeadline = event?.gradingEndAt
+    ? new Date(event.gradingEndAt)
+    : event?.endView
+      ? new Date(
+          new Date(event.endView).getTime() + (event.gradingDaysAfterEnd ?? 2) * 24 * 60 * 60 * 1000,
+        )
+      : null;
 
   return (
     <Card className="border-none dark:border dark:border-white/10 shadow-md hover:shadow-lg transition-all duration-300 group">
@@ -37,7 +44,16 @@ export default function CardInformation2({ event, editable, onEdit, language = "
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 rounded-full hover:bg-muted"
-                    onClick={() => onEdit("time", {})}
+                    onClick={() =>
+                      onEdit("time", {
+                        startView: event?.startView ?? "",
+                        endView: event?.endView ?? "",
+                        startJoinDate: event?.startJoinDate ?? "",
+                        endJoinDate: event?.endJoinDate ?? "",
+                        gradingEndAt: event?.gradingEndAt ?? "",
+                        allowProjectDataUpdate: event?.allowProjectDataUpdate ?? false,
+                      })
+                    }
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -216,6 +232,34 @@ export default function CardInformation2({ event, editable, onEdit, language = "
                     {event?.endJoinDate ? formatDateTime(new Date(event.endJoinDate), locale) : "-"}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground uppercase font-medium">
+                {t("eventTime.allowProjectDataUpdate")}
+              </div>
+              <div className="font-medium text-sm mt-1">
+                {event?.allowProjectDataUpdate
+                  ? t("eventTime.allowProjectDataUpdateEnabled")
+                  : t("eventTime.allowProjectDataUpdateDisabled")}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 pb-1 border-b">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">
+                {t("eventTime.gradingPeriod")}
+              </span>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground uppercase font-medium">
+                {t("eventTime.gradingEndDateTime")}
+              </div>
+              <div className="font-medium text-sm mt-1">
+                {gradingDeadline ? formatDateTime(gradingDeadline, locale) : "-"}
               </div>
             </div>
           </div>
